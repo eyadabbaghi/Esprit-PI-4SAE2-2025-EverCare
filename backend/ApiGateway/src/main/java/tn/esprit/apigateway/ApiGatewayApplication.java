@@ -54,5 +54,11 @@ public class ApiGatewayApplication {
                 .route("medical-record-service", r -> r
                         .path("/api/medical-records/**")
                         .uri("lb://MEDICAL-RECORD-SERVICE"))
+                .route("dailyme-service", r -> r
+                        .path("/api/daily-entries/**", "/api/dailyme-alerts/**", "/api/daily-tasks/**", "/api/journal/**", "/api/insights")
+                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://DAILYME-SERVICE"))
                 .build();
-    }
+
+
+    }}

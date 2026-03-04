@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "records": [
+    {
+      "filePath": "/ApiGatewayApplication.java",
+      "timestamp": 1772661779923,
+      "startOffset": 2802,
+      "endOffset": 2822,
+      "codeContent": "IntellijIdeaRulezzz ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/ApiGatewayApplication.java",
+      "timestamp": 1772661931513,
+      "startOffset": 2784,
+      "endOffset": 2804,
+      "codeContent": "IntellijIdeaRulezzz ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/ApiGatewayApplication.java",
+      "timestamp": 1772662123679,
+      "startOffset": 2913,
+      "endOffset": 2933,
+      "codeContent": "IntellijIdeaRulezzz ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1772663425570,
+      "startOffset": 2820,
+      "endOffset": 2840,
+      "codeContent": "                    ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1772663425573,
+      "startOffset": 2960,
+      "endOffset": 2980,
+      "codeContent": "                    ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1772663425576,
+      "startOffset": 3056,
+      "endOffset": 3076,
+      "codeContent": "                    ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1772663463539,
+      "startOffset": 2960,
+      "endOffset": 2980,
+      "codeContent": "                    ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1772663463543,
+      "startOffset": 3056,
+      "endOffset": 3076,
+      "codeContent": "                    ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    }
+  ],
+  "toolStats": {
+    "GitHub Copilot": {
+      "usageCount": 8,
+      "totalLines": 8
+    }
+  }
+}

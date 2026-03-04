@@ -16,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/journal")
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+
 public class JournalController {
 
     private final JournalRepository repo;

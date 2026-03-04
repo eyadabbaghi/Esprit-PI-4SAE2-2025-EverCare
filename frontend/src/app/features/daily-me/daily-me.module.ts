@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BaseChartDirective } from 'ng2-charts';
 
-import { BaseChartDirective } from 'ng2-charts'; // ✅ IMPORTANT
+import { DailyMeRoutingModule } from './daily-me-routing.module'; // ✅ Add this
 
 import { JournalComponent } from '../journal/journal.component';
 import { DailyMeListComponent } from './daily-me-list/daily-me-list.component';
@@ -17,7 +18,8 @@ import { DailyTaskListComponent } from './daily-task-list/daily-task-list.compon
   imports: [
     CommonModule,
     FormsModule,
-    BaseChartDirective // ✅ this makes baseChart + [data]/[options]/[type] work
+    BaseChartDirective,
+    DailyMeRoutingModule // ✅ Add routing here
   ],
   exports: [
     DailyMeListComponent,
@@ -25,4 +27,4 @@ import { DailyTaskListComponent } from './daily-task-list/daily-task-list.compon
     JournalComponent
   ]
 })
-export class DailyMeModule {}
+export class DailyMeModule { }

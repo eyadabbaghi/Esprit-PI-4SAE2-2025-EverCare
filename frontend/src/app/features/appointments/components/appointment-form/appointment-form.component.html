@@ -27,7 +27,7 @@
             class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
             <option value="">Choisir un médecin</option>
             <option *ngFor="let doctor of doctors" [value]="doctor.userId">
-              {{ doctor.name }} - {{ doctor.specialty }}
+              {{ doctor.name }}
             </option>
           </select>
         </div>
@@ -41,7 +41,7 @@
             class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
             <option value="">Choisir le type</option>
             <option *ngFor="let type of consultationTypes" [value]="type.typeId">
-              {{ type.name }} ({{ type.alzheimerDurationMinutes }} min)
+              {{ type.name }} ({{ type.alzheimerDuration }} min)
             </option>
           </select>
         </div>
@@ -79,7 +79,7 @@
             class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
             <option value="">Sans aidant</option>
             <option *ngFor="let caregiver of caregivers" [value]="caregiver.userId">
-              {{ caregiver.name }} ({{ caregiver.relationship }})
+              {{ caregiver.name }}
             </option>
           </select>
         </div>

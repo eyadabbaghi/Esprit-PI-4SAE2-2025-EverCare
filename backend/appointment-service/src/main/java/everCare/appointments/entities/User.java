@@ -1,10 +1,11 @@
 package everCare.appointments.entities;
 
-import everCare.appointments.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -28,17 +29,17 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ========== INFORMATIONS DE BASE ==========
-
     @Column(nullable = false)
     private String name;
 
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column(unique = true)
+    private String keycloakId;
 
     @Enumerated(EnumType.STRING)
-    private UserRole role;  // PATIENT, DOCTOR, CAREGIVER, ADMIN
+    private UserRole role;
 
     private String phone;
 
@@ -46,32 +47,39 @@ public class User {
 
     private LocalDateTime createdAt;
 
-    // ========== INFORMATIONS PERSONNELLES ==========
-
+    // Common profile fields
     private LocalDate dateOfBirth;
+    private String emergencyContact;
+    private String profilePicture;
 
-    private String emergencyContact;  // Contact d'urgence
+    // Doctor-specific fields
+    private Integer yearsExperience;
+    private String specialization;
+    private String medicalLicense;
+    private String workplaceType; // "hospital" or "private"
+    private String workplaceName;
 
-    private String profilePicture;    // URL photo
+    private String doctorEmail;
+    // Many-to-many between patients and caregivers
+    @ManyToMany
+    @JoinTable(
+            name = "patient_caregiver",
+            joinColumns = @JoinColumn(name = "patient_id"),
+            inverseJoinColumns = @JoinColumn(name = "caregiver_id")
+    )
+    private Set<User> caregivers = new HashSet<>();
 
-    // ========== POUR PATIENTS ALZHEIMER ==========
+    @ManyToMany(mappedBy = "caregivers")
+    private Set<User> patients = new HashSet<>();
 
-    private String alzheimerStage;    // LEGER, MODERE, AVANCE (simple string)
+    // Helper methods to maintain bidirectional relationship
+    public void addCaregiver(User caregiver) {
+        caregivers.add(caregiver);
+        caregiver.getPatients().add(this);
+    }
 
-    private boolean requiresCaregiver; // True si aidant requis
-
-    // ========== POUR MÉDECINS ==========
-
-    private String specialty;          // Spécialité
-
-
-    // ========== POUR AIDANTS ==========
-
-    private String relationship;        // Lien avec patient (fille, fils...)
-
-
-    // ========== STATUT ==========
-
-    private boolean active;
-
+    public void removeCaregiver(User caregiver) {
+        caregivers.remove(caregiver);
+        caregiver.getPatients().remove(this);
+    }
 }

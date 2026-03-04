@@ -154,4 +154,22 @@ public class UserController {
         User user = userService.findByEmail(email);
         return ResponseEntity.ok(mapToDto(user));
     }
+
+    // ========== GET CAREGIVERS FOR PATIENT ==========
+    @GetMapping("/{id}/patients")
+    public ResponseEntity<List<UserDto>> getPatientsByCaregiverId(@PathVariable String id) {
+        System.out.println("ID: " + id);
+        User caregiver = userService.findById(id);
+
+        if (caregiver.getRole() != UserRole.CAREGIVER) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<UserDto> patients = caregiver.getPatients().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(patients);
+    }
+
 }

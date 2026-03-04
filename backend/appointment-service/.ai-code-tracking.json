@@ -1,0 +1,253 @@
+{
+  "version": "1.0",
+  "records": [
+    {
+      "filePath": "/User.java",
+      "timestamp": 1772594423595,
+      "startOffset": 1605,
+      "endOffset": 1632,
+      "codeContent": "    private boolean active;",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/appointment-service/src/main/java/everCare/appointments/entities/User.java",
+      "timestamp": 1772596911516,
+      "startOffset": 8,
+      "endOffset": 2077,
+      "codeContent": "tn.esprit.user.entity;\n\nimport jakarta.persistence.*;\nimport lombok.*;\nimport java.time.LocalDate;\nimport java.time.LocalDateTime;\nimport java.util.HashSet;\nimport java.util.Set;\nimport java.util.UUID;\n\n@Entity\n@Table(name \u003d \"users\")\n@Getter\n@Setter\n@NoArgsConstructor\n@AllArgsConstructor\n@Builder\npublic class User {\n\n    @Id\n    @Column(name \u003d \"user_id\")\n    private String userId;\n\n    @PrePersist\n    public void generateId() {\n        if (this.userId \u003d\u003d null) {\n            this.userId \u003d UUID.randomUUID().toString();\n        }\n        this.createdAt \u003d LocalDateTime.now();\n    }\n\n    @Column(nullable \u003d false)\n    private String name;\n\n    @Column(unique \u003d true, nullable \u003d false)\n    private String email;\n\n    @Column(unique \u003d true)\n    private String keycloakId;\n\n    @Enumerated(EnumType.STRING)\n    private UserRole role;\n\n    private String phone;\n\n    private boolean isVerified;\n\n    private LocalDateTime createdAt;\n\n    // Common profile fields\n    private LocalDate dateOfBirth;\n    private String emergencyContact;\n    private String profilePicture;\n\n    // Doctor-specific fields\n    private Integer yearsExperience;\n    private String specialization;\n    private String medicalLicense;\n    private String workplaceType; // \"hospital\" or \"private\"\n    private String workplaceName;\n\n    private String doctorEmail;\n    // Many-to-many between patients and caregivers\n    @ManyToMany\n    @JoinTable(\n            name \u003d \"patient_caregiver\",\n            joinColumns \u003d @JoinColumn(name \u003d \"patient_id\"),\n            inverseJoinColumns \u003d @JoinColumn(name \u003d \"caregiver_id\")\n    )\n    private Set\u003cUser\u003e caregivers \u003d new HashSet\u003c\u003e();\n\n    @ManyToMany(mappedBy \u003d \"caregivers\")\n    private Set\u003cUser\u003e patients \u003d new HashSet\u003c\u003e();\n\n    // Helper methods to maintain bidirectional relationship\n    public void addCaregiver(User caregiver) {\n        caregivers.add(caregiver);\n        caregiver.getPatients().add(this);\n    }\n\n    public void removeCaregiver(User caregiver) {\n        caregivers.remove(caregiver);\n        caregiver.getPatients().remove(this);\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 84
+    },
+    {
+      "filePath": "/User.java",
+      "timestamp": 1772596912355,
+      "startOffset": 2077,
+      "endOffset": 2219,
+      "codeContent": "\n\n    public Set\u003cUser\u003e getCaregivers() {\n        return caregivers;\n    }\n\n    public Set\u003cUser\u003e getPatients() {\n        return patients;\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 9
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/appointment-service/src/main/java/everCare/appointments/entities/UserRole.java",
+      "timestamp": 1772596939957,
+      "startOffset": 0,
+      "endOffset": 66,
+      "codeContent": "package everCare.appointments.entities;\n\npublic enum UserRole {\n}\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "/SecurityConfig.java",
+      "timestamp": 1772607064120,
+      "startOffset": 1159,
+      "endOffset": 1179,
+      "codeContent": "IntellijIdeaRulezzz ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/config/WebConfig.java",
+      "timestamp": 1772607255195,
+      "startOffset": 522,
+      "endOffset": 883,
+      "codeContent": "\n    @Override\n    public void addCorsMappings(CorsRegistry registry) {\n        registry.addMapping(\"/**\")\n                .allowedOrigins(\"http://localhost:4200\")\n                .allowedMethods(\"GET\", \"POST\", \"PUT\", \"DELETE\", \"PATCH\", \"OPTIONS\")\n                .allowedHeaders(\"*\")\n                .allowCredentials(true)\n                .maxAge(3600);\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 10
+    },
+    {
+      "filePath": "/WebConfig.java",
+      "timestamp": 1772607256160,
+      "startOffset": 879,
+      "endOffset": 1050,
+      "codeContent": "\n    \n    @Override\n    public void addViewControllers(ViewControllerRegistry registry) {\n        registry.addViewController(\"/\").setViewName(\"forward:/index.html\");\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 6
+    },
+    {
+      "filePath": "/WebConfig.java",
+      "timestamp": 1772607257862,
+      "startOffset": 565,
+      "endOffset": 615,
+      "codeContent": "org.springframework.web.servlet.config.annotation.",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/WebConfig.java",
+      "timestamp": 1772607257870,
+      "startOffset": 93,
+      "endOffset": 163,
+      "codeContent": "import org.springframework.web.servlet.config.annotation.CorsRegistry;",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/config/WebConfig.java",
+      "timestamp": 1772607257896,
+      "startOffset": 93,
+      "endOffset": 164,
+      "codeContent": "import org.springframework.web.servlet.config.annotation.CorsRegistry;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "/UserController.java",
+      "timestamp": 1772607338043,
+      "startOffset": 6377,
+      "endOffset": 6681,
+      "codeContent": "@GetMapping(\"/all\")\n    public ResponseEntity\u003cList\u003cUserDto\u003e\u003e getAllUsers() {\n        List\u003cUser\u003e users \u003d userService.getAllUsers();\n        List\u003cUserDto\u003e dtos \u003d users.stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n        return ResponseEntity.ok(dtos);\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 8
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1772607341563,
+      "startOffset": 6377,
+      "endOffset": 6874,
+      "codeContent": "// In UserController.java\n@GetMapping(\"/{id}/patients\")\npublic ResponseEntity\u003cList\u003cUserDto\u003e\u003e getPatientsByCaregiverId(@PathVariable String id) {\n    User caregiver \u003d userService.findById(id);\n    \n    if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n        return ResponseEntity.badRequest().build();\n    }\n    \n    List\u003cUserDto\u003e patients \u003d caregiver.getPatients().stream()\n            .map(this::mapToDto)\n            .collect(Collectors.toList());\n    \n    return ResponseEntity.ok(patients);\n}",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 15
+    },
+    {
+      "filePath": "/UserController.java",
+      "timestamp": 1772607414012,
+      "startOffset": 6899,
+      "endOffset": 6988,
+      "codeContent": "    private User userService(String id) {\n        return userService.findById(id);\n    }\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 4
+    },
+    {
+      "filePath": "/UserController.java",
+      "timestamp": 1772607414446,
+      "startOffset": 6563,
+      "endOffset": 6583,
+      "codeContent": "IntellijIdeaRulezzz;",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1772607440254,
+      "startOffset": 9967,
+      "endOffset": 10004,
+      "codeContent": "public\u003c__TMP__\u003e __TMP__ findById() {}",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1772607440401,
+      "startOffset": 9979,
+      "endOffset": 10005,
+      "codeContent": "tn.esprit.user.entity.User",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/UserService.java",
+      "timestamp": 1772607443603,
+      "startOffset": 10014,
+      "endOffset": 10124,
+      "codeContent": "return userRepository.findById(id)\n                .orElseThrow(() -\u003e new RuntimeException(\"User not found\"));",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1772607444712,
+      "startOffset": 10014,
+      "endOffset": 10107,
+      "codeContent": "return userRepository.findById(id).orElseThrow(() -\u003e new RuntimeException(\"User not found\"));",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/UserService.java",
+      "timestamp": 1772607445157,
+      "startOffset": 10113,
+      "endOffset": 10280,
+      "codeContent": "\n    \n    public User findUserByEmail(String email) {\n        return userRepository.findByEmail(email).orElseThrow(() -\u003e new RuntimeException(\"User not found\"));\n    }",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1772607680753,
+      "startOffset": 6375,
+      "endOffset": 6424,
+      "codeContent": " \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d GET CAREGIVERS FOR PATIENT \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 1
+    },
+    {
+      "filePath": "/UserController.java",
+      "timestamp": 1772608105627,
+      "startOffset": 6376,
+      "endOffset": 6627,
+      "codeContent": "\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d GET CAREGIVERS FOR PATIENT \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n    @GetMapping(\"/{id}/patients\")\n    public ResponseEntity\u003cList\u003cUserDto\u003e\u003e getPatientsByCaregiverId(@PathVariable String id) {\n        SIntellijIdeaRulezzz \n        User caregiver \u003d userService.findById",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "/UserController.java",
+      "timestamp": 1772608107406,
+      "startOffset": 6777,
+      "endOffset": 6901,
+      "codeContent": "if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            return ResponseEntity.badRequest().build();\n        }\n\n        ",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    }
+  ],
+  "toolStats": {
+    "GitHub Copilot": {
+      "usageCount": 22,
+      "totalLines": 169
+    }
+  }
+}

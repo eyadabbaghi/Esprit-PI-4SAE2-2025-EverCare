@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Appointment } from '../../models/appointment';
 
 @Component({
@@ -20,11 +20,13 @@ export class CalendarComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.generateCalendar();
+
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['appointments'] || changes['currentDate']) {
+    if ( changes['currentDate']) {
       this.generateCalendar();
+
     }
   }
 

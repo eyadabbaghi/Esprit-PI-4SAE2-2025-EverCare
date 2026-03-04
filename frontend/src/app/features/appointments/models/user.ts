@@ -1,21 +1,24 @@
+
 export interface User {
-  userId: string;
+  userId?: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: string;
   phone?: string;
+  isVerified?: boolean;
+  createdAt?: string;
   profilePicture?: string;
-  // Patient fields
-  alzheimerStage?: AlzheimerStage;
-  requiresCaregiver?: boolean;
-  // Doctor fields
-  specialty?: string;
-  acceptsNewPatients?: boolean;
-  // Caregiver fields
-  relationship?: string;
-  accessLevel?: CaregiverAccessLevel;
+  dateOfBirth?: string;
+  emergencyContact?: string;
+  yearsExperience?: number;
+  specialization?: string;
+  medicalLicense?: string;
+  workplaceType?: string;
+  workplaceName?: string;
+  caregiverEmails?: string[];
+  patientEmails?: string[];
+  doctorEmail?: string;
 }
-
 export type UserRole = 'PATIENT' | 'DOCTOR' | 'CAREGIVER' | 'ADMIN';
 
 export type AlzheimerStage = 'LEGER' | 'MODERE' | 'AVANCE';

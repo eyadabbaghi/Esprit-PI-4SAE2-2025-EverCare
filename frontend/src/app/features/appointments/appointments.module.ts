@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { AppointmentsRoutingModule } from './appointments-routing.module';
 import { AppointmentsPageComponent } from './pages/appointments-page/appointments-page.component';
 import {FormsModule} from '@angular/forms';
@@ -20,11 +19,16 @@ import { RecentPatientsTableComponent } from './components/recent-patients-table
 import { AppointmentDetailsModalComponent } from './components/appointment-details-modal/appointment-details-modal.component';
 import { DoctorAppointmentsPageComponent } from './pages/doctor-appointments-page/doctor-appointments-page.component';
 import {DoctorCalendarComponent} from './components/doctor-calendar/doctor-calendar.component';
+import { DoctorAvailabilityComponent } from './components/doctor-availability/doctor-availability.component';
+import { WeeklyScheduleComponent } from './components/weekly-schedule/weekly-schedule.component';
+import { DoctorTabsComponent } from './components/doctor-tabs/doctor-tabs.component';
+import { ExceptionFormModalComponent } from './components/exception-form-modal/exception-form-modal.component';
+import { ConsultationTypeManagerComponent } from './components/consultation-type-manager/consultation-type-manager.component';
+import {AvailabilityManagerComponent} from './components/availability-management/availability-management.component';
+import { CaregiverAppointmentsPageComponent } from './pages/caregiver-appointments-page/caregiver-appointments-page.component';
 
-
-
-
-
+import { PatientInfoCardComponent } from './components/patient-info-card/patient-info-card.component';
+import { AppointmentsListComponent } from './components/appointments-list/appointments-list.component';
 @NgModule({
   declarations: [
     AppointmentsPageComponent,
@@ -43,14 +47,23 @@ import {DoctorCalendarComponent} from './components/doctor-calendar/doctor-calen
     RecentPatientsTableComponent,
     AppointmentDetailsModalComponent,
     DoctorAppointmentsPageComponent,
-   DoctorCalendarComponent
+   DoctorCalendarComponent,
+   DoctorAvailabilityComponent,
+   DoctorTabsComponent,
+    AvailabilityManagerComponent,
+   ExceptionFormModalComponent,
+   ConsultationTypeManagerComponent,
+   CaregiverAppointmentsPageComponent,
+   PatientInfoCardComponent,
+   AppointmentsListComponent
 
   ],
   imports: [
     CommonModule,
     AppointmentsRoutingModule,
     FormsModule,
-    AppointmentsRoutingModule
+    AppointmentsRoutingModule,
+    WeeklyScheduleComponent
   ]
 })
 export class AppointmentsModule { }

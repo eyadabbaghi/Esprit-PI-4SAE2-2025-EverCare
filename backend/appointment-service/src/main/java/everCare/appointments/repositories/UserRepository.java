@@ -25,26 +25,17 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findByRole(UserRole role);
 
-    List<User> findByRoleAndActiveTrue(UserRole role);
-
     // ========== FIND PATIENTS ==========
 
     @Query("SELECT u FROM User u WHERE u.role = 'PATIENT'")
     List<User> findAllPatients();
 
-    @Query("SELECT u FROM User u WHERE u.role = 'PATIENT' AND u.alzheimerStage = :stage")
-    List<User> findPatientsByAlzheimerStage(@Param("stage") String stage);
 
-    @Query("SELECT u FROM User u WHERE u.role = 'PATIENT' AND u.requiresCaregiver = true")
-    List<User> findPatientsNeedingCaregiver();
 
     // ========== FIND DOCTORS ==========
 
     @Query("SELECT u FROM User u WHERE u.role = 'DOCTOR'")
     List<User> findAllDoctors();
-
-    @Query("SELECT u FROM User u WHERE u.role = 'DOCTOR' AND u.specialty = :specialty")
-    List<User> findDoctorsBySpecialty(@Param("specialty") String specialty);
 
 
 
@@ -67,11 +58,6 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     List<User> findByIsVerifiedTrue();
 
-    // ========== ACTIVE/INACTIVE ==========
-
-    List<User> findByActiveTrue();
-
-    List<User> findByActiveFalse();
 
     // ========== RECENTLY CREATED ==========
 
@@ -94,24 +80,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u.role, COUNT(u) FROM User u GROUP BY u.role")
     List<Object[]> countUsersByRole();
 
-    // ========== BIRTHDAY ==========
-
-    @Query("SELECT u FROM User u WHERE FUNCTION('MONTH', u.dateOfBirth) = :month AND FUNCTION('DAY', u.dateOfBirth) = :day")
-    List<User> findUsersByBirthday(@Param("month") int month, @Param("day") int day);
-
-    // ========== EMERGENCY CONTACT ==========
-
-    List<User> findByEmergencyContactIsNotNull();
-
-    // ========== CUSTOM QUERIES FOR ALZHEIMER PATIENTS ==========
-
-    @Query("SELECT u FROM User u WHERE u.role = 'PATIENT' AND u.alzheimerStage IS NOT NULL")
-    List<User> findAllAlzheimerPatients();
-
-    @Query("SELECT u FROM User u WHERE u.role = 'PATIENT' AND u.alzheimerStage = :stage AND u.requiresCaregiver = true")
-    List<User> findAlzheimerPatientsByStageAndCaregiverRequired(@Param("stage") String stage);
-
-    // ========== EXISTS CHECKS ==========
 
     boolean existsByEmail(String email);
 

@@ -106,7 +106,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     // Protected routes that require authentication
     const protectedRoutes = [
       '/activities', '/medical-folder', '/alerts',
-      '/profile', '/messages', '/daily', '/blog','appointments',
+      '/profile', '/messages', '/daily', '/blog',
     ];
 
     if (protectedRoutes.includes(route) && !this.user) {

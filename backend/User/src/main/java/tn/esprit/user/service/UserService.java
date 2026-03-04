@@ -259,4 +259,9 @@ public class UserService {
     public List<User> searchUsersByRole(String query, UserRole role) {
         return userRepository.searchByRoleAndQuery(query, role);
     }
+
+    public User findById(String id) {
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
+    }
 }

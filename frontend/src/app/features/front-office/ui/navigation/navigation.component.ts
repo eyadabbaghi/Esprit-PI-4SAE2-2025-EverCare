@@ -29,7 +29,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     { id: 'home', label: 'Home', route: '/' },
     { id: 'activities', label: 'Activities', route: '/activities' },
     { id: 'appointments', label: 'Appointments', route: '/appointments' },
-    { id: 'medical-folder', label: 'Medical Folder', route: '/medical-folder' },
+    { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
     { id: 'alerts', label: 'Alerts', route: '/alerts' },
   ];
 

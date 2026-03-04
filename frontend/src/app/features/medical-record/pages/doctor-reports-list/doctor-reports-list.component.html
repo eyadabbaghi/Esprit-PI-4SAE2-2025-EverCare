@@ -1,0 +1,124 @@
+<section class="doctor-reports-list">
+  <div class="reports-shell">
+    <div class="reports-header">
+      <div>
+        <h2>Rapports d'évaluation des patients</h2>
+        <p>Consultez les scores, les stades et les alertes par patient.</p>
+      </div>
+      <div class="header-actions">
+        <button *ngIf="isPatientFiltered" type="button" class="btn-muted" (click)="clearPatientFilter()">
+          Retour à la liste des patients
+        </button>
+        <button type="button" class="btn-alert" (click)="toggleAlertsOnly()" [disabled]="isPatientFiltered">
+          {{ alertsOnly ? 'Afficher tous les rapports' : 'Afficher uniquement les alertes' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="actionMessage" class="status-message success">{{ actionMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Chargement des rapports...</div>
+    <div *ngIf="isPatientFiltered && !isLoading" class="status-message warning">
+      Filtre actif pour le patient : <strong>{{ patientFilterId }}</strong>
+    </div>
+
+    <div class="panel filter-panel" *ngIf="!isPatientFiltered">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="stage">Stade</label>
+          <select id="stage" [formControl]="stageControl" [disabled]="alertsOnly">
+            <option value="">Tous</option>
+            <option value="EARLY">EARLY</option>
+            <option value="MIDDLE">MIDDLE</option>
+            <option value="LATE">LATE</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="query">Nom patient</label>
+          <input id="query" [formControl]="queryControl" [disabled]="alertsOnly" placeholder="Saisir le nom du patient" />
+        </div>
+
+        <div class="field">
+          <label for="fromDate">Date début</label>
+          <input id="fromDate" type="date" [formControl]="fromDateControl" [disabled]="alertsOnly" />
+        </div>
+
+        <div class="field">
+          <label for="toDate">Date fin</label>
+          <input id="toDate" type="date" [formControl]="toDateControl" [disabled]="alertsOnly" />
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-solid" (click)="applyFilters()" [disabled]="alertsOnly">Filtrer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel table-panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Score</th>
+            <th>Stade</th>
+            <th>Alerte</th>
+            <th class="actions-col">Actes</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let report of reports">
+            <td>{{ report.patientName || report.patientId }}</td>
+            <td>{{ report.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</td>
+            <td>{{ report.score }}</td>
+            <td>{{ report.computedStage }}</td>
+            <td>
+              <span class="badge" [class.alert]="report.needsAttention" [class.normal]="!report.needsAttention">
+                {{ report.needsAttention ? 'Oui' : 'Non' }}
+              </span>
+              <small class="alert-status" *ngIf="getAlertStatus(report) === 'ACK'">Accusée</small>
+              <small class="alert-status" *ngIf="getAlertStatus(report) === 'OPEN'">Ouverte</small>
+            </td>
+            <td class="actions-col">
+              <div class="row-actions">
+                <button type="button" class="btn-link" (click)="openReport(report.id)">Voir le rapport</button>
+                <button type="button" class="btn-link dark" (click)="openPatientDossier(report.patientId)">Ouvrir le dossier</button>
+                <button
+                  type="button"
+                  class="btn-link warn"
+                  *ngIf="canAcknowledgeAlert(report)"
+                  [disabled]="acknowledgingReportId === report.id || resolvingReportId === report.id"
+                  (click)="acknowledgeAlert(report)">
+                  {{ acknowledgingReportId === report.id ? 'Accusé...' : 'Accuser' }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-link success"
+                  *ngIf="canResolveAlert(report)"
+                  [disabled]="resolvingReportId === report.id || acknowledgingReportId === report.id"
+                  (click)="resolveAlert(report)">
+                  {{ resolvingReportId === report.id ? 'Résolution...' : 'Résoudre' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!isLoading && reports.length === 0">
+            <td colspan="6" class="empty-row">Aucun rapport trouvé.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pager">
+      <span>Total : {{ totalElements }}</span>
+      <div class="pager-controls" *ngIf="!isPatientFiltered">
+        <button type="button" class="btn-muted small" [disabled]="page === 0" (click)="previousPage()">Précédent</button>
+        <span>Page {{ page + 1 }} / {{ totalPages || 1 }}</span>
+        <button type="button" class="btn-muted small" [disabled]="page + 1 >= totalPages" (click)="nextPage()">Suivant</button>
+      </div>
+    </div>
+  </div>
+</section>

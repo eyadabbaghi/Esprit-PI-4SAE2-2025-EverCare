@@ -1,1 +1,141 @@
-<p>medical-record-list works!</p>
+<section class="record-list">
+  <div class="list-shell">
+    <div class="list-header">
+      <div>
+        <h2>{{ isPatientRole ? 'Mon dossier médical' : 'Dossiers médicaux' }}</h2>
+        <p>
+          {{ isPatientRole
+          ? 'Accédez uniquement à votre dossier médical.'
+          : 'Gérez les dossiers patients, leur statut et l\'accès aux détails.' }}
+        </p>
+      </div>
+      <a *ngIf="permissions.canCreate" routerLink="/medical-record/new" class="btn-solid">
+        Nouveau dossier
+      </a>
+    </div>
+
+    <div class="panel filter-panel" *ngIf="!isPatientRole">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="patientSearch">Recherche par identifiant patient</label>
+          <input
+            id="patientSearch"
+            type="text"
+            [formControl]="searchControl"
+            placeholder="Saisir l'identifiant du patient" />
+        </div>
+
+        <div class="field">
+          <label for="activeFilter">Filtre d'état</label>
+          <select
+            id="activeFilter"
+            [value]="activeFilter"
+            (change)="changeFilter($any($event.target).value)">
+            <option value="active">Actif</option>
+            <option value="archived">Archivé</option>
+            <option value="all">Tous</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-outline" (click)="searchByPatientId()">Rechercher</button>
+          <button type="button" class="btn-muted" (click)="resetSearch()">Réinitialiser</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Chargement des dossiers...</div>
+
+    <div class="records-grid" *ngIf="!isLoading && records.length > 0">
+      <article class="panel record-card" *ngFor="let record of records">
+        <div class="record-card-head">
+          <div>
+            <p class="record-label">Patient</p>
+            <h3>{{ isPatientRole ? (currentUser?.name || record.patientId) : record.patientId }}</h3>
+          </div>
+          <span class="badge" [class.active]="record.active" [class.archived]="!record.active">
+            {{ record.active ? 'Actif' : 'Archivé' }}
+          </span>
+        </div>
+
+        <div class="record-hero">
+          <div class="record-chip stage-chip">
+            <span>Stade</span>
+            <strong>{{ record.alzheimerStage || '-' }}</strong>
+          </div>
+          <div class="record-chip">
+            <span>Groupe sanguin</span>
+            <strong>{{ record.bloodGroup || '-' }}</strong>
+          </div>
+          <div class="record-chip muted-chip">
+            <span>Mis à jour</span>
+            <strong>{{ record.updatedAt | date: 'dd/MM/yyyy, HH:mm' }}</strong>
+          </div>
+        </div>
+
+        <div class="record-meta">
+          <div class="meta-item">
+            <span>Contact urgence</span>
+            <strong>{{ record.emergencyContactName || '-' }}</strong>
+          </div>
+          <div class="meta-item">
+            <span>Téléphone</span>
+            <strong>{{ record.emergencyContactPhone || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="record-actions">
+          <a *ngIf="permissions.canViewDetails" [routerLink]="['/medical-record', record.id]" class="btn-link">Détails</a>
+          <a
+            *ngIf="currentRole === 'DOCTOR' || currentRole === 'ADMIN'"
+            [routerLink]="['/doctor/reports']"
+            [queryParams]="{ patientId: record.patientId }"
+            class="btn-link">
+            Résultats
+          </a>
+          <a *ngIf="permissions.canUpdate" [routerLink]="['/medical-record', record.id, 'edit']" class="btn-link dark">Modifier</a>
+          <button
+            *ngIf="permissions.canArchive"
+            type="button"
+            class="btn-link danger"
+            [disabled]="!record.active"
+            (click)="archive(record)">
+            Archiver
+          </button>
+          <button
+            *ngIf="currentRole === 'ADMIN'"
+            type="button"
+            class="btn-link success"
+            [disabled]="record.active"
+            (click)="restore(record)">
+            Réactiver
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <div class="panel empty-panel" *ngIf="!isLoading && records.length === 0">
+      <p class="empty-row">
+        {{ isPatientRole ? 'Aucun dossier associé à votre compte.' : 'Aucun dossier trouvé.' }}
+      </p>
+    </div>
+
+    <div class="pager" *ngIf="!isSearchMode && !isPatientRole">
+      <span>Total : {{ totalElements }}</span>
+      <div class="pager-controls">
+        <button type="button" class="btn-muted small" (click)="previousPage()" [disabled]="page === 0">Précédent</button>
+        <span>Page {{ page + 1 }} / {{ totalPages || 1 }}</span>
+        <button type="button" class="btn-muted small" (click)="nextPage()" [disabled]="page + 1 >= totalPages">Suivant</button>
+      </div>
+    </div>
+
+    <p class="search-hint" *ngIf="isSearchMode && !isPatientRole">
+      Le mode recherche est actif. Réinitialisez pour revenir à la pagination.
+    </p>
+
+    <div *ngIf="!permissions.canRead" class="status-message warning">
+      Vous n'êtes pas autorisé à accéder aux dossiers médicaux.
+    </div>
+  </div>
+</section>

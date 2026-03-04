@@ -1,0 +1,92 @@
+<section class="assessment-report-page">
+  <div class="report-shell">
+    <div class="panel report-card">
+      <div class="report-head">
+        <div>
+          <h2>Rapport d'évaluation</h2>
+          <p>Résultat du dépistage préliminaire de la maladie d'Alzheimer.</p>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+      <div *ngIf="infoMessage" class="status-message info">{{ infoMessage }}</div>
+      <div *ngIf="isLoading" class="status-message info">Chargement du rapport...</div>
+
+      <ng-container *ngIf="report as currentReport">
+        <div class="top-grid">
+          <div class="info-chip">
+            <span>Patient</span>
+            <strong>{{ currentReport.patientName || currentReport.patientId }}</strong>
+          </div>
+          <div class="info-chip">
+            <span>Aidant</span>
+            <strong>{{ currentReport.caregiverName || '-' }}</strong>
+          </div>
+          <div class="info-chip score">
+            <span>Score</span>
+            <strong>{{ currentReport.score }}</strong>
+          </div>
+          <div class="info-chip">
+            <span>Stade</span>
+            <strong>{{ currentReport.computedStage }}</strong>
+          </div>
+          <div class="info-chip">
+            <span>Alerte</span>
+            <strong>
+              <span class="alert-badge" [class.high]="currentReport.needsAttention" [class.normal]="!currentReport.needsAttention">
+                {{ currentReport.needsAttention ? 'Needs Attention' : 'Normal' }}
+              </span>
+            </strong>
+          </div>
+        </div>
+
+        <div class="recommendation-box">
+          <h3>Recommandation</h3>
+          <p>{{ currentReport.recommendation }}</p>
+        </div>
+
+        <div class="disclaimer-box">
+          {{ disclaimer }}
+        </div>
+
+        <div class="actions-row">
+          <button type="button" class="btn-link" (click)="downloadPdf()">Télécharger PDF</button>
+          <button type="button" class="btn-link dark" (click)="openDossier()">Ouvrir le dossier patient</button>
+          <a routerLink="/assessment" class="btn-muted">Nouvelle évaluation</a>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="history-head">
+          <h3>Mes rapports précédents</h3>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+            <tr>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Stade</th>
+              <th class="right">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let item of previousReports">
+              <td>{{ item.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</td>
+              <td>{{ item.score }}</td>
+              <td>{{ item.computedStage }}</td>
+              <td class="right">
+                <button type="button" class="btn-link small" (click)="openReport(item.id)">Voir</button>
+              </td>
+            </tr>
+            <tr *ngIf="previousReports.length === 0">
+              <td colspan="4" class="empty">Aucun rapport disponible.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</section>

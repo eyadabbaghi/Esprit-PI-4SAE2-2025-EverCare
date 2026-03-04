@@ -14,7 +14,6 @@ import tn.esprit.user.security.JwtUtil;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;

@@ -1,1 +1,5 @@
-<p>medical-record-card works!</p>
+<article class="record-card">
+  <h3>Patient: {{ limitedRead ? 'Hidden' : record.patientId }}</h3>
+  <p>Blood Group: {{ record.bloodGroup }}</p>
+  <p *ngIf="!limitedRead">Alzheimer Stage: {{ record.alzheimerStage }}</p>
+</article>

@@ -25,14 +25,12 @@
 
     <!-- MUST match your folder names exactly -->
     <modules>
-        <module>appointment-service</module>
+
         <module>Dailyme-service</module>
         <module>Eureka-service</module>
         <module>ApiGateway</module>
+     <module>medical-record-service</module>
 
-
-        <module>Activities</module>
-        <module>Alerts</module>
         <module>User</module>
         <!-- Comment these out until you actually create the folders -->
         <!-- <module>gateway-service</module> -->
@@ -70,15 +68,6 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.32</version> <!-- Latest stable -->
-            <scope>provided</scope>
-
-        </dependency>
-
 
     </dependencies>
 

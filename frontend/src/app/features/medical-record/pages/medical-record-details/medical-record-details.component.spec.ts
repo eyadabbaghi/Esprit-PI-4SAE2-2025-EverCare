@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
+import { AuthService } from '../../../front-office/pages/login/auth.service';
 
 import { MedicalRecordDetailsComponent } from './medical-record-details.component';
 
@@ -8,7 +11,14 @@ describe('MedicalRecordDetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MedicalRecordDetailsComponent]
+      declarations: [MedicalRecordDetailsComponent],
+      imports: [RouterTestingModule],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: { currentUser$: of({ name: 'Doc', email: 'doctor@evercare.tn', role: 'DOCTOR' }) },
+        },
+      ],
     })
     .compileComponents();
 

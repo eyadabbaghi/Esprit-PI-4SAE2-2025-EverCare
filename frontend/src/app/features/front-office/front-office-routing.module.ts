@@ -8,7 +8,6 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import {AppointmentsPageComponent} from '../appointments/pages/appointments-page/appointments-page.component';
-import {MedicalFolderPageComponent} from '../medical-folder/pages/medical-folder-page/medical-folder-page.component';
 
 const routes: Routes = [
   {
@@ -22,9 +21,18 @@ const routes: Routes = [
       { path: 'alerts', component: AlertsComponent },
       { path: 'profile', component: ProfileComponent },
       {path: 'appointments', component:AppointmentsPageComponent },
+      { path: 'medical-folder', redirectTo: 'medical-record', pathMatch: 'full' },
       {
-        path: 'medical-folder',
-        loadChildren: () => import('../medical-folder/medical-folder.module').then(m => m.MedicalFolderModule)
+        path: 'medical-record',
+        loadChildren: () => import('../medical-record/medical-record.module').then(m => m.MedicalRecordModule)
+      },
+      {
+        path: 'assessment',
+        loadChildren: () => import('../medical-record/assessment.module').then(m => m.AssessmentModule)
+      },
+      {
+        path: 'doctor',
+        loadChildren: () => import('../medical-record/doctor-reports.module').then(m => m.DoctorReportsModule)
       }
 
     ],

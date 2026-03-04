@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { MedicalRecord } from '../../models/medical-record.model';
 
 @Component({
   selector: 'app-medical-record-card',
@@ -6,5 +7,6 @@ import { Component } from '@angular/core';
   styleUrl: './medical-record-card.component.css'
 })
 export class MedicalRecordCardComponent {
-
+  @Input() record!: MedicalRecord;
+  @Input() limitedRead = false;
 }

@@ -57,4 +57,15 @@ public class UserActivityController {
     public ResponseEntity<List<ActivityDTO>> getRecommendations(@PathVariable String patientId) {
         return ResponseEntity.ok(activityService.getRecommendationsForPatient(patientId));
     }
+
+    /**
+     * Public endpoint to get all activities (no user context).
+     * Accessible without authentication.
+     *
+     * @return list of all activities
+     */
+    @GetMapping("/public")
+    public ResponseEntity<List<ActivityDTO>> getPublicActivities() {
+        return ResponseEntity.ok(activityService.getAllActivities());
+    }
 }

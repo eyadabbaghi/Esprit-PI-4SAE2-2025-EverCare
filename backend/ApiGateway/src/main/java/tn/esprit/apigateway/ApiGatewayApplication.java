@@ -37,6 +37,10 @@ public class ApiGatewayApplication {
                 .route("appointment-service", r -> r
                         .path("/api/appointments/**")
                         .uri("lb://APPOINTMENT-SERVICE"))
+                .route("notification-service", r -> r
+                        .path("/EverCare/api/notifications/**")
+                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://notification-service"))
                 .build();
     }
 }

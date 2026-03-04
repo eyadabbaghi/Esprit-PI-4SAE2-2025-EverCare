@@ -6,6 +6,31 @@ import { ActivityService, Activity, ActivityWithUserData } from '../../../../cor
 import { AuthService, User } from '../login/auth.service';
 import { UserService, Patient } from '../../../../core/services/user.service';
 
+export interface RoutineActivity {
+  id: string;
+  name: string;
+  type: string;
+  duration: number;
+  imageUrl: string;
+  completed: boolean;
+  pinnedAt: string;
+}
+
+export interface RoutineGoal {
+  type: string;
+  target: number;
+  label: string;
+  emoji: string;
+}
+
+const DEFAULT_GOALS: RoutineGoal[] = [
+  { type: 'Cognitive',   target: 3, label: 'Train your mind',   emoji: '🧠' },
+  { type: 'Physical',    target: 3, label: 'Move your body',    emoji: '💪' },
+  { type: 'Relaxation',  target: 2, label: 'Find your calm',    emoji: '🧘' },
+  { type: 'Social',      target: 2, label: 'Connect with others', emoji: '🤝' },
+  { type: 'Creative',    target: 2, label: 'Express yourself',  emoji: '🎨' },
+];
+
 @Component({
   selector: 'app-activities',
   templateUrl: './activities.component.html',
@@ -18,11 +43,11 @@ export class ActivitiesComponent implements OnInit {
   userId: string | null = null;
   patients: Patient[] = [];
   recommending = new Set<string>();
-  doctorActivities: Activity[] = []; // all activities for doctors
+  doctorActivities: Activity[] = [];
 
   // Doctor dropdown state
-  patientDropdownOpen: string | null = null; // activity ID for which dropdown is open
-  selectedPatient: { [key: string]: Patient } = {}; // selected patient per activity
+  patientDropdownOpen: string | null = null;
+  selectedPatient: { [key: string]: Patient } = {};
 
   // Shared activity data
   allActivities: ActivityWithUserData[] = [];
@@ -43,7 +68,6 @@ export class ActivitiesComponent implements OnInit {
   pageSize: number = 6;
   totalPages: number = 1;
 
-  // Internal filtered list
   private filteredActivities: ActivityWithUserData[] = [];
 
   // Translation and summarization
@@ -53,7 +77,6 @@ export class ActivitiesComponent implements OnInit {
   summaryLoading: { [key: string]: boolean } = {};
   translating: { [key: string]: boolean } = {};
 
-  // Language dropdown
   languages = [
     { code: 'fr', name: 'French', flag: '🇫🇷' },
     { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
@@ -63,6 +86,20 @@ export class ActivitiesComponent implements OnInit {
   ];
   selectedLang: { [key: string]: string } = {};
   currentTranslationLang: { [key: string]: string } = {};
+
+  // ─── MY ROUTINE ───────────────────────────────────────────────────────────
+  showRoutineModal = false;
+  routineActivities: RoutineActivity[] = [];
+  routineGoals: RoutineGoal[] = DEFAULT_GOALS;
+
+  // Completion celebration
+  showCompletionPopup = false;
+  completedActivityName = '';
+  completionTimeout: any;
+
+  private get routineStorageKey(): string {
+    return `routine_${this.userId}`;
+  }
 
   constructor(
     private readonly router: Router,
@@ -84,11 +121,163 @@ export class ActivitiesComponent implements OnInit {
           this.loadDoctorActivities();
         } else {
           this.loadActivities();
+          this.loadRoutine();
         }
       }
     });
   }
 
+  // ─── ROUTINE PERSISTENCE ──────────────────────────────────────────────────
+  private loadRoutine(): void {
+    try {
+      const raw = localStorage.getItem(this.routineStorageKey);
+      this.routineActivities = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.routineActivities = [];
+    }
+  }
+
+  private saveRoutine(): void {
+    try {
+      localStorage.setItem(this.routineStorageKey, JSON.stringify(this.routineActivities));
+    } catch {
+      console.error('Failed to save routine');
+    }
+  }
+
+  // ─── ROUTINE ACTIONS ──────────────────────────────────────────────────────
+  openRoutineModal(): void {
+    this.showRoutineModal = true;
+  }
+
+  closeRoutineModal(): void {
+    this.showRoutineModal = false;
+  }
+
+  isInRoutine(activityId: string): boolean {
+    return this.routineActivities.some(r => r.id === activityId);
+  }
+
+  pinToRoutine(activity: ActivityWithUserData, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.isInRoutine(activity.id)) return;
+
+    const routineItem: RoutineActivity = {
+      id: activity.id,
+      name: activity.name,
+      type: activity.type,
+      duration: activity.duration,
+      imageUrl: activity.imageUrl,
+      completed: false,
+      pinnedAt: new Date().toISOString()
+    };
+    this.routineActivities = [routineItem, ...this.routineActivities];
+    this.saveRoutine();
+    this.toastr.success(`"${activity.name}" added to your routine! 📌`);
+  }
+
+  unpinFromRoutine(activityId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.routineActivities = this.routineActivities.filter(r => r.id !== activityId);
+    this.saveRoutine();
+  }
+
+  completeRoutineActivity(routine: RoutineActivity, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (routine.completed) return;
+
+    routine.completed = true;
+    this.saveRoutine();
+
+    // Show celebration popup
+    this.completedActivityName = routine.name;
+    this.showCompletionPopup = true;
+    if (this.completionTimeout) clearTimeout(this.completionTimeout);
+    this.completionTimeout = setTimeout(() => {
+      this.showCompletionPopup = false;
+    }, 3500);
+  }
+
+  resetRoutineProgress(): void {
+    this.routineActivities = this.routineActivities.map(r => ({ ...r, completed: false }));
+    this.saveRoutine();
+  }
+
+  // ─── ROUTINE STATS ────────────────────────────────────────────────────────
+  getRoutineCompletedCount(): number {
+    return this.routineActivities.filter(r => r.completed).length;
+  }
+
+  getRoutineTotalCount(): number {
+    return this.routineActivities.length;
+  }
+
+  getOverallProgress(): number {
+    const total = this.routineActivities.length;
+    if (total === 0) return 0;
+    return Math.round((this.getRoutineCompletedCount() / total) * 100);
+  }
+
+  getTypeProgress(type: string): number {
+    const typeItems = this.routineActivities.filter(r => r.type === type);
+    if (typeItems.length === 0) return 0;
+    const completed = typeItems.filter(r => r.completed).length;
+    return Math.round((completed / typeItems.length) * 100);
+  }
+
+  getTypeCompleted(type: string): number {
+    return this.routineActivities.filter(r => r.type === type && r.completed).length;
+  }
+
+  getTypeTotal(type: string): number {
+    return this.routineActivities.filter(r => r.type === type).length;
+  }
+
+  getGoalProgress(goal: RoutineGoal): number {
+    const completed = this.getTypeCompleted(goal.type);
+    return Math.min(100, Math.round((completed / goal.target) * 100));
+  }
+
+  isGoalMet(goal: RoutineGoal): boolean {
+    return this.getTypeCompleted(goal.type) >= goal.target;
+  }
+
+  getActiveGoals(): RoutineGoal[] {
+    // Only show goals for types that exist in routine OR all goals
+    return this.routineGoals;
+  }
+
+  getRoutineByType(type: string): RoutineActivity[] {
+    return this.routineActivities.filter(r => r.type === type);
+  }
+
+  getUniqueRoutineTypes(): string[] {
+    return [...new Set(this.routineActivities.map(r => r.type))];
+  }
+
+  getTypeColor(type: string): string {
+    const colors: { [key: string]: string } = {
+      'Cognitive':  '#7C3AED',
+      'Physical':   '#059669',
+      'Relaxation': '#0284C7',
+      'Social':     '#DB2777',
+      'Creative':   '#D97706',
+    };
+    return colors[type] || '#6B7280';
+  }
+
+  getTypeBgClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'Cognitive':  'bg-purple-100 text-purple-700',
+      'Physical':   'bg-green-100 text-green-700',
+      'Relaxation': 'bg-blue-100 text-blue-700',
+      'Social':     'bg-pink-100 text-pink-700',
+      'Creative':   'bg-orange-100 text-orange-700',
+    };
+    return classes[type] || 'bg-gray-100 text-gray-700';
+  }
+
+  // ─── ORIGINAL METHODS ─────────────────────────────────────────────────────
   loadDoctorPatients(): void {
     if (!this.user?.patientEmails?.length) {
       this.patients = [];
@@ -115,7 +304,6 @@ export class ActivitiesComponent implements OnInit {
     });
   }
 
-  // Doctor dropdown methods
   togglePatientDropdown(activityId: string): void {
     this.patientDropdownOpen = this.patientDropdownOpen === activityId ? null : activityId;
   }
@@ -143,7 +331,8 @@ export class ActivitiesComponent implements OnInit {
   }
 
   applyFilters(): void {
-    let filtered = this.allActivities;
+    let filtered = this.allActivities.filter(a => !a.recommendedByDoctor);
+
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(a =>
@@ -157,6 +346,7 @@ export class ActivitiesComponent implements OnInit {
     if (this.selectedDifficulty !== 'all') {
       filtered = filtered.filter(a => a.difficulty === this.selectedDifficulty);
     }
+
     this.filteredActivities = filtered;
     this.currentPage = 1;
     this.totalPages = Math.max(1, Math.ceil(this.filteredActivities.length / this.pageSize));
@@ -165,9 +355,7 @@ export class ActivitiesComponent implements OnInit {
 
   private updatePage(): void {
     const start = (this.currentPage - 1) * this.pageSize;
-    const pageItems = this.filteredActivities.slice(start, start + this.pageSize);
-    this.todayActivities = pageItems.filter(a => !a.recommendedByDoctor).slice(0, 4);
-    this.recommendedActivities = pageItems.filter(a => a.recommendedByDoctor);
+    this.todayActivities = this.filteredActivities.slice(start, start + this.pageSize);
   }
 
   resetFilters(): void {
@@ -207,7 +395,6 @@ export class ActivitiesComponent implements OnInit {
     this.router.navigate(['/activities', activity.id]);
   }
 
-  // Pagination
   get pages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
@@ -239,7 +426,6 @@ export class ActivitiesComponent implements OnInit {
     return `${this.activityService.apiUrl}${relativePath}`;
   }
 
-  // Translation methods
   translateActivity(activity: ActivityWithUserData, lang: string): void {
     if (this.translating[activity.id]) return;
 
@@ -280,7 +466,6 @@ export class ActivitiesComponent implements OnInit {
     return lang ? lang.name : code;
   }
 
-  // Summarization method
   summarizeActivity(activity: ActivityWithUserData): void {
     if (this.summaryLoading[activity.id]) return;
     this.summaryLoading[activity.id] = true;

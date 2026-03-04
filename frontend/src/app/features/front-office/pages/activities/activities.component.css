@@ -28,3 +28,240 @@
 .border-2:hover:not(.bg-green-50) {
   transform: translateY(-2px);
 }
+/* ─── SEARCH INPUT ─────────────────────────────────────────────── */
+.search-input {
+  background: white;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.4);
+}
+
+/* ─── ROUTINE BUTTON ───────────────────────────────────────────── */
+.routine-btn {
+  position: relative;
+  overflow: hidden;
+}
+.routine-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.routine-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+}
+.routine-btn:active {
+  transform: translateY(0);
+}
+
+/* ─── ROUTINE MODAL OVERLAY ────────────────────────────────────── */
+.routine-overlay {
+  animation: fadeInOverlay 0.25s ease forwards;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── ROUTINE MODAL PANEL ──────────────────────────────────────── */
+.routine-panel {
+  animation: slideUpPanel 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: bottom center;
+}
+@keyframes slideUpPanel {
+  from { opacity: 0; transform: translateY(40px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+/* ─── PROGRESS BAR ─────────────────────────────────────────────── */
+.progress-bar-track {
+  background: #EDE9FE;
+  border-radius: 999px;
+  overflow: hidden;
+  height: 10px;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  to { left: 200%; }
+}
+
+/* ─── GOAL CARD ────────────────────────────────────────────────── */
+.goal-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.goal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.goal-card.goal-met {
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  border-color: #6EE7B7 !important;
+}
+
+/* ─── ROUTINE ACTIVITY CARD ────────────────────────────────────── */
+.routine-activity-card {
+  transition: all 0.25s ease;
+}
+.routine-activity-card:hover {
+  transform: translateX(3px);
+}
+.routine-activity-card.is-done {
+  opacity: 0.7;
+}
+
+/* ─── COMPLETION POPUP ─────────────────────────────────────────── */
+.completion-popup {
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-5deg); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(2deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg);    }
+}
+.completion-popup.fade-out {
+  animation: popOut 0.4s ease forwards;
+}
+@keyframes popOut {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
+  to   { opacity: 0; transform: translate(-50%, -50%) scale(0.85) translateY(-20px); }
+}
+
+/* Confetti dots */
+.confetti-ring {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  animation: ringPulse 0.6s ease forwards;
+}
+@keyframes ringPulse {
+  0%   { box-shadow: 0 0 0 0px rgba(124,58,237,0.4); }
+  100% { box-shadow: 0 0 0 30px rgba(124,58,237,0); }
+}
+
+/* Stars burst */
+.stars-burst span {
+  position: absolute;
+  font-size: 1.2rem;
+  animation: starFly 0.8s ease forwards;
+}
+@keyframes starFly {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.3); }
+}
+
+/* Pin button pulse */
+.pin-btn-pulse {
+  animation: pulsePinBtn 0.4s ease;
+}
+@keyframes pulsePinBtn {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ─── CIRCULAR PROGRESS ────────────────────────────────────────── */
+.circular-progress {
+  transform: rotate(-90deg);
+}
+.circle-bg {
+  fill: none;
+  stroke: #EDE9FE;
+  stroke-width: 4;
+}
+.circle-fill {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── TYPE SECTION HEADER ──────────────────────────────────────── */
+.type-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─── OVERALL PROGRESS RING ────────────────────────────────────── */
+.overall-ring {
+  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.3));
+}
+
+/* ─── EMPTY ROUTINE STATE ──────────────────────────────────────── */
+.empty-routine {
+  animation: floatEmpty 3s ease-in-out infinite;
+}
+@keyframes floatEmpty {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ─── SCROLL AREA ──────────────────────────────────────────────── */
+.routine-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #C4B5FD #F3E8FF;
+}
+.routine-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.routine-scroll::-webkit-scrollbar-track {
+  background: #F3E8FF;
+  border-radius: 999px;
+}
+.routine-scroll::-webkit-scrollbar-thumb {
+  background: #C4B5FD;
+  border-radius: 999px;
+}
+
+/* ─── PIN BUTTON IN CARD ───────────────────────────────────────── */
+.pin-activity-btn {
+  transition: all 0.2s ease;
+}
+.pin-activity-btn:hover {
+  transform: scale(1.08);
+}
+.pin-activity-btn.pinned {
+  background: #7C3AED !important;
+  color: white !important;
+}
+
+/* ─── DETAILS PAGE ADDITIONS ───────────────────────────────────── */
+.pin-routine-btn {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pin-routine-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pin-toast {
+  animation: slideInToast 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes slideInToast {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

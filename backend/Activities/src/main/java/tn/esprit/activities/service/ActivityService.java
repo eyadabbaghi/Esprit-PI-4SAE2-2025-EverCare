@@ -1,8 +1,10 @@
 package tn.esprit.activities.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.activities.client.NotificationClient;
 import tn.esprit.activities.client.UserServiceClient;
 import tn.esprit.activities.dto.*;
 import tn.esprit.activities.entity.Activity;
@@ -24,13 +26,15 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final ActivityDetailsRepository detailsRepository;
     private final UserActivityRepository userActivityRepository;
-    private final ActivityRecommendationRepository  recommendationRepository;
+    private final ActivityRecommendationRepository recommendationRepository;
     private final UserServiceClient userServiceClient;
+    private final NotificationClient notificationClient;
 
     // ---------- Admin: Activity CRUD ----------
 
@@ -63,6 +67,9 @@ public class ActivityService {
                 .monitoredBy(request.getMonitoredBy())
                 .build();
         activity = activityRepository.save(activity);
+
+        sendNotification(activity.getId(), "CREATED", "Activity '" + activity.getName() + "' was created.");
+
         return mapToDTO(activity);
     }
 
@@ -83,6 +90,9 @@ public class ActivityService {
         if (request.getMonitoredBy() != null) activity.setMonitoredBy(request.getMonitoredBy());
 
         activity = activityRepository.save(activity);
+
+        sendNotification(activity.getId(), "UPDATED", "Activity '" + activity.getName() + "' was updated.");
+
         return mapToDTO(activity);
     }
 
@@ -91,6 +101,8 @@ public class ActivityService {
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Activity not found"));
         activityRepository.delete(activity);
+
+        sendNotification(activity.getId(), "DELETED", "Activity '" + activity.getName() + "' was deleted.");
     }
 
     // ---------- Admin: ActivityDetails CRUD ----------
@@ -170,7 +182,7 @@ public class ActivityService {
                         .findFirst().orElse(null);
                 if (rec != null) {
                     UserDto doctor = doctorCache.computeIfAbsent(rec.getDoctorId(),
-                            id -> userServiceClient.getUserById(id));
+                            did -> userServiceClient.getUserById(did));
                     dto.setDoctorName(doctor.getName());
                     dto.setDoctorPicture(doctor.getProfilePicture());
                 }
@@ -178,7 +190,6 @@ public class ActivityService {
             return dto;
         }).collect(Collectors.toList());
     }
-
 
     public ActivityWithUserDataDTO getActivityForUser(String userId, String activityId) {
         Activity activity = activityRepository.findById(activityId)
@@ -252,6 +263,21 @@ public class ActivityService {
         return mapToDTO(activity);
     }
 
+    // ---------- Helper: Send notification (with error handling) ----------
+
+    private void sendNotification(String activityId, String action, String details) {
+        try {
+            NotificationRequest request = new NotificationRequest();
+            request.setActivityId(activityId);
+            request.setAction(action);
+            request.setDetails(details);
+            notificationClient.sendNotification(request);
+            log.info("Notification sent: {} - {}", action, activityId);
+        } catch (Exception e) {
+            log.error("Failed to send notification for activity {}: {}", activityId, e.getMessage());
+        }
+    }
+
     // ---------- Mapping ----------
 
     private ActivityDTO mapToDTO(Activity activity) {
@@ -322,7 +348,6 @@ public class ActivityService {
         dto.setStartTime(activity.getStartTime());
         dto.setMonitoredBy(activity.getMonitoredBy());
 
-        // For simplicity, pick the first set of details (or adjust logic)
         if (!activity.getDetails().isEmpty()) {
             ActivityDetails details = activity.getDetails().get(0);
             dto.setInstructions(details.getInstructions());
@@ -345,7 +370,6 @@ public class ActivityService {
         }
         return dto;
     }
-
 
     public Activity getActivityEntityById(String id) {
         return activityRepository.findById(id)

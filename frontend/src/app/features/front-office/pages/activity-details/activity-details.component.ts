@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ActivityService, ActivityWithUserData } from '../../../../core/services/activity.service';
 import { AuthService } from '../login/auth.service';
+import { RoutineActivity } from '../activities/activities.component';
 
 @Component({
   selector: 'app-activity-details',
@@ -28,10 +29,19 @@ export class ActivityDetailsComponent implements OnInit {
   showOriginal: boolean = true;
   translating: boolean = false;
   currentTranslationLang: string = '';
-  
+
   summary: string = '';
   summaryLoading: boolean = false;
-  showSummaryModal: boolean = false;  // New property
+  showSummaryModal: boolean = false;
+
+  // ─── ROUTINE ──────────────────────────────────────────────────────────────
+  isInRoutine: boolean = false;
+  pinAnimating: boolean = false;
+  showPinToast: boolean = false;
+
+  private get routineStorageKey(): string {
+    return `routine_${this.userId}`;
+  }
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -52,6 +62,7 @@ export class ActivityDetailsComponent implements OnInit {
       if (user && user.userId) {
         this.userId = user.userId;
         this.loadActivity(activityId);
+        this.checkRoutineStatus(activityId);
       }
     });
   }
@@ -62,6 +73,7 @@ export class ActivityDetailsComponent implements OnInit {
       next: (data) => {
         this.activity = data;
         this.userRating = data.userRating || 0;
+        this.checkRoutineStatus(data.id);
       },
       error: (err) => {
         console.error('Failed to load activity', err);
@@ -71,6 +83,63 @@ export class ActivityDetailsComponent implements OnInit {
     });
   }
 
+  // ─── ROUTINE METHODS ──────────────────────────────────────────────────────
+  private getRoutineActivities(): RoutineActivity[] {
+    try {
+      const raw = localStorage.getItem(this.routineStorageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveRoutineActivities(items: RoutineActivity[]): void {
+    try {
+      localStorage.setItem(this.routineStorageKey, JSON.stringify(items));
+    } catch {
+      console.error('Failed to save routine');
+    }
+  }
+
+  checkRoutineStatus(activityId: string): void {
+    const items = this.getRoutineActivities();
+    this.isInRoutine = items.some(r => r.id === activityId);
+  }
+
+  toggleRoutine(): void {
+    if (!this.activity || !this.userId) return;
+
+    this.pinAnimating = true;
+    setTimeout(() => this.pinAnimating = false, 400);
+
+    const items = this.getRoutineActivities();
+
+    if (this.isInRoutine) {
+      const updated = items.filter(r => r.id !== this.activity!.id);
+      this.saveRoutineActivities(updated);
+      this.isInRoutine = false;
+      this.toastr.info(`"${this.activity.name}" removed from your routine`);
+    } else {
+      const newItem: RoutineActivity = {
+        id: this.activity.id,
+        name: this.activity.name,
+        type: this.activity.type,
+        duration: this.activity.duration,
+        imageUrl: this.activity.imageUrl,
+        completed: false,
+        pinnedAt: new Date().toISOString()
+      };
+      items.unshift(newItem);
+      this.saveRoutineActivities(items);
+      this.isInRoutine = true;
+
+      // Show inline toast
+      this.showPinToast = true;
+      setTimeout(() => this.showPinToast = false, 2500);
+    }
+  }
+
+  // ─── ORIGINAL METHODS ─────────────────────────────────────────────────────
   backToList(): void {
     this.router.navigate(['/activities']);
   }
@@ -97,16 +166,12 @@ export class ActivityDetailsComponent implements OnInit {
     return `${this.activityService.apiUrl}${relativePath}`;
   }
 
-  // --- Translation methods ---
   translate(lang: string = this.selectedLang): void {
     if (!this.activity || this.translating) return;
-
-    // If already have translation for this language, just toggle
     if (this.translatedActivity && this.currentTranslationLang === lang) {
       this.showOriginal = !this.showOriginal;
       return;
     }
-
     this.translating = true;
     this.activityService.translateActivity(this.activity.id, lang).subscribe({
       next: (translated) => {
@@ -129,7 +194,6 @@ export class ActivityDetailsComponent implements OnInit {
     return lang ? lang.name : code;
   }
 
-  // --- Summarization method ---
   summarize(): void {
     if (!this.activity || this.summaryLoading) return;
     this.summaryLoading = true;
@@ -137,7 +201,7 @@ export class ActivityDetailsComponent implements OnInit {
       next: (summary) => {
         this.summary = summary;
         this.summaryLoading = false;
-        this.showSummaryModal = true;   // Open modal
+        this.showSummaryModal = true;
       },
       error: (err) => {
         console.error('Summarization failed', err);

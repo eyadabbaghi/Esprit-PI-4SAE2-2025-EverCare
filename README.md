@@ -99,8 +99,8 @@ Prerequisites
 	• Eureka Server (start first)
 
 1️⃣ Clone the repository
-git clone https://github.com/your-org/evercare.git
-cd evercare
+git clone https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git
+cd Esprit-PI-4SAE2-2025-EverCare
 2️⃣ Start Eureka Server
 cd backend/eureka-server
 mvn spring-boot:run

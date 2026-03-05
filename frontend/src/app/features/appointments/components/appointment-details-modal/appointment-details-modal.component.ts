@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Appointment } from '../../models/appointment';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../../../front-office/pages/login/auth.service';
 
 @Component({
   selector: 'app-appointment-details-modal',
-
-  templateUrl:"appointment-details-modal.component.html"
+  templateUrl: "appointment-details-modal.component.html"
 })
 export class AppointmentDetailsModalComponent {
   @Input() appointment: Appointment | null = null;
@@ -22,9 +23,24 @@ export class AppointmentDetailsModalComponent {
   @Output() onEditNotes = new EventEmitter<void>();
   @Output() onNotesChange = new EventEmitter<string>();
 
+  userRole: string = '';
+
+  constructor(
+    private router: Router,
+    private toastr: ToastrService,
+    private authService: AuthService
+  ) {
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.userRole = user.role || '';
+      }
+    });
+  }
+
   getDuration(): number {
     if (!this.appointment) return 0;
-    const diff = this.appointment.endDateTime.getTime() - this.appointment.startDateTime.getTime();
+    const diff = new Date(this.appointment.endDateTime).getTime() -
+      new Date(this.appointment.startDateTime).getTime();
     return Math.round(diff / 60000);
   }
 
@@ -32,6 +48,28 @@ export class AppointmentDetailsModalComponent {
     return !!(this.appointment &&
       (this.appointment.status === 'SCHEDULED' ||
         this.appointment.status === 'CONFIRMED_BY_PATIENT'));
+  }
+
+  canStartVideoCall(): boolean {
+    return !!(this.appointment && (
+      this.appointment.status === 'CONFIRMED_BY_PATIENT' ||
+      this.appointment.status === 'CONFIRMED_BY_CAREGIVER' ||
+      this.appointment.status === 'SCHEDULED'
+    ));
+  }
+
+  isDoctor(): boolean {
+    return this.userRole === 'DOCTOR';
+  }
+
+  // ✅ Simple Jitsi navigation — same room for doctor and patient
+  startVideoConsultation(): void {
+    if (!this.appointment) {
+      this.toastr.error('No appointment selected');
+      return;
+    }
+    this.onClose.emit();
+    this.router.navigate(['/appointments/video', this.appointment.appointmentId]);
   }
 
   getStatusClass(status: string): string {
@@ -48,11 +86,20 @@ export class AppointmentDetailsModalComponent {
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       'SCHEDULED': 'Scheduled',
-      'CONFIRMED_BY_PATIENT': 'Confirmed',
-      'CONFIRMED_BY_CAREGIVER': 'Confirmed',
+      'CONFIRMED_BY_PATIENT': 'Confirmed by Patient',
+      'CONFIRMED_BY_CAREGIVER': 'Confirmed by Caregiver',
       'COMPLETED': 'Completed',
       'CANCELLED': 'Cancelled'
     };
     return labels[status] || status;
+  }
+
+  getPresenceLabel(presence?: string): string {
+    const labels: Record<string, string> = {
+      'PHYSICAL': 'Caregiver present',
+      'REMOTE': 'Caregiver remote',
+      'NONE': 'No caregiver'
+    };
+    return presence ? labels[presence] : 'No caregiver';
   }
 }

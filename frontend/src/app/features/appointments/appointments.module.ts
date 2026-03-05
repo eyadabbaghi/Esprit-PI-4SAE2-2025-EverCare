@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentsRoutingModule } from './appointments-routing.module';
 import { AppointmentsPageComponent } from './pages/appointments-page/appointments-page.component';
-import {FormsModule} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { CalendarComponent } from './components/calendar/calendar.component';
 import { AppointmentFiltersComponent } from './components/appointment-filters/appointment-filters.component';
 import { AppointmentCardComponent } from './components/appointment-card/appointment-card.component';
@@ -18,17 +18,24 @@ import { UpcomingAppointmentsComponent } from './components/upcoming-appointment
 import { RecentPatientsTableComponent } from './components/recent-patients-table/recent-patients-table.component';
 import { AppointmentDetailsModalComponent } from './components/appointment-details-modal/appointment-details-modal.component';
 import { DoctorAppointmentsPageComponent } from './pages/doctor-appointments-page/doctor-appointments-page.component';
-import {DoctorCalendarComponent} from './components/doctor-calendar/doctor-calendar.component';
+import { DoctorCalendarComponent } from './components/doctor-calendar/doctor-calendar.component';
 import { DoctorAvailabilityComponent } from './components/doctor-availability/doctor-availability.component';
 import { WeeklyScheduleComponent } from './components/weekly-schedule/weekly-schedule.component';
 import { DoctorTabsComponent } from './components/doctor-tabs/doctor-tabs.component';
 import { ExceptionFormModalComponent } from './components/exception-form-modal/exception-form-modal.component';
 import { ConsultationTypeManagerComponent } from './components/consultation-type-manager/consultation-type-manager.component';
-import {AvailabilityManagerComponent} from './components/availability-management/availability-management.component';
+import { AvailabilityManagerComponent } from './components/availability-management/availability-management.component';
 import { CaregiverAppointmentsPageComponent } from './pages/caregiver-appointments-page/caregiver-appointments-page.component';
-
 import { PatientInfoCardComponent } from './components/patient-info-card/patient-info-card.component';
 import { AppointmentsListComponent } from './components/appointments-list/appointments-list.component';
+import { RouterModule } from '@angular/router';
+import { ToastrModule } from 'ngx-toastr';
+
+// NEW: Video consultation
+import { VideoConsultationPageComponent } from './pages/video-consultation-page/video-consultation-page.component';
+import { JitsiMeetComponent } from './components/jitsi-meet/jitsi-meet.component';
+import { UserAppointmentsComponent } from './pages/user-appointments/user-appointments.component';
+
 @NgModule({
   declarations: [
     AppointmentsPageComponent,
@@ -47,23 +54,27 @@ import { AppointmentsListComponent } from './components/appointments-list/appoin
     RecentPatientsTableComponent,
     AppointmentDetailsModalComponent,
     DoctorAppointmentsPageComponent,
-   DoctorCalendarComponent,
-   DoctorAvailabilityComponent,
-   DoctorTabsComponent,
+    DoctorCalendarComponent,
+    DoctorAvailabilityComponent,
+    DoctorTabsComponent,
     AvailabilityManagerComponent,
-   ExceptionFormModalComponent,
-   ConsultationTypeManagerComponent,
-   CaregiverAppointmentsPageComponent,
-   PatientInfoCardComponent,
-   AppointmentsListComponent
-
+    ExceptionFormModalComponent,
+    ConsultationTypeManagerComponent,
+    CaregiverAppointmentsPageComponent,
+    PatientInfoCardComponent,
+    AppointmentsListComponent,
+    // NEW
+    VideoConsultationPageComponent,
+    JitsiMeetComponent,
+    UserAppointmentsComponent,
   ],
   imports: [
     CommonModule,
     AppointmentsRoutingModule,
     FormsModule,
-    AppointmentsRoutingModule,
-    WeeklyScheduleComponent
+    WeeklyScheduleComponent,
+    RouterModule,
+    ToastrModule.forRoot()
   ]
 })
 export class AppointmentsModule { }

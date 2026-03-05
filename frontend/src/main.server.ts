@@ -1,1 +1,3 @@
-export { AppServerModule as default } from './app/app.module.server';
+import { AppServerModule } from './app/app.server.module';
+
+export default AppServerModule;

@@ -10,7 +10,7 @@ import { ConsultationType } from '../models/consultation-type.model';
 })
 export class ConsultationTypeService {
 
-  private baseUrl = "http://localhost:8085/EverCare/consultation-types";
+  private baseUrl = "http://localhost:8089/EverCare/consultation-types";
 
   constructor(private http: HttpClient) { }
 

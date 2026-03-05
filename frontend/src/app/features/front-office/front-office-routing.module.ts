@@ -8,9 +8,6 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
-
-import {AppointmentsPageComponent} from '../appointments/pages/appointments-page/appointments-page.component';
-import {DailyMeListComponent} from '../daily-me/daily-me-list/daily-me-list.component';
 const routes: Routes = [
   { path: 'setup-profile', component: SetupProfileComponent },
 
@@ -35,16 +32,16 @@ const routes: Routes = [
         loadChildren: () => import('../medical-folder/medical-folder.module').then(m => m.MedicalFolderModule)
       },
 
-      {
-        path:"daily-me",
-        loadChildren: () => import('../daily-me/daily-me.module').then(m => m.DailyMeModule)
+      //{
+        //path:"daily-me",
+        //loadChildren: () => import('../daily-me/daily-me.module').then(m => m.DailyMeModule)
 
-      },
-      {
+      //},
+      //{
 
-        path: 'communication',
-        loadChildren: () => import('../communication/communication.module').then(m => m.CommunicationModule)
-      }
+      // path: 'communication',
+    // loadChildren: () => import('../communication/communication.module').then(m => m.CommunicationModule)
+      //}
     ],
   },
 ];

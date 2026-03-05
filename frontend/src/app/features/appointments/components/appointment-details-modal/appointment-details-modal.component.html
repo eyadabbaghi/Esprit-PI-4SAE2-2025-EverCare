@@ -14,16 +14,20 @@
       </div>
 
       <div *ngIf="appointment" class="space-y-4">
+
         <!-- Patient Info -->
         <div class="bg-[#F9FAFB] p-4 rounded-lg">
           <div class="flex items-center space-x-4 mb-4">
-            <img [src]="appointment.patientPhoto" class="w-16 h-16 rounded-full">
+            <img [src]="appointment.patientPhoto || 'assets/default-avatar.png'"
+                 class="w-16 h-16 rounded-full object-cover border-2 border-[#E9D5FF]">
             <div>
               <h3 class="font-semibold text-lg text-[#2D1B4E]">{{ appointment.patientName }}</h3>
-              <p class="text-sm text-[#6B5B8C]">Born: {{ patientBirthDate | date:'dd/MM/yyyy' }} ({{ patientAge }} years)</p>
+              <p class="text-sm text-[#6B5B8C]">
+                Born: {{ patientBirthDate | date:'dd/MM/yyyy' }}
+                <span *ngIf="patientAge"> ({{ patientAge }} years)</span>
+              </p>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-xs text-[#6B5B8C]">Alzheimer Stage</p>
@@ -39,7 +43,7 @@
             </div>
             <div>
               <p class="text-xs text-[#6B5B8C]">Previous Visits</p>
-              <p class="font-medium">{{ previousVisits || 12 }} consultations</p>
+              <p class="font-medium">{{ previousVisits || 0 }} consultations</p>
             </div>
           </div>
         </div>
@@ -64,13 +68,58 @@
               <p class="text-xs text-[#6B5B8C]">Status</p>
               <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
                     [class]="getStatusClass(appointment.status)">
-                    {{ getStatusLabel(appointment.status) }}
-                  </span>
+                {{ getStatusLabel(appointment.status) }}
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Medical Notes Section -->
+        <!-- ✅ VIDEO CONSULTATION SECTION -->
+        <div *ngIf="canStartVideoCall()" class="border-t pt-4">
+          <h4 class="font-medium text-[#2D1B4E] mb-3">Video Consultation</h4>
+
+          <!-- DOCTOR: Start Call (green - host) -->
+          <div *ngIf="isDoctor()" class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-2xl">🩺</span>
+              <div>
+                <p class="font-medium text-green-800">Start as Host</p>
+                <p class="text-sm text-green-600">You will be the moderator of this consultation</p>
+              </div>
+            </div>
+            <button
+              class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              (click)="startVideoConsultation()">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"/>
+                <rect x="1" y="5" width="15" height="15" rx="2" ry="2"/>
+              </svg>
+              Start Video Consultation
+            </button>
+          </div>
+
+          <!-- PATIENT / CAREGIVER: Join Call (purple) -->
+          <div *ngIf="!isDoctor()" class="bg-[#F3E8FF] border border-[#E9D5FF] rounded-lg p-4">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-2xl">👤</span>
+              <div>
+                <p class="font-medium text-[#2D1B4E]">Join Consultation</p>
+                <p class="text-sm text-[#6B5B8C]">The doctor will be waiting for you</p>
+              </div>
+            </div>
+            <button
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white py-2.5 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              (click)="startVideoConsultation()">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 7l-7 5 7 5V7z"/>
+                <rect x="1" y="5" width="15" height="15" rx="2" ry="2"/>
+              </svg>
+              Join Video Consultation
+            </button>
+          </div>
+        </div>
+
+        <!-- Medical Notes -->
         <div class="border-t pt-4">
           <div class="flex justify-between items-center mb-3">
             <h4 class="font-medium text-[#2D1B4E]">Medical Notes</h4>
@@ -82,7 +131,7 @@
             rows="4"
             class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
             placeholder="Add your medical notes here...">
-              </textarea>
+          </textarea>
         </div>
 
         <!-- Cognitive Markers -->
@@ -105,7 +154,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="border-t pt-4 flex justify-end space-x-3">
+        <div class="border-t pt-4 flex flex-wrap gap-3 justify-end">
           <button *ngIf="showStartButton"
                   class="px-4 py-2 bg-[#7C3AED] text-white rounded-md hover:bg-[#6D28D9]"
                   (click)="onStart.emit(appointment)">
@@ -120,6 +169,7 @@
             Close
           </button>
         </div>
+
       </div>
     </div>
   </div>

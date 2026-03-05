@@ -9,13 +9,14 @@ import { AuthService } from '../../../front-office/pages/login/auth.service';
 import { ConsultationTypeService } from '../../services/consultation-type.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-appointments-page',
   templateUrl: './appointments-page.component.html',
 })
 export class AppointmentsPageComponent implements OnInit {
-  // ========== EXISTING PROPERTIES ==========
+  // ========== PROPERTIES ==========
 
   currentPatient: User = {
     userId: "",
@@ -55,7 +56,7 @@ export class AppointmentsPageComponent implements OnInit {
 
   availableSlots: string[] = [];
 
-  // ========== NEW PROPERTIES FOR BOOKING TAB ==========
+  // ========== BOOKING TAB PROPERTIES ==========
 
   activeTab: 'my-appointments' | 'book-appointment' = 'my-appointments';
   bookingStep: 1 | 2 | 3 = 1;
@@ -80,7 +81,6 @@ export class AppointmentsPageComponent implements OnInit {
   loadCurrentPatient(): void {
     this.loading = true;
 
-    // Get current user from auth service
     this.authService.currentUser$.subscribe({
       next: (user) => {
         if (user && user.role === 'PATIENT') {
@@ -93,12 +93,12 @@ export class AppointmentsPageComponent implements OnInit {
             phone: user.phone || '',
             profilePicture: user.profilePicture || '',
           };
+          console.log('✅ Patient loaded:', this.currentPatient);
           this.loadInitialData();
         } else if (user && user.role !== 'PATIENT') {
           this.toastr.error('Access denied. This page is for patients only.');
           this.router.navigate(['/']);
         } else {
-
           this.router.navigate(['/login']);
         }
         this.loading = false;
@@ -116,126 +116,179 @@ export class AppointmentsPageComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    // Load all necessary data in parallel
+    // Load all data in parallel
     Promise.all([
-      this.loadDoctorsPromise(),
-      this.loadCaregiversPromise(),
-      this.loadConsultationTypesPromise(),
-      this.loadAppointmentsPromise()
-    ]).then(() => {
-      this.loading = false;
-    }).catch((error) => {
+      this.loadDoctors(),
+      this.loadCaregivers(),
+      this.loadConsultationTypes(),
+      this.loadAppointments()
+    ]).catch((error) => {
       console.error('Error loading initial data:', error);
       this.errorMessage = 'Failed to load some data. Please refresh the page.';
-      this.loading = false;
       setTimeout(() => this.errorMessage = '', 3000);
+    }).finally(() => {
+      this.loading = false;
     });
   }
 
-  loadAppointmentsPromise(): Promise<void> {
-    if (!this.currentPatient.userId) {
-      return Promise.resolve();
-    }
+  // ========== DATA LOADING METHODS ==========
 
-    return new Promise((resolve, reject) => {
-      this.appointmentService.getAppointmentsByPatient(this.currentPatient.userId || "").subscribe({
-        next: (data) => {
-          this.appointments = data;
-
-          resolve();
-        },
-        error: (error) => {
-          console.error('Error loading appointments:', error);
-          this.errorMessage = 'Failed to load appointments.';
-          resolve(); // Resolve anyway to continue loading other data
-        }
-      });
-    });
-  }
-
-  // ========== REAL DATA LOADING METHODS ==========
-  private loadDoctorsPromise(): Promise<void> {
+  loadDoctors(): Promise<void> {
     return new Promise((resolve) => {
       this.authService.searchUsersByRole('', 'DOCTOR').subscribe({
         next: (doctors) => {
-          this.doctors = doctors;
+          this.doctors = doctors || [];
+          console.log('✅ Doctors loaded:', this.doctors.length);
           resolve();
         },
         error: (error) => {
           console.error('Error loading doctors:', error);
-
+          this.toastr.warning('Could not load doctors list');
+          this.doctors = [];
           resolve();
         }
       });
     });
   }
-  private loadCaregiversPromise(): Promise<void> {
-    if (!this.currentPatient.userId) {
-      this.loadMockCaregivers();
-      return Promise.resolve();
-    }
 
+  loadCaregivers(): Promise<void> {
     return new Promise((resolve) => {
+      if (!this.currentPatient.email) {
+        this.myCaregivers = [];
+        resolve();
+        return;
+      }
+
       this.authService.searchUsersByRole('', 'CAREGIVER').subscribe({
         next: (caregivers) => {
+          // Filter caregivers that are associated with this patient
           this.myCaregivers = caregivers.filter(c =>
-            (c as any).patientEmails?.includes(this.currentPatient.email)
+            c.patientEmails?.includes(this.currentPatient.email)
           );
-          if (this.myCaregivers.length === 0) {
-            this.loadMockCaregivers();
-          }
+          console.log('✅ Caregivers loaded:', this.myCaregivers.length);
           resolve();
         },
         error: (error) => {
           console.error('Error loading caregivers:', error);
-          this.loadMockCaregivers();
+          this.myCaregivers = [];
           resolve();
         }
       });
     });
   }
-  private loadConsultationTypesPromise(): Promise<void> {
+
+  loadConsultationTypes(): Promise<void> {
     return new Promise((resolve) => {
       this.consultationTypeService.getAllConsultationTypes().subscribe({
         next: (types) => {
-          this.consultationTypes = types;
+          this.consultationTypes = types || [];
+          console.log('✅ Consultation types loaded:', this.consultationTypes.length);
           resolve();
         },
         error: (error) => {
           console.error('Error loading consultation types:', error);
-
+          this.consultationTypes = [];
           resolve();
         }
       });
     });
   }
 
-  // ========== MOCK DATA FALLBACKS (for development) ==========
+// ========== FIXED LOAD APPOINTMENTS METHOD ==========
 
+  // In appointments-page.component.ts - Focus ONLY on appointments
 
+  // In appointments-page.component.ts - Replace only the loadAppointments method
 
-  private loadMockCaregivers(): void {
-    this.myCaregivers = [
-      {
-        userId: "care-001",
-        name: "Sophie Moreau",
-        email: "sophie.moreau@email.com",
-        role: "CAREGIVER",
-        phone: "06 78 90 12 34",
-        profilePicture: "https://randomuser.me/api/portraits/women/10.jpg",
-        emergencyContact: "Jeanne Moreau"
+  loadAppointments(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.currentPatient.userId) {
+        console.warn('⚠️ No patient ID available');
+        this.appointments = [];
+        this.errorMessage = 'Patient ID not found';
+        resolve();
+        return;
       }
-    ];
+
+      const patientId = this.currentPatient.userId;
+      console.log('📅 Loading appointments for patient:', patientId);
+      console.log('🔑 Auth token present:', !!this.authService.getToken());
+
+      this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
+        next: (data) => {
+          console.log('📦 Appointments received:', data);
+
+          // Ensure data is an array and matches the Appointment interface
+          if (Array.isArray(data)) {
+            // Validate and cast the data
+            this.appointments = data.map(item => ({
+              ...item,
+              startDateTime: new Date(item.startDateTime),
+              endDateTime: new Date(item.endDateTime),
+              createdAt: new Date(item.createdAt),
+              updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+              confirmationDatePatient: item.confirmationDatePatient ? new Date(item.confirmationDatePatient) : undefined,
+              confirmationDateCaregiver: item.confirmationDateCaregiver ? new Date(item.confirmationDateCaregiver) : undefined
+            }));
+
+            console.log(`✅ Loaded ${this.appointments.length} appointments`);
+
+            if (this.appointments.length === 0) {
+              this.errorMessage = 'No appointments found for this patient';
+            } else {
+              this.errorMessage = ''; // Clear any previous error
+            }
+          } else {
+            console.error('❌ Received data is not an array:', data);
+            this.errorMessage = 'Invalid data format received from server';
+            this.appointments = [];
+          }
+
+          resolve();
+        },
+        error: (error) => {
+          console.error('❌ Error loading appointments:', error);
+
+          // Handle different error types with specific messages
+          if (error.status === 0) {
+            this.errorMessage = 'Cannot connect to server. Please check if backend is running.';
+            console.error('🔴 Network error - Is the backend running on port 8089?');
+          } else if (error.status === 401) {
+            this.errorMessage = 'Your session has expired. Please login again.';
+            console.error('🔴 Authentication error - Token may be expired');
+            setTimeout(() => this.router.navigate(['/login']), 2000);
+          } else if (error.status === 403) {
+            this.errorMessage = 'You do not have permission to access these appointments.';
+            console.error('🔴 Authorization error');
+          } else if (error.status === 404) {
+            this.errorMessage = 'Appointment endpoint not found.';
+            console.error('🔴 404 - Check if the URL is correct:', `${this.appointmentService['baseUrl']}/patient/${patientId}`);
+          } else if (error.status === 500) {
+            this.errorMessage = 'Server error. Please try again later.';
+            console.error('🔴 Server error - Check backend logs');
+          } else if (error.message && error.message.includes('incomplete')) {
+            this.errorMessage = 'Server sent incomplete data. Please contact support.';
+            console.error('🔴 Incomplete chunked encoding - Backend issue');
+          } else {
+            this.errorMessage = 'Failed to load appointments. Please try again.';
+          }
+
+          this.appointments = [];
+          resolve();
+        }
+      });
+    });
   }
 
-
-
-  // ========== EXISTING GETTERS ==========
-
+  // ========== GETTERS ==========
 
   get filteredAppointments(): Appointment[] {
-   return this.appointments;
-
+    return this.appointments.filter(apt => {
+      let matches = true;
+      if (this.filters.status && apt.status !== this.filters.status) matches = false;
+      if (this.filters.doctorId && apt.doctorId !== this.filters.doctorId) matches = false;
+      return matches;
+    });
   }
 
   get upcomingAppointments(): Appointment[] {
@@ -247,9 +300,7 @@ export class AppointmentsPageComponent implements OnInit {
       )
       .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
   }
-get MyAppointments(): Appointment[] {
-    return this.appointments;
-}
+
   get pastAppointments(): Appointment[] {
     const now = new Date();
     return this.filteredAppointments
@@ -257,7 +308,7 @@ get MyAppointments(): Appointment[] {
       .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
   }
 
-  // ========== EXISTING EVENT HANDLERS ==========
+  // ========== EVENT HANDLERS ==========
 
   onFiltersChanged(filters: { status: string; doctorId: string }): void {
     this.filters = filters;
@@ -277,7 +328,7 @@ get MyAppointments(): Appointment[] {
     }, 100);
   }
 
-  // ========== EXISTING APPOINTMENT ACTIONS ==========
+  // ========== APPOINTMENT ACTIONS ==========
 
   viewAppointmentDetails(appointment: Appointment): void {
     this.selectedAppointment = appointment;
@@ -352,7 +403,7 @@ get MyAppointments(): Appointment[] {
       diffMinutes <= 15 && diffMinutes >= -30;
   }
 
-  // ========== EXISTING ADD APPOINTMENT METHODS ==========
+  // ========== ADD APPOINTMENT METHODS ==========
 
   openAddDialog(): void {
     this.isAddDialogOpen = true;
@@ -377,10 +428,6 @@ get MyAppointments(): Appointment[] {
     this.availableSlots = [];
   }
 
-  /**
-   * Load available time slots for a specific doctor and date
-   * Uses the backend API endpoint: GET /availabilities/available-slots
-   */
   loadAvailableSlots(doctorId: string, date: string): void {
     if (!doctorId || !date) {
       this.availableSlots = [];
@@ -388,16 +435,10 @@ get MyAppointments(): Appointment[] {
     }
 
     const selectedDate = new Date(date);
-
-    // Get the selected consultation type duration (if available)
-    const selectedType = this.consultationTypes.find(
-      t => t.typeId === this.newAppointment.consultationTypeId
-    );
     const durationMinutes = 20;
 
     this.loading = true;
 
-    // Use the availability service to get available slots
     this.availabilityService.getAvailableTimeSlots(doctorId, selectedDate, durationMinutes).subscribe({
       next: (slots: string[]) => {
         this.availableSlots = slots;
@@ -409,31 +450,13 @@ get MyAppointments(): Appointment[] {
       },
       error: (error) => {
         console.error('Error loading available slots:', error);
-        this.loadMockAvailableSlots(doctorId);
+        this.toastr.warning('Could not load available slots');
+        this.availableSlots = [];
         this.loading = false;
       }
     });
   }
 
-  /**
-   * Fallback method to load mock available slots when API fails
-   */
-  private loadMockAvailableSlots(doctorId: string): void {
-    const slotsByDoctor: { [key: string]: string[] } = {
-      'doc-001': ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00'],
-      'doc-002': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
-      'doc-003': ['09:30', '10:30', '14:00', '15:00'],
-    };
-
-    this.availableSlots = slotsByDoctor[doctorId] ||
-      ['09:00', '10:00', '11:00', '14:00', '15:00'];
-
-    console.log('Using mock slots:', this.availableSlots);
-  }
-
-  /**
-   * Update the method to be called when doctor or date changes
-   */
   onDoctorOrDateChange(): void {
     if (this.newAppointment.doctorId && this.newAppointment.date) {
       this.loadAvailableSlots(
@@ -461,7 +484,7 @@ get MyAppointments(): Appointment[] {
     }
 
     const startDateTime = new Date(formData.date + 'T' + formData.time);
-    const endDateTime = new Date(startDateTime.getTime() );
+    const endDateTime = new Date(startDateTime.getTime() + (selectedType?.alzheimerDuration || 20) * 60000);
 
     const newAppointmentPayload: CreateAppointmentRequest = {
       patientId: this.currentPatient.userId!,
@@ -493,6 +516,9 @@ get MyAppointments(): Appointment[] {
         console.error('Error creating appointment:', error);
         if (error.status === 0) {
           this.toastr.error('Cannot connect to server. Please check if backend is running.');
+        } else if (error.status === 401) {
+          this.toastr.error('Session expired. Please login again.');
+          this.router.navigate(['/login']);
         } else if (error.status === 404) {
           this.toastr.error('API endpoint not found. Please check the URL.');
         } else if (error.status === 500) {
@@ -522,12 +548,12 @@ get MyAppointments(): Appointment[] {
   }
 
   refreshAppointments(): void {
-    this.loadAppointmentsPromise().then(() => {
+    this.loadAppointments().then(() => {
       this.toastr.success('Appointments refreshed');
     });
   }
 
-  // ========== NEW METHODS FOR BOOKING TAB ==========
+  // ========== BOOKING TAB METHODS ==========
 
   onDoctorSelected(doctorId: string): void {
     this.selectedDoctorId = doctorId;

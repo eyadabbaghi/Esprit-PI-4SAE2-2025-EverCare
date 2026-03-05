@@ -53,16 +53,18 @@
           <p>{{ appointment.caregiverName }} - {{ getPresenceLabel(appointment.caregiverPresence) }}</p>
         </div>
 
-        <!-- Video Link -->
-        <div *ngIf="appointment.videoLink" class="border-t pt-4">
-          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Lien de visio</p>
+        <!-- Replace the existing video link button with this: -->
+        <div *ngIf="appointment.status === 'CONFIRMED_BY_PATIENT' ||
+            appointment.status === 'CONFIRMED_BY_CAREGIVER' ||
+            appointment.status === 'SCHEDULED'" class="border-t pt-4">
+          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Consultation vidéo</p>
           <button
-            class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-4 py-2 rounded-md flex items-center"
-            (click)="onJoinCall.emit(appointment.videoLink)">
-            <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-4 py-2 rounded-md flex items-center gap-2"
+            (click)="joinVideoCall()">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M22 6l-6 4 6 4V6z"/><rect x="2" y="4" width="16" height="16" rx="2"/>
             </svg>
-            Rejoindre la visio
+            Rejoindre la consultation
           </button>
         </div>
 

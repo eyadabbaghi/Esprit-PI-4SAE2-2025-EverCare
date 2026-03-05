@@ -130,7 +130,9 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     this.loading = true;
     this.appointmentService.getAppointmentsByDoctor(this.currentDoctor.userId || "").subscribe({
       next: (data: any) => {
+        console.log('Raw appointments data:', data);
         this.appointments = this.transformAppointments(data);
+
         this.calculateStats();
         this.loadRecentPatients();
         this.updateAvailabilityStats();
@@ -148,22 +150,23 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   private transformAppointments(data: any[]): Appointment[] {
     return data.map(item => ({
       appointmentId: item.appointmentId,
-      patientId: item.patient?.userId || '',
-      patientName: item.patient?.name || '',
-      doctorId: item.doctor?.userId || '',
-      doctorName: item.doctor?.name || '',
-      caregiverId: item.caregiver?.userId,
-      caregiverName: item.caregiver?.name,
-      consultationTypeId: item.consultationType?.typeId || '',
-      consultationTypeName: item.consultationType?.name || '',
-      startDateTime: item.startDateTime,
-      endDateTime: item.endDateTime,
+      // Fix: handle both nested object and flat structure
+      patientId: item.patient?.userId || item.patientId || '',
+      patientName: item.patient?.name || item.patientName || '',
+      doctorId: item.doctor?.userId || item.doctorId || '',
+      doctorName: item.doctor?.name || item.doctorName || '',
+      caregiverId: item.caregiver?.userId || item.caregiverId,
+      caregiverName: item.caregiver?.name || item.caregiverName,
+      consultationTypeId: item.consultationType?.typeId || item.consultationTypeId || '',
+      consultationTypeName: item.consultationType?.name || item.consultationTypeName || '',
+      startDateTime: new Date(item.startDateTime),  // ← convert to Date
+      endDateTime: new Date(item.endDateTime),       // ← convert to Date
       status: item.status,
       caregiverPresence: item.caregiverPresence,
       videoLink: item.videoLink,
       doctorNotes: item.doctorNotes,
       isRecurring: item.isRecurring || false,
-      createdAt: item.createdAt || new Date(),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
     }));
   }
 
@@ -521,7 +524,6 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     return this.appointments.filter(apt => {
-      if (apt.doctorId !== this.currentDoctor.userId) return false;
       const aptDate = new Date(apt.startDateTime);
       return aptDate >= today && aptDate < tomorrow;
     }).sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
@@ -531,13 +533,14 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     const now = new Date();
     return this.appointments
       .filter(apt => {
-        if (apt.doctorId !== this.currentDoctor.userId) return false;
         const aptDate = new Date(apt.startDateTime);
         const validStatus = ['SCHEDULED', 'CONFIRMED_BY_PATIENT', 'CONFIRMED_BY_CAREGIVER'].includes(apt.status);
         return validStatus && aptDate > now;
       })
       .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
   }
+
+
 
   // ========== EXISTING METHODS ==========
 

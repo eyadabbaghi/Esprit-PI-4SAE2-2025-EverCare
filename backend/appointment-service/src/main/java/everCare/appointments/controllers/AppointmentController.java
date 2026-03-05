@@ -4,6 +4,7 @@ import everCare.appointments.entities.Appointment;
 import everCare.appointments.entities.User;
 import everCare.appointments.entities.ConsultationType;
 import everCare.appointments.dtos.AppointmentDTO;
+import everCare.appointments.dtos.AppointmentResponseDTO;
 import everCare.appointments.services.AppointmentService;
 import everCare.appointments.repositories.UserRepository;
 import everCare.appointments.repositories.ConsultationTypeRepository;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/appointments")
@@ -84,78 +86,115 @@ public class AppointmentController {
     // ========== READ ALL ==========
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> getAllAppointments() {
+    public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointments() {
         List<Appointment> appointments = appointmentService.getAllAppointments();
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ BY ID ==========
 
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable String id) {
+    public ResponseEntity<AppointmentResponseDTO> getAppointmentById(@PathVariable String id) {
         Appointment appointment = appointmentService.getAppointmentById(id);
-        return ResponseEntity.ok(appointment);
+        return ResponseEntity.ok(convertToDTO(appointment));
     }
 
-    // ========== READ BY PATIENT ==========
+    // ========== READ BY PATIENT - FIXED ==========
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByPatient(@PathVariable String patientId) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByPatient(patientId);
-        return ResponseEntity.ok(appointments);
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByPatient(@PathVariable String patientId) {
+        try {
+            System.out.println("🔍 Fetching appointments for patient: " + patientId);
+
+            List<Appointment> appointments = appointmentService.getAppointmentsByPatient(patientId);
+
+            System.out.println("📊 Found " + appointments.size() + " appointments");
+
+            // Convert to DTOs to avoid circular references
+            List<AppointmentResponseDTO> dtos = appointments.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            System.err.println("❌ Error fetching appointments: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // ========== READ BY DOCTOR ==========
 
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDoctor(@PathVariable String doctorId) {
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByDoctor(@PathVariable String doctorId) {
         List<Appointment> appointments = appointmentService.getAppointmentsByDoctor(doctorId);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ BY CAREGIVER ==========
 
     @GetMapping("/caregiver/{caregiverId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByCaregiver(@PathVariable String caregiverId) {
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByCaregiver(@PathVariable String caregiverId) {
         List<Appointment> appointments = appointmentService.getAppointmentsByCaregiver(caregiverId);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ BY STATUS ==========
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByStatus(@PathVariable String status) {
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByStatus(@PathVariable String status) {
         List<Appointment> appointments = appointmentService.getAppointmentsByStatus(status);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ BY DATE RANGE ==========
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDateRange(
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         List<Appointment> appointments = appointmentService.getAppointmentsByDateRange(start, end);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ BY DOCTOR AND DATE RANGE ==========
 
     @GetMapping("/doctor/{doctorId}/date-range")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDoctorAndDateRange(
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByDoctorAndDateRange(
             @PathVariable String doctorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         List<Appointment> appointments = appointmentService.getAppointmentsByDoctorAndDateRange(doctorId, start, end);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== READ FUTURE APPOINTMENTS BY PATIENT ==========
 
     @GetMapping("/patient/{patientId}/future")
-    public ResponseEntity<List<Appointment>> getFutureAppointmentsByPatient(@PathVariable String patientId) {
+    public ResponseEntity<List<AppointmentResponseDTO>> getFutureAppointmentsByPatient(@PathVariable String patientId) {
         List<Appointment> appointments = appointmentService.getFutureAppointmentsByPatient(patientId);
-        return ResponseEntity.ok(appointments);
+        List<AppointmentResponseDTO> dtos = appointments.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // ========== CHECK DOCTOR AVAILABILITY ==========
@@ -171,65 +210,65 @@ public class AppointmentController {
     // ========== UPDATE ==========
 
     @PutMapping("/{id}")
-    public ResponseEntity<Appointment> updateAppointment(
+    public ResponseEntity<AppointmentResponseDTO> updateAppointment(
             @PathVariable String id,
             @RequestBody Appointment appointment) {
         Appointment updatedAppointment = appointmentService.updateAppointment(id, appointment);
-        return ResponseEntity.ok(updatedAppointment);
+        return ResponseEntity.ok(convertToDTO(updatedAppointment));
     }
 
     // ========== CONFIRM BY PATIENT ==========
 
     @PatchMapping("/{id}/confirm-patient")
-    public ResponseEntity<Appointment> confirmByPatient(@PathVariable String id) {
+    public ResponseEntity<AppointmentResponseDTO> confirmByPatient(@PathVariable String id) {
         Appointment confirmedAppointment = appointmentService.confirmByPatient(id);
-        return ResponseEntity.ok(confirmedAppointment);
+        return ResponseEntity.ok(convertToDTO(confirmedAppointment));
     }
 
     // ========== CONFIRM BY CAREGIVER ==========
 
     @PatchMapping("/{id}/confirm-caregiver")
-    public ResponseEntity<Appointment> confirmByCaregiver(@PathVariable String id) {
+    public ResponseEntity<AppointmentResponseDTO> confirmByCaregiver(@PathVariable String id) {
         Appointment confirmedAppointment = appointmentService.confirmByCaregiver(id);
-        return ResponseEntity.ok(confirmedAppointment);
+        return ResponseEntity.ok(convertToDTO(confirmedAppointment));
     }
 
     // ========== CANCEL APPOINTMENT ==========
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<Appointment> cancelAppointment(@PathVariable String id) {
+    public ResponseEntity<AppointmentResponseDTO> cancelAppointment(@PathVariable String id) {
         Appointment cancelledAppointment = appointmentService.cancelAppointment(id);
-        return ResponseEntity.ok(cancelledAppointment);
+        return ResponseEntity.ok(convertToDTO(cancelledAppointment));
     }
 
     // ========== RESCHEDULE APPOINTMENT ==========
 
     @PatchMapping("/{id}/reschedule")
-    public ResponseEntity<Appointment> rescheduleAppointment(
+    public ResponseEntity<AppointmentResponseDTO> rescheduleAppointment(
             @PathVariable String id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime newDateTime) {
         Appointment rescheduledAppointment = appointmentService.rescheduleAppointment(id, newDateTime);
-        return ResponseEntity.ok(rescheduledAppointment);
+        return ResponseEntity.ok(convertToDTO(rescheduledAppointment));
     }
 
     // ========== UPDATE DOCTOR NOTES ==========
 
     @PatchMapping("/{id}/notes")
-    public ResponseEntity<Appointment> updateDoctorNotes(
+    public ResponseEntity<AppointmentResponseDTO> updateDoctorNotes(
             @PathVariable String id,
             @RequestParam String notes) {
         Appointment updatedAppointment = appointmentService.updateDoctorNotes(id, notes);
-        return ResponseEntity.ok(updatedAppointment);
+        return ResponseEntity.ok(convertToDTO(updatedAppointment));
     }
 
     // ========== UPDATE SIMPLE SUMMARY ==========
 
     @PatchMapping("/{id}/summary")
-    public ResponseEntity<Appointment> updateSimpleSummary(
+    public ResponseEntity<AppointmentResponseDTO> updateSimpleSummary(
             @PathVariable String id,
             @RequestParam String summary) {
         Appointment updatedAppointment = appointmentService.updateSimpleSummary(id, summary);
-        return ResponseEntity.ok(updatedAppointment);
+        return ResponseEntity.ok(convertToDTO(updatedAppointment));
     }
 
     // ========== DELETE ==========
@@ -264,5 +303,57 @@ public class AppointmentController {
     public ResponseEntity<String> sendReminders() {
         appointmentService.sendReminders();
         return ResponseEntity.ok("Reminders sent successfully");
+    }
+
+    // ========== HELPER METHOD TO CONVERT TO DTO ==========
+
+    private AppointmentResponseDTO convertToDTO(Appointment appointment) {
+        if (appointment == null) return null;
+
+        AppointmentResponseDTO dto = new AppointmentResponseDTO();
+
+        // Basic fields
+        dto.setAppointmentId(appointment.getAppointmentId());
+        dto.setStartDateTime(appointment.getStartDateTime());
+        dto.setEndDateTime(appointment.getEndDateTime());
+        dto.setStatus(appointment.getStatus());
+        dto.setConfirmationDatePatient(appointment.getConfirmationDatePatient());
+        dto.setConfirmationDateCaregiver(appointment.getConfirmationDateCaregiver());
+        dto.setCaregiverPresence(appointment.getCaregiverPresence());
+        dto.setVideoLink(appointment.getVideoLink());
+        dto.setRecurring(appointment.isRecurring());
+        dto.setRecurrencePattern(appointment.getRecurrencePattern());
+        dto.setDoctorNotes(appointment.getDoctorNotes());
+        dto.setSimpleSummary(appointment.getSimpleSummary());
+        dto.setCreatedAt(appointment.getCreatedAt());
+        dto.setUpdatedAt(appointment.getUpdatedAt());
+
+        // Patient info - only primitive fields, no circular references
+        if (appointment.getPatient() != null) {
+            dto.setPatientId(appointment.getPatient().getUserId());
+            dto.setPatientName(appointment.getPatient().getName());
+            dto.setPatientPhoto(appointment.getPatient().getProfilePicture());
+        }
+
+        // Doctor info - only primitive fields
+        if (appointment.getDoctor() != null) {
+            dto.setDoctorId(appointment.getDoctor().getUserId());
+            dto.setDoctorName(appointment.getDoctor().getName());
+            dto.setDoctorPhoto(appointment.getDoctor().getProfilePicture());
+        }
+
+        // Caregiver info - only primitive fields
+        if (appointment.getCaregiver() != null) {
+            dto.setCaregiverId(appointment.getCaregiver().getUserId());
+            dto.setCaregiverName(appointment.getCaregiver().getName());
+        }
+
+        // Consultation type info
+        if (appointment.getConsultationType() != null) {
+            dto.setConsultationTypeId(appointment.getConsultationType().getTypeId());
+            dto.setConsultationTypeName(appointment.getConsultationType().getName());
+        }
+
+        return dto;
     }
 }

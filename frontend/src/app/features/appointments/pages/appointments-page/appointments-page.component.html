@@ -96,7 +96,7 @@
         <!-- Calendar Component (existing) -->
         <div class="lg:col-span-2">
           <app-calendar
-            [appointments]="MyAppointments"
+            [appointments]="appointments"
             [currentDate]="currentDate"
             (monthChanged)="onMonthChanged($event)"
             (dateSelected)="onDateSelected($event)">

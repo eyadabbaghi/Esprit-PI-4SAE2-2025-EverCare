@@ -10,7 +10,7 @@ import { Availability } from '../models/availability.model';
 })
 export class AvailabilityService {
 
-  private baseUrl = "http://localhost:8085/EverCare/availabilities";
+  private baseUrl = "http://localhost:8089/EverCare/availabilities";
 
   constructor(private http: HttpClient) { }
 

@@ -31,6 +31,12 @@ const routes: Routes = [
         path: 'medical-folder',
         loadChildren: () => import('../medical-folder/medical-folder.module').then(m => m.MedicalFolderModule)
       },
+      {
+        path: 'prescriptions',
+        loadChildren: () =>
+          import('../prescription/prescription.module')
+            .then(m => m.PrescriptionModule)
+      }
 
       //{
         //path:"daily-me",

@@ -1,0 +1,196 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- ========== HEADER ========== -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Prescriptions</h1>
+        <p class="text-[#6B5B8C] mt-1">Manage and track all medical prescriptions</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'my-prescriptions'"
+                [class.text-white]="activeTab === 'my-prescriptions'"
+                [class.text-[#2D1B4E]]="activeTab !== 'my-prescriptions'"
+                (click)="activeTab = 'my-prescriptions'">
+          💊 My Prescriptions
+        </button>
+
+        <!-- New Prescription tab — doctors only -->
+        <button *ngIf="isDoctor()"
+                class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'new-prescription'"
+                [class.text-white]="activeTab === 'new-prescription'"
+                [class.text-[#2D1B4E]]="activeTab !== 'new-prescription'"
+                (click)="activeTab = 'new-prescription'">
+          ➕ New Prescription
+        </button>
+
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'medications'"
+                [class.text-white]="activeTab === 'medications'"
+                [class.text-[#2D1B4E]]="activeTab !== 'medications'"
+                (click)="activeTab = 'medications'">
+          🧪 Medications
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== GLOBAL LOADING ========== -->
+    <div *ngIf="loading"
+         class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-4 flex items-center space-x-3 shadow-lg">
+        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-[#2D1B4E] text-sm">Loading...</span>
+      </div>
+    </div>
+
+    <!-- ========== GLOBAL MESSAGES ========== -->
+    <div *ngIf="successMessage"
+         class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg
+                flex items-center justify-between">
+      <span>✅ {{ successMessage }}</span>
+      <button (click)="successMessage = ''" class="text-green-500 hover:text-green-700">✕</button>
+    </div>
+
+    <div *ngIf="errorMessage"
+         class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg
+                flex items-center justify-between">
+      <span>⚠️ {{ errorMessage }}</span>
+      <button (click)="errorMessage = ''" class="text-red-500 hover:text-red-700">✕</button>
+    </div>
+
+    <!-- ========== TAB 1: MY PRESCRIPTIONS ========== -->
+    <div *ngIf="activeTab === 'my-prescriptions'" class="space-y-6">
+
+      <!-- Stats cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Active</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ activeCount }}</p>
+            </div>
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <span class="text-lg">💊</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Expiring Soon</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ expiringCount }}</p>
+            </div>
+            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+              <span class="text-lg">⚠️</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Renewable</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ renewableCount }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
+              <span class="text-lg">🔄</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Today's schedule -->
+      <div *ngIf="todayPrescriptions.length > 0"
+           class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <h3 class="font-semibold text-[#2D1B4E] mb-3">📅 Today's Schedule</h3>
+        <div class="space-y-2">
+          <div *ngFor="let p of todayPrescriptions"
+               class="flex items-center space-x-3 p-2 bg-[#F9FAFB] rounded-lg">
+            <span class="text-xl">💊</span>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-[#2D1B4E]">
+                {{ p.medicament.nomCommercial }}
+              </p>
+              <p class="text-xs text-[#6B5B8C]">{{ p.posologie }}</p>
+            </div>
+            <div class="flex space-x-2 text-sm">
+              <span *ngIf="p.priseMatin" title="Morning">🌅</span>
+              <span *ngIf="p.priseMidi"  title="Noon">☀️</span>
+              <span *ngIf="p.priseSoir"  title="Evening">🌙</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="grid lg:grid-cols-2 gap-6">
+
+        <!-- Active prescriptions -->
+        <app-prescription-list
+          title="Active Prescriptions"
+          [prescriptions]="activePrescriptions"
+          emptyMessage="No active prescriptions"
+          [showActions]="true"
+          [scrollable]="true"
+          [loading]="loading"
+          (onView)="viewPrescription($event)"
+          (onRenew)="viewPrescription($event)"
+          (onCancel)="viewPrescription($event)"
+          (onDownloadPdf)="onPdfGenerated($event)">
+        </app-prescription-list>
+
+        <!-- Past prescriptions -->
+        <app-prescription-list
+          title="History"
+          [prescriptions]="pastPrescriptions"
+          emptyMessage="No past prescriptions"
+          [showActions]="false"
+          [scrollable]="true"
+          [loading]="loading"
+          (onView)="viewPrescription($event)">
+        </app-prescription-list>
+
+      </div>
+    </div>
+
+    <!-- ========== TAB 2: NEW PRESCRIPTION (doctors only) ========== -->
+    <div *ngIf="activeTab === 'new-prescription' && isDoctor()">
+      <app-prescription-form
+        [patientId]="currentUserId"
+        [doctorId]="currentDoctorId"
+        (onSubmit)="onFormSubmit($event)"
+        (onClose)="activeTab = 'my-prescriptions'">
+      </app-prescription-form>
+    </div>
+
+    <!-- ========== TAB 3: MEDICATIONS ========== -->
+    <div *ngIf="activeTab === 'medications'">
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-6 text-center">
+        <span class="text-4xl">🧪</span>
+        <p class="text-[#2D1B4E] font-semibold mt-2">Medication Database</p>
+        <p class="text-sm text-[#6B5B8C] mt-1">
+          Coming next — browse and manage the medication catalog
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== PRESCRIPTION DETAILS MODAL ========== -->
+<app-prescription-details
+  *ngIf="selectedPrescription"
+  [prescription]="selectedPrescription"
+  (onClose)="closeDetails()"
+  (onRenewed)="onPrescriptionRenewed($event)"
+  (onCancelled)="onPrescriptionCancelled($event)"
+  (onPdfGenerated)="onPdfGenerated($event)">
+</app-prescription-details>

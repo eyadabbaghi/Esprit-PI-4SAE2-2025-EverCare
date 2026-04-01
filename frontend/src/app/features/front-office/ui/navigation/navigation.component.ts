@@ -45,6 +45,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     { id: 'home', label: 'Home', route: '/' },
     { id: 'activities', label: 'Activities', route: '/activities' },
     { id: 'appointments', label: 'Appointments', route: '/appointments' },
+    { id: 'pres', label: 'pres', route: '/prescriptions' },
     { id: 'medical-folder', label: 'Medical Folder', route: '/medical-folder' },
     { id: 'alerts', label: 'Alerts', route: '/alerts' },
     { id: 'daily', label: 'Daily Me', route: '/daily-me' },

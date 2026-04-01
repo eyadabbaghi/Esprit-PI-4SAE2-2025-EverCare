@@ -1,4 +1,4 @@
-package everCare.appointments.services.impl;
+package everCare.appointments.services;
 
 import everCare.appointments.entities.Medicament;
 import everCare.appointments.exceptions.ResourceNotFoundException;
@@ -22,13 +22,6 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament createMedicament(Medicament medicament) {
-        // Generate ID if not present
-        if (medicament.getMedicamentId() == null) {
-            medicament.setMedicamentId(UUID.randomUUID().toString());
-        }
-
-        // Set creation timestamp
-        medicament.setCreatedAt(LocalDateTime.now());
 
         // Set default active to true
         medicament.setActif(true);

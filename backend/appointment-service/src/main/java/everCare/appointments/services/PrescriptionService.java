@@ -1,5 +1,6 @@
 package everCare.appointments.services;
 
+import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.entities.Prescription;
 import everCare.appointments.entities.User;
 import java.time.LocalDate;
@@ -27,7 +28,6 @@ public interface PrescriptionService {
     List<Prescription> getPrescriptionsByAppointment(String appointmentId);
 
     // ========== UPDATE ==========
-    Prescription updatePrescription(String id, Prescription prescriptionDetails);
     Prescription terminatePrescription(String id);
     Prescription renewPrescription(String id, LocalDate newDateFin);
     Prescription updatePosologie(String id, String posologie);
@@ -43,4 +43,7 @@ public interface PrescriptionService {
     boolean isPrescriptionActive(String id);
     List<Prescription> getTodayPrescriptions(String patientId);
     long countByMedicament(String medicamentId);
+
+    Prescription updatePrescriptionFromRequest(String id, PrescriptionRequestDTO request);
+    Prescription cancelPrescription(String id);
 }

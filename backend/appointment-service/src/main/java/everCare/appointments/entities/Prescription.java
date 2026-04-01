@@ -71,10 +71,11 @@ public class Prescription {
 
     private String statut;                        // ACTIVE, TERMINEE, INTERROMPUE
 
-    private boolean renouvelable;                  // Prescription renouvelable ?
+    @Builder.Default
+    private Boolean renouvelable = false;
 
-    private int nombreRenouvellements;              // Nombre de renouvellements autorisés
-
+    @Builder.Default
+    private Integer nombreRenouvellements = 0;
     // ========== POUR PATIENTS ALZHEIMER ==========
 
     private String priseMatin;                    // "Donépézil 10mg"
@@ -93,4 +94,5 @@ public class Prescription {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
 }

@@ -1,5 +1,6 @@
-package everCare.appointments.services.impl;
+package everCare.appointments.services;
 
+import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.entities.Prescription;
 import everCare.appointments.entities.User;
 import everCare.appointments.entities.Medicament;
@@ -32,10 +33,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public Prescription createPrescription(Prescription prescription) {
-        // Generate ID if not present
-        if (prescription.getPrescriptionId() == null) {
-            prescription.setPrescriptionId(UUID.randomUUID().toString());
-        }
+
 
         // Set creation timestamp
         prescription.setCreatedAt(LocalDateTime.now());
@@ -78,7 +76,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .posologie(posologie)
                 .statut("ACTIVE")
                 .renouvelable(false)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         return prescriptionRepository.save(prescription);
@@ -149,52 +146,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     // ========== UPDATE ==========
 
-    @Override
-    public Prescription updatePrescription(String id, Prescription prescriptionDetails) {
-        Prescription existingPrescription = getPrescriptionById(id);
-
-        if (prescriptionDetails.getMedicament() != null) {
-            existingPrescription.setMedicament(prescriptionDetails.getMedicament());
-        }
-
-        if (prescriptionDetails.getDateDebut() != null) {
-            existingPrescription.setDateDebut(prescriptionDetails.getDateDebut());
-        }
-
-        if (prescriptionDetails.getDateFin() != null) {
-            existingPrescription.setDateFin(prescriptionDetails.getDateFin());
-        }
-
-        if (prescriptionDetails.getPosologie() != null) {
-            existingPrescription.setPosologie(prescriptionDetails.getPosologie());
-        }
-
-        if (prescriptionDetails.getInstructions() != null) {
-            existingPrescription.setInstructions(prescriptionDetails.getInstructions());
-        }
-
-        if (prescriptionDetails.getStatut() != null) {
-            existingPrescription.setStatut(prescriptionDetails.getStatut());
-        }
-
-        existingPrescription.setRenouvelable(prescriptionDetails.isRenouvelable());
-
-        if (prescriptionDetails.getPriseMatin() != null) {
-            existingPrescription.setPriseMatin(prescriptionDetails.getPriseMatin());
-        }
-
-        if (prescriptionDetails.getPriseMidi() != null) {
-            existingPrescription.setPriseMidi(prescriptionDetails.getPriseMidi());
-        }
-
-        if (prescriptionDetails.getPriseSoir() != null) {
-            existingPrescription.setPriseSoir(prescriptionDetails.getPriseSoir());
-        }
-
-        existingPrescription.setUpdatedAt(LocalDateTime.now());
-
-        return prescriptionRepository.save(existingPrescription);
-    }
 
     @Override
     public Prescription terminatePrescription(String id) {
@@ -208,10 +159,28 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription renewPrescription(String id, LocalDate newDateFin) {
         Prescription prescription = getPrescriptionById(id);
 
-        if (!prescription.isRenouvelable()) {
-            throw new RuntimeException("This prescription is not renewable");
+        // Check 1: is it marked as renewable at all?
+        if (prescription.getNombreRenouvellements() == null
+                || prescription.getNombreRenouvellements() <= 0) {
+            throw new RuntimeException("Prescription " + id + " is not renewable.");
         }
 
+        // Check 2 (THE FIX): are there renewals remaining?
+        if (prescription.getNombreRenouvellements() <= 0) {
+            throw new RuntimeException(
+                    "No renewals remaining for prescription " + id + "."
+            );
+        }
+
+        // Check 3: can only renew an ACTIVE prescription
+        if (!"ACTIVE".equals(prescription.getStatut())) {
+            throw new RuntimeException(
+                    "Cannot renew prescription with status: " + prescription.getStatut()
+                            + ". Only ACTIVE prescriptions can be renewed."
+            );
+        }
+
+        // Build the new prescription — start date is old end date + 1 day
         Prescription newPrescription = Prescription.builder()
                 .prescriptionId(UUID.randomUUID().toString())
                 .patient(prescription.getPatient())
@@ -223,16 +192,18 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .posologie(prescription.getPosologie())
                 .instructions(prescription.getInstructions())
                 .statut("ACTIVE")
-                .renouvelable(prescription.isRenouvelable())
-                .nombreRenouvellements(prescription.getNombreRenouvellements() - 1)
+                .renouvelable(prescription.getRenouvelable())
+                .nombreRenouvellements(prescription.getNombreRenouvellements() - 1) // decrement safely
                 .priseMatin(prescription.getPriseMatin())
                 .priseMidi(prescription.getPriseMidi())
                 .priseSoir(prescription.getPriseSoir())
+                .resumeSimple(prescription.getResumeSimple())
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Mark old prescription as renewed
+        // Mark the old prescription as renewed (not TERMINEE — different meaning)
         prescription.setStatut("RENOUVELEE");
+        prescription.setUpdatedAt(LocalDateTime.now());
         prescriptionRepository.save(prescription);
 
         return prescriptionRepository.save(newPrescription);
@@ -313,4 +284,88 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
         return prescriptionRepository.countByMedicament(medicament);
     }
+
+    @Override
+    public Prescription updatePrescriptionFromRequest(String id, PrescriptionRequestDTO request) {
+        Prescription existingPrescription = getPrescriptionById(id);
+
+        // Resolve medicament from ID if provided
+        if (request.getMedicamentId() != null) {
+            Medicament medicament = medicamentRepository.findById(request.getMedicamentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + request.getMedicamentId()));
+            existingPrescription.setMedicament(medicament);
+        }
+
+        if (request.getDateDebut() != null) {
+            existingPrescription.setDateDebut(request.getDateDebut());
+        }
+
+        if (request.getDateFin() != null) {
+            existingPrescription.setDateFin(request.getDateFin());
+        }
+
+        if (request.getPosologie() != null) {
+            existingPrescription.setPosologie(request.getPosologie());
+        }
+
+        if (request.getInstructions() != null) {
+            existingPrescription.setInstructions(request.getInstructions());
+        }
+
+        // Statut should NOT be updatable freely via a generic update —
+        // use the dedicated endpoints (terminate, cancel, renew) instead.
+        // Removing this to prevent status bypass.
+
+        if (request.getPriseMatin() != null) {
+            existingPrescription.setPriseMatin(request.getPriseMatin());
+        }
+
+        if (request.getPriseMidi() != null) {
+            existingPrescription.setPriseMidi(request.getPriseMidi());
+        }
+
+        if (request.getPriseSoir() != null) {
+            existingPrescription.setPriseSoir(request.getPriseSoir());
+        }
+
+        if (request.getNotesMedecin() != null) {
+            existingPrescription.setNotesMedecin(request.getNotesMedecin());
+        }
+
+        if (request.getResumeSimple() != null) {
+            existingPrescription.setResumeSimple(request.getResumeSimple());
+        }
+
+        // Only update renouvelable if explicitly set to true
+        // (avoids the primitive boolean defaulting-to-false problem)
+        if (request.getRenouvelable() != null) {
+            existingPrescription.setRenouvelable(request.getRenouvelable());
+        }
+
+        if (request.getNombreRenouvellements() != null) {
+            existingPrescription.setNombreRenouvellements(request.getNombreRenouvellements());
+        }
+
+        existingPrescription.setUpdatedAt(LocalDateTime.now());
+
+        return prescriptionRepository.save(existingPrescription);
+    }
+
+    @Override
+    public Prescription cancelPrescription(String id) {
+        Prescription prescription = getPrescriptionById(id);
+
+        // Can only cancel an ACTIVE prescription
+        if (!"ACTIVE".equals(prescription.getStatut())) {
+            throw new RuntimeException(
+                    "Cannot cancel prescription with status: " + prescription.getStatut()
+                            + ". Only ACTIVE prescriptions can be cancelled."
+            );
+        }
+
+        prescription.setStatut("INTERROMPUE"); // matches your entity's statut values
+        prescription.setUpdatedAt(LocalDateTime.now());
+        return prescriptionRepository.save(prescription);
+    }
+
 }

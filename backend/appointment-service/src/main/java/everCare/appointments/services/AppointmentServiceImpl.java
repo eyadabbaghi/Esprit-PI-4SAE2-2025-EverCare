@@ -318,4 +318,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             System.out.println("Sending reminder for appointment: " + appointment.getAppointmentId());
         }
     }
+
+
 }

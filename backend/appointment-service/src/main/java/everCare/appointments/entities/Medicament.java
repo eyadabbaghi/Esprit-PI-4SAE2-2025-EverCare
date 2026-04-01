@@ -23,7 +23,9 @@ public class Medicament {
         if (this.medicamentId == null) {
             this.medicamentId = UUID.randomUUID().toString();
         }
+        this.createdAt = LocalDateTime.now();
     }
+
 
     // ========== INFORMATIONS DE BASE ==========
 
@@ -67,4 +69,5 @@ public class Medicament {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
 }

@@ -19,13 +19,7 @@
       {{ successMessage }}
     </div>
 
-    <!-- Patient Info Card Component -->
-    <app-patient-info-card
-      *ngIf="patient"
-      [patient]="patient"
-      [age]="getPatientAge()"
-      [totalAppointments]="appointments.length">
-    </app-patient-info-card>
+
 
     <!-- Upcoming Appointments List Component -->
     <app-appointments-list

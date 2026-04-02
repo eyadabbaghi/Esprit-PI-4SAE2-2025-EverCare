@@ -162,21 +162,74 @@ public class UserController {
         return ResponseEntity.ok(mapToDto(user));
     }
 
-    // ========== GET CAREGIVERS FOR PATIENT ==========
-    /* @GetMapping("/{id}/patients")
-    public ResponseEntity<List<UserDto>> getPatientsByCaregiverId(@PathVariable String id) {
-        System.out.println("ID: " + id);
-        User caregiver = userService.findById(id);
+    // ========== CAREGIVER & PATIENT RELATIONSHIP ENDPOINTS ---- Badr ==========
+    // ADDED: April 2, 2026 - New endpoints to fetch caregiver-patient relationships
+    // These endpoints leverage the existing many-to-many relationship between Users
+    // Usage: Call these endpoints to retrieve caregivers for patients or patients for caregivers
 
-        if (caregiver.getRole() != UserRole.CAREGIVER) {
-            return ResponseEntity.badRequest().build();
+    /**
+     * ADDED: Fetch all caregivers assigned to a specific patient by patient ID
+     *
+     * @param userId The unique identifier of the patient
+     * @return ResponseEntity containing list of caregiver DTOs with status 200 OK
+     *         or error message with status 404 NOT_FOUND if user doesn't exist or is not a patient
+     *
+     * Example:
+     * GET /users/550e8400-e29b-41d4-a716-446655440000/caregivers
+     *
+     * Response: {"caregivers": [{UserDto}, {UserDto}, ...]}
+     */
+    @GetMapping("/{userId}/caregivers")
+    public ResponseEntity<?> getCaregiversByUserId(@PathVariable String userId) {
+        try {
+            List<UserDto> caregivers = userService.getCaregiversByPatientId(userId);
+            return ResponseEntity.ok(Map.of("caregivers", caregivers));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
         }
+    }
 
-        List<UserDto> patients = caregiver.getPatients().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    /**
+     * ADDED: Fetch all caregivers for the authenticated patient (uses JWT token)
+     *
+     * Security: Requires valid JWT authentication token
+     *
+     * @param userDetails The authenticated user details extracted from JWT token
+     * @return ResponseEntity containing list of caregiver DTOs with status 200 OK
+     *         or error message with status 404 NOT_FOUND if user is not a patient
 
-        return ResponseEntity.ok(patients);
-    } */
+     */
+    @GetMapping("/caregivers")
+    public ResponseEntity<?> getMyCaregiversFromAuth(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String email = userDetails.getUsername();
+            List<UserDto> caregivers = userService.getCaregiversByPatientEmail(email);
+            return ResponseEntity.ok(Map.of("caregivers", caregivers));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
+     * ADDED: Fetch all patients assigned to a specific caregiver by caregiver ID
+     *
+     * @param userId The unique identifier of the caregiver
+     * @return ResponseEntity containing list of patient DTOs with status 200 OK
+     *         or error message with status 404 NOT_FOUND if user doesn't exist or is not a caregiver
+     *
+
+     */
+    @GetMapping("/{userId}/patients")
+    public ResponseEntity<?> getPatientsByCaregiverId(@PathVariable String userId) {
+        try {
+            List<UserDto> patients = userService.getPatientsByCaregiveId(userId);
+            return ResponseEntity.ok(Map.of("patients", patients));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
 
 }

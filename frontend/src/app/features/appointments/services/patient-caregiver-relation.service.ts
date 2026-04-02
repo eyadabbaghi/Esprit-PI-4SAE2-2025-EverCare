@@ -36,12 +36,12 @@ export class CaregiverPatientService {
     const url = `${this.baseUrl}/users/${caregiverId}/patients`;
     console.log('Making request to:', url);
 
-    return this.http.get<User[]>(url, {
+    return this.http.get<{patients: User[]}>(url, {
       headers: this.getHeaders()
     }).pipe(
-      map(patients => {
-        console.log('Patients received:', patients);
-        return patients;
+      map(response => {
+        console.log('Patients received:', response);
+        return response.patients || [];
       }),
       catchError(error => {
         console.error('Error in getPatientsByCaregiverId:', error);

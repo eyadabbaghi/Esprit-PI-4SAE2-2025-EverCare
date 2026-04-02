@@ -649,12 +649,155 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 26
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128046195,
+      "startOffset": 6618,
+      "endOffset": 7084,
+      "codeContent": "    @GetMapping(\"/{userId}/caregivers\")\n    public ResponseEntity\u003c?\u003e getCaregiversByUserId(@PathVariable String userId) {\n        try {\n            List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientId(userId);\n            return ResponseEntity.ok(Map.of(\"caregivers\", caregivers));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n        }\n    }\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 11
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128046258,
+      "startOffset": 7085,
+      "endOffset": 7605,
+      "codeContent": "    @GetMapping(\"/caregivers\")\n    public ResponseEntity\u003c?\u003e getMyCaregiversFromAuth(@AuthenticationPrincipal UserDetails userDetails) {\n        try {\n            String email \u003d userDetails.getUsername();\n            List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientEmail(email);\n            return ResponseEntity.ok(Map.of(\"caregivers\", caregivers));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 10
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128046278,
+      "startOffset": 7622,
+      "endOffset": 8138,
+      "codeContent": "    // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d GET PATIENTS FOR CAREGIVER \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n    @GetMapping(\"/{userId}/patients\")\n    public ResponseEntity\u003c?\u003e getPatientsByCaregiverId(@PathVariable String userId) {\n        try {\n            List\u003cUserDto\u003e patients \u003d userService.getPatientsByCaregiveId(userId);\n            return ResponseEntity.ok(Map.of(\"patients\", patients));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n        }\n    }\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 12
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1775128053524,
+      "startOffset": 10578,
+      "endOffset": 13236,
+      "codeContent": "\n    // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d CAREGIVER AND PATIENT RELATIONSHIPS \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\n    /**\n     * Get all caregivers for a specific patient by patient ID\n     * @param patientId the ID of the patient\n     * @return list of caregiver DTOs\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getCaregiversByPatientId(String patientId) {\n        User patient \u003d findByUserId(patientId);\n        \n        if (patient.getRole() !\u003d UserRole.PATIENT) {\n            throw new RuntimeException(\"User with ID \" + patientId + \" is not a patient\");\n        }\n        \n        return patient.getCaregivers().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * Get all caregivers for the authenticated patient by email\n     * @param patientEmail the email of the patient\n     * @return list of caregiver DTOs\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getCaregiversByPatientEmail(String patientEmail) {\n        User patient \u003d findByEmail(patientEmail);\n        \n        if (patient.getRole() !\u003d UserRole.PATIENT) {\n            throw new RuntimeException(\"User with email \" + patientEmail + \" is not a patient\");\n        }\n        \n        return patient.getCaregivers().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * Get all patients for a specific caregiver by caregiver ID\n     * @param caregiverId the ID of the caregiver\n     * @return list of patient DTOs\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getPatientsByCaregiveId(String caregiverId) {\n        User caregiver \u003d findByUserId(caregiverId);\n        \n        if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            throw new RuntimeException(\"User with ID \" + caregiverId + \" is not a caregiver\");\n        }\n        \n        return caregiver.getPatients().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * Get all patients for the authenticated caregiver by email\n     * @param caregiverEmail the email of the caregiver\n     * @return list of patient DTOs\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getPatientsByCaregiveEmail(String caregiverEmail) {\n        User caregiver \u003d findByEmail(caregiverEmail);\n        \n        if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            throw new RuntimeException(\"User with email \" + caregiverEmail + \" is not a caregiver\");\n        }\n        \n        return caregiver.getPatients().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 75
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157565,
+      "startOffset": 6841,
+      "endOffset": 6954,
+      "codeContent": "        if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            return ResponseEntity.badRequest().build();\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 3
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157575,
+      "startOffset": 6964,
+      "endOffset": 7115,
+      "codeContent": "\n        List\u003cUserDto\u003e patients \u003d caregiver.getPatients().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157586,
+      "startOffset": 7116,
+      "endOffset": 7169,
+      "codeContent": "        return ResponseEntity.ok(patients);\n    } */\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 3
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157654,
+      "startOffset": 6562,
+      "endOffset": 7861,
+      "codeContent": "    // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d CAREGIVER \u0026 PATIENT RELATIONSHIP ENDPOINTS \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n    // ADDED: April 2, 2026 - New endpoints to fetch caregiver-patient relationships\n    // These endpoints leverage the existing many-to-many relationship between Users\n    // Usage: Call these endpoints to retrieve caregivers for patients or patients for caregivers\n    \n    /**\n     * ADDED: Fetch all caregivers assigned to a specific patient by patient ID\n     * \n     * @param userId The unique identifier of the patient\n     * @return ResponseEntity containing list of caregiver DTOs with status 200 OK\n     *         or error message with status 404 NOT_FOUND if user doesn\u0027t exist or is not a patient\n     * \n     * Example:\n     * GET /users/550e8400-e29b-41d4-a716-446655440000/caregivers\n     * \n     * Response: {\"caregivers\": [{UserDto}, {UserDto}, ...]}\n     */\n    @GetMapping(\"/{userId}/caregivers\")\n    public ResponseEntity\u003c?\u003e getCaregiversByUserId(@PathVariable String userId) {\n        try {\n            List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientId(userId);\n            return ResponseEntity.ok(Map.of(\"caregivers\", caregivers));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 26
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157701,
+      "startOffset": 7878,
+      "endOffset": 8996,
+      "codeContent": "    /**\n     * ADDED: Fetch all caregivers for the authenticated patient (uses JWT token)\n     * \n     * Security: Requires valid JWT authentication token\n     * \n     * @param userDetails The authenticated user details extracted from JWT token\n     * @return ResponseEntity containing list of caregiver DTOs with status 200 OK\n     *         or error message with status 404 NOT_FOUND if user is not a patient\n     * \n     * Example:\n     * GET /users/caregivers\n     * Authorization: Bearer \u003cjwt_token\u003e\n     * \n     * Response: {\"caregivers\": [{UserDto}, {UserDto}, ...]}\n     */\n    @GetMapping(\"/caregivers\")\n    public ResponseEntity\u003c?\u003e getMyCaregiversFromAuth(@AuthenticationPrincipal UserDetails userDetails) {\n        try {\n            String email \u003d userDetails.getUsername();\n            List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientEmail(email);\n            return ResponseEntity.ok(Map.of(\"caregivers\", caregivers));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n        }\n    }\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 27
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128157709,
+      "startOffset": 8997,
+      "endOffset": 10118,
+      "codeContent": "    /**\n     * ADDED: Fetch all patients assigned to a specific caregiver by caregiver ID\n     * \n     * @param userId The unique identifier of the caregiver\n     * @return ResponseEntity containing list of patient DTOs with status 200 OK\n     *         or error message with status 404 NOT_FOUND if user doesn\u0027t exist or is not a caregiver\n     * \n     * Example:\n     * GET /users/6ba7b810-9dad-11d1-80b4-00c04fd430c8/patients\n     * \n     * Response: {\"patients\": [{UserDto}, {UserDto}, ...]}\n     * \n     * Note: This endpoint can also be used to get patients for the authenticated caregiver\n     * if the caregiver role is verified in the database\n     */\n    @GetMapping(\"/{userId}/patients\")\n    public ResponseEntity\u003c?\u003e getPatientsByCaregiverId(@PathVariable String userId) {\n        try {\n            List\u003cUserDto\u003e patients \u003d userService.getPatientsByCaregiveId(userId);\n            return ResponseEntity.ok(Map.of(\"patients\", patients));\n        } catch (Exception e) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND)\n                    .body(Map.of(\"message\", e.getMessage()));\n        }\n    }\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 26
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1775128174078,
+      "startOffset": 10578,
+      "endOffset": 16896,
+      "codeContent": "\n    // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d CAREGIVER AND PATIENT RELATIONSHIPS \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n    // ADDED: April 2, 2026 - New methods to manage and fetch patient-caregiver relationships\n    // These methods utilize the existing @ManyToMany relationship in the User entity\n    // The relationship is managed through the \u0027patient_caregiver\u0027 junction table\n    // \n    // TEAM NOTE: \n    // - Patient entity has: Set\u003cUser\u003e caregivers (joinColumns \u003d patient_id)\n    // - Caregiver entity has: Set\u003cUser\u003e patients (inverse side of caregivers)\n    // - Before using these endpoints, ensure relationships are established using updateUser()\n    //   method with the \u0027connectedEmail\u0027 parameter\n    // - All methods use @Transactional(readOnly \u003d true) for performance optimization\n\n    /**\n     * ADDED: Retrieve all caregivers assigned to a specific patient using patient ID\n     * \n     * Use Case: Frontend needs to display all caregivers for a patient\u0027s profile\n     * \n     * @param patientId The UUID of the patient\n     * @return List of UserDto objects representing caregivers\n     * @throws RuntimeException if user ID doesn\u0027t exist or user is not a PATIENT role\n     * \n     * Performance: Uses readOnly transaction, leverages existing eager-loaded relationship\n     * \n     * Example:\n     * List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientId(\"550e8400-e29b-41d4-a716-446655440000\");\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getCaregiversByPatientId(String patientId) {\n        User patient \u003d findByUserId(patientId);\n        \n        // Validate that the user is actually a PATIENT before returning caregivers\n        if (patient.getRole() !\u003d UserRole.PATIENT) {\n            throw new RuntimeException(\"User with ID \" + patientId + \" is not a patient\");\n        }\n        \n        // Stream the caregivers set, map each to DTO, and collect into list\n        return patient.getCaregivers().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * ADDED: Retrieve all caregivers for the authenticated patient using email\n     * \n     * Use Case: When a patient is logged in and needs to see their own caregivers\n     * This method extracts patient email from the JWT token\u0027s UserDetails\n     * \n     * @param patientEmail The email of the authenticated patient\n     * @return List of UserDto objects representing caregivers\n     * @throws RuntimeException if email doesn\u0027t exist or user is not a PATIENT role\n     * \n     * Security: Called from controller with @AuthenticationPrincipal annotation\n     * This ensures only authenticated users can call this method\n     * \n     * Example:\n     * UserDetails userDetails \u003d // from @AuthenticationPrincipal\n     * List\u003cUserDto\u003e caregivers \u003d userService.getCaregiversByPatientEmail(userDetails.getUsername());\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getCaregiversByPatientEmail(String patientEmail) {\n        User patient \u003d findByEmail(patientEmail);\n        \n        // Validate that the user is actually a PATIENT before returning caregivers\n        if (patient.getRole() !\u003d UserRole.PATIENT) {\n            throw new RuntimeException(\"User with email \" + patientEmail + \" is not a patient\");\n        }\n        \n        // Stream the caregivers set, map each to DTO, and collect into list\n        return patient.getCaregivers().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * ADDED: Retrieve all patients assigned to a specific caregiver using caregiver ID\n     * \n     * Use Case: Frontend needs to display all patients under a caregiver\u0027s care\n     * \n     * @param caregiverId The UUID of the caregiver\n     * @return List of UserDto objects representing patients\n     * @throws RuntimeException if user ID doesn\u0027t exist or user is not a CAREGIVER role\n     * \n     * Performance: Uses readOnly transaction, leverages existing eager-loaded relationship\n     * \n     * Example:\n     * List\u003cUserDto\u003e patients \u003d userService.getPatientsByCaregiveId(\"6ba7b810-9dad-11d1-80b4-00c04fd430c8\");\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getPatientsByCaregiveId(String caregiverId) {\n        User caregiver \u003d findByUserId(caregiverId);\n        \n        // Validate that the user is actually a CAREGIVER before returning patients\n        if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            throw new RuntimeException(\"User with ID \" + caregiverId + \" is not a caregiver\");\n        }\n        \n        // Stream the patients set, map each to DTO, and collect into list\n        return caregiver.getPatients().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n\n    /**\n     * ADDED: Retrieve all patients for the authenticated caregiver using email\n     * \n     * Use Case: When a caregiver is logged in and needs to see their assigned patients\n     * This method extracts caregiver email from the JWT token\u0027s UserDetails\n     * \n     * @param caregiverEmail The email of the authenticated caregiver\n     * @return List of UserDto objects representing patients\n     * @throws RuntimeException if email doesn\u0027t exist or user is not a CAREGIVER role\n     * \n     * Security: Called from controller with @AuthenticationPrincipal annotation\n     * This ensures only authenticated users can call this method\n     * \n     * Example:\n     * UserDetails userDetails \u003d // from @AuthenticationPrincipal\n     * List\u003cUserDto\u003e patients \u003d userService.getPatientsByCaregiveEmail(userDetails.getUsername());\n     */\n    @Transactional(readOnly \u003d true)\n    public List\u003cUserDto\u003e getPatientsByCaregiveEmail(String caregiverEmail) {\n        User caregiver \u003d findByEmail(caregiverEmail);\n        \n        // Validate that the user is actually a CAREGIVER before returning patients\n        if (caregiver.getRole() !\u003d UserRole.CAREGIVER) {\n            throw new RuntimeException(\"User with email \" + caregiverEmail + \" is not a caregiver\");\n        }\n        \n        // Stream the patients set, map each to DTO, and collect into list\n        return caregiver.getPatients().stream()\n                .map(this::mapToDto)\n                .collect(Collectors.toList());\n    }\n    // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d END OF CAREGIVER AND PATIENT RELATIONSHIPS \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 136
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128801023,
+      "startOffset": 8283,
+      "endOffset": 8440,
+      "codeContent": "  *\n     * Example:\n     * GET /users/caregivers\n     * Authorization: Bearer \u003cjwt_token\u003e\n     *\n     * Response: {\"caregivers\": [{UserDto}, {UserDto}, ...]}",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 6
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/controller/UserController.java",
+      "timestamp": 1775128801798,
+      "startOffset": 9337,
+      "endOffset": 9634,
+      "codeContent": " * Example:\n     * GET /users/6ba7b810-9dad-11d1-80b4-00c04fd430c8/patients\n     *\n     * Response: {\"patients\": [{UserDto}, {UserDto}, ...]}\n     *\n     * Note: This endpoint can also be used to get patients for the authenticated caregiver\n     * if the caregiver role is verified in the database",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 7
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 59,
-      "totalLines": 2468
+      "usageCount": 72,
+      "totalLines": 2815
     }
   }
 }

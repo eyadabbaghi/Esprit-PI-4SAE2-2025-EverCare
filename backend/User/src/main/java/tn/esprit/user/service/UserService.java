@@ -274,4 +274,139 @@ public class UserService {
         User user = findByUserId(userId);
         return mapToDto(user);
     }
+
+    // ============ CAREGIVER AND PATIENT RELATIONSHIPS ============
+    // ADDED: April 2, 2026 - New methods to manage and fetch patient-caregiver relationships
+    // These methods utilize the existing @ManyToMany relationship in the User entity
+    // The relationship is managed through the 'patient_caregiver' junction table
+    // 
+    // TEAM NOTE: 
+    // - Patient entity has: Set<User> caregivers (joinColumns = patient_id)
+    // - Caregiver entity has: Set<User> patients (inverse side of caregivers)
+    // - Before using these endpoints, ensure relationships are established using updateUser()
+    //   method with the 'connectedEmail' parameter
+    // - All methods use @Transactional(readOnly = true) for performance optimization
+
+    /**
+     * ADDED: Retrieve all caregivers assigned to a specific patient using patient ID
+     * 
+     * Use Case: Frontend needs to display all caregivers for a patient's profile
+     * 
+     * @param patientId The UUID of the patient
+     * @return List of UserDto objects representing caregivers
+     * @throws RuntimeException if user ID doesn't exist or user is not a PATIENT role
+     * 
+     * Performance: Uses readOnly transaction, leverages existing eager-loaded relationship
+     * 
+     * Example:
+     * List<UserDto> caregivers = userService.getCaregiversByPatientId("550e8400-e29b-41d4-a716-446655440000");
+     */
+    @Transactional(readOnly = true)
+    public List<UserDto> getCaregiversByPatientId(String patientId) {
+        User patient = findByUserId(patientId);
+        
+        // Validate that the user is actually a PATIENT before returning caregivers
+        if (patient.getRole() != UserRole.PATIENT) {
+            throw new RuntimeException("User with ID " + patientId + " is not a patient");
+        }
+        
+        // Stream the caregivers set, map each to DTO, and collect into list
+        return patient.getCaregivers().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ADDED: Retrieve all caregivers for the authenticated patient using email
+     * 
+     * Use Case: When a patient is logged in and needs to see their own caregivers
+     * This method extracts patient email from the JWT token's UserDetails
+     * 
+     * @param patientEmail The email of the authenticated patient
+     * @return List of UserDto objects representing caregivers
+     * @throws RuntimeException if email doesn't exist or user is not a PATIENT role
+     * 
+     * Security: Called from controller with @AuthenticationPrincipal annotation
+     * This ensures only authenticated users can call this method
+     * 
+     * Example:
+     * UserDetails userDetails = // from @AuthenticationPrincipal
+     * List<UserDto> caregivers = userService.getCaregiversByPatientEmail(userDetails.getUsername());
+     */
+    @Transactional(readOnly = true)
+    public List<UserDto> getCaregiversByPatientEmail(String patientEmail) {
+        User patient = findByEmail(patientEmail);
+        
+        // Validate that the user is actually a PATIENT before returning caregivers
+        if (patient.getRole() != UserRole.PATIENT) {
+            throw new RuntimeException("User with email " + patientEmail + " is not a patient");
+        }
+        
+        // Stream the caregivers set, map each to DTO, and collect into list
+        return patient.getCaregivers().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ADDED: Retrieve all patients assigned to a specific caregiver using caregiver ID
+     * 
+     * Use Case: Frontend needs to display all patients under a caregiver's care
+     * 
+     * @param caregiverId The UUID of the caregiver
+     * @return List of UserDto objects representing patients
+     * @throws RuntimeException if user ID doesn't exist or user is not a CAREGIVER role
+     * 
+     * Performance: Uses readOnly transaction, leverages existing eager-loaded relationship
+     * 
+     * Example:
+     * List<UserDto> patients = userService.getPatientsByCaregiveId("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+     */
+    @Transactional(readOnly = true)
+    public List<UserDto> getPatientsByCaregiveId(String caregiverId) {
+        User caregiver = findByUserId(caregiverId);
+        
+        // Validate that the user is actually a CAREGIVER before returning patients
+        if (caregiver.getRole() != UserRole.CAREGIVER) {
+            throw new RuntimeException("User with ID " + caregiverId + " is not a caregiver");
+        }
+        
+        // Stream the patients set, map each to DTO, and collect into list
+        return caregiver.getPatients().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ADDED: Retrieve all patients for the authenticated caregiver using email
+     * 
+     * Use Case: When a caregiver is logged in and needs to see their assigned patients
+     * This method extracts caregiver email from the JWT token's UserDetails
+     * 
+     * @param caregiverEmail The email of the authenticated caregiver
+     * @return List of UserDto objects representing patients
+     * @throws RuntimeException if email doesn't exist or user is not a CAREGIVER role
+     * 
+     * Security: Called from controller with @AuthenticationPrincipal annotation
+     * This ensures only authenticated users can call this method
+     * 
+     * Example:
+     * UserDetails userDetails = // from @AuthenticationPrincipal
+     * List<UserDto> patients = userService.getPatientsByCaregiveEmail(userDetails.getUsername());
+     */
+    @Transactional(readOnly = true)
+    public List<UserDto> getPatientsByCaregiveEmail(String caregiverEmail) {
+        User caregiver = findByEmail(caregiverEmail);
+        
+        // Validate that the user is actually a CAREGIVER before returning patients
+        if (caregiver.getRole() != UserRole.CAREGIVER) {
+            throw new RuntimeException("User with email " + caregiverEmail + " is not a caregiver");
+        }
+        
+        // Stream the patients set, map each to DTO, and collect into list
+        return caregiver.getPatients().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+    // ============ END OF CAREGIVER AND PATIENT RELATIONSHIPS ============
 }

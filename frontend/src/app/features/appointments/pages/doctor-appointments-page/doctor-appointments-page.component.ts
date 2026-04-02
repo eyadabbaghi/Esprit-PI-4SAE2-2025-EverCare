@@ -10,7 +10,7 @@ import { AvailabilityService } from '../../services/availability.service';
 import { ConsultationTypeService } from '../../services/consultation-type.service';
 import { Availability, AvailabilityStats } from '../../models/availability.model';
 import { ConsultationType } from '../../models/consultation-type.model';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-doctor-appointments-page',
   templateUrl: './doctor-appointments-page.component.html',
@@ -94,7 +94,8 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     private appointmentService: AppointmentService,
     private authService: AuthService,
     private availabilityService: AvailabilityService,
-    private consultationTypeService: ConsultationTypeService
+    private consultationTypeService: ConsultationTypeService,
+    private router: Router
   ) {
   }
 
@@ -577,9 +578,21 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     this.selectedDate = new Date(date);
   }
 
-  openPrescription(): void {
-    console.log('Opening prescription form');
-  }
+   openPrescription(): void {
+     if (!this.selectedAppointment) return;
+
+     // Extract patient and appointment data
+     const patientId = this.selectedAppointment.patientId;
+     const appointmentId = this.selectedAppointment.appointmentId;
+
+     // Navigate to prescription page with query parameters
+     this.router.navigate(['/prescriptions/doctor'], {
+       queryParams: {
+         patientId: patientId,
+         appointmentId: appointmentId
+       }
+     });
+   }
 
   enableNotesEditing(): void {
     this.isEditingNotes = true;

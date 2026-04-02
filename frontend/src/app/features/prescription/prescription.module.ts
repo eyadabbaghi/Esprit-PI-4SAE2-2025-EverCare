@@ -11,6 +11,10 @@ import { PrescriptionCardComponent } from './components/prescription-card/prescr
 import { PrescriptionFormComponent } from './components/prescription-form/prescription-form.component';
 import { PrescriptionDetailsComponent } from './components/prescription-details/prescription-details.component';
 import { MedicationSelectorComponent } from './components/medication-selector/medication-selector.component';
+import { UserPrescriptionsComponent } from './pages/user-prescriptions/user-prescriptions.component';
+import { PatientPrescriptionPageComponent } from './pages/patient-prescription-page/patient-prescription-page.component';
+import { DoctorPrescriptionPageComponent } from './pages/doctor-prescription-page/doctor-prescription-page.component';
+import { CaregiverPrescriptionPageComponent } from './pages/caregiver-prescription-page/caregiver-prescription-page.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +23,11 @@ import { MedicationSelectorComponent } from './components/medication-selector/me
     PrescriptionCardComponent,
     PrescriptionFormComponent,
     PrescriptionDetailsComponent,
-    MedicationSelectorComponent
+    MedicationSelectorComponent,
+    UserPrescriptionsComponent,
+    PatientPrescriptionPageComponent,
+    DoctorPrescriptionPageComponent,
+    CaregiverPrescriptionPageComponent
   ],
   imports: [
     CommonModule,

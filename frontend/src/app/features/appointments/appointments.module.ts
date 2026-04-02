@@ -74,7 +74,8 @@ import { UserAppointmentsComponent } from './pages/user-appointments/user-appoin
     FormsModule,
     WeeklyScheduleComponent,
     RouterModule,
-    ToastrModule.forRoot()
+    ToastrModule.forRoot(),
+    
   ]
 })
 export class AppointmentsModule { }

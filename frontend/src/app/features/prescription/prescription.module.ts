@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { LucideAngularModule } from 'lucide-angular';
 
 import { PrescriptionRoutingModule } from './prescription-routing.module';
 
@@ -16,6 +17,9 @@ import { PatientPrescriptionPageComponent } from './pages/patient-prescription-p
 import { DoctorPrescriptionPageComponent } from './pages/doctor-prescription-page/doctor-prescription-page.component';
 import { CaregiverPrescriptionPageComponent } from './pages/caregiver-prescription-page/caregiver-prescription-page.component';
 
+// Import PrescriptionActionsComponent from appointments module
+import { PrescriptionActionsComponent } from '../appointments/components/prescription-actions/prescription-actions.component';
+
 @NgModule({
   declarations: [
     PrescriptionPageComponent,
@@ -27,12 +31,14 @@ import { CaregiverPrescriptionPageComponent } from './pages/caregiver-prescripti
     UserPrescriptionsComponent,
     PatientPrescriptionPageComponent,
     DoctorPrescriptionPageComponent,
-    CaregiverPrescriptionPageComponent
+    CaregiverPrescriptionPageComponent,
+    PrescriptionActionsComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     HttpClientModule,
+    LucideAngularModule,
     PrescriptionRoutingModule
   ]
 })

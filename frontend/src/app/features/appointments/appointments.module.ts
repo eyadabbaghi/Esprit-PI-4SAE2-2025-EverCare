@@ -30,6 +30,7 @@ import { PatientInfoCardComponent } from './components/patient-info-card/patient
 import { AppointmentsListComponent } from './components/appointments-list/appointments-list.component';
 import { RouterModule } from '@angular/router';
 import { ToastrModule } from 'ngx-toastr';
+import { LucideAngularModule } from 'lucide-angular';
 
 // NEW: Video consultation
 import { VideoConsultationPageComponent } from './pages/video-consultation-page/video-consultation-page.component';
@@ -75,6 +76,7 @@ import { UserAppointmentsComponent } from './pages/user-appointments/user-appoin
     WeeklyScheduleComponent,
     RouterModule,
     ToastrModule.forRoot(),
+    LucideAngularModule,
     
   ]
 })

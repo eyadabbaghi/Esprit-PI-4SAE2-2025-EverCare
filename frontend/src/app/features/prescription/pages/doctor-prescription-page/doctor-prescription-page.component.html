@@ -21,7 +21,17 @@
           📋 Issued
         </button>
 
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'new-prescription'"
+                [class.text-white]="activeTab === 'new-prescription'"
+                [class.text-[#2D1B4E]]="activeTab !== 'new-prescription'"
+                (click)="activeTab = 'new-prescription'">
+          ✏️ New Prescription
+        </button>
+
+
       </div>
+
     </div>
 
     <!-- Loading -->
@@ -81,6 +91,8 @@
         </div>
       </div>
 
+
+
       <!-- Prescription lists -->
       <div class="grid lg:grid-cols-2 gap-6">
         <app-prescription-list
@@ -108,7 +120,16 @@
       </div>
     </div>
 
-
+    <!-- TAB: New Prescription -->
+    <div *ngIf="activeTab === 'new-prescription'" class="space-y-6">
+      <app-prescription-form
+        [patientId]="selectedPatientId"
+        [doctorId]="currentUser?.userId || ''"
+        [appointmentId]="selectedAppointmentId"
+        (onSubmit)="onFormSubmit($event)"
+        (onClose)="activeTab = 'issued'">
+      </app-prescription-form>
+    </div>
 
   </div>
 </div>
@@ -122,3 +143,5 @@
   (onCancelled)="onPrescriptionCancelled($event)"
   (onPdfGenerated)="onPdfGenerated($event)">
 </app-prescription-details>
+
+

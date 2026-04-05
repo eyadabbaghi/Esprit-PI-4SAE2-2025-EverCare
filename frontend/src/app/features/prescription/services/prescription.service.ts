@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Prescription, PrescriptionRequest } from '../models/prescription.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PrescriptionService {
 
-  private readonly API_URL = 'http://localhost:8089/EverCare/prescriptions';
+  private readonly API_URL = `${environment.apiUrl}/prescriptions`;
 
   constructor(private http: HttpClient) {}
 
@@ -109,5 +111,56 @@ export class PrescriptionService {
 
   countByMedicament(medicamentId: string): Observable<number> {
     return this.http.get<number>(`${this.API_URL}/count/medicament/${medicamentId}`);
+  }
+
+  // ========== PDF ACTIONS ==========
+
+  downloadPdf(prescriptionId: string): void {
+    this.http.get(`${this.API_URL}/${prescriptionId}/pdf`, { responseType: 'blob' }).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `prescription-${prescriptionId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('PDF download error:', error);
+        
+        // Handle different error types
+        if (error.status === 500) {
+          throw new Error('PDF generation is currently unavailable. Please try again later or contact support.');
+        } else if (error.status === 404) {
+          throw new Error('Prescription not found or PDF not available.');
+        } else if (error.status === 403) {
+          throw new Error('You do not have permission to download this prescription.');
+        } else {
+          throw new Error('Failed to download PDF. Please try again.');
+        }
+      }
+    });
+  }
+
+  sendPdfByEmail(prescriptionId: string): Observable<void> {
+    return this.http.post<void>(`${this.API_URL}/${prescriptionId}/send-pdf`, {}).pipe(
+      catchError((error) => {
+        console.error('Email send error:', error);
+        
+        let errorMessage = 'Failed to send email. Please try again.';
+        
+        if (error.status === 500) {
+          errorMessage = 'Email service is currently unavailable. Please try again later.';
+        } else if (error.status === 404) {
+          errorMessage = 'Prescription not found or patient email not available.';
+        } else if (error.status === 403) {
+          errorMessage = 'You do not have permission to send this prescription.';
+        }
+        
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 }

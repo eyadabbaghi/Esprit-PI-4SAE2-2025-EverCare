@@ -1,5 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Prescription } from '../../models/prescription.model';
+import { PrescriptionService } from '../../services/prescription.service';
+import { ToastrService } from 'ngx-toastr';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-prescription-card',
@@ -14,6 +18,11 @@ export class PrescriptionCardComponent {
   @Output() onRenew = new EventEmitter<Prescription>();
   @Output() onCancel = new EventEmitter<Prescription>();
   @Output() onDownloadPdf = new EventEmitter<Prescription>();
+
+  constructor(
+    private prescriptionService: PrescriptionService,
+    private toastr: ToastrService
+  ) {}
 
   getStatusClass(): string {
     switch (this.prescription.statut) {
@@ -54,5 +63,15 @@ export class PrescriptionCardComponent {
     return !!(this.prescription.priseMatin ||
       this.prescription.priseMidi  ||
       this.prescription.priseSoir);
+  }
+
+  quickDownload(prescriptionId: string): void {
+    try {
+      this.prescriptionService.downloadPdf(prescriptionId);
+      this.toastr.success('PDF download started');
+    } catch (error) {
+      console.error('Quick download error:', error);
+      this.toastr.error('Failed to download PDF. Please try again.');
+    }
   }
 }

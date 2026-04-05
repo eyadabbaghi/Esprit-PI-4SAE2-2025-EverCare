@@ -50,7 +50,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription createPrescriptionFromConsultation(String patientId, String doctorId,
                                                            String appointmentId, String medicamentId,
                                                            LocalDate dateDebut, LocalDate dateFin,
-                                                           String posologie) {
+                                                           String posologie, String instructions) {
 
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
@@ -74,6 +74,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .dateDebut(dateDebut)
                 .dateFin(dateFin)
                 .posologie(posologie)
+                .instructions(instructions)
                 .statut("ACTIVE")
                 .renouvelable(false)
                 .build();
@@ -252,11 +253,76 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     @Override
+    public void deletePrescriptions(List<String> ids) {
+        List<Prescription> prescriptions = prescriptionRepository.findAllById(ids);
+        prescriptionRepository.deleteAll(prescriptions);
+    }
+
+    @Override
     public void deletePrescriptionsByPatient(String patientId) {
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
         List<Prescription> prescriptions = prescriptionRepository.findByPatient(patient);
         prescriptionRepository.deleteAll(prescriptions);
+    }
+
+    // ========== SEARCH AND FILTER ==========
+
+    @Override
+    public List<Prescription> searchPrescriptions(String patientName, String doctorName, String medicamentName, 
+                                                 String status, LocalDate dateFrom, LocalDate dateTo) {
+        List<Prescription> prescriptions = getAllPrescriptions();
+        
+        // Filter by patient name
+        if (patientName != null && !patientName.trim().isEmpty()) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> p.getPatient() != null && 
+                           p.getPatient().getName() != null &&
+                           p.getPatient().getName().toLowerCase().contains(patientName.toLowerCase()))
+                .toList();
+        }
+        
+        // Filter by doctor name
+        if (doctorName != null && !doctorName.trim().isEmpty()) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> p.getDoctor() != null && 
+                           p.getDoctor().getName() != null &&
+                           p.getDoctor().getName().toLowerCase().contains(doctorName.toLowerCase()))
+                .toList();
+        }
+        
+        // Filter by medicament name
+        if (medicamentName != null && !medicamentName.trim().isEmpty()) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> p.getMedicament() != null && 
+                           p.getMedicament().getNomCommercial() != null &&
+                           p.getMedicament().getNomCommercial().toLowerCase().contains(medicamentName.toLowerCase()))
+                .toList();
+        }
+        
+        // Filter by status
+        if (status != null && !status.trim().isEmpty()) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> status.equals(p.getStatut()))
+                .toList();
+        }
+        
+        // Filter by date range
+        if (dateFrom != null) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> p.getDatePrescription() != null && 
+                           !p.getDatePrescription().isBefore(dateFrom))
+                .toList();
+        }
+        
+        if (dateTo != null) {
+            prescriptions = prescriptions.stream()
+                .filter(p -> p.getDatePrescription() != null && 
+                           !p.getDatePrescription().isAfter(dateTo))
+                .toList();
+        }
+        
+        return prescriptions;
     }
 
     // ========== BUSINESS LOGIC ==========

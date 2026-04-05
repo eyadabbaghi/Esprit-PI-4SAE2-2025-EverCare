@@ -4,11 +4,13 @@ import { UserPrescriptionsComponent } from './pages/user-prescriptions/user-pres
 import { PatientPrescriptionPageComponent } from './pages/patient-prescription-page/patient-prescription-page.component';
 import { DoctorPrescriptionPageComponent } from './pages/doctor-prescription-page/doctor-prescription-page.component';
 import { CaregiverPrescriptionPageComponent } from './pages/caregiver-prescription-page/caregiver-prescription-page.component';
+import {PrescriptionFormComponent} from './components/prescription-form/prescription-form.component';
 
 const routes: Routes = [
   { path: '', component: UserPrescriptionsComponent },
   { path: 'patient', component: PatientPrescriptionPageComponent },
   { path: 'doctor', component: DoctorPrescriptionPageComponent },
+  { path: 'doctor/prescribe', component: PrescriptionFormComponent },
   { path: 'caregiver', component: CaregiverPrescriptionPageComponent },
 ];
 

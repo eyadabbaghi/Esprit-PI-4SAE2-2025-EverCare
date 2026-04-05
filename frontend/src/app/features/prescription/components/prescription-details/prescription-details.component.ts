@@ -1,6 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Prescription } from '../../models/prescription.model';
 import { PrescriptionService } from '../../services/prescription.service';
+import { PrescriptionActionsComponent } from '../../../appointments/components/prescription-actions/prescription-actions.component';
 
 @Component({
   selector: 'app-prescription-details',

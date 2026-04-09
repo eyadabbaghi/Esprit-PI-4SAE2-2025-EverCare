@@ -16,21 +16,21 @@
                 [class.bg-[#7C3AED]]="activeTab === 'active'"
                 [class.text-white]="activeTab === 'active'"
                 [class.text-[#2D1B4E]]="activeTab !== 'active'"
-                (click)="activeTab = 'active'">
+                (click)="goToTab('active')">
           💊 Active
         </button>
         <button class="px-4 py-2 rounded-md text-sm transition-colors"
                 [class.bg-[#7C3AED]]="activeTab === 'today'"
                 [class.text-white]="activeTab === 'today'"
                 [class.text-[#2D1B4E]]="activeTab !== 'today'"
-                (click)="activeTab = 'today'">
+                (click)="goToTab('today')">
           📅 Today
         </button>
         <button class="px-4 py-2 rounded-md text-sm transition-colors"
                 [class.bg-[#7C3AED]]="activeTab === 'history'"
                 [class.text-white]="activeTab === 'history'"
                 [class.text-[#2D1B4E]]="activeTab !== 'history'"
-                (click)="activeTab = 'history'">
+                (click)="goToTab('history')">
           🕐 History
         </button>
       </div>
@@ -99,7 +99,7 @@
         [showActions]="true"
         [scrollable]="true"
         [loading]="loading"
-        (onView)="viewPrescription($event)"
+        (onView)="openPrescriptionRoute($event)"
         (onRenew)="viewPrescription($event)"
         (onCancel)="viewPrescription($event)"
         (onDownloadPdf)="onPdfGenerated($event)">
@@ -121,7 +121,7 @@
           <div *ngFor="let p of todayPrescriptions"
                class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg
                       cursor-pointer hover:bg-[#F3E8FF] transition-colors"
-               (click)="viewPrescription(p)">
+               (click)="openPrescriptionRoute(p)">
             <span class="text-2xl">💊</span>
             <div class="flex-1">
               <p class="text-sm font-semibold text-[#2D1B4E]">
@@ -148,7 +148,7 @@
         [showActions]="false"
         [scrollable]="true"
         [loading]="loading"
-        (onView)="viewPrescription($event)">
+        (onView)="openPrescriptionRoute($event)">
       </app-prescription-list>
     </div>
 
@@ -159,6 +159,7 @@
 <app-prescription-details
   *ngIf="selectedPrescription"
   [prescription]="selectedPrescription"
+  [canManage]="false"
   (onClose)="closeDetails()"
   (onRenewed)="onPrescriptionRenewed($event)"
   (onCancelled)="onPrescriptionCancelled($event)"

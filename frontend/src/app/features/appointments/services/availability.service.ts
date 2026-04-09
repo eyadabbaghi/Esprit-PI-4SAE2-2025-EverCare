@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { of } from 'rxjs';
 
 import { Availability } from '../models/availability.model';
 
@@ -25,6 +26,10 @@ export class AvailabilityService {
   }
 
   getAvailabilitiesByDoctor(doctorId: string): Observable<Availability[]> {
+    if (!doctorId) {
+      return of([]);
+    }
+
     return this.http.get<Availability[]>(`${this.baseUrl}/doctor/${doctorId}`);
   }
 

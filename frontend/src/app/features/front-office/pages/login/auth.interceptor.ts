@@ -15,10 +15,19 @@ export class AuthInterceptor implements HttpInterceptor {
 
     // For all other requests, add the token if available
     const token = this.authService.getToken();
+    const currentUser = this.authService.getCurrentUserValue();
     if (token) {
-      const cloned = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${token}`)
-      });
+      let headers = req.headers.set('Authorization', `Bearer ${token}`);
+
+      if (currentUser?.userId && !headers.has('X-User-Id')) {
+        headers = headers.set('X-User-Id', currentUser.userId);
+      }
+
+      if (currentUser?.role && !headers.has('X-User-Role')) {
+        headers = headers.set('X-User-Role', currentUser.role);
+      }
+
+      const cloned = req.clone({ headers });
       return next.handle(cloned);
     }
     return next.handle(req);

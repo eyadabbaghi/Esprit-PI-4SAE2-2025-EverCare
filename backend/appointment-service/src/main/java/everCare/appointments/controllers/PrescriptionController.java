@@ -6,18 +6,26 @@ import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import everCare.appointments.dtos.PdfEmailRequest;
+import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.dtos.PrescriptionResponseDTO;
+import everCare.appointments.dtos.StatusCountDTO;
+import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.dtos.PatientSimpleDTO;
 import everCare.appointments.dtos.UserSimpleDTO;
 import everCare.appointments.feign.NotificationFeignClient;
 import everCare.appointments.feign.PatientFeignClient;
 import everCare.appointments.mappers.PrescriptionMapper;
 import everCare.appointments.services.PrescriptionPdfService;
+import everCare.appointments.services.PrescriptionAccessControlService;
 import everCare.appointments.services.PrescriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +46,7 @@ import java.io.ByteArrayOutputStream;
 public class PrescriptionController {
 
     private final PrescriptionService prescriptionService;
+    private final PrescriptionAccessControlService accessControlService;
     private final PrescriptionMapper mapper;
     private final PrescriptionPdfService prescriptionPdfService;
     private final NotificationFeignClient notificationFeignClient;
@@ -51,6 +61,8 @@ public class PrescriptionController {
      */
     @PostMapping
     public ResponseEntity<PrescriptionResponseDTO> createPrescription(@RequestBody PrescriptionRequestDTO request) {
+        accessControlService.assertCanManagePrescription(request.getDoctorId());
+
         PrescriptionResponseDTO response = mapper.toResponse(
                 prescriptionService.createPrescriptionFromConsultation(
                         request.getPatientId(),
@@ -60,7 +72,14 @@ public class PrescriptionController {
                         request.getDateDebut(),
                         request.getDateFin(),
                         request.getPosologie(),
-                        request.getInstructions()
+                        request.getInstructions(),
+                        request.getRenouvelable(),
+                        request.getNombreRenouvellements(),
+                        request.getPriseMatin(),
+                        request.getPriseMidi(),
+                        request.getPriseSoir(),
+                        request.getResumeSimple(),
+                        request.getNotesMedecin()
                 )
         );
         return ResponseEntity.ok(response);
@@ -70,10 +89,11 @@ public class PrescriptionController {
 
     @GetMapping
     public ResponseEntity<List<PrescriptionResponseDTO>> getAllPrescriptions() {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getAllPrescriptions()
                         .stream()
-                        .map(mapper::toResponse)
+                        .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
                         .collect(Collectors.toList())
         );
     }
@@ -82,16 +102,22 @@ public class PrescriptionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PrescriptionResponseDTO> getPrescriptionById(@PathVariable String id) {
-        return ResponseEntity.ok(mapper.toResponse(prescriptionService.getPrescriptionById(id)));
+        everCare.appointments.entities.Prescription prescription = prescriptionService.getPrescriptionById(id);
+        accessControlService.assertCanViewPrescription(prescription);
+        return ResponseEntity.ok(mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()));
     }
 
     // ========== READ BY PATIENT ==========
 
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByPatient(@PathVariable String patientId) {
+        accessControlService.assertPatientScope(patientId);
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByPatient(patientId)
-                        .stream().map(mapper::toResponse).collect(Collectors.toList())
+                        .stream()
+                        .filter(this::isMappablePrescription)
+                        .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
+                        .collect(Collectors.toList())
         );
     }
 
@@ -99,9 +125,13 @@ public class PrescriptionController {
 
     @GetMapping("/patient/{patientId}/active")
     public ResponseEntity<List<PrescriptionResponseDTO>> getActivePrescriptionsByPatient(@PathVariable String patientId) {
+        accessControlService.assertPatientScope(patientId);
         return ResponseEntity.ok(
                 prescriptionService.getActivePrescriptionsByPatient(patientId)
-                        .stream().map(mapper::toResponse).collect(Collectors.toList())
+                        .stream()
+                        .filter(this::isMappablePrescription)
+                        .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
+                        .collect(Collectors.toList())
         );
     }
 
@@ -109,19 +139,30 @@ public class PrescriptionController {
 
     @GetMapping("/patient/{patientId}/today")
     public ResponseEntity<List<PrescriptionResponseDTO>> getTodayPrescriptions(@PathVariable String patientId) {
+        accessControlService.assertPatientScope(patientId);
         return ResponseEntity.ok(
                 prescriptionService.getTodayPrescriptions(patientId)
-                        .stream().map(mapper::toResponse).collect(Collectors.toList())
+                        .stream()
+                        .filter(this::isMappablePrescription)
+                        .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
+                        .collect(Collectors.toList())
         );
+    }
+
+    private boolean isMappablePrescription(everCare.appointments.entities.Prescription prescription) {
+        return prescription.getPatient() != null
+                && prescription.getDoctor() != null
+                && prescription.getMedicament() != null;
     }
 
     // ========== READ BY DOCTOR ==========
 
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByDoctor(@PathVariable String doctorId) {
+        accessControlService.assertDoctorScope(doctorId);
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByDoctor(doctorId)
-                        .stream().map(mapper::toResponse).collect(Collectors.toList())
+                        .stream().map(prescription -> mapper.toResponse(prescription, true)).collect(Collectors.toList())
         );
     }
 
@@ -129,6 +170,7 @@ public class PrescriptionController {
 
     @GetMapping("/medicament/{medicamentId}")
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByMedicament(@PathVariable String medicamentId) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByMedicament(medicamentId)
                         .stream().map(mapper::toResponse).collect(Collectors.toList())
@@ -139,6 +181,7 @@ public class PrescriptionController {
 
     @GetMapping("/status/{statut}")
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByStatus(@PathVariable String statut) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByStatus(statut)
                         .stream().map(mapper::toResponse).collect(Collectors.toList())
@@ -151,6 +194,7 @@ public class PrescriptionController {
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByDateRange(start, end)
                         .stream().map(mapper::toResponse).collect(Collectors.toList())
@@ -162,6 +206,7 @@ public class PrescriptionController {
     @GetMapping("/expiring")
     public ResponseEntity<List<PrescriptionResponseDTO>> getExpiringPrescriptions(
             @RequestParam(defaultValue = "7") int days) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getExpiringPrescriptions(days)
                         .stream().map(mapper::toResponse).collect(Collectors.toList())
@@ -172,6 +217,7 @@ public class PrescriptionController {
 
     @GetMapping("/appointment/{appointmentId}")
     public ResponseEntity<List<PrescriptionResponseDTO>> getPrescriptionsByAppointment(@PathVariable String appointmentId) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(
                 prescriptionService.getPrescriptionsByAppointment(appointmentId)
                         .stream().map(mapper::toResponse).collect(Collectors.toList())
@@ -184,6 +230,7 @@ public class PrescriptionController {
     public ResponseEntity<PrescriptionResponseDTO> updatePrescription(
             @PathVariable String id,
             @RequestBody PrescriptionRequestDTO request) {
+        accessControlService.assertCanManagePrescription(request.getDoctorId());
         PrescriptionResponseDTO response = mapper.toResponse(
                 prescriptionService.updatePrescriptionFromRequest(id, request)
         );
@@ -195,20 +242,82 @@ public class PrescriptionController {
     @PatchMapping("/{id}/renew")
     public ResponseEntity<PrescriptionResponseDTO> renewPrescription(
             @PathVariable String id,
-            @RequestParam(defaultValue = "30") int additionalDays) {
-        LocalDate newDateFin = LocalDate.now().plusDays(additionalDays);
+            @RequestParam(required = false) Integer additionalDays,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate newDateFin) {
+        everCare.appointments.entities.Prescription prescription = prescriptionService.getPrescriptionById(id);
+        accessControlService.assertCanManagePrescription(prescription);
+
+        // Support both renewal modes to keep the frontend flexible.
+        LocalDate resolvedDateFin = newDateFin;
+
+        if (resolvedDateFin == null) {
+            int daysToAdd = additionalDays != null ? additionalDays : 30;
+            resolvedDateFin = LocalDate.now().plusDays(daysToAdd);
+        }
+
         PrescriptionResponseDTO response = mapper.toResponse(
-                prescriptionService.renewPrescription(id, newDateFin)
+                prescriptionService.renewPrescription(id, resolvedDateFin)
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/terminate")
+    public ResponseEntity<PrescriptionResponseDTO> terminatePrescription(@PathVariable String id) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.terminatePrescription(id)));
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<PrescriptionResponseDTO> cancelPrescription(@PathVariable String id) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.cancelPrescription(id)));
+    }
+
+    @PatchMapping("/{id}/posologie")
+    public ResponseEntity<PrescriptionResponseDTO> updatePosologie(
+            @PathVariable String id,
+            @RequestParam String posologie) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.updatePosologie(id, posologie)));
+    }
+
+    @PatchMapping("/{id}/instructions")
+    public ResponseEntity<PrescriptionResponseDTO> updateInstructions(
+            @PathVariable String id,
+            @RequestParam String instructions) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.updateInstructions(id, instructions)));
+    }
+
+    @PatchMapping("/{id}/resume")
+    public ResponseEntity<PrescriptionResponseDTO> updateResume(
+            @PathVariable String id,
+            @RequestParam String resume) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.updateResumeSimple(id, resume)));
+    }
+
+    @PatchMapping("/{id}/notes")
+    public ResponseEntity<PrescriptionResponseDTO> updateNotes(
+            @PathVariable String id,
+            @RequestParam String notes) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.addNotes(id, notes)));
     }
 
     // ========== DELETE ==========
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePrescription(@PathVariable String id) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
         prescriptionService.deletePrescription(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/generate-pdf")
+    public ResponseEntity<PrescriptionResponseDTO> generatePdf(@PathVariable String id) {
+        accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id));
+        return ResponseEntity.ok(mapper.toResponse(prescriptionService.generatePdf(id), true));
     }
 
     // ========== PDF DOWNLOAD ==========
@@ -219,6 +328,7 @@ public class PrescriptionController {
      */
     @GetMapping(value = "/{id}/pdf")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable String id) {
+        accessControlService.assertCanViewPrescription(prescriptionService.getPrescriptionById(id));
         log.info("Downloading PDF for prescription ID: {}", id);
         
         try {
@@ -269,31 +379,43 @@ public class PrescriptionController {
     @PostMapping("/{id}/send-pdf")
     public ResponseEntity<String> sendPdfViaEmail(
             @PathVariable String id,
-            @RequestBody PdfEmailRequest request) {
+            @RequestBody(required = false) PdfEmailRequest request) {
+        everCare.appointments.entities.Prescription prescription = prescriptionService.getPrescriptionById(id);
+        accessControlService.assertCanManagePrescription(prescription);
+        UserSimpleDTO patient = patientFeignClient.getUserById(prescription.getPatient().getUserId());
+        UserSimpleDTO doctor = patientFeignClient.getUserById(prescription.getDoctor().getUserId());
+
         // Generate PDF
         byte[] pdfBytes = prescriptionPdfService.generatePdf(id);
 
         // Send via notification service
         PdfEmailRequest emailRequest = PdfEmailRequest.builder()
-                .recipientEmail(request.getRecipientEmail())
-                .subject(request.getSubject())
-                .body(request.getBody())
-                .patientEmail(request.getRecipientEmail())
-                .patientName("") // You may need to add this field or get it from prescription
-                .doctorName("") // You may need to add this field or get it from prescription
+                .recipientEmail(request != null && request.getRecipientEmail() != null
+                        ? request.getRecipientEmail()
+                        : patient.getEmail())
+                .subject(request != null && request.getSubject() != null
+                        ? request.getSubject()
+                        : "Your EverCare prescription")
+                .body(request != null && request.getBody() != null
+                        ? request.getBody()
+                        : "Please find your prescription attached.")
+                .patientEmail(patient.getEmail())
+                .patientName(patient.getName())
+                .doctorName(doctor.getName())
                 .prescriptionId(id)
                 .pdfBase64(Base64.getEncoder().encodeToString(pdfBytes))
                 .build();
         
         notificationFeignClient.sendPrescriptionEmail(emailRequest);
 
-        return ResponseEntity.ok("PDF sent successfully to " + request.getRecipientEmail());
+        return ResponseEntity.ok("PDF sent successfully to " + emailRequest.getRecipientEmail());
     }
 
     // ========== COUNT BY MEDICAMENT ==========
 
     @GetMapping("/count/medicament/{medicamentId}")
     public ResponseEntity<Long> countByMedicament(@PathVariable String medicamentId) {
+        accessControlService.assertAdminAccess();
         return ResponseEntity.ok(prescriptionService.countByMedicament(medicamentId));
     }
 
@@ -303,7 +425,9 @@ public class PrescriptionController {
     public ResponseEntity<List<PrescriptionResponseDTO>> createBatch(
             @RequestBody List<PrescriptionRequestDTO> requests) {
         List<PrescriptionResponseDTO> responses = requests.stream()
-                .map(request -> mapper.toResponse(
+                .map(request -> {
+                    accessControlService.assertCanManagePrescription(request.getDoctorId());
+                    return mapper.toResponse(
                         prescriptionService.createPrescriptionFromConsultation(
                                 request.getPatientId(),
                                 request.getDoctorId(),
@@ -312,20 +436,193 @@ public class PrescriptionController {
                                 request.getDateDebut(),
                                 request.getDateFin(),
                                 request.getPosologie(),
-                                request.getInstructions()
+                                request.getInstructions(),
+                                request.getRenouvelable(),
+                                request.getNombreRenouvellements(),
+                                request.getPriseMatin(),
+                                request.getPriseMidi(),
+                                request.getPriseSoir(),
+                                request.getResumeSimple(),
+                                request.getNotesMedecin()
                         )
-                ))
+                    );
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
     }
 
     @DeleteMapping("/batch")
     public ResponseEntity<Void> deleteBatch(@RequestBody List<String> ids) {
+        ids.forEach(id -> accessControlService.assertCanManagePrescription(prescriptionService.getPrescriptionById(id)));
         prescriptionService.deletePrescriptions(ids);
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<Page<PrescriptionResponseDTO>> filterPrescriptions(
+            @RequestParam(required = false) String patientId,
+            @RequestParam(required = false) String doctorId,
+            @RequestParam(required = false) String medicamentId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean renewable,
+            @RequestParam(required = false) Boolean expired,
+            @RequestParam(required = false) Boolean expiringSoon,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) Boolean hasAppointment,
+            Pageable pageable) {
+        String scopedDoctorId = doctorId;
+
+        if (accessControlService.getRequesterRole() == everCare.appointments.entities.UserRole.DOCTOR) {
+            scopedDoctorId = accessControlService.getRequesterUserId();
+        } else {
+            accessControlService.assertAdminAccess();
+        }
+
+        Page<PrescriptionResponseDTO> page;
+
+        try {
+            page = prescriptionService.filterPrescriptions(
+                            patientId,
+                            scopedDoctorId,
+                            medicamentId,
+                            status,
+                            renewable,
+                            expired,
+                            expiringSoon,
+                            dateFrom,
+                            dateTo,
+                            hasAppointment,
+                            pageable)
+                    .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()));
+        } catch (RuntimeException ex) {
+            log.warn("Falling back to in-memory prescription filtering", ex);
+            page = buildFilterFallback(
+                    patientId,
+                    scopedDoctorId,
+                    medicamentId,
+                    status,
+                    renewable,
+                    expired,
+                    expiringSoon,
+                    dateFrom,
+                    dateTo,
+                    hasAppointment,
+                    pageable
+            );
+        }
+
+        return ResponseEntity.ok(page);
+    }
+
+    private Page<PrescriptionResponseDTO> buildFilterFallback(
+            String patientId,
+            String doctorId,
+            String medicamentId,
+            String status,
+            Boolean renewable,
+            Boolean expired,
+            Boolean expiringSoon,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Boolean hasAppointment,
+            Pageable pageable
+    ) {
+        LocalDate today = LocalDate.now();
+
+        List<PrescriptionResponseDTO> filtered = prescriptionService.getPrescriptionsByDoctor(doctorId).stream()
+                .filter(prescription -> patientId == null || prescription.getPatient().getUserId().equals(patientId))
+                .filter(prescription -> medicamentId == null || prescription.getMedicament().getMedicamentId().equals(medicamentId))
+                .filter(prescription -> status == null || prescription.getStatut().equals(status))
+                .filter(prescription -> renewable == null || Boolean.TRUE.equals(prescription.getRenouvelable()) == renewable)
+                .filter(prescription -> hasAppointment == null || (hasAppointment ? prescription.getAppointment() != null : prescription.getAppointment() == null))
+                .filter(prescription -> dateFrom == null || !prescription.getDatePrescription().isBefore(dateFrom))
+                .filter(prescription -> dateTo == null || !prescription.getDatePrescription().isAfter(dateTo))
+                .filter(prescription -> expired == null || (expired
+                        ? prescription.getDateFin() != null && prescription.getDateFin().isBefore(today)
+                        : prescription.getDateFin() == null || !prescription.getDateFin().isBefore(today)))
+                .filter(prescription -> expiringSoon == null || (expiringSoon
+                        ? "ACTIVE".equals(prescription.getStatut())
+                          && prescription.getDateFin() != null
+                          && !prescription.getDateFin().isBefore(today)
+                          && !prescription.getDateFin().isAfter(today.plusDays(7))
+                        : true))
+                .sorted(buildFallbackComparator(pageable.getSort()))
+                .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
+                .collect(Collectors.toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<PrescriptionResponseDTO> content = start >= filtered.size() ? List.of() : filtered.subList(start, end);
+
+        return new PageImpl<>(content, pageable, filtered.size());
+    }
+
+    private Comparator<everCare.appointments.entities.Prescription> buildFallbackComparator(Sort sort) {
+        Comparator<everCare.appointments.entities.Prescription> comparator = Comparator.comparing(
+                prescription -> prescription.getDatePrescription() != null ? prescription.getDatePrescription() : LocalDate.MIN
+        );
+
+        for (Sort.Order order : sort) {
+            Comparator<everCare.appointments.entities.Prescription> current;
+
+            if ("dateFin".equals(order.getProperty())) {
+                current = Comparator.comparing(
+                        prescription -> prescription.getDateFin() != null ? prescription.getDateFin() : LocalDate.MIN
+                );
+            } else {
+                current = Comparator.comparing(
+                        prescription -> prescription.getDatePrescription() != null ? prescription.getDatePrescription() : LocalDate.MIN
+                );
+            }
+
+            comparator = order.isAscending() ? current : current.reversed();
+        }
+
+        return comparator;
+    }
+
     // ========== SEARCH AND FILTER ==========
+
+    @GetMapping("/analytics/summary")
+    public ResponseEntity<PrescriptionAnalyticsSummaryDTO> getAnalyticsSummary() {
+        String doctorScope = null;
+
+        if (accessControlService.getRequesterRole() == everCare.appointments.entities.UserRole.DOCTOR) {
+            doctorScope = accessControlService.getRequesterUserId();
+        } else {
+            accessControlService.assertAdminAccess();
+        }
+
+        return ResponseEntity.ok(prescriptionService.getAnalyticsSummary(doctorScope));
+    }
+
+    @GetMapping("/analytics/status-breakdown")
+    public ResponseEntity<List<StatusCountDTO>> getStatusBreakdown() {
+        String doctorScope = null;
+
+        if (accessControlService.getRequesterRole() == everCare.appointments.entities.UserRole.DOCTOR) {
+            doctorScope = accessControlService.getRequesterUserId();
+        } else {
+            accessControlService.assertAdminAccess();
+        }
+
+        return ResponseEntity.ok(prescriptionService.getStatusBreakdown(doctorScope));
+    }
+
+    @GetMapping("/analytics/top-medicaments")
+    public ResponseEntity<List<TopMedicamentDTO>> getTopMedicaments(
+            @RequestParam(defaultValue = "5") int limit) {
+        String doctorScope = null;
+
+        if (accessControlService.getRequesterRole() == everCare.appointments.entities.UserRole.DOCTOR) {
+            doctorScope = accessControlService.getRequesterUserId();
+        } else {
+            accessControlService.assertAdminAccess();
+        }
+
+        return ResponseEntity.ok(prescriptionService.getTopMedicaments(doctorScope, limit));
+    }
 
     @GetMapping("/search")
     public ResponseEntity<List<PrescriptionResponseDTO>> searchPrescriptions(
@@ -335,10 +632,14 @@ public class PrescriptionController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        accessControlService.assertAdminAccess();
+
         return ResponseEntity.ok(
                 prescriptionService.searchPrescriptions(
                         patientName, doctorName, medicamentName, status, dateFrom, dateTo
-                ).stream().map(mapper::toResponse).collect(Collectors.toList())
+                ).stream()
+                 .map(prescription -> mapper.toResponse(prescription, accessControlService.shouldIncludeDoctorNotes()))
+                 .collect(Collectors.toList())
         );
     }
 

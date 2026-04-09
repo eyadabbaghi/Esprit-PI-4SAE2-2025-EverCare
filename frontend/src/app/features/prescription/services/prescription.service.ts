@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Prescription, PrescriptionRequest } from '../models/prescription.model';
+import { Prescription, PrescriptionFilterParams, PrescriptionRequest } from '../models/prescription.model';
+import { PageResponse } from '../models/page.model';
+import { PrescriptionAnalyticsSummary, StatusCount, TopMedicament } from '../models/prescription-analytics.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -34,12 +36,30 @@ export class PrescriptionService {
     return this.http.get<Prescription[]>(`${this.API_URL}/patient/${patientId}`);
   }
 
+  getPrescriptionsByPatientWithContext(patientId: string, contextUserId: string, contextRole: string): Observable<Prescription[]> {
+    const headers = new HttpHeaders({
+      'X-User-Id': contextUserId,
+      'X-User-Role': contextRole
+    });
+
+    return this.http.get<Prescription[]>(`${this.API_URL}/patient/${patientId}`, { headers });
+  }
+
   getActivePrescriptionsByPatient(patientId: string): Observable<Prescription[]> {
     return this.http.get<Prescription[]>(`${this.API_URL}/patient/${patientId}/active`);
   }
 
   getTodayPrescriptions(patientId: string): Observable<Prescription[]> {
     return this.http.get<Prescription[]>(`${this.API_URL}/patient/${patientId}/today`);
+  }
+
+  getTodayPrescriptionsWithContext(patientId: string, contextUserId: string, contextRole: string): Observable<Prescription[]> {
+    const headers = new HttpHeaders({
+      'X-User-Id': contextUserId,
+      'X-User-Role': contextRole
+    });
+
+    return this.http.get<Prescription[]>(`${this.API_URL}/patient/${patientId}/today`, { headers });
   }
 
   getPrescriptionsByDoctor(doctorId: string): Observable<Prescription[]> {
@@ -59,6 +79,31 @@ export class PrescriptionService {
     return this.http.get<Prescription[]>(`${this.API_URL}/expiring`, { params });
   }
 
+  filterPrescriptions(filters: PrescriptionFilterParams): Observable<PageResponse<Prescription>> {
+    let params = new HttpParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params = params.set(key, String(value));
+      }
+    });
+
+    return this.http.get<PageResponse<Prescription>>(`${this.API_URL}/filter`, { params });
+  }
+
+  getAnalyticsSummary(): Observable<PrescriptionAnalyticsSummary> {
+    return this.http.get<PrescriptionAnalyticsSummary>(`${this.API_URL}/analytics/summary`);
+  }
+
+  getStatusBreakdown(): Observable<StatusCount[]> {
+    return this.http.get<StatusCount[]>(`${this.API_URL}/analytics/status-breakdown`);
+  }
+
+  getTopMedicaments(limit: number = 5): Observable<TopMedicament[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<TopMedicament[]>(`${this.API_URL}/analytics/top-medicaments`, { params });
+  }
+
   // ========== UPDATE ==========
 
   updatePrescription(id: string, request: PrescriptionRequest): Observable<Prescription> {
@@ -75,8 +120,17 @@ export class PrescriptionService {
     return this.http.patch<Prescription>(`${this.API_URL}/${id}/cancel`, {});
   }
 
-  renewPrescription(id: string, newDateFin: string): Observable<Prescription> {
-    const params = new HttpParams().set('newDateFin', newDateFin);
+  renewPrescription(id: string, options: { newDateFin?: string; additionalDays?: number }): Observable<Prescription> {
+    let params = new HttpParams();
+
+    if (options.newDateFin) {
+      params = params.set('newDateFin', options.newDateFin);
+    }
+
+    if (options.additionalDays !== undefined) {
+      params = params.set('additionalDays', options.additionalDays.toString());
+    }
+
     return this.http.patch<Prescription>(`${this.API_URL}/${id}/renew`, {}, { params });
   }
 
@@ -90,6 +144,11 @@ export class PrescriptionService {
   updateResumeSimple(id: string, resume: string): Observable<Prescription> {
     const params = new HttpParams().set('resume', resume);
     return this.http.patch<Prescription>(`${this.API_URL}/${id}/resume`, {}, { params });
+  }
+
+  updateInstructions(id: string, instructions: string): Observable<Prescription> {
+    const params = new HttpParams().set('instructions', instructions);
+    return this.http.patch<Prescription>(`${this.API_URL}/${id}/instructions`, {}, { params });
   }
 
   addNotes(id: string, notes: string): Observable<Prescription> {

@@ -1,12 +1,22 @@
 package everCare.appointments.services;
 
+import everCare.appointments.dtos.MedicamentAnalyticsSummaryDTO;
+import everCare.appointments.dtos.MedicamentUsageStatsDTO;
 import everCare.appointments.entities.Medicament;
 import everCare.appointments.exceptions.ResourceNotFoundException;
 import everCare.appointments.repositories.MedicamentRepository;
+import everCare.appointments.repositories.PrescriptionRepository;
+import everCare.appointments.specifications.MedicamentSpecifications;
 import everCare.appointments.services.MedicamentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -17,20 +27,16 @@ import java.util.UUID;
 public class MedicamentServiceImpl implements MedicamentService {
 
     private final MedicamentRepository medicamentRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     // ========== CREATE ==========
 
     @Override
     public Medicament createMedicament(Medicament medicament) {
+        validateCodeCipUniqueness(medicament.getCodeCIP(), null);
 
         // Set default active to true
         medicament.setActif(true);
-
-        // Check if code CIP already exists
-        if (medicament.getCodeCIP() != null &&
-                medicamentRepository.existsByCodeCIP(medicament.getCodeCIP())) {
-            throw new RuntimeException("Medicament with code CIP " + medicament.getCodeCIP() + " already exists");
-        }
 
         return medicamentRepository.save(medicament);
     }
@@ -77,11 +83,25 @@ public class MedicamentServiceImpl implements MedicamentService {
         return medicamentRepository.findByForme(forme);
     }
 
+    @Override
+    public Page<Medicament> filterMedicaments(String keyword, Boolean actif, String laboratoire,
+                                              String forme, String dosage, Boolean used, Pageable pageable) {
+        return medicamentRepository.findAll(
+                MedicamentSpecifications.withFilters(keyword, actif, laboratoire, forme, dosage, used),
+                pageable
+        );
+    }
+
     // ========== UPDATE ==========
 
     @Override
     public Medicament updateMedicament(String id, Medicament medicamentDetails) {
         Medicament existingMedicament = getMedicamentById(id);
+
+        if (medicamentDetails.getCodeCIP() != null) {
+            validateCodeCipUniqueness(medicamentDetails.getCodeCIP(), id);
+            existingMedicament.setCodeCIP(medicamentDetails.getCodeCIP());
+        }
 
         if (medicamentDetails.getNomCommercial() != null) {
             existingMedicament.setNomCommercial(medicamentDetails.getNomCommercial());
@@ -161,11 +181,26 @@ public class MedicamentServiceImpl implements MedicamentService {
     @Override
     public void deleteMedicament(String id) {
         Medicament medicament = getMedicamentById(id);
+
+        if (prescriptionRepository.countByMedicament(medicament) > 0) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "This medicament is already used in prescriptions. Deactivate it instead."
+            );
+        }
+
         medicamentRepository.delete(medicament);
     }
 
     @Override
     public void deleteAllMedicaments() {
+        if (prescriptionRepository.count() > 0) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "Medicaments already used in prescriptions cannot be deleted in bulk. Deactivate them instead."
+            );
+        }
+
         medicamentRepository.deleteAll();
     }
 
@@ -179,5 +214,49 @@ public class MedicamentServiceImpl implements MedicamentService {
     @Override
     public long countMedicaments() {
         return medicamentRepository.count();
+    }
+
+    @Override
+    public List<MedicamentUsageStatsDTO> getUsageStats(String doctorId, int limit) {
+        return medicamentRepository.getUsageStats(doctorId)
+                .stream()
+                .limit(Math.max(limit, 1))
+                .toList();
+    }
+
+    @Override
+    public MedicamentAnalyticsSummaryDTO getAnalyticsSummary(String doctorId) {
+        List<MedicamentUsageStatsDTO> stats = medicamentRepository.getUsageStats(doctorId);
+
+        long active = stats.stream().filter(MedicamentUsageStatsDTO::isActif).count();
+        long inactive = stats.size() - active;
+        long used = stats.stream().filter(item -> item.getTotalPrescriptions() > 0).count();
+        long unused = stats.size() - used;
+        long deactivatedUsed = stats.stream()
+                .filter(item -> !item.isActif() && item.getTotalPrescriptions() > 0)
+                .count();
+
+        return MedicamentAnalyticsSummaryDTO.builder()
+                .totalMedicaments(stats.size())
+                .activeMedicaments(active)
+                .inactiveMedicaments(inactive)
+                .usedMedicaments(used)
+                .unusedMedicaments(unused)
+                .deactivatedUsedMedicaments(deactivatedUsed)
+                .build();
+    }
+
+    private void validateCodeCipUniqueness(String codeCIP, String currentMedicamentId) {
+        if (codeCIP == null || codeCIP.isBlank()) {
+            return;
+        }
+
+        Medicament existing = medicamentRepository.findByCodeCIP(codeCIP);
+        if (existing != null && !existing.getMedicamentId().equals(currentMedicamentId)) {
+            throw new ResponseStatusException(
+                    BAD_REQUEST,
+                    "Another medicament already uses code CIP " + codeCIP + "."
+            );
+        }
     }
 }

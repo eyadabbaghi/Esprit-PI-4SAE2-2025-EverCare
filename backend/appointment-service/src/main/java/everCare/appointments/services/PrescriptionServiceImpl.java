@@ -1,6 +1,9 @@
 package everCare.appointments.services;
 
+import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
+import everCare.appointments.dtos.StatusCountDTO;
+import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.entities.Prescription;
 import everCare.appointments.entities.User;
 import everCare.appointments.entities.Medicament;
@@ -10,14 +13,21 @@ import everCare.appointments.repositories.PrescriptionRepository;
 import everCare.appointments.repositories.UserRepository;
 import everCare.appointments.repositories.MedicamentRepository;
 import everCare.appointments.repositories.AppointmentRepository;
+import everCare.appointments.specifications.PrescriptionSpecifications;
 import everCare.appointments.services.PrescriptionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +43,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public Prescription createPrescription(Prescription prescription) {
+        validatePrescriptionDates(prescription.getDateDebut(), prescription.getDateFin());
+        ensureMedicamentIsActive(prescription.getMedicament());
+        ensureNoOverlap(prescription.getPatient(), prescription.getMedicament(), prescription.getDateDebut(), prescription.getDateFin(), null);
 
-
-        // Set creation timestamp
         prescription.setCreatedAt(LocalDateTime.now());
 
         // Set default status
@@ -50,7 +61,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription createPrescriptionFromConsultation(String patientId, String doctorId,
                                                            String appointmentId, String medicamentId,
                                                            LocalDate dateDebut, LocalDate dateFin,
-                                                           String posologie, String instructions) {
+                                                           String posologie, String instructions,
+                                                           Boolean renouvelable, Integer nombreRenouvellements,
+                                                           String priseMatin, String priseMidi, String priseSoir,
+                                                           String resumeSimple, String notesMedecin) {
 
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
@@ -61,7 +75,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         Medicament medicament = medicamentRepository.findById(medicamentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
 
-        Appointment appointment = appointmentRepository.findById(appointmentId)
+        ensureMedicamentIsActive(medicament);
+        validatePrescriptionDates(dateDebut, dateFin);
+        ensureNoOverlap(patient, medicament, dateDebut, dateFin, null);
+
+        Appointment appointment = appointmentId == null || appointmentId.isBlank()
+                ? null
+                : appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
 
         Prescription prescription = Prescription.builder()
@@ -76,7 +96,15 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .posologie(posologie)
                 .instructions(instructions)
                 .statut("ACTIVE")
-                .renouvelable(false)
+                .renouvelable(Boolean.TRUE.equals(renouvelable))
+                .nombreRenouvellements(Boolean.TRUE.equals(renouvelable)
+                        ? Math.max(nombreRenouvellements != null ? nombreRenouvellements : 0, 0)
+                        : 0)
+                .priseMatin(priseMatin)
+                .priseMidi(priseMidi)
+                .priseSoir(priseSoir)
+                .resumeSimple(resumeSimple)
+                .notesMedecin(notesMedecin)
                 .build();
 
         return prescriptionRepository.save(prescription);
@@ -159,6 +187,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public Prescription renewPrescription(String id, LocalDate newDateFin) {
         Prescription prescription = getPrescriptionById(id);
+        ensureMedicamentIsActive(prescription.getMedicament());
 
         // Check 1: is it marked as renewable at all?
         if (prescription.getNombreRenouvellements() == null
@@ -181,6 +210,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             );
         }
 
+        LocalDate newDateDebut = prescription.getDateFin().plusDays(1);
+        validatePrescriptionDates(newDateDebut, newDateFin);
+        ensureNoOverlap(prescription.getPatient(), prescription.getMedicament(), newDateDebut, newDateFin, id);
+
         // Build the new prescription — start date is old end date + 1 day
         Prescription newPrescription = Prescription.builder()
                 .prescriptionId(UUID.randomUUID().toString())
@@ -188,7 +221,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .doctor(prescription.getDoctor())
                 .medicament(prescription.getMedicament())
                 .datePrescription(LocalDate.now())
-                .dateDebut(prescription.getDateFin().plusDays(1))
+                .dateDebut(newDateDebut)
                 .dateFin(newDateFin)
                 .posologie(prescription.getPosologie())
                 .instructions(prescription.getInstructions())
@@ -214,6 +247,14 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription updatePosologie(String id, String posologie) {
         Prescription prescription = getPrescriptionById(id);
         prescription.setPosologie(posologie);
+        prescription.setUpdatedAt(LocalDateTime.now());
+        return prescriptionRepository.save(prescription);
+    }
+
+    @Override
+    public Prescription updateInstructions(String id, String instructions) {
+        Prescription prescription = getPrescriptionById(id);
+        prescription.setInstructions(instructions);
         prescription.setUpdatedAt(LocalDateTime.now());
         return prescriptionRepository.save(prescription);
     }
@@ -325,6 +366,28 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         return prescriptions;
     }
 
+    @Override
+    public Page<Prescription> filterPrescriptions(String patientId, String doctorId, String medicamentId,
+                                                  String status, Boolean renewable, Boolean expired,
+                                                  Boolean expiringSoon, LocalDate dateFrom, LocalDate dateTo,
+                                                  Boolean hasAppointment, Pageable pageable) {
+        return prescriptionRepository.findAll(
+                PrescriptionSpecifications.withFilters(
+                        patientId,
+                        doctorId,
+                        medicamentId,
+                        status,
+                        renewable,
+                        expired,
+                        expiringSoon,
+                        dateFrom,
+                        dateTo,
+                        hasAppointment
+                ),
+                pageable
+        );
+    }
+
     // ========== BUSINESS LOGIC ==========
 
     @Override
@@ -339,8 +402,9 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
 
         return prescriptionRepository.findActiveByPatient(patient).stream()
-                .filter(p -> p.getDateDebut().isBefore(LocalDate.now().plusDays(1)) &&
-                        (p.getDateFin() == null || p.getDateFin().isAfter(LocalDate.now())))
+                .filter(p -> p.getDateDebut() != null)
+                .filter(p -> !p.getDateDebut().isAfter(LocalDate.now()))
+                .filter(p -> p.getDateFin() == null || !p.getDateFin().isBefore(LocalDate.now()))
                 .toList();
     }
 
@@ -355,11 +419,14 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription updatePrescriptionFromRequest(String id, PrescriptionRequestDTO request) {
         Prescription existingPrescription = getPrescriptionById(id);
 
+        Medicament targetMedicament = existingPrescription.getMedicament();
+
         // Resolve medicament from ID if provided
         if (request.getMedicamentId() != null) {
             Medicament medicament = medicamentRepository.findById(request.getMedicamentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + request.getMedicamentId()));
             existingPrescription.setMedicament(medicament);
+            targetMedicament = medicament;
         }
 
         if (request.getDateDebut() != null) {
@@ -369,6 +436,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         if (request.getDateFin() != null) {
             existingPrescription.setDateFin(request.getDateFin());
         }
+
+        validatePrescriptionDates(existingPrescription.getDateDebut(), existingPrescription.getDateFin());
+        ensureMedicamentIsActive(targetMedicament);
+        ensureNoOverlap(
+                existingPrescription.getPatient(),
+                targetMedicament,
+                existingPrescription.getDateDebut(),
+                existingPrescription.getDateFin(),
+                existingPrescription.getPrescriptionId()
+        );
 
         if (request.getPosologie() != null) {
             existingPrescription.setPosologie(request.getPosologie());
@@ -432,6 +509,73 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         prescription.setStatut("INTERROMPUE"); // matches your entity's statut values
         prescription.setUpdatedAt(LocalDateTime.now());
         return prescriptionRepository.save(prescription);
+    }
+
+    @Override
+    public PrescriptionAnalyticsSummaryDTO getAnalyticsSummary(String doctorId) {
+        LocalDate today = LocalDate.now();
+
+        return PrescriptionAnalyticsSummaryDTO.builder()
+                .total(prescriptionRepository.countScoped(doctorId))
+                .active(prescriptionRepository.countByStatusScoped(doctorId, "ACTIVE"))
+                .expired(prescriptionRepository.countExpiredScoped(doctorId, today))
+                .expiringSoon(prescriptionRepository.countExpiringSoonScoped(doctorId, today, today.plusDays(7)))
+                .renewed(prescriptionRepository.countByStatusScoped(doctorId, "RENOUVELEE"))
+                .interrupted(prescriptionRepository.countByStatusScoped(doctorId, "INTERROMPUE"))
+                .completed(prescriptionRepository.countByStatusScoped(doctorId, "TERMINEE"))
+                .build();
+    }
+
+    @Override
+    public List<StatusCountDTO> getStatusBreakdown(String doctorId) {
+        return prescriptionRepository.getStatusBreakdown(doctorId);
+    }
+
+    @Override
+    public List<TopMedicamentDTO> getTopMedicaments(String doctorId, int limit) {
+        List<TopMedicamentDTO> medicaments = prescriptionRepository.getTopMedicaments(doctorId);
+        return medicaments.stream().limit(Math.max(limit, 1)).toList();
+    }
+
+    private void validatePrescriptionDates(LocalDate dateDebut, LocalDate dateFin) {
+        if (dateDebut == null || dateFin == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Prescription start and end dates are required.");
+        }
+
+        if (dateFin.isBefore(dateDebut)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Prescription end date must be on or after start date.");
+        }
+    }
+
+    private void ensureMedicamentIsActive(Medicament medicament) {
+        if (medicament == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "A medicament is required.");
+        }
+
+        if (!medicament.isActif()) {
+            throw new ResponseStatusException(CONFLICT, "Inactive medicaments cannot be prescribed.");
+        }
+    }
+
+    private void ensureNoOverlap(User patient, Medicament medicament, LocalDate dateDebut, LocalDate dateFin, String excludedPrescriptionId) {
+        if (patient == null || medicament == null || dateDebut == null || dateFin == null) {
+            return;
+        }
+
+        boolean overlaps = prescriptionRepository.existsOverlappingPrescription(
+                patient,
+                medicament,
+                dateDebut,
+                dateFin,
+                excludedPrescriptionId
+        );
+
+        if (overlaps) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "An overlapping prescription already exists for this patient and medicament."
+            );
+        }
     }
 
 }

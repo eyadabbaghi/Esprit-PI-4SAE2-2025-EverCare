@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
@@ -29,6 +30,7 @@ export class PatientPrescriptionPageComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private prescriptionService: PrescriptionService,
+    private route: ActivatedRoute,
     private router: Router,
     private toastr: ToastrService
   ) {}
@@ -45,6 +47,8 @@ export class PatientPrescriptionPageComponent implements OnInit {
         return;
       }
       this.currentUser = user;
+      this.route.url.subscribe(() => this.applyRouteState());
+      this.route.paramMap.subscribe(() => this.applyRouteState());
       this.loadPrescriptions();
     });
   }
@@ -58,6 +62,7 @@ export class PatientPrescriptionPageComponent implements OnInit {
         next: (data) => {
           this.allPrescriptions = data;
           this.splitPrescriptions(data);
+          this.applyRouteState();
           this.loading = false;
         },
         error: () => {
@@ -134,6 +139,32 @@ export class PatientPrescriptionPageComponent implements OnInit {
     );
     if (index !== -1) {
       this.allPrescriptions[index] = updated;
+    }
+  }
+
+  goToTab(tab: 'active' | 'today' | 'history'): void {
+    const target = tab === 'active' ? '/prescriptions/patient/active' : `/prescriptions/patient/${tab}`;
+    this.router.navigate([target]);
+  }
+
+  openPrescriptionRoute(prescription: Prescription): void {
+    this.router.navigate(['/prescriptions/patient/prescription', prescription.prescriptionId]);
+  }
+
+  private applyRouteState(): void {
+    const path = this.route.routeConfig?.path || 'patient';
+    const prescriptionId = this.route.snapshot.paramMap.get('id');
+
+    if (path.includes('today')) {
+      this.activeTab = 'today';
+    } else if (path.includes('history')) {
+      this.activeTab = 'history';
+    } else {
+      this.activeTab = 'active';
+    }
+
+    if (prescriptionId) {
+      this.selectedPrescription = this.allPrescriptions.find(item => item.prescriptionId === prescriptionId) || null;
     }
   }
 }

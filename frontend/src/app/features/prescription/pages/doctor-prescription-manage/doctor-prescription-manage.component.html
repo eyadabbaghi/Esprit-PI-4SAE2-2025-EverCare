@@ -1,0 +1,218 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Manage Prescriptions</h1>
+        <p class="mt-1 text-[#6B5B8C]">A single doctor workspace with a quick summary first, then the advanced management view.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <a routerLink="/prescriptions/doctor/analytics" class="rounded-lg border border-[#C4B5FD] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+          Analytics
+        </a>
+        <a routerLink="/prescriptions/doctor/prescribe" class="rounded-lg bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white">
+          New Prescription
+        </a>
+      </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+        <p class="text-sm text-[#6B5B8C]">Total Issued</p>
+        <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ totalIssued }}</p>
+        <p class="mt-1 text-xs text-[#6B5B8C]">All prescriptions you issued.</p>
+      </div>
+
+      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+        <p class="text-sm text-[#6B5B8C]">Active</p>
+        <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ activeCount }}</p>
+        <p class="mt-1 text-xs text-[#6B5B8C]">Currently running treatments.</p>
+      </div>
+
+      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+        <p class="text-sm text-[#6B5B8C]">Expiring Soon</p>
+        <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ expiringCount }}</p>
+        <p class="mt-1 text-xs text-[#6B5B8C]">Need a review in the next 7 days.</p>
+      </div>
+
+      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+        <p class="text-sm text-[#6B5B8C]">Renewable</p>
+        <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ renewableCount }}</p>
+        <p class="mt-1 text-xs text-[#6B5B8C]">Still eligible for renewal.</p>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+      <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-[#2D1B4E]">Advanced View</h2>
+          <p class="text-sm text-[#6B5B8C]">Use filters, sorting and row actions to manage prescriptions in detail.</p>
+        </div>
+        <a routerLink="/prescriptions/doctor/prescribe"
+           class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm font-medium text-[#7C3AED]">
+          Open Prescription Form
+        </a>
+      </div>
+    </div>
+
+    <div class="grid gap-4 rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Status</label>
+        <select [(ngModel)]="filters.status" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+          <option value="">All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="RENOUVELEE">Renewed</option>
+          <option value="INTERROMPUE">Cancelled</option>
+          <option value="TERMINEE">Completed</option>
+          <option value="EXPIREE">Expired</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Renewable</label>
+        <select [(ngModel)]="filters.renewable" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+          <option [ngValue]="undefined">All</option>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Expiring Soon</label>
+        <select [(ngModel)]="filters.expiringSoon" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+          <option [ngValue]="undefined">All</option>
+          <option [ngValue]="true">Only expiring</option>
+          <option [ngValue]="false">Exclude expiring</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Has Appointment</label>
+        <select [(ngModel)]="filters.hasAppointment" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+          <option [ngValue]="undefined">All</option>
+          <option [ngValue]="true">Linked</option>
+          <option [ngValue]="false">Standalone</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">From</label>
+        <input [(ngModel)]="filters.dateFrom" type="date" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">To</label>
+        <input [(ngModel)]="filters.dateTo" type="date" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+      </div>
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Sort</label>
+        <select [(ngModel)]="filters.sort" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+          <option value="datePrescription,desc">Newest first</option>
+          <option value="datePrescription,asc">Oldest first</option>
+          <option value="dateFin,asc">Ending soonest</option>
+          <option value="dateFin,desc">Ending latest</option>
+        </select>
+      </div>
+
+      <div class="flex items-end gap-3">
+        <button (click)="applyFilters()" class="rounded-lg bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white">Apply</button>
+        <button (click)="resetFilters()" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm font-medium text-[#6B5B8C]">Reset</button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-[#C4B5FD] bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#F3E8FF] px-4 py-3">
+        <div>
+          <h2 class="font-semibold text-[#2D1B4E]">Prescription List</h2>
+          <p class="text-xs text-[#6B5B8C]">{{ totalElements }} result{{ totalElements === 1 ? '' : 's' }}</p>
+        </div>
+        <div class="text-xs text-[#6B5B8C]">Page {{ page + 1 }} / {{ totalPages || 1 }}</div>
+      </div>
+
+      <div *ngIf="loading" class="p-8 text-center text-sm text-[#6B5B8C]">Loading prescriptions...</div>
+
+      <div *ngIf="!loading && prescriptions.length === 0" class="p-8 text-center text-sm text-[#6B5B8C]">
+        No prescriptions match the selected filters.
+      </div>
+
+      <div *ngIf="!loading && prescriptions.length > 0" class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-[#FAF5FF] text-left text-[#6B5B8C]">
+            <tr>
+              <th class="px-4 py-3 font-medium">Patient</th>
+              <th class="px-4 py-3 font-medium">Medicament</th>
+              <th class="px-4 py-3 font-medium">Issued</th>
+              <th class="px-4 py-3 font-medium">End</th>
+              <th class="px-4 py-3 font-medium">Status</th>
+              <th class="px-4 py-3 font-medium">PDF</th>
+              <th class="px-4 py-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let prescription of prescriptions; trackBy: trackByPrescription" class="border-t border-[#F3E8FF] align-top">
+              <td class="px-4 py-3">
+                <div class="font-medium text-[#2D1B4E]">{{ prescription.patient.name }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ prescription.patient.email }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="font-medium text-[#2D1B4E]">{{ prescription.medicament.nomCommercial }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ prescription.medicament.dosage }} · {{ prescription.medicament.forme }}</div>
+              </td>
+              <td class="px-4 py-3 text-[#2D1B4E]">{{ prescription.datePrescription | date:'mediumDate' }}</td>
+              <td class="px-4 py-3 text-[#2D1B4E]">{{ prescription.dateFin | date:'mediumDate' }}</td>
+              <td class="px-4 py-3">
+                <span class="rounded-full px-2 py-1 text-xs font-medium" [ngClass]="getStatusClass(prescription.statut)">
+                  {{ prescription.statut }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <button (click)="prescription.pdfUrl ? downloadPdf(prescription) : generatePdf(prescription)"
+                        class="text-xs font-medium text-[#7C3AED] hover:underline">
+                  {{ prescription.pdfUrl ? 'Download' : 'Generate' }}
+                </button>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="viewPrescription(prescription)" class="rounded-md border border-[#E9D5FF] px-3 py-1 text-xs font-medium text-[#2D1B4E]">View</button>
+                  <button *ngIf="prescription.statut === 'ACTIVE' && prescription.renouvelable && prescription.nombreRenouvellements > 0"
+                          (click)="renewPrescription(prescription)"
+                          class="rounded-md bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">Renew</button>
+                  <button *ngIf="prescription.statut === 'ACTIVE'"
+                          (click)="cancelPrescription(prescription)"
+                          class="rounded-md bg-red-50 px-3 py-1 text-xs font-medium text-red-700">Cancel</button>
+                  <button *ngIf="prescription.statut === 'ACTIVE'"
+                          (click)="terminatePrescription(prescription)"
+                          class="rounded-md bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Complete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-[#F3E8FF] px-4 py-3">
+        <button (click)="previousPage()" [disabled]="page === 0" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm disabled:opacity-50">
+          Previous
+        </button>
+        <button (click)="nextPage()" [disabled]="page + 1 >= totalPages" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm disabled:opacity-50">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-prescription-details
+  *ngIf="selectedPrescription"
+  [prescription]="selectedPrescription"
+  [canManage]="true"
+  (onClose)="closeDetails()"
+  (onRenewed)="onPrescriptionUpdated()"
+  (onCancelled)="onPrescriptionUpdated()"
+  (onPdfGenerated)="onPrescriptionUpdated()">
+</app-prescription-details>

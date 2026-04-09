@@ -15,7 +15,10 @@ import { MedicationSelectorComponent } from './components/medication-selector/me
 import { UserPrescriptionsComponent } from './pages/user-prescriptions/user-prescriptions.component';
 import { PatientPrescriptionPageComponent } from './pages/patient-prescription-page/patient-prescription-page.component';
 import { DoctorPrescriptionPageComponent } from './pages/doctor-prescription-page/doctor-prescription-page.component';
-import { CaregiverPrescriptionPageComponent } from './pages/caregiver-prescription-page/caregiver-prescription-page.component';
+import { DoctorPrescriptionManageComponent } from './pages/doctor-prescription-manage/doctor-prescription-manage.component';
+import { DoctorPrescriptionAnalyticsComponent } from './pages/doctor-prescription-analytics/doctor-prescription-analytics.component';
+import { DoctorPrescriptionCreateComponent } from './pages/doctor-prescription-create/doctor-prescription-create.component';
+import { CaregiverPatientPrescriptionsComponent } from './pages/caregiver-patient-prescriptions/caregiver-patient-prescriptions.component';
 
 // Import PrescriptionActionsComponent from appointments module
 import { PrescriptionActionsComponent } from '../appointments/components/prescription-actions/prescription-actions.component';
@@ -31,7 +34,10 @@ import { PrescriptionActionsComponent } from '../appointments/components/prescri
     UserPrescriptionsComponent,
     PatientPrescriptionPageComponent,
     DoctorPrescriptionPageComponent,
-    CaregiverPrescriptionPageComponent,
+    DoctorPrescriptionManageComponent,
+    DoctorPrescriptionAnalyticsComponent,
+    DoctorPrescriptionCreateComponent,
+    CaregiverPatientPrescriptionsComponent,
     PrescriptionActionsComponent
   ],
   imports: [

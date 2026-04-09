@@ -99,6 +99,10 @@ export class AppointmentService {
   }
 
   getAppointmentsByDoctor(doctorId: string): Observable<Appointment[]> {
+    if (!doctorId) {
+      return of([]);
+    }
+
     return this.http.get<Appointment[]>(`${this.baseUrl}/doctor/${doctorId}`).pipe(
       timeout(this.TIMEOUT),
       retry(1),

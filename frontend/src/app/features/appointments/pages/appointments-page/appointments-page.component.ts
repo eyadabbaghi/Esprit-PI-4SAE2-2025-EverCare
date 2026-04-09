@@ -488,21 +488,18 @@ export class AppointmentsPageComponent implements OnInit {
 
     const newAppointmentPayload: CreateAppointmentRequest = {
       patientId: this.currentPatient.userId!,
-      patientName: this.currentPatient.name,
       doctorId: formData.doctorId,
-      doctorName: selectedDoctor?.name || '',
       caregiverId: formData.caregiverId || undefined,
-      caregiverName: selectedCaregiver?.name,
       consultationTypeId: formData.consultationTypeId,
-      consultationTypeName: selectedType?.name || '',
-      startDateTime: startDateTime,
-      endDateTime: endDateTime,
+      startDateTime: this.toLocalDateTimeString(startDateTime),
+      endDateTime: this.toLocalDateTimeString(endDateTime),
       status: 'SCHEDULED',
       caregiverPresence: formData.caregiverPresence,
       videoLink: `https://consult.evercare.com/room/${formData.doctorId}-${this.currentPatient.userId}`,
-      doctorNotes: formData.notes,
-      isRecurring: false
+      simpleSummary: formData.notes || undefined
     };
+
+    console.log('Appointment create payload:', newAppointmentPayload);
 
     this.loading = true;
     this.appointmentService.createAppointment(newAppointmentPayload).subscribe({
@@ -524,7 +521,8 @@ export class AppointmentsPageComponent implements OnInit {
         } else if (error.status === 500) {
           this.toastr.error('Server error. Please try again later.');
         } else {
-          this.toastr.error('Failed to create appointment. Please try again.');
+          const backendMessage = error?.error?.message || error?.error?.error || error?.message;
+          this.toastr.error(backendMessage || 'Failed to create appointment. Please try again.');
         }
         this.loading = false;
       }
@@ -603,5 +601,16 @@ export class AppointmentsPageComponent implements OnInit {
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
     const day = d.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private toLocalDateTimeString(date: Date): string {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const seconds = d.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 }

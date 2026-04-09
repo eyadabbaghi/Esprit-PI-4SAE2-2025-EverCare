@@ -28,9 +28,12 @@
                 (click)="activeTab = 'new-prescription'">
           ✏️ New Prescription
         </button>
-
-
       </div>
+
+      <a routerLink="/prescriptions/doctor/manage"
+         class="rounded-lg border border-[#C4B5FD] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+        Advanced Manage
+      </a>
 
     </div>
 
@@ -138,6 +141,7 @@
 <app-prescription-details
   *ngIf="selectedPrescription"
   [prescription]="selectedPrescription"
+  [canManage]="true"
   (onClose)="closeDetails()"
   (onRenewed)="onPrescriptionRenewed($event)"
   (onCancelled)="onPrescriptionCancelled($event)"

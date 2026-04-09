@@ -114,9 +114,6 @@ export class DoctorAppointmentsPageComponent implements OnInit {
           role: 'DOCTOR'
         };
         this.loadAllData();
-      } else {
-        // Fallback to mock data
-        this.loadAllData();
       }
     });
   }
@@ -128,8 +125,13 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   }
 
   loadAppointments(): void {
+    if (!this.currentDoctor.userId) {
+      this.appointments = [];
+      return;
+    }
+
     this.loading = true;
-    this.appointmentService.getAppointmentsByDoctor(this.currentDoctor.userId || "").subscribe({
+    this.appointmentService.getAppointmentsByDoctor(this.currentDoctor.userId).subscribe({
       next: (data: any) => {
         console.log('Raw appointments data:', data);
         this.appointments = this.transformAppointments(data);
@@ -234,7 +236,13 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   // ========== AVAILABILITY METHODS ==========
 
   loadAvailabilities(): void {
-    this.availabilityService.getAvailabilitiesByDoctor(this.currentDoctor.userId || "").subscribe({
+    if (!this.currentDoctor.userId) {
+      this.availabilities = [];
+      this.updateAvailabilityStats();
+      return;
+    }
+
+    this.availabilityService.getAvailabilitiesByDoctor(this.currentDoctor.userId).subscribe({
       next: (data) => {
         this.availabilities = data.map(slot => ({
           ...slot,
@@ -585,13 +593,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
      const patientId = this.selectedAppointment.patientId;
      const appointmentId = this.selectedAppointment.appointmentId;
 
-     // Navigate to prescription page with query parameters
-     this.router.navigate(['/prescriptions/doctor'], {
-       queryParams: {
-         patientId: patientId,
-         appointmentId: appointmentId
-       }
-     });
+     this.router.navigate(['/prescriptions/doctor/prescribe', patientId, appointmentId]);
    }
 
   enableNotesEditing(): void {

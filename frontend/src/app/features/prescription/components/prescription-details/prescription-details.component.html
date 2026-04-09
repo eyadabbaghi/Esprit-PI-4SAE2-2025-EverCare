@@ -300,7 +300,7 @@
     <div class="px-6 pb-4">
       <app-prescription-actions
         [prescription]="prescription"
-        [doctorView]="true">
+        [doctorView]="canManage">
       </app-prescription-actions>
     </div>
 
@@ -309,7 +309,8 @@
                 bg-[#FDFBFF] rounded-b-2xl sticky bottom-0">
 
       <!-- PDF -->
-      <button (click)="generatePdf()"
+      <button *ngIf="canManage"
+              (click)="generatePdf()"
               [disabled]="loading"
               class="flex items-center space-x-2 px-4 py-2 text-sm text-[#6B5B8C]
                      border border-[#E2E8F0] rounded-lg hover:bg-[#F9FAFB]
@@ -319,7 +320,7 @@
       </button>
 
       <!-- Right side actions — only for ACTIVE prescriptions -->
-      <div *ngIf="prescription.statut === 'ACTIVE'" class="flex items-center space-x-2">
+      <div *ngIf="canManage && prescription.statut === 'ACTIVE'" class="flex items-center space-x-2">
 
         <!-- Cancel -->
         <button *ngIf="!showCancelConfirm && !showRenewForm"

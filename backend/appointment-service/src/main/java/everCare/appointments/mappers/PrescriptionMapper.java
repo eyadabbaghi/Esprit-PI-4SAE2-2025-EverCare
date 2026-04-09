@@ -21,6 +21,10 @@ public class PrescriptionMapper {
      * This is what gets returned to the client — no raw entities, no sensitive data.
      */
     public PrescriptionResponseDTO toResponse(Prescription prescription) {
+        return toResponse(prescription, true);
+    }
+
+    public PrescriptionResponseDTO toResponse(Prescription prescription, boolean includeDoctorNotes) {
         if (prescription == null) return null;
 
         return PrescriptionResponseDTO.builder()
@@ -46,7 +50,7 @@ public class PrescriptionMapper {
                 .priseSoir(prescription.getPriseSoir())
                 .resumeSimple(prescription.getResumeSimple())
                 .pdfUrl(prescription.getPdfUrl())
-                .notesMedecin(prescription.getNotesMedecin())
+                .notesMedecin(includeDoctorNotes ? prescription.getNotesMedecin() : null)
                 .createdAt(prescription.getCreatedAt())
                 .updatedAt(prescription.getUpdatedAt())
                 .build();

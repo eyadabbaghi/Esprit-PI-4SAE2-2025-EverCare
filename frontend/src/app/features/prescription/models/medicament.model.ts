@@ -33,3 +33,33 @@ export interface MedicamentRequest {
   photoUrl?: string;
   noticeSimplifiee?: string;
 }
+
+export interface MedicamentFilterParams {
+  keyword?: string;
+  actif?: boolean;
+  laboratoire?: string;
+  forme?: string;
+  dosage?: string;
+  used?: boolean;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+export interface MedicamentUsageStats {
+  medicamentId: string;
+  nomCommercial: string;
+  actif: boolean;
+  totalPrescriptions: number;
+  activePrescriptions: number;
+  lastPrescribedDate?: string;
+}
+
+export interface MedicamentAnalyticsSummary {
+  totalMedicaments: number;
+  activeMedicaments: number;
+  inactiveMedicaments: number;
+  usedMedicaments: number;
+  unusedMedicaments: number;
+  deactivatedUsedMedicaments: number;
+}

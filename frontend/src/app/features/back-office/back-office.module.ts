@@ -15,6 +15,10 @@ import { NotificationPanelComponent } from './components/notification-panel/noti
 
 import { ActivitiesAdminComponent } from './pages/activities-admin/activities-admin.component';
 import { ActivityDetailsAdminComponent } from './pages/activity-details-admin/activity-details-admin.component';
+import { MedicamentsAdminComponent } from './pages/medicaments-admin/medicaments-admin.component';
+import { MedicamentEditorPlaceholderComponent } from './pages/medicament-editor-placeholder/medicament-editor-placeholder.component';
+import { MedicamentsAnalyticsComponent } from './pages/medicaments-analytics/medicaments-analytics.component';
+import { MedicamentDetailsComponent } from './pages/medicament-details/medicament-details.component';
 
 // Import the image cropper standalone component
 import { ImageCropperComponent } from 'ngx-image-cropper';
@@ -32,7 +36,11 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
     ChartWidgetComponent,
     NotificationPanelComponent,
     ActivitiesAdminComponent,
-    ActivityDetailsAdminComponent
+    ActivityDetailsAdminComponent,
+    MedicamentsAdminComponent,
+    MedicamentEditorPlaceholderComponent,
+    MedicamentsAnalyticsComponent,
+    MedicamentDetailsComponent
   ],
   imports: [
     CommonModule,

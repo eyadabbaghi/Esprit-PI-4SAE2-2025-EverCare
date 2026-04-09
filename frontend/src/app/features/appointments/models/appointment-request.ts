@@ -9,8 +9,8 @@ export interface CreateAppointmentRequest {
   caregiverName?: string; // Optional, backend might ignore
   consultationTypeId: string;
   consultationTypeName?: string; // Optional, backend might ignore
-  startDateTime: Date;
-  endDateTime: Date;
+  startDateTime: Date | string;
+  endDateTime: Date | string;
   status?: string;
   caregiverPresence: string;
   videoLink?: string;

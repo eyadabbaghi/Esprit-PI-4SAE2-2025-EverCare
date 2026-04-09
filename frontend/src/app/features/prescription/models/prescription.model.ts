@@ -78,3 +78,19 @@ export interface PrescriptionRequest {
 
   notesMedecin?: string;
 }
+
+export interface PrescriptionFilterParams {
+  patientId?: string;
+  doctorId?: string;
+  medicamentId?: string;
+  status?: string;
+  renewable?: boolean;
+  expired?: boolean;
+  expiringSoon?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  hasAppointment?: boolean;
+  page?: number;
+  size?: number;
+  sort?: string;
+}

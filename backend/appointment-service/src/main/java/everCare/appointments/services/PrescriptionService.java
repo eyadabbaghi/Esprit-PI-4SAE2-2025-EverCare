@@ -1,8 +1,14 @@
 package everCare.appointments.services;
 
+import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
+import everCare.appointments.dtos.StatusCountDTO;
+import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.entities.Prescription;
 import everCare.appointments.entities.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,7 +19,10 @@ public interface PrescriptionService {
     Prescription createPrescriptionFromConsultation(String patientId, String doctorId,
                                                     String appointmentId, String medicamentId,
                                                     LocalDate dateDebut, LocalDate dateFin,
-                                                    String posologie, String instructions);
+                                                    String posologie, String instructions,
+                                                    Boolean renouvelable, Integer nombreRenouvellements,
+                                                    String priseMatin, String priseMidi, String priseSoir,
+                                                    String resumeSimple, String notesMedecin);
 
     // ========== READ ==========
     List<Prescription> getAllPrescriptions();
@@ -31,6 +40,7 @@ public interface PrescriptionService {
     Prescription terminatePrescription(String id);
     Prescription renewPrescription(String id, LocalDate newDateFin);
     Prescription updatePosologie(String id, String posologie);
+    Prescription updateInstructions(String id, String instructions);
     Prescription updateResumeSimple(String id, String resume);
     Prescription addNotes(String id, String notes);
     Prescription generatePdf(String id);
@@ -43,6 +53,10 @@ public interface PrescriptionService {
     // ========== SEARCH AND FILTER ==========
     List<Prescription> searchPrescriptions(String patientName, String doctorName, String medicamentName, 
                                          String status, LocalDate dateFrom, LocalDate dateTo);
+    Page<Prescription> filterPrescriptions(String patientId, String doctorId, String medicamentId,
+                                          String status, Boolean renewable, Boolean expired,
+                                          Boolean expiringSoon, LocalDate dateFrom, LocalDate dateTo,
+                                          Boolean hasAppointment, Pageable pageable);
 
     // ========== BUSINESS LOGIC ==========
     boolean isPrescriptionActive(String id);
@@ -51,4 +65,7 @@ public interface PrescriptionService {
 
     Prescription updatePrescriptionFromRequest(String id, PrescriptionRequestDTO request);
     Prescription cancelPrescription(String id);
+    PrescriptionAnalyticsSummaryDTO getAnalyticsSummary(String doctorId);
+    List<StatusCountDTO> getStatusBreakdown(String doctorId);
+    List<TopMedicamentDTO> getTopMedicaments(String doctorId, int limit);
 }

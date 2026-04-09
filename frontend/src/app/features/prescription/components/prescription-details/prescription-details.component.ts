@@ -11,6 +11,7 @@ import { PrescriptionActionsComponent } from '../../../appointments/components/p
 export class PrescriptionDetailsComponent implements OnInit {
 
   @Input() prescription!: Prescription;
+  @Input() canManage = false;
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onRenewed = new EventEmitter<Prescription>();
@@ -91,7 +92,7 @@ export class PrescriptionDetailsComponent implements OnInit {
 
     this.prescriptionService.renewPrescription(
       this.prescription.prescriptionId,
-      this.newDateFin
+      { newDateFin: this.newDateFin }
     ).subscribe({
       next: (renewed) => {
         this.loading = false;
@@ -128,6 +129,10 @@ export class PrescriptionDetailsComponent implements OnInit {
   }
 
   generatePdf(): void {
+    if (!this.canManage) {
+      return;
+    }
+
     this.loading = true;
     this.prescriptionService.generatePdf(
       this.prescription.prescriptionId

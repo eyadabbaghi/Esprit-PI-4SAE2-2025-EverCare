@@ -189,6 +189,7 @@
 <app-prescription-details
   *ngIf="selectedPrescription"
   [prescription]="selectedPrescription"
+  [canManage]="currentUserRole === 'DOCTOR'"
   (onClose)="closeDetails()"
   (onRenewed)="onPrescriptionRenewed($event)"
   (onCancelled)="onPrescriptionCancelled($event)"

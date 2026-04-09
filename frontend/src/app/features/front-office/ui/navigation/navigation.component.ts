@@ -90,11 +90,13 @@ export class NavigationComponent implements OnInit, OnDestroy {
       this.user = user;
 
       // Start task watcher when user is available
-      if (user && isPlatformBrowser(this.platformId)) {
+      if (user && user.role === 'PATIENT' && isPlatformBrowser(this.platformId)) {
         const patientId = this.getPatientId(user);
         if (patientId) {
           this.startTaskWatcher(patientId);
         }
+      } else if (this.taskWatcherSub) {
+        this.taskWatcherSub.unsubscribe();
       }
     });
 
@@ -301,6 +303,10 @@ export class NavigationComponent implements OnInit, OnDestroy {
   // ==================== Task Notification Methods (new additions) ====================
 
   private getPatientId(user: User): string | null {
+    if (user.role !== 'PATIENT') {
+      return null;
+    }
+
     const u: any = user;
     const val =
       u.id ??

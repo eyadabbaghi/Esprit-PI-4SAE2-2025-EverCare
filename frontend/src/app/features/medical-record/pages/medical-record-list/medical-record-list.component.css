@@ -157,6 +157,62 @@
   color: #8a450d;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0.4rem 0 0.95rem;
+}
+
+.stat-card {
+  border-radius: 14px;
+  border: 1px solid #d8caf6;
+  background: #fff;
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.stat-card.critical {
+  border-color: #f2bdca;
+  background: #fff5f7;
+}
+
+.stat-card.active {
+  border-color: #c8e8d2;
+  background: #effbf3;
+}
+
+.stat-card.total {
+  border-color: #d8caf6;
+  background: #f8f5ff;
+}
+
+.stat-card.archived {
+  border-color: #d5d9e3;
+  background: #f5f7fb;
+}
+
+.stat-label {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #6a5a8e;
+  font-weight: 600;
+}
+
+.stat-value {
+  color: #2d1b4e;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.stat-note {
+  color: #7b6a9d;
+  font-size: 0.78rem;
+}
+
 .records-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -191,6 +247,14 @@
   color: #2d1b4e;
   font-size: 1.32rem;
   line-height: 1.25;
+  word-break: break-word;
+}
+
+.record-sub-label {
+  margin: 0.22rem 0 0;
+  color: #7b6a9d;
+  font-size: 0.8rem;
+  font-weight: 600;
   word-break: break-word;
 }
 
@@ -386,6 +450,10 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .records-grid {
     grid-template-columns: 1fr;
   }
@@ -410,6 +478,10 @@
   }
 
   .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 

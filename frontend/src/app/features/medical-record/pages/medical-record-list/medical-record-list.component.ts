@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { MedicalRecord } from '../../models/medical-record.model';
 import { MedicalRecordService } from '../../services/medical-record.service';
+import { AssessmentService } from '../../services/assessment.service';
 import {
   getMedicalRecordPermissions,
   MedicalRecordPermissions,
@@ -23,6 +25,8 @@ export class MedicalRecordListComponent implements OnInit {
   currentRole: string | undefined;
   patientIdentifier = '';
   patientIdentifierCandidates: string[] = [];
+  private readonly patientNameById = new Map<string, string>();
+  private readonly patientNameLoading = new Set<string>();
 
   isLoading = false;
   errorMessage = '';
@@ -34,9 +38,16 @@ export class MedicalRecordListComponent implements OnInit {
   activeFilter: 'active' | 'archived' | 'all' = 'active';
   isSearchMode = false;
 
+  criticalCount = 0;
+  activeCount = 0;
+  totalCount = 0;
+  archivedCount = 0;
+  isStatsLoading = false;
+
   constructor(
     private readonly authService: AuthService,
-    private readonly medicalRecordService: MedicalRecordService
+    private readonly medicalRecordService: MedicalRecordService,
+    private readonly assessmentService: AssessmentService
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +64,7 @@ export class MedicalRecordListComponent implements OnInit {
       }
 
       if (this.permissions.canRead) {
+        this.refreshStats();
         this.loadPage(0);
       }
     });
@@ -76,6 +88,7 @@ export class MedicalRecordListComponent implements OnInit {
     this.medicalRecordService.getByPatientId(patientId).subscribe({
       next: (record) => {
         this.records = [record];
+        this.hydratePatientNames(this.records);
         this.totalElements = 1;
         this.totalPages = 1;
         this.page = 0;
@@ -120,6 +133,7 @@ export class MedicalRecordListComponent implements OnInit {
     this.medicalRecordService.getPage(page, this.size, this.resolveActiveParam()).subscribe({
       next: (response) => {
         this.records = response.content;
+        this.hydratePatientNames(this.records);
         this.page = response.number;
         this.totalPages = response.totalPages;
         this.totalElements = response.totalElements;
@@ -164,6 +178,7 @@ export class MedicalRecordListComponent implements OnInit {
 
     this.medicalRecordService.archive(record.id).subscribe({
       next: () => {
+        this.refreshStats();
         if (this.isSearchMode) {
           this.searchByPatientId();
           return;
@@ -183,6 +198,7 @@ export class MedicalRecordListComponent implements OnInit {
 
     this.medicalRecordService.restore(record.id).subscribe({
       next: () => {
+        this.refreshStats();
         if (this.isSearchMode) {
           this.searchByPatientId();
           return;
@@ -241,6 +257,7 @@ export class MedicalRecordListComponent implements OnInit {
       next: (record) => {
         this.patientIdentifier = candidate;
         this.records = [record];
+        this.hydratePatientNames(this.records);
         this.totalElements = 1;
         this.isLoading = false;
       },
@@ -290,5 +307,98 @@ export class MedicalRecordListComponent implements OnInit {
       seen.add(key);
       return true;
     });
+  }
+
+  getPatientDisplayName(record: MedicalRecord): string {
+    if (this.isPatientRole) {
+      const fromUser = this.currentUser?.name?.trim();
+      if (fromUser) {
+        return fromUser;
+      }
+    }
+
+    return this.resolvePatientName(record.patientId);
+  }
+
+  private refreshStats(): void {
+    if (!this.permissions.canRead || this.isPatientRole) {
+      return;
+    }
+
+    this.isStatsLoading = true;
+
+    forkJoin({
+      total: this.medicalRecordService.getPage(0, 1),
+      active: this.medicalRecordService.getPage(0, 1, true),
+      archived: this.medicalRecordService.getPage(0, 1, false),
+      critical: this.assessmentService.getAlerts(0, 1)
+    }).subscribe({
+      next: ({ total, active, archived, critical }) => {
+        this.totalCount = total.totalElements;
+        this.activeCount = active.totalElements;
+        this.archivedCount = archived.totalElements;
+        this.criticalCount = critical.totalElements;
+        this.isStatsLoading = false;
+      },
+      error: () => {
+        this.isStatsLoading = false;
+      }
+    });
+  }
+
+  private hydratePatientNames(records: MedicalRecord[]): void {
+    if (records.length === 0) {
+      return;
+    }
+
+    for (const record of records) {
+      const patientId = record.patientId.trim();
+      const normalizedId = patientId.toLowerCase();
+
+      if (!this.isUuid(patientId)) {
+        this.patientNameById.set(normalizedId, patientId);
+        continue;
+      }
+
+      if (this.patientNameById.has(normalizedId) || this.patientNameLoading.has(normalizedId)) {
+        continue;
+      }
+
+      this.patientNameLoading.add(normalizedId);
+      this.assessmentService.getByPatient(patientId).subscribe({
+        next: (reports) => {
+          const reportWithName = reports.find(
+            (report) => typeof report.patientName === 'string' && report.patientName.trim().length > 0
+          );
+
+          if (reportWithName?.patientName) {
+            this.patientNameById.set(normalizedId, reportWithName.patientName.trim());
+          }
+
+          this.patientNameLoading.delete(normalizedId);
+        },
+        error: () => {
+          this.patientNameLoading.delete(normalizedId);
+        }
+      });
+    }
+  }
+
+  private resolvePatientName(patientId: string): string {
+    const normalizedId = patientId.trim().toLowerCase();
+    const resolvedName = this.patientNameById.get(normalizedId);
+    if (resolvedName) {
+      return resolvedName;
+    }
+
+    if (this.isUuid(patientId)) {
+      return 'Non renseigné';
+    }
+
+    return patientId;
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
   }
 }

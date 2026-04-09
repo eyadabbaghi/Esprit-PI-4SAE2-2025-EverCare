@@ -1,0 +1,218 @@
+<section class="cognitive-page">
+  <div class="cognitive-shell">
+    <div class="page-header">
+      <div>
+        <h2>Cognitive Stimulation Tracking</h2>
+        <p>Review recommended activities, recent progress, and therapeutic sessions linked to the medical record.</p>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/cognitive-stimulation/catalog" class="btn-link">Catalog</a>
+        <a
+          *ngIf="currentRecord"
+          [routerLink]="['/medical-record', currentRecord.id]"
+          class="btn-muted">
+          Open Record
+        </a>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>
+    <div *ngIf="infoMessage" class="status-message info">{{ infoMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Loading cognitive stimulation module...</div>
+
+    <ng-container *ngIf="!isLoading && currentRecord as record; else noRecord">
+      <div class="summary-grid">
+        <article class="summary-card highlighted">
+          <span class="summary-label">Patient</span>
+          <strong>{{ patientDisplayName || record.patientId }}</strong>
+          <p>Record {{ record.active ? 'active' : 'archived' }} | Stage {{ progress?.alzheimerStage || record.alzheimerStage || '-' }}</p>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Recorded Sessions</span>
+          <strong>{{ progress?.totalSessions ?? 0 }}</strong>
+          <p>Cognitive history linked to the medical record.</p>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">7-Day Average</span>
+          <strong>{{ (progress?.averageScoreLast7Days ?? 0) | number: '1.0-0' }}/100</strong>
+          <p>Dynamic comparison with the last 30 days.</p>
+        </article>
+        <article class="summary-card" [class.alert-card]="progress?.declineDetected">
+          <span class="summary-label">Recommendation</span>
+          <strong>{{ progress?.recommendedDifficulty ?? '-' }}</strong>
+          <p>
+            {{ progress?.recommendedGameType ? labelForType(progress?.recommendedGameType) : 'Type to confirm' }}
+          </p>
+        </article>
+      </div>
+
+      <div class="status-banner" [class.warning]="progress?.declineDetected" [class.info]="!progress?.declineDetected">
+        <strong>{{ progress?.declineDetected ? 'Clinical Attention' : 'Follow-Up in Progress' }}</strong>
+        <p>{{ progress?.recommendation || 'No specific recommendation at the moment.' }}</p>
+      </div>
+
+      <div class="content-grid">
+        <div class="panel recommendations-card">
+          <div class="section-head">
+            <div>
+              <h3>Recommended Games</h3>
+              <p>The recommendation engine adjusts suggestions according to the stage and recent performance.</p>
+            </div>
+          </div>
+
+          <div class="recommended-list" *ngIf="recommendedGames.length > 0; else noRecommendedGames">
+            <button
+              type="button"
+              class="recommended-item"
+              [ngClass]="themeClassForGame(game)"
+              *ngFor="let game of recommendedGames"
+              [class.selected]="selectedGame?.id === game.id"
+              (click)="selectGame(game)">
+              <div class="recommended-visual">
+                <img [src]="imageForGame(game)" [alt]="game.title" />
+              </div>
+              <div class="recommended-copy">
+                <span class="overline">{{ labelForType(game.gameType) }}</span>
+                <strong>{{ game.title }}</strong>
+                <p>{{ game.description }}</p>
+                <small>{{ helperTextForGame(game) }}</small>
+              </div>
+              <div class="inline-metrics">
+                <span>Level {{ game.difficultyLevel }}</span>
+                <span>{{ game.estimatedDuration }} min</span>
+              </div>
+            </button>
+          </div>
+
+          <ng-template #noRecommendedGames>
+            <p class="empty-hint">No recommended games for this record at the moment.</p>
+          </ng-template>
+        </div>
+
+        <div class="panel form-card">
+          <div class="section-head">
+            <div>
+              <h3>{{ canSubmitSession ? 'Play an Activity' : 'Progress Summary' }}</h3>
+              <p *ngIf="canSubmitSession">
+                Launch an interactive therapeutic activity. The score will be calculated and recorded automatically.
+              </p>
+              <p *ngIf="!canSubmitSession">
+                Read-only view: open a patient record from the medical module to follow cognitive stimulation.
+              </p>
+            </div>
+          </div>
+
+          <ng-container *ngIf="canSubmitSession; else readonlySummary">
+            <div class="play-ready-card" [ngClass]="themeClassForGame(game)" *ngIf="selectedGame as game; else noPlayableGame">
+              <div class="play-ready-visual">
+                <img [src]="imageForGame(game)" [alt]="game.title" />
+              </div>
+              <div class="play-ready-copy">
+                <span class="overline">{{ labelForType(game.gameType) }}</span>
+                <h3>{{ game.title }}</h3>
+                <p>{{ game.instructions }}</p>
+                <small>{{ helperTextForGame(game) }}</small>
+
+                <div class="inline-metrics">
+                  <span>Level {{ game.difficultyLevel }}/5</span>
+                  <span>{{ game.estimatedDuration }} min</span>
+                  <span>Record {{ record.active ? 'active' : 'archived' }}</span>
+                </div>
+
+                <a
+                  class="btn-solid"
+                  [routerLink]="['/cognitive-stimulation/medical-record', record.id, 'play', game.id]">
+                  Play Now
+                </a>
+              </div>
+            </div>
+
+            <ng-template #noPlayableGame>
+              <p class="empty-hint">No activity is ready to be launched for this record.</p>
+            </ng-template>
+          </ng-container>
+
+          <ng-template #readonlySummary>
+            <div class="readonly-block">
+              <div class="readonly-item">
+                <span>30-Day Average</span>
+                <strong>{{ (progress?.averageScoreLast30Days ?? 0) | number: '1.0-0' }}/100</strong>
+              </div>
+              <div class="readonly-item">
+                <span>Suggested Game</span>
+                <strong>{{ progress?.recommendedGameType ? labelForType(progress?.recommendedGameType) : '-' }}</strong>
+              </div>
+              <div class="readonly-item">
+                <span>Recommended Difficulty</span>
+                <strong>{{ progress?.recommendedDifficulty ?? '-' }}</strong>
+              </div>
+              <div class="readonly-item">
+                <span>Easier Game Suggested</span>
+                <strong>{{ progress?.easierGameSuggested ? 'Yes' : 'No' }}</strong>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="panel history-card">
+        <div class="section-head">
+          <div>
+            <h3>Session History</h3>
+            <p>Detailed follow-up of the cognitive performances recorded for this record.</p>
+          </div>
+        </div>
+
+        <div class="session-list" *ngIf="sessions.length > 0; else emptySessions">
+          <article class="session-item" *ngFor="let session of sessions">
+            <div class="session-main">
+              <div class="session-top">
+                <div>
+                  <strong>{{ session.gameTitle }}</strong>
+                  <p>{{ labelForType(session.gameType) }} | {{ session.playedAt | date: 'dd/MM/yyyy, HH:mm' }}</p>
+                </div>
+                <span class="score-pill">{{ session.score }}/100</span>
+              </div>
+
+              <div class="session-meta">
+                <span>Stage: {{ session.stageAtPlay }}</span>
+                <span>Difficulty: {{ session.difficultyAtPlay }}</span>
+                <span>Assistance: {{ session.assistanceNeeded ? 'Yes' : 'No' }}</span>
+                <span>Frustration: {{ session.frustrationLevel }}/5</span>
+                <span>Enjoyment: {{ session.enjoymentLevel }}/5</span>
+                <span>{{ session.correct ? 'Correct' : 'Incorrect' }}</span>
+              </div>
+
+              <p *ngIf="session.notes" class="session-notes">{{ session.notes }}</p>
+            </div>
+
+            <button
+              *ngIf="isDoctorView"
+              type="button"
+              class="btn-link danger"
+              (click)="removeSession(session)">
+              Delete
+            </button>
+          </article>
+        </div>
+
+        <ng-template #emptySessions>
+          <p class="empty-hint">No cognitive session has been recorded yet.</p>
+        </ng-template>
+      </div>
+    </ng-container>
+  </div>
+</section>
+
+<ng-template #noRecord>
+  <div class="cognitive-shell" *ngIf="!isLoading && !currentRecord && !errorMessage">
+    <div class="panel empty-card">
+      <p>No medical record context is available to load cognitive stimulation.</p>
+      <div class="empty-actions">
+        <a routerLink="/medical-record" class="btn-muted">Open My Medical Record</a>
+        <a routerLink="/cognitive-stimulation/catalog" class="btn-link">Open Catalog</a>
+      </div>
+    </div>
+  </div>
+</ng-template>

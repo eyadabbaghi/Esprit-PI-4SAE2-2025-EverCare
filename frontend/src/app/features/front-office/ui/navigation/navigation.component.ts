@@ -25,14 +25,6 @@ interface Notification {
   styleUrls: ['./navigation.component.css'],
 })
 export class NavigationComponent implements OnInit, OnDestroy {
-  navItems: NavItem[] = [
-    { id: 'home', label: 'Home', route: '/' },
-    { id: 'activities', label: 'Activities', route: '/activities' },
-    { id: 'appointments', label: 'Appointments', route: '/appointments' },
-    { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
-    { id: 'alerts', label: 'Alerts', route: '/alerts' },
-  ];
-
   user: User | null = null;
   private userSub!: Subscription;
 
@@ -84,8 +76,32 @@ export class NavigationComponent implements OnInit, OnDestroy {
     return this.notifications.filter((n) => !n.read).length;
   }
 
+  get cognitiveRoute(): string {
+    const role = this.user?.role?.trim().toUpperCase();
+    return role === 'PATIENT' || role === 'CAREGIVER'
+      ? '/cognitive-stimulation'
+      : '/cognitive-stimulation/catalog';
+  }
+
+  get navItems(): NavItem[] {
+    return [
+      { id: 'home', label: 'Home', route: '/' },
+      { id: 'activities', label: 'Activities', route: '/activities' },
+      { id: 'appointments', label: 'Appointments', route: '/appointments' },
+      { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
+      { id: 'cognitive-stimulation', label: 'Cognitive Care', route: this.cognitiveRoute },
+      { id: 'alerts', label: 'Alerts', route: '/alerts' },
+    ];
+  }
+
   isActive(route: string): boolean {
-    return this.router.url === route;
+    if (route === '/') {
+      return this.router.url === '/';
+    }
+
+    return this.router.url === route
+      || this.router.url.startsWith(`${route}/`)
+      || this.router.url.startsWith(`${route}?`);
   }
 
   navigate(route: string): void {

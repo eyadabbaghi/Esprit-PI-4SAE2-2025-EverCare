@@ -1,0 +1,379 @@
+.cognitive-page {
+  background: linear-gradient(180deg, #faf7ff 0%, #f7f1ff 100%);
+  min-height: calc(100vh - 64px);
+  padding: 2rem 1.5rem 3rem;
+}
+
+.cognitive-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-header,
+.editor-head,
+.game-card-head,
+.hero-chips,
+.card-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h2,
+.editor-head h3,
+.game-card-head h3 {
+  margin: 0;
+  color: #2d1b4e;
+}
+
+.page-header p,
+.editor-head p,
+.game-description,
+.instructions-box p,
+.game-story p {
+  margin: 0.45rem 0 0;
+  color: #6b5b8c;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #dcc7ff;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 16px 32px rgba(124, 58, 237, 0.08);
+}
+
+.editor-panel,
+.filter-panel {
+  margin-bottom: 1.5rem;
+}
+
+.editor-form,
+.form-grid,
+.filter-grid,
+.games-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1rem 0 1.25rem;
+}
+
+.filter-grid {
+  grid-template-columns: 2fr repeat(3, minmax(180px, 1fr));
+}
+
+.games-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.game-card {
+  overflow: hidden;
+  padding: 0;
+  --game-accent: #7c3aed;
+  --game-soft: #f7f1ff;
+}
+
+.game-card.memory-theme {
+  --game-accent: #3b82f6;
+  --game-soft: #eff6ff;
+}
+
+.game-card.language-theme {
+  --game-accent: #d97706;
+  --game-soft: #fff7ed;
+}
+
+.game-card.logic-theme {
+  --game-accent: #0f766e;
+  --game-soft: #f0fdfa;
+}
+
+.game-card.attention-theme {
+  --game-accent: #4d7c0f;
+  --game-soft: #f7fee7;
+}
+
+.game-card.praxis-theme {
+  --game-accent: #ea580c;
+  --game-soft: #fff7ed;
+}
+
+.game-card.gnosis-theme {
+  --game-accent: #e11d48;
+  --game-soft: #fff1f2;
+}
+
+.game-visual {
+  position: relative;
+  min-height: 220px;
+  background: var(--game-soft);
+}
+
+.game-visual img {
+  width: 100%;
+  height: 220px;
+  display: block;
+  object-fit: cover;
+}
+
+.visual-overlay {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.visual-pill,
+.visual-type {
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.visual-pill {
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--game-accent);
+}
+
+.visual-type {
+  background: rgba(45, 27, 78, 0.74);
+  color: #fff;
+}
+
+.game-card-head,
+.game-description,
+.game-story,
+.hero-chips,
+.instructions-box,
+.card-actions {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+}
+
+.game-card-head {
+  margin-top: 1.4rem;
+}
+
+.game-description {
+  margin-top: 0.9rem;
+}
+
+.game-story {
+  margin-top: 1rem;
+  border: 1px solid color-mix(in srgb, var(--game-accent) 18%, #ffffff);
+  border-radius: 1rem;
+  background: var(--game-soft);
+  padding: 0.95rem 1rem;
+}
+
+.game-story strong {
+  color: var(--game-accent);
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.field label,
+.instructions-box span,
+.overline,
+.chip span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5f4c8a;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid #d8c5ff;
+  padding: 0.9rem 1rem;
+  font: inherit;
+  color: #2d1b4e;
+  background: #fff;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.toggle-field {
+  justify-content: flex-end;
+}
+
+.toggle-field label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.status-message {
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.status-message.error {
+  color: #be123c;
+  background: #fff1f2;
+  border: 1px solid #fda4af;
+}
+
+.status-message.success {
+  color: #166534;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+}
+
+.status-message.info {
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.badge.active {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.badge.archived {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.hero-chips {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--game-accent) 18%, #ffffff);
+  border-radius: 1rem;
+  background: var(--game-soft);
+  padding: 0.9rem 1rem;
+}
+
+.chip strong,
+.instructions-box p {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.instructions-box {
+  margin-top: 0.2rem;
+  margin-bottom: 1.1rem;
+  border-radius: 1rem;
+  background: #fcfbff;
+  border: 1px solid #eadfff;
+  padding: 1rem;
+}
+
+.empty-panel {
+  text-align: center;
+  color: #6b5b8c;
+}
+
+.btn-solid,
+.btn-link,
+.btn-muted {
+  border: none;
+  border-radius: 1rem;
+  padding: 0.85rem 1.2rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-solid {
+  background: linear-gradient(135deg, var(--game-accent) 0%, #8b5cf6 100%);
+  color: #fff;
+}
+
+.btn-link {
+  background: transparent;
+  color: #7c3aed;
+  border: 1px solid #c4b5fd;
+}
+
+.btn-link.dark {
+  color: #1f2a44;
+  border-color: #94a3b8;
+}
+
+.btn-link.danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btn-muted {
+  background: #f6f1ff;
+  color: #5f4c8a;
+  border: 1px solid #dcc7ff;
+}
+
+@media (max-width: 900px) {
+  .form-grid,
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header,
+  .editor-head,
+  .game-card-head,
+  .hero-chips,
+  .card-actions,
+  .visual-overlay {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toggle-field label {
+    margin-top: 0;
+  }
+
+  .game-card-head,
+  .game-description,
+  .game-story,
+  .hero-chips,
+  .instructions-box,
+  .card-actions {
+    margin-left: 1.2rem;
+    margin-right: 1.2rem;
+  }
+}

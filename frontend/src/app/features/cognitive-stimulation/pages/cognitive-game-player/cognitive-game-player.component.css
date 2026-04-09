@@ -1,0 +1,464 @@
+.player-page {
+  min-height: calc(100vh - 64px);
+  background: linear-gradient(180deg, #faf7ff 0%, #f3ecff 100%);
+  padding: 2rem 1.5rem 3rem;
+}
+.player-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+.status-message {
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.status-message.error {
+  color: #be123c;
+  background: #fff1f2;
+  border: 1px solid #fda4af;
+}
+.status-message.success {
+  color: #166534;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+}
+.status-message.info {
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+.timeout-overlay,
+.final-countdown-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timeout-overlay {
+  background: rgba(45, 27, 78, 0.18);
+  z-index: 20;
+}
+.final-countdown-overlay {
+  pointer-events: none;
+  z-index: 15;
+}
+.timeout-overlay-card {
+  background: #fff;
+  border: 1px solid #fdba74;
+  box-shadow: 0 20px 48px rgba(154, 52, 18, 0.18);
+  border-radius: 1.25rem;
+  padding: 1.2rem 1.4rem;
+  color: #9a3412;
+  min-width: 320px;
+  text-align: center;
+}
+.final-countdown-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 247, 237, 0.95);
+  border: 4px solid #fdba74;
+  color: #9a3412;
+  font-size: 3.5rem;
+  font-weight: 800;
+  box-shadow: 0 22px 50px rgba(154, 52, 18, 0.2);
+  animation: pulse-final-countdown 1s ease-in-out infinite;
+}
+.final-countdown-circle.final-countdown-danger {
+  background: rgba(255, 241, 242, 0.96);
+  border-color: #fb7185;
+  color: #be123c;
+}
+.page-header,
+.layout-grid,
+.hero-badges,
+.result-actions,
+.question-topline,
+.memory-progress {
+  display: flex;
+  gap: 1rem;
+}
+.page-header,
+.result-actions,
+.question-topline {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.page-header {
+  --player-accent: #7c3aed;
+  --player-soft: #faf7ff;
+  border: 1px solid color-mix(in srgb, var(--player-accent) 16%, #ffffff);
+  border-radius: 1.5rem;
+  padding: 1.2rem 1.3rem;
+  background: linear-gradient(135deg, var(--player-soft) 0%, #ffffff 100%);
+  margin-bottom: 1.5rem;
+}
+.page-header.memory-theme,
+.gameplay-card.memory-theme,
+.support-card.memory-theme {
+  --player-accent: #3b82f6;
+  --player-soft: #eff6ff;
+}
+.page-header.language-theme,
+.gameplay-card.language-theme,
+.support-card.language-theme {
+  --player-accent: #d97706;
+  --player-soft: #fff7ed;
+}
+.page-header.logic-theme,
+.gameplay-card.logic-theme,
+.support-card.logic-theme {
+  --player-accent: #0f766e;
+  --player-soft: #f0fdfa;
+}
+.page-header.attention-theme,
+.gameplay-card.attention-theme,
+.support-card.attention-theme {
+  --player-accent: #4d7c0f;
+  --player-soft: #f7fee7;
+}
+.page-header.praxis-theme,
+.gameplay-card.praxis-theme,
+.support-card.praxis-theme {
+  --player-accent: #ea580c;
+  --player-soft: #fff7ed;
+}
+.page-header.gnosis-theme,
+.gameplay-card.gnosis-theme,
+.support-card.gnosis-theme {
+  --player-accent: #e11d48;
+  --player-soft: #fff1f2;
+}
+.page-header h2,
+.gameplay-card h3,
+.support-card h3 {
+  margin: 0.35rem 0 0;
+  color: #2d1b4e;
+}
+.page-header p,
+.explanation,
+.support-card li,
+.result-answer,
+.timer-intro p,
+.timeout-hint,
+.hero-support-copy,
+.game-banner-copy p,
+.back-link {
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: 600;
+}
+.hero-support-copy {
+  display: inline-flex;
+  margin-top: 0.9rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid color-mix(in srgb, var(--player-accent) 18%, #ffffff);
+  font-weight: 600;
+}
+.hero-badges {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.hero-badge,
+.result-meta span,
+.timer-inline,
+.memory-progress span {
+  background: #f4ecff;
+  border: 1px solid #d8c5ff;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  color: #5f4c8a;
+  font-weight: 600;
+}
+.timer-badge,
+.timer-inline {
+  font-variant-numeric: tabular-nums;
+}
+.timer-badge.timer-critical,
+.timer-inline.timer-critical {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #9a3412;
+}
+.timer-badge.timer-danger,
+.timer-inline.timer-danger {
+  background: #fff1f2;
+  border-color: #fb7185;
+  color: #be123c;
+  animation: pulse-timer 1s ease-in-out infinite;
+}
+.layout-grid {
+  align-items: flex-start;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #dcc7ff;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 18px 32px rgba(124, 58, 237, 0.08);
+}
+.gameplay-card {
+  flex: 1.2;
+}
+.support-card {
+  flex: 0.8;
+}
+.overline,
+.question-label,
+.support-metrics span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b5b8c;
+}
+.memory-preview,
+.memory-play,
+.play-form,
+.feedback-grid,
+.result-card,
+.timer-intro,
+.game-banner,
+.game-banner-copy {
+  display: grid;
+  gap: 1rem;
+}
+.memory-chip-grid,
+.options-grid,
+.support-metrics,
+.memory-board {
+  display: grid;
+  gap: 0.85rem;
+}
+.game-banner {
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: stretch;
+  margin-bottom: 1.2rem;
+}
+.game-banner-visual,
+.support-visual {
+  overflow: hidden;
+  border-radius: 1.2rem;
+  background: var(--player-soft);
+}
+.game-banner-visual img,
+.support-visual img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.game-banner-visual {
+  min-height: 188px;
+}
+.game-banner-copy {
+  align-content: center;
+  padding: 1rem 1.1rem;
+  border-radius: 1.2rem;
+  background: var(--player-soft);
+  border: 1px solid color-mix(in srgb, var(--player-accent) 18%, #ffffff);
+}
+.memory-chip-grid {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+.memory-chip {
+  background: #f8f4ff;
+  border: 1px solid #d8c5ff;
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 700;
+  color: #2d1b4e;
+}
+.question-box {
+  background: var(--player-soft);
+  border: 1px solid color-mix(in srgb, var(--player-accent) 18%, #ffffff);
+  border-radius: 1.25rem;
+  padding: 1rem 1.1rem;
+}
+.question-box-danger {
+  border-color: #fb7185;
+  background: #fff7f9;
+}
+.memory-progress {
+  flex-wrap: wrap;
+  margin-top: 0.7rem;
+}
+.memory-board {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.memory-card-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  perspective: 1000px;
+}
+.memory-card-inner {
+  position: relative;
+  width: 100%;
+  min-height: 120px;
+  transform-style: preserve-3d;
+  transition: transform 0.35s ease;
+  display: block;
+}
+.memory-card-button.flipped .memory-card-inner,
+.memory-card-button.matched .memory-card-inner {
+  transform: rotateY(180deg);
+}
+.memory-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  backface-visibility: hidden;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.9rem;
+}
+.memory-card-front {
+  background: linear-gradient(135deg, var(--player-accent) 0%, #8b5cf6 100%);
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(59, 130, 246, 0.18);
+  font-size: 2rem;
+}
+.memory-card-back {
+  transform: rotateY(180deg);
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--player-accent) 22%, #ffffff);
+  color: #2d1b4e;
+}
+.memory-card-button.matched .memory-card-back {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+}
+.timeout-hint {
+  margin: 0.4rem 0 0;
+  color: #9a3412;
+  font-weight: 600;
+}
+.options-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.option-card {
+  border: 1px solid #d8c5ff;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem;
+  color: #2d1b4e;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.option-card.selected {
+  border-color: var(--player-accent);
+  background: var(--player-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.12);
+}
+.btn-solid,
+.btn-muted,
+.btn-link {
+  border-radius: 1rem;
+  padding: 0.85rem 1.2rem;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-solid {
+  border: none;
+  background: linear-gradient(135deg, var(--player-accent, #7c3aed) 0%, #8b5cf6 100%);
+  color: #fff;
+}
+.btn-muted {
+  border: 1px solid #dcc7ff;
+  background: #f6f1ff;
+  color: #5f4c8a;
+}
+.btn-link {
+  border: 1px solid #c4b5fd;
+  background: transparent;
+  color: #7c3aed;
+}
+.result-badge {
+  justify-self: flex-start;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-weight: 700;
+}
+.result-badge.good {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
+}
+.result-badge.bad {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+}
+.result-badge.timeout {
+  background: #fff7ed;
+  border: 1px solid #fb923c;
+  color: #c2410c;
+}
+.support-card ul {
+  margin: 1rem 0;
+  padding-left: 1.1rem;
+}
+.support-visual {
+  min-height: 190px;
+  margin: 1rem 0 1.1rem;
+}
+.support-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.support-metrics div {
+  background: var(--player-soft);
+  border: 1px solid color-mix(in srgb, var(--player-accent) 18%, #ffffff);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+.support-metrics strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #2d1b4e;
+  font-size: 1.15rem;
+}
+@keyframes pulse-timer {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes pulse-final-countdown {
+  0% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.92; }
+}
+@media (max-width: 980px) {
+  .page-header,
+  .layout-grid,
+  .result-actions,
+  .question-topline {
+    flex-direction: column;
+  }
+  .options-grid,
+  .feedback-grid,
+  .support-metrics,
+  .game-banner,
+  .memory-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
@@ -41,10 +42,16 @@ export class DoctorReportsListComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly assessmentService: AssessmentService,
-    private readonly medicalRecordService: MedicalRecordService
+    private readonly medicalRecordService: MedicalRecordService,
+    @Inject(PLATFORM_ID) private readonly platformId: Object
   ) {}
 
   ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      this.errorMessage = 'Chargement des rapports dans le navigateur...';
+      return;
+    }
+
     this.route.queryParamMap.subscribe((params) => {
       this.patientFilterId = (params.get('patientId') ?? '').trim();
       if (this.patientFilterId) {

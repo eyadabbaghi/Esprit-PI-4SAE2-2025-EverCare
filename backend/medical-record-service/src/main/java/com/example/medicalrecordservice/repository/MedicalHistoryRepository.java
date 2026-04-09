@@ -15,4 +15,8 @@ public interface MedicalHistoryRepository extends JpaRepository<MedicalHistory, 
     Optional<MedicalHistory> findByIdAndMedicalRecordId(UUID id, UUID medicalRecordId);
 
     boolean existsByMedicalRecordIdAndTypeAndDateAndDescription(UUID medicalRecordId, MedicalHistoryType type, LocalDate date, String description);
+
+    long countByMedicalRecordIdAndDate(UUID medicalRecordId, LocalDate date);
+
+    long countByMedicalRecordIdAndDateAndType(UUID medicalRecordId, LocalDate date, MedicalHistoryType type);
 }

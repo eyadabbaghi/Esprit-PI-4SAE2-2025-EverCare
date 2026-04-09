@@ -1,56 +1,51 @@
 <section class="record-details-page">
   <div class="details-shell">
     <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
-    <div *ngIf="isLoading" class="status-message info">Chargement du dossier médical...</div>
+    <div *ngIf="isLoading" class="status-message info">Loading medical record...</div>
 
     <ng-container *ngIf="record as currentRecord; else notFound">
       <div class="panel details-card">
         <div class="details-head">
           <div>
-            <h2>Détails du dossier médical</h2>
-            <p>Visualisez les informations principales du patient.</p>
+            <h2>Medical Record Details</h2>
           </div>
           <span class="badge-state" [class.active]="currentRecord.active" [class.archived]="!currentRecord.active">
-            {{ currentRecord.active ? 'Actif' : 'Archivé' }}
+            {{ currentRecord.active ? 'Active' : 'Archived' }}
           </span>
         </div>
 
-        <div class="status-inline" [class.archived]="!currentRecord.active">
-          {{ statusHint }}
-        </div>
-
         <div class="info-grid">
-          <div class="info-item"><span>Nom du patient</span><strong>{{ patientDisplayName || 'Non renseigné' }}</strong></div>
-          <div class="info-item"><span>Identifiant patient</span><strong>{{ currentRecord.patientId }}</strong></div>
-          <div class="info-item"><span>Groupe sanguin</span><strong>{{ currentRecord.bloodGroup || '-' }}</strong></div>
-          <div class="info-item"><span>Stade Alzheimer</span><strong>{{ currentRecord.alzheimerStage || '-' }}</strong></div>
-          <div class="info-item"><span>Contact d'urgence</span><strong>{{ currentRecord.emergencyContactName || '-' }}</strong></div>
-          <div class="info-item"><span>Téléphone d'urgence</span><strong>{{ currentRecord.emergencyContactPhone || '-' }}</strong></div>
-          <div class="info-item"><span>Dernière mise à jour</span><strong>{{ currentRecord.updatedAt | date: 'dd/MM/yyyy, HH:mm' }}</strong></div>
-          <div class="info-item"><span>Raison d'archivage</span><strong>{{ archiveReasonText }}</strong></div>
+          <div class="info-item"><span>Patient Name</span><strong>{{ patientDisplayName || 'Not provided' }}</strong></div>
+          <div class="info-item"><span>Patient Identifier</span><strong>{{ currentRecord.patientId }}</strong></div>
+          <div class="info-item"><span>Blood Group</span><strong>{{ currentRecord.bloodGroup || '-' }}</strong></div>
+          <div class="info-item"><span>Alzheimer Stage</span><strong>{{ currentRecord.alzheimerStage || '-' }}</strong></div>
+          <div class="info-item"><span>Emergency Contact</span><strong>{{ currentRecord.emergencyContactName || '-' }}</strong></div>
+          <div class="info-item"><span>Emergency Phone</span><strong>{{ currentRecord.emergencyContactPhone || '-' }}</strong></div>
+          <div class="info-item"><span>Last Updated</span><strong>{{ currentRecord.updatedAt | date: 'dd/MM/yyyy, HH:mm' }}</strong></div>
+          <div class="info-item"><span>Archive Reason</span><strong>{{ archiveReasonText }}</strong></div>
           <div class="info-item full"><span>Allergies</span><strong>{{ currentRecord.allergies || '-' }}</strong></div>
-          <div class="info-item full"><span>Maladies chroniques</span><strong>{{ currentRecord.chronicDiseases || '-' }}</strong></div>
+          <div class="info-item full"><span>Chronic Diseases</span><strong>{{ currentRecord.chronicDiseases || '-' }}</strong></div>
         </div>
 
         <div class="insight-grid">
           <article class="insight-card">
-            <h4>Dernière évaluation</h4>
+            <h4>Latest Assessment</h4>
             <div *ngIf="latestAssessment; else noAssessment" class="insight-content">
               <p><span>Score</span><strong>{{ latestAssessment.score }}</strong></p>
-              <p><span>Stade calculé</span><strong>{{ formatStage(latestAssessment.computedStage) }}</strong></p>
-              <p><span>Alerte</span><strong>{{ latestAssessment.needsAttention ? 'Oui' : 'Non' }}</strong></p>
+              <p><span>Computed Stage</span><strong>{{ formatStage(latestAssessment.computedStage) }}</strong></p>
+              <p><span>Alert</span><strong>{{ latestAssessment.needsAttention ? 'Yes' : 'No' }}</strong></p>
               <p><span>Date</span><strong>{{ latestAssessment.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</strong></p>
               <button type="button" class="btn-link" (click)="openLatestAssessmentReport()">
-                Voir le rapport
+                View Report
               </button>
             </div>
             <ng-template #noAssessment>
-              <p class="empty-hint">Aucune évaluation disponible.</p>
+              <p class="empty-hint">No assessment available.</p>
             </ng-template>
           </article>
 
           <article class="insight-card">
-            <h4>Évolution du stade</h4>
+            <h4>Stage Progression</h4>
             <div *ngIf="stageTransitions.length > 0; else noTimeline" class="timeline-list">
               <div class="timeline-item" *ngFor="let transition of stageTransitions">
                 <strong>
@@ -62,16 +57,16 @@
               </div>
             </div>
             <ng-template #noTimeline>
-              <p class="empty-hint">Aucun changement de stade enregistré.</p>
+              <p class="empty-hint">No stage change recorded.</p>
             </ng-template>
           </article>
 
           <article class="insight-card">
-            <h4>Complétude du dossier</h4>
+            <h4>Record Completeness</h4>
             <div class="completeness-block">
               <div class="score-row">
                 <strong>{{ completenessScore }}%</strong>
-                <span>{{ completenessItems.length - missingCompletenessItems.length }}/{{ completenessItems.length }} critères</span>
+                <span>{{ completenessItems.length - missingCompletenessItems.length }}/{{ completenessItems.length }} criteria</span>
               </div>
               <div class="progress-track">
                 <div class="progress-fill" [style.width.%]="completenessScore"></div>
@@ -81,21 +76,24 @@
                 <span *ngFor="let item of missingCompletenessItems">{{ item.label }}</span>
               </div>
               <p *ngIf="missingCompletenessItems.length === 0" class="empty-hint">
-                Dossier complet.
+                Record complete.
               </p>
             </div>
           </article>
         </div>
 
         <div class="top-actions">
-          <a *ngIf="permissions.canUpdate" [routerLink]="['/medical-record', currentRecord.id, 'edit']" class="btn-link dark">Modifier</a>
+          <a [routerLink]="['/cognitive-stimulation/medical-record', currentRecord.id]" class="btn-link">
+            Cognitive Stimulation
+          </a>
+          <a *ngIf="permissions.canUpdate" [routerLink]="['/medical-record', currentRecord.id, 'edit']" class="btn-link dark">Edit</a>
           <button
             *ngIf="permissions.canArchive"
             type="button"
             class="btn-link danger"
             [disabled]="!canMutateRecord || !permissions.canArchive"
             (click)="archiveRecord()">
-            Archiver
+            Archive
           </button>
           <button
             *ngIf="currentRole === 'ADMIN'"
@@ -103,16 +101,16 @@
             class="btn-link success"
             [disabled]="currentRecord.active"
             (click)="restoreRecord()">
-            Réactiver
+            Restore
           </button>
-          <button type="button" class="btn-link" (click)="backToList()">Retour à la liste</button>
+          <button type="button" class="btn-link" (click)="backToList()">Back to List</button>
         </div>
       </div>
 
       <div class="two-columns">
         <div class="panel content-card">
-          <h3>Historique</h3>
-          <p class="readonly-note" *ngIf="!permissions.canManageHistory">Mode lecture seule pour votre rôle.</p>
+          <h3>History</h3>
+          <p class="readonly-note" *ngIf="!permissions.canManageHistory">Read-only mode for your role.</p>
 
           <div *ngIf="historyError" class="status-message error compact">{{ historyError }}</div>
 
@@ -127,18 +125,18 @@
               <div class="field">
                 <label for="historyDate">Date</label>
                 <input id="historyDate" type="date" formControlName="date" [max]="todayMaxDate" [disabled]="!canMutateRecord || !permissions.canManageHistory" />
-                <div class="field-error" *ngIf="hasHistoryError('date', 'required')">La date est obligatoire.</div>
-                <div class="field-error" *ngIf="hasHistoryError('date', 'futureDate')">La date ne peut pas être dans le futur.</div>
+                <div class="field-error" *ngIf="hasHistoryError('date', 'required')">Date is required.</div>
+                <div class="field-error" *ngIf="hasHistoryError('date', 'futureDate')">Date cannot be in the future.</div>
               </div>
               <div class="field full">
                 <label for="historyDescription">Description</label>
                 <textarea id="historyDescription" rows="3" formControlName="description" [disabled]="!canMutateRecord || !permissions.canManageHistory"></textarea>
-                <div class="field-error" *ngIf="hasHistoryError('description', 'required')">La description est obligatoire.</div>
-                <div class="field-error" *ngIf="hasHistoryError('description', 'maxlength')">La description ne doit pas dépasser 2000 caractères.</div>
+                <div class="field-error" *ngIf="hasHistoryError('description', 'required')">Description is required.</div>
+                <div class="field-error" *ngIf="hasHistoryError('description', 'maxlength')">Description must not exceed 2000 characters.</div>
               </div>
             </div>
             <button type="submit" class="btn-solid small" [disabled]="!canMutateRecord || !permissions.canManageHistory || isHistorySubmitting">
-              Ajouter à l'historique
+              Add to History
             </button>
           </form>
 
@@ -155,26 +153,26 @@
                 class="btn-link danger"
                 [disabled]="!canMutateRecord || !permissions.canManageHistory"
                 (click)="deleteHistory(history.id)">
-                Supprimer
+                Delete
               </button>
             </div>
-            <p class="empty-hint" *ngIf="histories.length === 0">Aucune entrée d'historique.</p>
+            <p class="empty-hint" *ngIf="histories.length === 0">No history entries.</p>
           </div>
         </div>
 
         <div class="panel content-card">
           <h3>Documents</h3>
-          <p class="readonly-note" *ngIf="!permissions.canManageDocuments">Mode lecture seule pour votre rôle.</p>
+          <p class="readonly-note" *ngIf="!permissions.canManageDocuments">Read-only mode for your role.</p>
 
           <div *ngIf="documentError" class="status-message error compact">{{ documentError }}</div>
 
           <div class="upload-row" *ngIf="permissions.canManageDocuments">
             <input type="file" accept=".pdf,.png,.jpg,.jpeg" (change)="onFileSelected($event)" [disabled]="!canMutateRecord || !permissions.canManageDocuments" />
             <button type="button" class="btn-solid small" (click)="uploadDocument()" [disabled]="!canMutateRecord || !permissions.canManageDocuments || !selectedFile || isDocumentUploading">
-              Téléverser
+              Upload
             </button>
           </div>
-          <p class="upload-hint" *ngIf="permissions.canManageDocuments">Formats autorisés: pdf, png, jpg, jpeg. Taille max: 5MB.</p>
+          <p class="upload-hint" *ngIf="permissions.canManageDocuments">Allowed formats: pdf, png, jpg, jpeg. Max size: 5MB.</p>
 
           <div class="stack-list">
             <div class="list-item" *ngFor="let document of documents">
@@ -183,18 +181,18 @@
                 <p>{{ document.fileType | uppercase }} | {{ document.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</p>
               </div>
               <div class="inline-actions">
-                <button type="button" class="btn-link" (click)="downloadDocument(document)">Télécharger</button>
+                <button type="button" class="btn-link" (click)="downloadDocument(document)">Download</button>
                 <button
                   *ngIf="permissions.canManageDocuments"
                   type="button"
                   class="btn-link danger"
                   [disabled]="!canMutateRecord || !permissions.canManageDocuments"
                   (click)="deleteDocument(document.id)">
-                  Supprimer
+                  Delete
                 </button>
               </div>
             </div>
-            <p class="empty-hint" *ngIf="documents.length === 0">Aucun document téléversé.</p>
+            <p class="empty-hint" *ngIf="documents.length === 0">No uploaded documents.</p>
           </div>
         </div>
       </div>
@@ -204,6 +202,6 @@
 
 <ng-template #notFound>
   <div class="details-shell">
-    <div class="status-message warning">Dossier médical introuvable.</div>
+    <div class="status-message warning">Medical record not found.</div>
   </div>
 </ng-template>

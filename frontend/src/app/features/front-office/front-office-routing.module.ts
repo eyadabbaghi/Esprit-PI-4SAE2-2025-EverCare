@@ -33,6 +33,10 @@ const routes: Routes = [
       {
         path: 'doctor',
         loadChildren: () => import('../medical-record/doctor-reports.module').then(m => m.DoctorReportsModule)
+      },
+      {
+        path: 'cognitive-stimulation',
+        loadChildren: () => import('../cognitive-stimulation/cognitive-stimulation.module').then(m => m.CognitiveStimulationModule)
       }
 
     ],

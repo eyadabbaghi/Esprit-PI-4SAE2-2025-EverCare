@@ -2,34 +2,35 @@
   <div class="form-shell">
     <div class="form-card">
       <div class="form-head">
-        <h2>{{ isEditMode ? 'Modifier un dossier médical' : 'Créer un dossier médical' }}</h2>
-        <p>Complétez les informations du patient et les contacts d'urgence.</p>
+        <h2>{{ isEditMode ? 'Edit Medical Record' : 'Create Medical Record' }}</h2>
+        <p>Complete the patient information and emergency contacts.</p>
       </div>
 
       <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
-      <div *ngIf="isLoading" class="status-message info">Chargement du dossier médical...</div>
+      <div *ngIf="isLoading" class="status-message info">Loading medical record...</div>
       <div *ngIf="currentRole === 'CAREGIVER'" class="status-message warning">
-        Mode aidant: le stade Alzheimer est en lecture seule.
+        Caregiver mode: the Alzheimer stage is read-only.
       </div>
 
       <form [formGroup]="form" (ngSubmit)="save()" novalidate>
         <div class="form-grid">
           <div class="field">
-            <label for="patientId">Numéro d'identification du patient</label>
+            <label for="patientId">Patient Name (existing account)</label>
             <input
               id="patientId"
               type="text"
               formControlName="patientId"
+              placeholder="Enter the patient name"
               [readonly]="isEditMode"
               [class.invalid]="form.controls.patientId.touched && form.controls.patientId.invalid" />
             <div class="field-error" *ngIf="form.controls.patientId.touched && form.controls.patientId.invalid">
-              <span *ngIf="form.controls.patientId.errors?.['required']">L'identifiant patient est obligatoire.</span>
-              <span *ngIf="form.controls.patientId.errors?.['maxlength']">L'identifiant patient est trop long.</span>
+              <span *ngIf="form.controls.patientId.errors?.['required']">Patient name is required.</span>
+              <span *ngIf="form.controls.patientId.errors?.['maxlength']">Patient name is too long.</span>
             </div>
           </div>
 
           <div class="field">
-            <label for="bloodGroup">Groupe sanguin</label>
+            <label for="bloodGroup">Blood Group</label>
             <input
               id="bloodGroup"
               type="text"
@@ -37,32 +38,32 @@
               placeholder="A+, O-, AB+"
               [class.invalid]="form.controls.bloodGroup.touched && !!form.controls.bloodGroup.errors?.['pattern']" />
             <div class="field-error" *ngIf="form.controls.bloodGroup.touched && form.controls.bloodGroup.errors?.['pattern']">
-              Format attendu: A+/A-/B+/B-/AB+/AB-/O+/O-.
+              Expected format: A+/A-/B+/B-/AB+/AB-/O+/O-.
             </div>
           </div>
 
           <div class="field">
-            <label for="stage">Stade de la maladie d'Alzheimer</label>
+            <label for="stage">Alzheimer Disease Stage</label>
             <select id="stage" formControlName="alzheimerStage">
-              <option value="">Sélectionner un stade</option>
+              <option value="">Select a stage</option>
               <option *ngFor="let stage of stageOptions" [value]="stage">{{ stage }}</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="emergencyPhone">Numéro de téléphone d'urgence</label>
+            <label for="emergencyPhone">Emergency Phone Number</label>
             <input
               id="emergencyPhone"
               type="text"
               formControlName="emergencyContactPhone"
               [class.invalid]="form.controls.emergencyContactPhone.touched && !!form.controls.emergencyContactPhone.errors?.['pattern']" />
             <div class="field-error" *ngIf="form.controls.emergencyContactPhone.touched && form.controls.emergencyContactPhone.errors?.['pattern']">
-              Format du numéro invalide.
+              Invalid phone number format.
             </div>
           </div>
 
           <div class="field">
-            <label for="emergencyName">Nom du contact d'urgence</label>
+            <label for="emergencyName">Emergency Contact Name</label>
             <input id="emergencyName" type="text" formControlName="emergencyContactName" />
           </div>
 
@@ -72,14 +73,14 @@
           </div>
 
           <div class="field field-full">
-            <label for="chronicDiseases">Maladies chroniques</label>
+            <label for="chronicDiseases">Chronic Diseases</label>
             <textarea id="chronicDiseases" rows="3" formControlName="chronicDiseases"></textarea>
           </div>
 
           <div class="field field-full checkbox-field" *ngIf="!isEditMode">
             <label for="autoCreate" class="check-label">
               <input id="autoCreate" type="checkbox" [(ngModel)]="useAutoCreate" [ngModelOptions]="{ standalone: true }" />
-              <span>Utiliser la création automatique (idempotente par identifiant patient)</span>
+              <span>Use automatic creation (idempotent by patient name)</span>
             </label>
           </div>
         </div>
@@ -89,9 +90,9 @@
             type="submit"
             class="btn-solid"
             [disabled]="isSubmitting || isLoading || (!isEditMode && !permissions.canCreate) || (isEditMode && !permissions.canUpdate)">
-            {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+            {{ isEditMode ? 'Update' : 'Create' }}
           </button>
-          <button type="button" class="btn-muted" (click)="cancel()">Annuler</button>
+          <button type="button" class="btn-muted" (click)="cancel()">Cancel</button>
         </div>
       </form>
     </div>

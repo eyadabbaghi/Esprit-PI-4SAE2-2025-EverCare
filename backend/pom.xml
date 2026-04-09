@@ -26,10 +26,11 @@
     <!-- MUST match your folder names exactly -->
     <modules>
 
-        <module>Dailyme-service</module>
+
         <module>Eureka-service</module>
         <module>ApiGateway</module>
      <module>medical-record-service</module>
+        <module>cognitive-stimulation-service</module>
 
         <module>User</module>
         <!-- Comment these out until you actually create the folders -->

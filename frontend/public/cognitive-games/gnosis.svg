@@ -1,0 +1,20 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gnosisBg" x1="124" y1="60" x2="688" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE2E8"/>
+      <stop offset="1" stop-color="#FFF7F9"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="40" fill="url(#gnosisBg)"/>
+  <circle cx="162" cy="120" r="72" fill="#FFD2DD"/>
+  <circle cx="640" cy="400" r="96" fill="#FFE6EC"/>
+  <rect x="126" y="116" width="548" height="274" rx="28" fill="white"/>
+  <rect x="176" y="176" width="120" height="120" rx="28" fill="#F43F5E"/>
+  <circle cx="236" cy="236" r="32" fill="white"/>
+  <rect x="340" y="176" width="120" height="120" rx="28" fill="#FB7185"/>
+  <path d="M400 194L432 236L400 278L368 236L400 194Z" fill="white"/>
+  <rect x="504" y="176" width="120" height="120" rx="28" fill="#FDA4AF"/>
+  <path d="M564 192L590 280H538L564 192Z" fill="white"/>
+  <path d="M214 328H586" stroke="#F9A8D4" stroke-width="18" stroke-linecap="round"/>
+  <rect x="238" y="414" width="324" height="18" rx="9" fill="#FFD9E4"/>
+</svg>

@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.alerts.dto.AlertRequest;
 import tn.esprit.alerts.dto.AlertResponse;
+import tn.esprit.alerts.dto.SosRequest;
 import tn.esprit.alerts.service.AlertService;
-
+import tn.esprit.alerts.dto.SmsRequest;
+import tn.esprit.alerts.service.SmsService;
 import java.util.List;
 
 @RestController
@@ -17,7 +19,7 @@ import java.util.List;
 public class AlertController {
 
     private final AlertService alertService;
-
+    private final SmsService smsService;
     @PostMapping
     public ResponseEntity<AlertResponse> createAlert(@Valid @RequestBody AlertRequest request) {
         AlertResponse response = alertService.createAlert(request);
@@ -64,5 +66,21 @@ public class AlertController {
     public ResponseEntity<AlertResponse> updateAlert(@PathVariable String id, @Valid @RequestBody AlertRequest request) {
         AlertResponse response = alertService.updateAlert(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/emergency-sms")
+    public ResponseEntity<Void> sendEmergencySms(@RequestBody SmsRequest request) {
+        String body = "🚨 EMERGENCY: " + request.getPatientName() +
+                " did not confirm alert \"" + request.getAlertLabel() + "\"" +
+                " for incident: " + request.getIncidentTitle() +
+                ". Please check on them immediately.";
+        smsService.sendSms(request.getCaregiverPhone(), body);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/sos-call")
+    public ResponseEntity<Void> triggerSosCall(@RequestBody SosRequest request) {
+        smsService.makeCall(request.getCaregiverPhone(), request.getPatientName());
+        return ResponseEntity.ok().build();
     }
 }

@@ -53,4 +53,10 @@ public class IncidentController {
         IncidentResponse response = incidentService.resolveIncident(id);
         return ResponseEntity.ok(response);
     }
+
+    @PatchMapping("/{id}/acknowledge")
+    public ResponseEntity<IncidentResponse> acknowledgeIncident(@PathVariable String id) {
+        IncidentResponse response = incidentService.acknowledgeIncident(id);
+        return ResponseEntity.ok(response);
+    }
 }

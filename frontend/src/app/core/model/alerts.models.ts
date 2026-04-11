@@ -13,7 +13,7 @@ export interface Incident {
   location: string;
   incidentDate: Date;
   reportedByUserId: string;
-  status: 'OPEN' | 'RESOLVED';
+  status: 'OPEN' |'ACKNOWLEDGED' | 'RESOLVED';
   aiSuggestion?: string;
   
 }

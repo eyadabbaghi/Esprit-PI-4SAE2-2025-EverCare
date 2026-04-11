@@ -13,10 +13,24 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <button *ngIf="isPatient" type="button" class="px-4 py-2 rounded-full bg-[#C06C84] text-white text-sm font-medium shadow hover:bg-[#A85A70]">
-            <span class="mr-2">🚨</span> Emergency SOS
-          </button>
-          <!-- Create Incident button – visible for caregivers and patients -->
+          <div *ngIf="isPatient" class="flex flex-col items-end gap-1">
+  <button type="button"
+    class="px-4 py-2 rounded-full bg-[#C06C84] text-white text-sm font-medium shadow hover:bg-[#A85A70] active:scale-95 transition-all flex items-center gap-2"
+    (click)="triggerSOS()">
+    <span style="font-size:16px">🚨</span> Emergency SOS
+    <!-- Mic indicator -->
+    <span *ngIf="voiceListening"
+      class="flex items-center gap-1 text-xs bg-white/20 rounded-full px-2 py-0.5">
+      <span class="w-2 h-2 rounded-full bg-white animate-pulse inline-block"></span>
+      listening
+    </span>
+  </button>
+  <p *ngIf="voiceListening" class="text-xs text-[#6B5B8C]">
+    Say "help" or "SOS" to trigger automatically
+  </p>
+  
+</div>
+
           <button *ngIf="!isDoctor" type="button" class="px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow hover:bg-[#6D28D9]" (click)="openCreateIncidentDialog()">
             <span class="mr-2">＋</span> Report Incident
           </button>
@@ -83,7 +97,7 @@
       </div>
     </section>
 
-    <!-- Filters (unchanged) -->
+    <!-- Filters -->
     <section class="rounded-xl p-4 grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
       <div class="md:col-span-2">
         <div class="relative group">
@@ -123,12 +137,12 @@
         <option value="RESOLVED">Resolved</option>
       </select>
 
-      <!-- Patient filter dropdown removed for doctors – replaced by patient cards -->
       <select *ngIf="isDoctor" class="w-full px-3 py-2 rounded-full border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] transition-all duration-300" [(ngModel)]="selectedPatientFilter" style="display: none;"></select>
     </section>
 
     <!-- Main layout -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
       <!-- ========== DOCTOR VIEW ========== -->
       <ng-container *ngIf="isDoctor; else nonDoctorLayout">
         <!-- Left column: patient cards -->
@@ -137,7 +151,8 @@
           <div *ngIf="doctorPatients.length === 0" class="text-center py-4 text-[#6B5B8C] border border-dashed border-[#C4B5FD] rounded-lg">
             No patients assigned yet.
           </div>
-          <div *ngFor="let patient of doctorPatients" class="border-2 rounded-xl bg-white p-4 cursor-pointer hover:shadow-lg transition flex items-center gap-3"
+          <div *ngFor="let patient of doctorPatients"
+               class="border-2 rounded-xl bg-white p-4 cursor-pointer hover:shadow-lg transition flex items-center gap-3"
                [ngClass]="selectedDoctorPatient?.userId === patient.userId ? 'border-[#7C3AED] bg-[#F3E8FF]' : 'border-[#DDD6FE]'"
                (click)="selectDoctorPatient(patient)">
             <div class="w-12 h-12 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold overflow-hidden">
@@ -160,10 +175,10 @@
         <div class="lg:col-span-2 space-y-4" *ngIf="selectedDoctorPatient">
           <h2 class="text-xl font-semibold text-[#2D1B4E] mb-3">Incidents for {{ selectedDoctorPatient.name }}</h2>
           <ng-container *ngIf="incidentsForSelectedPatient.length; else noPatientIncidents">
-            <div *ngFor="let incident of incidentsForSelectedPatient" 
-     class="border-2 rounded-2xl bg-white p-5 cursor-pointer hover:shadow-lg transition" 
-     (click)="selectIncident(incident)" 
-     (dblclick)="openIncidentDetailsDialog(incident)">
+            <div *ngFor="let incident of incidentsForSelectedPatient"
+                 class="border-2 rounded-2xl bg-white p-5 cursor-pointer hover:shadow-lg transition"
+                 (click)="selectIncident(incident)"
+                 (dblclick)="openIncidentDetailsDialog(incident)">
               <div class="flex items-start gap-4">
                 <div class="w-12 h-12 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold overflow-hidden">
                   <ng-container *ngIf="incident.patientAvatar; else incidentInitials">
@@ -181,7 +196,9 @@
                       <span>{{ getSeverityIcon(incident.severity) }}</span><span>{{ incident.severity }}</span>
                     </span>
                     <span class="px-3 py-1 rounded-full text-xs font-medium bg-white border border-[#E5E7EB] text-[#2D1B4E]">{{ incident.type }}</span>
-                    <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert" class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1" [ngClass]="getStatusBadgeClasses(firstAlert.status)">
+                    <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert"
+                          class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                          [ngClass]="getStatusBadgeClasses(firstAlert.status)">
                       {{ firstAlert.status }}
                     </span>
                   </div>
@@ -205,14 +222,16 @@
         </div>
       </ng-container>
 
-      <!-- ========== NON‑DOCTOR VIEW (patients, caregivers, admins) ========== -->
+      <!-- ========== NON-DOCTOR VIEW (patients, caregivers, admins) ========== -->
       <ng-template #nonDoctorLayout>
+
         <!-- Incidents list -->
         <div class="lg:col-span-2 space-y-4">
           <ng-container *ngIf="paginatedIncidents.length; else noIncidents">
-            <div *ngFor="let incident of paginatedIncidents" class="border-2 rounded-2xl bg-white p-5 cursor-pointer hover:shadow-lg transition" (click)="selectIncident(incident)">
+            <div *ngFor="let incident of paginatedIncidents"
+                 class="border-2 rounded-2xl bg-white p-5 cursor-pointer hover:shadow-lg transition"
+                 (click)="selectIncident(incident)">
               <div class="flex items-start gap-4">
-                <!-- Patient avatar / initials -->
                 <div class="w-12 h-12 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold overflow-hidden">
                   <ng-container *ngIf="incident.patientAvatar; else initials">
                     <img [src]="incident.patientAvatar" alt="Patient" class="w-full h-full object-cover">
@@ -224,32 +243,37 @@
                 <div class="flex-1 min-w-0">
                   <h2 class="text-lg font-semibold text-[#2D1B4E] mb-1">{{ incident.title }}</h2>
                   <p class="text-sm text-[#6B5B8C] mb-2">{{ incident.patientName }}</p>
-                  <!-- Badges -->
                   <div class="flex flex-wrap gap-2 mb-2">
-                    <!-- Severity badge with icon -->
                     <span class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1" [ngClass]="getSeverityBadgeClasses(incident.severity)">
                       <span>{{ getSeverityIcon(incident.severity) }}</span>
                       <span>{{ incident.severity }}</span>
                     </span>
-                    <!-- Type badge -->
                     <span class="px-3 py-1 rounded-full text-xs font-medium bg-white border border-[#E5E7EB] text-[#2D1B4E]">
                       {{ incident.type }}
                     </span>
-                    <!-- First alert status if any -->
-                    <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert" class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1" [ngClass]="getStatusBadgeClasses(firstAlert.status)">
+                    <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert"
+                          class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+                          [ngClass]="getStatusBadgeClasses(firstAlert.status)">
                       {{ firstAlert.status }}
                     </span>
+
+
+                    <span class="px-3 py-1 rounded-full text-xs font-medium"
+      [ngClass]="{
+        'bg-[#FEF3C7] text-[#F59E0B]': incident.status === 'ACKNOWLEDGED',
+        'bg-green-50 text-[#22c55e]': incident.status === 'RESOLVED',
+        'bg-red-50 text-[#C06C84]': incident.status === 'OPEN'
+      }">
+  {{ incident.status }}
+</span>
                   </div>
-                  <!-- Location and time -->
                   <div class="flex flex-wrap gap-4 text-xs text-[#6B5B8C]">
                     <div class="flex items-center gap-1"><span>📍</span><span>{{ incident.location }}</span></div>
                     <div class="flex items-center gap-1"><span>📅</span><span>{{ incident.incidentDate | date:'short' }}</span></div>
-                    <!-- First alert sent time with label -->
                     <div *ngIf="getFirstAlert(incident.incidentId) as fa" class="flex items-center gap-1">
                       <span>⏱</span><span>{{ fa.label || 'Alert' }} at {{ fa.sentAt | date:'shortTime' }}</span>
                     </div>
                   </div>
-                  <!-- AI Suggestion if present -->
                   <div *ngIf="incident.aiSuggestion" class="mt-3 flex items-start gap-2 p-3 bg-gradient-to-r from-[#F3E8FF] to-white rounded-lg border border-[#C4B5FD]">
                     <span class="text-[#7C3AED]">✨</span>
                     <div>
@@ -269,7 +293,7 @@
             </div>
           </ng-template>
 
-          <!-- Pagination (for incidents list) -->
+          <!-- Pagination -->
           <div *ngIf="totalPages > 1" class="flex items-center justify-between pt-2 text-xs text-[#6B5B8C] mt-6">
             <div>
               Page
@@ -277,12 +301,12 @@
               of
               <span class="font-semibold text-[#2D1B4E]">{{ totalPages }}</span>
             </div>
-
             <div class="inline-flex items-center gap-1 bg-white/80 rounded-full px-1 py-0.5 border border-[#E5D9FF]">
               <button type="button" class="px-2 py-1 rounded-full hover:bg-[#F3E8FF] disabled:opacity-50" (click)="prevPage()" [disabled]="currentPage === 1">
                 ‹
               </button>
-              <button *ngFor="let page of pages" type="button" class="min-w-[2rem] px-2 py-1 rounded-full text-xs"
+              <button *ngFor="let page of pages" type="button"
+                      class="min-w-[2rem] px-2 py-1 rounded-full text-xs"
                       [ngClass]="page === currentPage ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'"
                       (click)="setPage(page)">
                 {{ page }}
@@ -299,7 +323,10 @@
           <ng-container *ngIf="selectedIncident; else selectPrompt">
             <div class="border border-[#C4B5FD] rounded-2xl bg-white p-5 space-y-4">
               <div class="flex items-start justify-between">
-                <div><h2 class="text-lg font-semibold text-[#2D1B4E]">Incident Details</h2><p class="text-xs text-[#6B5B8C]">{{ selectedIncident.title }}</p></div>
+                <div>
+                  <h2 class="text-lg font-semibold text-[#2D1B4E]">Incident Details</h2>
+                  <p class="text-xs text-[#6B5B8C]">{{ selectedIncident.title }}</p>
+                </div>
                 <button type="button" class="text-[#6B5B8C] hover:text-[#111827]" (click)="selectedIncident = null; selectedAlert = null">✕</button>
               </div>
 
@@ -320,28 +347,66 @@
               </div>
 
               <div class="space-y-2 text-sm">
-                <div><label class="text-xs text-[#6B5B8C]">Description</label><p class="text-[#2D1B4E]">{{ selectedIncident.description }}</p></div>
+                <div>
+                  <label class="text-xs text-[#6B5B8C]">Description</label>
+                  <p class="text-[#2D1B4E]">{{ selectedIncident.description }}</p>
+                </div>
                 <div class="flex flex-wrap gap-2">
                   <span class="px-3 py-1 rounded-full text-xs font-medium" [ngClass]="getSeverityBadgeClasses(selectedIncident.severity)">{{ selectedIncident.severity }}</span>
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-white border border-[#E5E7EB] text-[#2D1B4E]">{{ selectedIncident.type }}</span>
                 </div>
-                <div class="flex items-center gap-1 text-xs text-[#6B5B8C]"><span>📍</span><span>{{ selectedIncident.location }}</span></div>
+                <div class="flex items-center gap-1 text-xs text-[#6B5B8C]">
+                  <span>📍</span><span>{{ selectedIncident.location }}</span>
+                </div>
               </div>
 
-              <!-- Action buttons – only for non‑doctor -->
+              <!-- Action buttons – only for non-doctor -->
               <div *ngIf="!isDoctor" class="space-y-2">
                 <button type="button" class="w-full px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9]" (click)="openCreateAlertDialog(selectedIncident)">＋ Create Alert</button>
                 <button type="button" class="w-full px-4 py-2 rounded-full border border-[#E5E7EB] text-sm text-[#374151]" (click)="openEditIncidentDialog(selectedIncident)">✎ Edit Incident</button>
                 <button type="button" class="w-full px-4 py-2 rounded-full border border-[#C06C84] text-sm text-[#C06C84] hover:bg-red-50" (click)="deleteIncident(selectedIncident)">🗑 Delete Incident</button>
               </div>
 
+              <!-- Action buttons — caregiver only -->
+<div *ngIf="isCaregiver" class="space-y-2">
+
+  <!-- Acknowledge button — only show if not already acknowledged or resolved -->
+  <button *ngIf="selectedIncident.status === 'OPEN'"
+    type="button"
+    class="w-full px-4 py-2 rounded-full border border-[#F59E0B] text-sm text-[#F59E0B] hover:bg-orange-50 flex items-center justify-center gap-2"
+    (click)="acknowledgeIncident(selectedIncident)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17L4 12"/>
+    </svg>
+    Acknowledge incident
+  </button>
+
+  <!-- Resolve button — show if not already resolved -->
+  <button *ngIf="selectedIncident.status !== 'RESOLVED'"
+    type="button"
+    class="w-full px-4 py-2 rounded-full border border-[#22c55e] text-sm text-[#22c55e] hover:bg-green-50 flex items-center justify-center gap-2"
+    (click)="resolveIncident(selectedIncident)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    Resolve incident
+  </button>
+
+  <!-- Status badge — show when resolved -->
+  <div *ngIf="selectedIncident.status === 'RESOLVED'"
+       class="w-full px-4 py-2 rounded-full bg-green-50 border border-[#22c55e] text-sm text-[#22c55e] text-center">
+    Incident resolved
+  </div>
+
+</div>
+
               <!-- Alerts list -->
               <div *ngIf="alertsForSelectedIncident.length" class="space-y-2">
                 <h3 class="text-xs font-semibold text-[#6B5B8C]">Alerts for this incident</h3>
-                <div *ngFor="let alert of paginatedAlerts" class="flex items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-xs">
+                <div *ngFor="let alert of paginatedAlerts"
+                     class="flex items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-xs">
                   <div>
-                    <p class="font-semibold text-[#2D1B4E]">  {{ alert.label || 'Alert' }} – {{ alert.status }}</p>
-                    <!-- For doctor, show sender info -->
+                    <p class="font-semibold text-[#2D1B4E]">{{ alert.label || 'Alert' }} – {{ alert.status }}</p>
                     <ng-container *ngIf="isDoctor">
                       <p class="text-[#6B5B8C]">From: {{ alert.senderName || alert.senderId }}</p>
                     </ng-container>
@@ -358,6 +423,7 @@
                     </ng-container>
                   </div>
                 </div>
+
                 <!-- Alerts pagination -->
                 <div *ngIf="alertsForSelectedIncident.length > ALERTS_PER_PAGE" class="flex items-center justify-between text-[10px] text-[#6B5B8C]">
                   <span>Page {{ alertsPage }} of {{ totalAlertPages }}</span>
@@ -367,13 +433,146 @@
                   </div>
                 </div>
               </div>
+
             </div>
           </ng-container>
           <ng-template #selectPrompt>
-            <div class="border border-[#C4B5FD] rounded-2xl bg-white p-6 text-sm text-[#6B5B8C]">Select an incident on the left to view details, edit it, and manage alerts.</div>
+            <div class="border border-[#C4B5FD] rounded-2xl bg-white p-6 text-sm text-[#6B5B8C]">
+              Select an incident on the left to view details, edit it, and manage alerts.
+            </div>
           </ng-template>
         </div>
+
       </ng-template>
     </section>
   </div>
+
+  <!-- Alert alarm popup — sits inside min-h-screen wrapper, renders as position:fixed overlay -->
+  <app-alert-alarm
+    (dismissed)="onAlarmDismissed($event)"
+    (emergencySent)="toastr.warning('Emergency SMS sent to caregiver')">
+  </app-alert-alarm>
+
+
+  <!-- Alert alarm popup — sits inside min-h-screen wrapper, renders as position:fixed overlay -->
+  <app-alert-alarm
+    (dismissed)="onAlarmDismissed($event)"
+    (emergencySent)="toastr.warning('Emergency SMS sent to caregiver')">
+  </app-alert-alarm>
+
+  <!-- ── SOS Triggered Popup ─────────────────────────────────────────── -->
+  <div *ngIf="sosPopupVisible"
+       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+       (click)="sosPopupVisible = false">
+    <div class="relative bg-white rounded-3xl shadow-2xl px-10 py-10 flex flex-col items-center gap-4 max-w-sm w-full mx-4 animate-bounce-in"
+         (click)="$event.stopPropagation()">
+
+      <!-- Pulsing ring -->
+      <div class="relative flex items-center justify-center">
+        <span class="absolute inline-flex h-24 w-24 rounded-full bg-[#C06C84] opacity-20 animate-ping"></span>
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#C06C84] to-[#7C3AED] flex items-center justify-center shadow-lg">
+          <span style="font-size: 36px">🚨</span>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <h2 class="text-2xl font-bold text-[#2D1B4E] text-center">Help is on the way!</h2>
+      <p class="text-[#6B5B8C] text-center text-sm leading-relaxed">
+        Hold tight — your caregiver is being contacted right now.
+      </p>
+
+      <!-- Countdown bar -->
+      <div class="w-full bg-[#F3E8FF] rounded-full h-2 overflow-hidden">
+        <div class="h-2 rounded-full bg-gradient-to-r from-[#C06C84] to-[#7C3AED]"
+             [style.width.%]="sosCountdown * 10"
+             style="transition: width 1s linear;">
+        </div>
+      </div>
+      <p class="text-xs text-[#6B5B8C]">Closing in {{ sosCountdown }}s</p>
+
+      <!-- Dismiss button -->
+      <button type="button"
+        class="mt-2 px-6 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9] transition-all"
+        (click)="sosPopupVisible = false">
+        Got it
+      </button>
+    </div>
+  </div>
+
+  <!-- EviCare AI prevention popup -->
+<div *ngIf="eviCarePopupVisible"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+     (click)="eviCarePopupVisible = false">
+  <div class="relative bg-white rounded-3xl shadow-2xl px-8 py-8 flex flex-col items-center gap-4 max-w-sm w-full mx-4"
+       (click)="$event.stopPropagation()">
+
+    <!-- EviCare avatar -->
+    <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#C06C84] flex items-center justify-center shadow-lg">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <!-- Simple brain/shield icon for EviCare -->
+        <circle cx="20" cy="14" r="8" stroke="white" stroke-width="2" fill="none"/>
+        <path d="M14 14 Q16 10 20 10 Q24 10 26 14" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M17 14 Q17 18 20 19 Q23 18 23 14" stroke="white" stroke-width="1.5" fill="none"/>
+        <path d="M12 26 Q14 22 20 22 Q26 22 28 26 L28 32 Q20 35 12 32 Z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="text-center">
+      <p class="text-xs font-semibold text-[#7C3AED] uppercase tracking-widest mb-1">EviCare AI</p>
+      <h2 class="text-xl font-bold text-[#2D1B4E]">Prevention insight</h2>
+    </div>
+
+    <!-- Risk badge -->
+    <span class="px-4 py-1 rounded-full text-sm font-semibold"
+          [ngClass]="{
+            'bg-[#C06C84] text-white': eviCareRiskScore?.level === 'HIGH',
+            'bg-[#F59E0B] text-white': eviCareRiskScore?.level === 'MEDIUM'
+          }">
+      {{ eviCareRiskScore?.level }} risk detected
+    </span>
+
+    <!-- Advice -->
+    <p class="text-[#6B5B8C] text-center text-sm leading-relaxed">
+      {{ eviCareRiskScore?.advice }}
+    </p>
+
+    <!-- Stats row -->
+<div class="flex gap-6 text-center text-xs text-[#6B5B8C]">
+  <div>
+    <p class="text-lg font-bold text-[#2D1B4E]">{{ eviCareRiskScore?.recentIncidents }}</p>
+    <p>last 30 days</p>
+  </div>
+  <div>
+    <p class="text-lg font-bold text-[#C06C84]">{{ eviCareRiskScore?.criticalCount }}</p>
+    <p>critical / high</p>
+  </div>
+  <div>
+    <p class="text-lg font-bold text-[#F59E0B]">{{ eviCareRiskScore?.missedAlertsCount }}</p>
+    <p>missed alerts</p>
+  </div>
+</div>
+
+<!-- Pattern summary -->
+<div *ngIf="eviCareRiskScore?.patternSummary"
+     class="w-full p-3 bg-[#F3E8FF] rounded-xl text-xs text-[#6B5B8C] leading-relaxed">
+  <p class="text-xs font-semibold text-[#7C3AED] mb-1">Detected patterns</p>
+  {{ eviCareRiskScore?.patternSummary }}
+</div>
+
+<!-- Pattern tags -->
+<div class="flex flex-wrap gap-2 justify-center text-xs">
+  <span *ngIf="eviCareRiskScore?.dominantTimeOfDay"
+        class="px-3 py-1 rounded-full bg-[#DCCEF9] text-[#7C3AED]">
+    {{ eviCareRiskScore.dominantTimeOfDay | titlecase }}
+  </span>
+  <span *ngIf="eviCareRiskScore?.riskiestLocation"
+        class="px-3 py-1 rounded-full bg-[#DCCEF9] text-[#7C3AED]">
+    {{ eviCareRiskScore.riskiestLocation | titlecase }}
+  </span>
+  <span *ngIf="eviCareRiskScore?.dominantIncidentType"
+        class="px-3 py-1 rounded-full bg-[#DCCEF9] text-[#7C3AED]">
+    {{ eviCareRiskScore.dominantIncidentType }}
+  </span>
+</div>
+<!-- closes min-h-screen -->
 </div>

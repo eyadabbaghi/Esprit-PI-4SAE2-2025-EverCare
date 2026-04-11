@@ -37,6 +37,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { IncidentDetailsDialogComponent } from './features/front-office/pages/alerts/incident-details-dialog.component';
+import { AlertAlarmComponent } from './alert-alarm/alert-alarm.component';
 
 @NgModule({
   declarations: [
@@ -50,8 +51,7 @@ import { IncidentDetailsDialogComponent } from './features/front-office/pages/al
     HeroComponent,
     AddIncidentDialogComponent,
     AddAlertDialogComponent,
-    IncidentDetailsDialogComponent // <-- add here
-
+    IncidentDetailsDialogComponent, // <-- add here
   ],
   imports: [
     BrowserModule,

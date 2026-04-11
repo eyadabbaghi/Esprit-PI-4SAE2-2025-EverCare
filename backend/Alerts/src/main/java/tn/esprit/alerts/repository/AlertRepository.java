@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface AlertRepository extends JpaRepository<Alert, String> {
     List<Alert> findByIncident_IncidentId(String incidentId);
+    // in AlertRepository.java — add this line
+    List<Alert> findByTargetId(String targetId);
 }

@@ -29,7 +29,7 @@ public class ApiGatewayApplication {
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("lb://ACTIVITIES-SERVICE"))
                 .route("alerts-service", r -> r
-                        .path("/EverCare/incidents/**", "/EverCare/alerts/**")
+                        .path("/EverCare/incidents/**", "/EverCare/alerts/**", "/EverCare/evicare/**")
                         .uri("lb://alerts-service"))
                 .route("user-service", r -> r
                         .path("/EverCare/auth/**", "/EverCare/users/**", "/EverCare/test/**")

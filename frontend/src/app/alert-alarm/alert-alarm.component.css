@@ -1,0 +1,140 @@
+.alarm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 27, 78, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.alarm-card {
+  background: linear-gradient(135deg, #7C3AED, #C06C84);
+  border-radius: 24px;
+  padding: 40px 32px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  color: white;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.alarm-icon-wrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alarm-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0; }
+}
+
+.alarm-icon {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  animation: shake 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes shake {
+  from { transform: rotate(-12deg); }
+  to   { transform: rotate(12deg);  }
+}
+
+.alarm-title {
+  font-size: 13px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 6px;
+}
+
+.alarm-label {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.alarm-incident {
+  font-size: 13px;
+  opacity: 0.85;
+  margin: 0 0 24px;
+}
+
+.countdown-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+}
+
+.countdown-svg {
+  width: 80px;
+  height: 80px;
+}
+
+.countdown-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.alarm-warning {
+  font-size: 12px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 20px;
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+
+.complete-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  border: 2px solid white;
+  background: white;
+  color: #7C3AED;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.complete-btn:hover {
+  background: transparent;
+  color: white;
+}

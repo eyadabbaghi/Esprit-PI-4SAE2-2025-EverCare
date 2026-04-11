@@ -62,4 +62,17 @@ export class AlertsService {
   updateAlert(id: string, data: any): Observable<Alert> {
   return this.http.put<Alert>(`${this.baseUrl}/alerts/${id}`, data);
 }
+
+triggerSosCall(data: { caregiverPhone: string; patientName: string; patientId: string }): Observable<void> {
+  return this.http.post<void>(`${this.baseUrl}/alerts/sos-call`, data);
+}
+
+
+getEviCareAnalysis(patientId: string): Observable<any> {
+  return this.http.get(`${this.baseUrl}/evicare/analyse/${patientId}`);
+}
+
+acknowledgeIncident(id: string): Observable<Incident> {
+  return this.http.patch<Incident>(`${this.baseUrl}/incidents/${id}/acknowledge`, {});
+}
 }

@@ -28,9 +28,10 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { NewUserFlowComponent } from './pages/login/new-user-flow.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
-
+import { AlertAlarmComponent } from '../../alert-alarm/alert-alarm.component';
 // 👇 ADD THIS IMPORT
 import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -59,9 +60,11 @@ import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.
     SetupProfileComponent,
     // 👇 ADD THIS COMPONENT
     DoctorSearchModalComponent,
+    AlertAlarmComponent,
   ],
   imports: [
     CommonModule,
+    HttpClientModule, 
     FormsModule,
     ReactiveFormsModule,
     SharedModule,

@@ -193,6 +193,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   getActivityIcon(action: string): string {
     switch (action) {
+      case 'EVICARE_ALERT': return '🤖';
       case 'CREATED': return '🆕';
       case 'UPDATED': return '✏️';
       case 'DELETED': return '🗑️';
@@ -202,6 +203,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   getActivityTitle(action: string): string {
     switch (action) {
+      case 'EVICARE_ALERT': return 'EviCare prevention alert'; 
       case 'CREATED': return 'New activity available';
       case 'UPDATED': return 'Activity updated';
       case 'DELETED': return 'Activity removed';

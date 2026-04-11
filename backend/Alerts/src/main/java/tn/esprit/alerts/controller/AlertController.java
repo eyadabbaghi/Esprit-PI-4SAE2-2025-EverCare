@@ -5,11 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.alerts.dto.AlertRequest;
-import tn.esprit.alerts.dto.AlertResponse;
-import tn.esprit.alerts.dto.SosRequest;
+import tn.esprit.alerts.client.NotificationClient;
+import tn.esprit.alerts.dto.*;
 import tn.esprit.alerts.service.AlertService;
-import tn.esprit.alerts.dto.SmsRequest;
 import tn.esprit.alerts.service.SmsService;
 import java.util.List;
 
@@ -20,6 +18,7 @@ public class AlertController {
 
     private final AlertService alertService;
     private final SmsService smsService;
+    private final NotificationClient notifClient;
     @PostMapping
     public ResponseEntity<AlertResponse> createAlert(@Valid @RequestBody AlertRequest request) {
         AlertResponse response = alertService.createAlert(request);
@@ -81,6 +80,17 @@ public class AlertController {
     @PostMapping("/sos-call")
     public ResponseEntity<Void> triggerSosCall(@RequestBody SosRequest request) {
         smsService.makeCall(request.getCaregiverPhone(), request.getPatientName());
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/snapshot-notify")
+    public ResponseEntity<Void> notifySnapshot(@RequestBody SnapshotNotifyRequest request) {
+        EviCareNotificationRequest notif = new EviCareNotificationRequest();
+        notif.setActivityId(request.getCaregiverEmail()); // target identifier
+        notif.setAction("SNAPSHOT_ALERT");
+        notif.setDetails("📸 Patient " + request.getPatientName() + " did not respond to the check. A snapshot was captured. Please check immediately.");
+        notifClient.send(notif);
         return ResponseEntity.ok().build();
     }
 }

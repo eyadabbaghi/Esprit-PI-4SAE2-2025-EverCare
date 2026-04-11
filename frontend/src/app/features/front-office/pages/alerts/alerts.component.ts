@@ -16,6 +16,7 @@ import { Incident, Alert, Severity, IncidentType, AlertStatus } from '../../../.
 import { IncidentDetailsDialogComponent } from './incident-details-dialog.component';
 import { AlertSchedulerService } from '../../../../core/services/alert-scheduler.service';
 import { VoiceSosService } from '../../../../core/services/voice-sos.service';
+import { CheckService } from './services/check.service';
 
 // Extended UI models (include extra fields for display)
 interface IncidentUI extends Incident {
@@ -62,6 +63,18 @@ private sosCountdownTimer?: any;
 eviCarePopupVisible = false;
 eviCareRiskScore: any = null;
 
+// Voice-guided check properties
+currentUserId!: string;
+patientId!: string;
+caregiverId!: string;
+
+checkPopupVisible = false;
+checkPopupPatientId = '';
+checkPopupPatientName = '';
+checkPopupStatus: string = 'idle';
+
+
+
   get isDoctor(): boolean {
     return this.userRole === 'doctor';
   }
@@ -107,7 +120,9 @@ eviCareRiskScore: any = null;
     private dialog: MatDialog,
     private alertScheduler: AlertSchedulerService,
     private voiceSos: VoiceSosService,
-    private ngZone: NgZone 
+    private ngZone: NgZone ,
+    private checkService: CheckService  // ADD THIS
+
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -125,6 +140,23 @@ ngOnInit(): void {
       if (!user) return;
 
       this.userRole = user.role.toLowerCase() as any;
+      // Populate IDs for voice-guided check
+this.currentUserId = user.userId!;
+
+if (this.isPatient) {
+  this.patientId = user.userId!;
+  const primaryEmail = user.caregiverEmails?.[0];
+  if (primaryEmail) {
+    this.userService.getUserByEmail(primaryEmail).subscribe(cg => {
+      this.caregiverId = cg.userId;
+      // Connect patient WebSocket once IDs are ready
+     // this.checkService.connect(this.patientId);
+    });
+  }
+} else if (this.isCaregiver) {
+  // Caregiver WebSocket connected per-patient inside the component itself
+ // this.checkService.connect(this.currentUserId);
+}
 
       // Start voice SOS listener for patients — guarded to only run once
       if (this.isPatient && this.isBrowser && !this.voiceStarted) {
@@ -180,6 +212,8 @@ private loadEviCareInsight(): void {
     if (this.sosCountdownTimer) clearInterval(this.sosCountdownTimer); // ← add this
     this.subscriptions.forEach(s => s.unsubscribe());
     this.voiceSos.stop();
+    //this.checkService.disconnect(); // ADD THIS
+
   }
 
 loadData(): void {
@@ -843,5 +877,15 @@ resolveIncident(incident: IncidentUI): void {
   });
 }
 
+openCheckPopup(incident: IncidentUI): void {
+  this.checkPopupPatientId = incident.patientId;
+  this.checkPopupPatientName = incident.patientName;
+  this.checkPopupStatus = 'idle';
+  this.checkPopupVisible = true;
+}
+
+closeCheckPopup(): void {
+  this.checkPopupVisible = false;
+}
 
 }

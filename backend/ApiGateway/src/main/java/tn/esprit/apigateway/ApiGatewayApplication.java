@@ -28,9 +28,16 @@ public class ApiGatewayApplication {
                         )
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("lb://ACTIVITIES-SERVICE"))
+                // ✅ No rewritePath — context-path /EverCare handles it
+                .route("alerts-service-ws", r -> r
+                        .path("/EverCare/ws-check", "/EverCare/ws-check/**")
+                        // ✅ Remove rewritePath entirely — pass URL as-is including query params
+                        .uri("lb:ws://ALERTS-SERVICE"))
+
+                // ✅ No rewritePath — same reason
                 .route("alerts-service", r -> r
                         .path("/EverCare/incidents/**", "/EverCare/alerts/**", "/EverCare/evicare/**")
-                        .uri("lb://alerts-service"))
+                        .uri("lb://ALERTS-SERVICE"))
                 .route("user-service", r -> r
                         .path("/EverCare/auth/**", "/EverCare/users/**", "/EverCare/test/**")
                         .uri("lb://User-service"))

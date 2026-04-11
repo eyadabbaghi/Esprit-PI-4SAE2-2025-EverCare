@@ -1,0 +1,130 @@
+<div class="flex flex-col gap-4">
+
+  <!-- Action row -->
+  <div class="flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full bg-[#F3E8FF] flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <span class="text-sm font-medium text-[#2D1B4E]">{{ patientName }}</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button
+        (click)="startCheck()"
+        [disabled]="status === 'waiting' || status === 'streaming'"
+        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+               bg-gradient-to-r from-[#7C3AED] to-[#9F67F5] text-white shadow-sm
+               hover:opacity-90 active:scale-95
+               disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 7l-7 5 7 5V7z"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+        Start Check
+      </button>
+
+      <button
+        *ngIf="status === 'streaming'"
+        (click)="stopCheck()"
+        class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+               border border-[#C06C84] text-[#C06C84] hover:bg-red-50 active:scale-95">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+        </svg>
+        Stop
+      </button>
+    </div>
+  </div>
+
+  <!-- Status pill -->
+  <div class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all"
+       [ngClass]="{
+         'bg-[#F3E8FF] text-[#7C3AED]':           status === 'idle',
+         'bg-[#EDE9FE] text-[#6D28D9]':           status === 'waiting',
+         'bg-[#ECFDF5] text-[#059669]':           status === 'streaming',
+         'bg-red-50   text-[#C06C84]':            status === 'cancelled',
+         'bg-[#FFF7ED] text-[#D97706]':           status === 'snapshot'
+       }">
+
+    <!-- idle -->
+    <ng-container *ngIf="status === 'idle'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Ready to start
+    </ng-container>
+
+    <!-- waiting -->
+    <ng-container *ngIf="status === 'waiting'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           style="animation: spin 1.2s linear infinite">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Waiting for patient camera...
+    </ng-container>
+
+    <!-- streaming -->
+    <ng-container *ngIf="status === 'streaming'">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+      </span>
+      Live
+    </ng-container>
+
+    <!-- cancelled -->
+    <ng-container *ngIf="status === 'cancelled'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="15" y1="9" x2="9" y2="15"/>
+        <line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      Patient cancelled — requesting snapshot...
+    </ng-container>
+
+    <!-- snapshot -->
+    <ng-container *ngIf="status === 'snapshot'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      Snapshot received
+    </ng-container>
+  </div>
+
+  <!-- Video feed — always in DOM, hidden via CSS when not streaming -->
+  <div [class.hidden]="status !== 'streaming'"
+       class="rounded-2xl overflow-hidden bg-[#1a0533] relative shadow-lg"
+       style="aspect-ratio: 4/3">
+    <video #remoteVideo autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+    <!-- Live badge overlay -->
+    <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
+      <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block"></span>
+      LIVE
+    </div>
+  </div>
+
+  <!-- Snapshot display -->
+  <div *ngIf="status === 'snapshot' && snapshotImage"
+       class="rounded-2xl overflow-hidden border border-[#E9D5FF] bg-[#FAFAFA] shadow-sm">
+    <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[#F3E8FF] bg-white">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span class="text-xs font-medium text-[#6B5B8C]">Latest snapshot of {{ patientName }}</span>
+    </div>
+    <img [src]="snapshotImage" alt="Patient snapshot" class="w-full object-cover" style="aspect-ratio: 4/3"/>
+  </div>
+
+</div>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>

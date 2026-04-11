@@ -32,7 +32,8 @@ import { AlertAlarmComponent } from '../../alert-alarm/alert-alarm.component';
 // 👇 ADD THIS IMPORT
 import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.component';
 import { HttpClientModule } from '@angular/common/http';
-
+import { CaregiverCheckComponent } from './pages/alerts/components/caregiver-check/caregiver-check.component';
+import { PatientCheckComponent } from './pages/alerts/components/patient-check/patient-check.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -61,6 +62,8 @@ import { HttpClientModule } from '@angular/common/http';
     // 👇 ADD THIS COMPONENT
     DoctorSearchModalComponent,
     AlertAlarmComponent,
+    CaregiverCheckComponent,
+    PatientCheckComponent,
   ],
   imports: [
     CommonModule,

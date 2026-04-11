@@ -8,6 +8,8 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { FaceLoginComponent } from './pages/face-login/face-login.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 
 const routes: Routes = [
   { path: 'setup-profile', component: SetupProfileComponent },
@@ -22,6 +24,8 @@ const routes: Routes = [
       { path: 'activities/:id', component: ActivityDetailsComponent },
       { path: 'alerts', component: AlertsComponent },
       { path: 'profile', component: ProfileComponent },
+      { path: 'setup-face-id', component: FaceSetupComponent },
+      { path: 'face-login', component: FaceLoginComponent },
     ],
   },
 ];

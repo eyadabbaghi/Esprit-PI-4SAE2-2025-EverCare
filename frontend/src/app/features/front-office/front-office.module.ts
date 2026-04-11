@@ -34,6 +34,8 @@ import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.
 import { HttpClientModule } from '@angular/common/http';
 import { CaregiverCheckComponent } from './pages/alerts/components/caregiver-check/caregiver-check.component';
 import { PatientCheckComponent } from './pages/alerts/components/patient-check/patient-check.component';
+import { FaceLoginComponent } from './pages/face-login/face-login.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 @NgModule({
   declarations: [
     HomeComponent,
@@ -64,6 +66,8 @@ import { PatientCheckComponent } from './pages/alerts/components/patient-check/p
     AlertAlarmComponent,
     CaregiverCheckComponent,
     PatientCheckComponent,
+    FaceSetupComponent,
+    FaceLoginComponent,
   ],
   imports: [
     CommonModule,

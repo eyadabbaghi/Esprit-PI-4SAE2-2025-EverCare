@@ -9,6 +9,7 @@ import tn.esprit.user.entity.UserRole;
 import tn.esprit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,7 +18,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final KeycloakAdminClient keycloakAdminClient;
-
+    private final FaceService faceService;
+    private final KeycloakTokenService keycloakTokenService; // new — see 2.5
     @Transactional
     public void register(RegisterRequest request) {
         // Check if email already exists locally
@@ -54,6 +56,7 @@ public class UserService {
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());
+        dto.setKeycloakId(user.getKeycloakId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
@@ -71,6 +74,8 @@ public class UserService {
         dto.setWorkplaceType(user.getWorkplaceType());
         dto.setWorkplaceName(user.getWorkplaceName());
         dto.setDoctorEmail(user.getDoctorEmail());
+
+
 
         // Relationships
         if (user.getRole() == UserRole.PATIENT) {
@@ -273,5 +278,57 @@ public class UserService {
     public UserDto getUserDtoById(String userId) {
         User user = findByUserId(userId);
         return mapToDto(user);
+    }
+
+
+    @Transactional
+    public void setupFaceId(String email, List<String> images) {
+        User user = findByEmail(email);
+        if (user.getKeycloakId() == null) {
+            throw new RuntimeException("User has no Keycloak ID");
+        }
+        boolean success = faceService.registerFace(user.getKeycloakId(), images);
+        if (!success) {
+            throw new RuntimeException("Failed to register face embeddings");
+        }
+    }
+
+    public Map<String, Object> faceLogin(String keycloakId, String base64Image) {
+        // 1. Verify face
+        Map result = faceService.verifyFace(keycloakId, base64Image);
+        boolean matched = Boolean.TRUE.equals(result.get("matched"));
+
+        if (!matched) {
+            double score = result.get("score") != null ?
+                    ((Number) result.get("score")).doubleValue() : 0.0;
+            throw new RuntimeException("Face not recognized. Score: " + score);
+        }
+
+        // 2. Find user locally
+        User user = userRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 3. Try token exchange, fall back to admin token
+        String token;
+        try {
+            token = keycloakTokenService.getTokenForUser(keycloakId);
+            System.out.println("✅ Token exchange succeeded for: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("⚠️ Token exchange failed: " + e.getMessage());
+            System.err.println("⚠️ Falling back to admin token");
+            token = keycloakTokenService.getAdminAccessToken();
+        }
+
+        // 4. Return token + user info
+        return Map.of(
+                "token", token,
+                "email", user.getEmail(),
+                "userId", user.getUserId()
+        );
+    }
+    public boolean hasFaceId(String email) {
+        User user = findByEmail(email);
+        if (user.getKeycloakId() == null) return false;
+        return faceService.hasFaceRegistered(user.getKeycloakId());
     }
 }

@@ -68,6 +68,7 @@ public class UserController {
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());
+        dto.setKeycloakId(user.getKeycloakId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());

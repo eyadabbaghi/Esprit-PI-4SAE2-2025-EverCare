@@ -4,6 +4,8 @@ import { ToastrService } from 'ngx-toastr';
 import { Subscription, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService, User, UpdateUserRequest, ChangePasswordRequest } from '../login/auth.service';
+import { Router } from '@angular/router';
+import { FaceService } from '../../services/camera/face.service';
 
 // Custom validators
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
@@ -39,6 +41,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   personalForm: FormGroup;
   passwordData = { currentPassword: '', newPassword: '' };
 
+  hasFaceId = false;
+
   // Country codes
   countries = [
     { code: '+1', flag: '🇺🇸', name: 'USA' },
@@ -71,7 +75,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private toastr: ToastrService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,        // ← add
+    private faceService: FaceService  // ← add
   ) {
     this.personalForm = this.fb.group({
       name: ['', Validators.required],
@@ -96,6 +102,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.loadConnectedUsers();
       }
     });
+
+    // ← add this
+  this.faceService.hasFaceId().subscribe({
+    next: (res) => this.hasFaceId = res.hasFaceId,
+    error: () => this.hasFaceId = false
+  });
   }
 
   ngOnDestroy(): void {
@@ -414,5 +426,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     return item.email;
   }
 
+  goToFaceSetup(): void {
+  this.router.navigate(['/setup-face-id']);
+}
   
 }

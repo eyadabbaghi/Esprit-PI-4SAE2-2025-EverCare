@@ -222,4 +222,9 @@ export class LoginComponent implements OnInit {
 
   get lf() { return this.loginForm.controls; }
   get rf() { return this.registerForm.controls; }
+
+
+  goToFaceLogin(): void {
+  this.router.navigate(['/face-login']);
+}
 }

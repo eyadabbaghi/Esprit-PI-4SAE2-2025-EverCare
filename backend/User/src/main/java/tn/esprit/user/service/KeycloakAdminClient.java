@@ -1,6 +1,5 @@
 package tn.esprit.user.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -19,7 +18,6 @@ import java.util.Collections;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class KeycloakAdminClient {
 
     @Value("${keycloak.auth-server-url}")
@@ -36,10 +34,10 @@ public class KeycloakAdminClient {
 
     private final RestTemplate restTemplate;
 
-    // Constructor to add logging interceptor
+    // ✅ Single constructor — no Lombok, no conflict
+    // Creates its own RestTemplate with logging interceptor
     public KeycloakAdminClient() {
         this.restTemplate = new RestTemplate();
-        // Add logging interceptor
         restTemplate.setInterceptors(Collections.singletonList(new ClientHttpRequestInterceptor() {
             @Override
             public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
@@ -52,7 +50,6 @@ public class KeycloakAdminClient {
                 }
                 ClientHttpResponse response = execution.execute(request, body);
                 System.out.println("Response status: " + response.getStatusCode());
-                // Optionally log response body (be careful not to consume it)
                 return response;
             }
         }));
@@ -60,19 +57,15 @@ public class KeycloakAdminClient {
 
     private String getAdminAccessToken() {
         String tokenUrl = authServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
-        System.out.println("Token URL: " + tokenUrl); // DEBUG (already in interceptor, but keep for now)
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("User-Agent", "curl/7.68.0");   // <-- add this line
-
+        headers.set("User-Agent", "curl/7.68.0");
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "client_credentials");
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
-
-        System.out.println("Body: " + body); // DEBUG (optional)
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
@@ -134,6 +127,7 @@ public class KeycloakAdminClient {
     public void deleteUser(String userId) {
         String token = getAdminAccessToken();
         String url = authServerUrl + "/admin/realms/" + realm + "/users/" + userId;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);

@@ -71,16 +71,12 @@ export interface ChangePasswordRequest {
   providedIn: 'root'
 })
 export class AuthService {
- // private apiUrl = 'http://localhost:8096/EverCare/auth';
-  //private usersUrl = 'http://localhost:8096/EverCare/users';
-
-   // New gateway URLs
- private apiUrl = 'http://localhost:8089/EverCare/auth';
+  private apiUrl = 'http://localhost:8089/EverCare/auth';
   private usersUrl = 'http://localhost:8089/EverCare/users';
 
-  // Keycloak configuration – use a public client (no secret) created in Keycloak
-private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
-  private clientId = 'frontend-app'; // Replace with your public client ID
+  private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
+  private clientId = 'frontend-app';
+  private clientSecret = 'yEs0lXWdnzAvF78IsXsW2Dw82e2X51hT'; // ← confidential client secret
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -96,14 +92,14 @@ private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openi
     this.loadStoredUser();
   }
 
-  // ---------- Login with Keycloak (direct grant, public client) ----------
+  // ---------- Login with Keycloak (confidential client) ----------
   login(credentials: LoginRequest): Observable<KeycloakTokenResponse> {
     const body = new URLSearchParams();
     body.set('grant_type', 'password');
     body.set('client_id', this.clientId);
+    body.set('client_secret', this.clientSecret); // ← added
     body.set('username', credentials.email);
     body.set('password', credentials.password);
-    // No client_secret – this is a public client
 
     return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
       headers: new HttpHeaders({
@@ -122,7 +118,7 @@ private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openi
   register(userData: RegisterRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/register`, userData).pipe(
       tap(() => this.toastr.success('Registration successful. Logging you in...')),
-      delay(3000), // Small delay to allow Keycloak to propagate the new user
+      delay(3000),
       switchMap(() => this.login({ email: userData.email, password: userData.password })),
       map(() => ({ message: 'Registration and login successful' }))
     );
@@ -226,6 +222,13 @@ private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openi
   }
 
   getCurrentUserValue(): User | null {
-  return this.currentUserSubject.value;
-}
+    return this.currentUserSubject.value;
+  }
+
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    if (this.isBrowser) {
+      localStorage.setItem('current_user', JSON.stringify(user));
+    }
+  }
 }

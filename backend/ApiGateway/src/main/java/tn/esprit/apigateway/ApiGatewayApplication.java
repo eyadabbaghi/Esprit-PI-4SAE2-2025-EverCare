@@ -48,6 +48,10 @@ public class ApiGatewayApplication {
                         .path("/EverCare/api/notifications/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("lb://notification-service"))
+                .route("face-service", r -> r
+                        .path("/EverCare/face/**")
+                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
+                        .uri("http://localhost:8085"))
                 .build();
     }
 }

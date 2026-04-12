@@ -139,11 +139,15 @@ export class AuthService {
 
   // ---------- Token handling ----------
   private handleTokenResponse(tokenResponse: KeycloakTokenResponse): void {
-    this.storeToken(tokenResponse.access_token);
-    this.fetchCurrentUser().subscribe({
-      error: (err) => console.error('Failed to fetch user after login', err)
-    });
-  }
+  this.storeToken(tokenResponse.access_token);
+  this.fetchCurrentUser().subscribe({
+    next: () => {
+      // Record password login event
+      this.http.post(`${this.apiUrl}/record-login`, {}).subscribe();
+    },
+    error: (err) => console.error('Failed to fetch user after login', err)
+  });
+}
 
   private storeToken(token: string): void {
     if (this.isBrowser) {

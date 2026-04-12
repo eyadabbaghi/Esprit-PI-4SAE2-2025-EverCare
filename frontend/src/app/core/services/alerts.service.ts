@@ -75,4 +75,15 @@ getEviCareAnalysis(patientId: string): Observable<any> {
 acknowledgeIncident(id: string): Observable<Incident> {
   return this.http.patch<Incident>(`${this.baseUrl}/incidents/${id}/acknowledge`, {});
 }
+
+getPatientActivityStatus(userId: string): Observable<any> {
+  return this.http.get(`http://localhost:8089/EverCare/users/activity/${userId}/status`);
+}
+
+getBatchActivityStatus(userIds: string[]): Observable<any[]> {
+  return this.http.post<any[]>(
+    `http://localhost:8089/EverCare/users/activity/batch-status`,
+    userIds
+  );
+}
 }

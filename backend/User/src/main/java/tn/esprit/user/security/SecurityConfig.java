@@ -26,7 +26,8 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/auth/login",
                                 "/auth/face-login",
-                                "/users/by-email",      // ← face login lookup
+                                "/users/by-email",
+                                "/users/activity/**",
                                 "/uploads/**"
                         ).permitAll()
                         .anyRequest().authenticated()

@@ -36,6 +36,8 @@ import { CaregiverCheckComponent } from './pages/alerts/components/caregiver-che
 import { PatientCheckComponent } from './pages/alerts/components/patient-check/patient-check.component';
 import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
+import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog.component';
+
 @NgModule({
   declarations: [
     HomeComponent,
@@ -68,6 +70,7 @@ import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
     PatientCheckComponent,
     FaceSetupComponent,
     FaceLoginComponent,
+    ConfirmDialogComponent,
   ],
   imports: [
     CommonModule,

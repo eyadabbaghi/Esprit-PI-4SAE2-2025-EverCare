@@ -10,8 +10,10 @@ import tn.esprit.user.dto.FaceLoginRequest;
 import tn.esprit.user.dto.FaceSetupRequest;
 import tn.esprit.user.dto.RegisterRequest;
 import tn.esprit.user.dto.UserDto;
+import tn.esprit.user.entity.LoginType;
 import tn.esprit.user.entity.User;
 import tn.esprit.user.entity.UserRole;
+import tn.esprit.user.service.LoginEventService;
 import tn.esprit.user.service.UserService;
 
 import java.util.Map;
@@ -22,6 +24,8 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+    private final LoginEventService loginEventService; // ← add this
+
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
@@ -69,6 +73,14 @@ public class AuthController {
         String email = userDetails.getUsername();
         boolean has = userService.hasFaceId(email);
         return ResponseEntity.ok(Map.of("hasFaceId", has));
+    }
+
+    @PostMapping("/record-login")
+    public ResponseEntity<?> recordLogin(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userService.findByEmail(email);
+        loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.PASSWORD);
+        return ResponseEntity.ok().build();
     }
 
     private UserDto mapToDto(User user) {

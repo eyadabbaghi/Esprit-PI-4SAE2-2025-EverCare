@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.user.dto.*;
+import tn.esprit.user.entity.LoginType;
 import tn.esprit.user.entity.User;
 import tn.esprit.user.entity.UserRole;
 import tn.esprit.user.repository.UserRepository;
@@ -20,6 +21,8 @@ public class UserService {
     private final KeycloakAdminClient keycloakAdminClient;
     private final FaceService faceService;
     private final KeycloakTokenService keycloakTokenService; // new — see 2.5
+    private final LoginEventService loginEventService;
+
     @Transactional
     public void register(RegisterRequest request) {
         // Check if email already exists locally
@@ -294,7 +297,6 @@ public class UserService {
     }
 
     public Map<String, Object> faceLogin(String keycloakId, String base64Image) {
-        // 1. Verify face
         Map result = faceService.verifyFace(keycloakId, base64Image);
         boolean matched = Boolean.TRUE.equals(result.get("matched"));
 
@@ -304,22 +306,19 @@ public class UserService {
             throw new RuntimeException("Face not recognized. Score: " + score);
         }
 
-        // 2. Find user locally
         User user = userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Try token exchange, fall back to admin token
+        // ✅ Record face login event
+        loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.FACE);
+
         String token;
         try {
             token = keycloakTokenService.getTokenForUser(keycloakId);
-            System.out.println("✅ Token exchange succeeded for: " + user.getEmail());
         } catch (Exception e) {
-            System.err.println("⚠️ Token exchange failed: " + e.getMessage());
-            System.err.println("⚠️ Falling back to admin token");
             token = keycloakTokenService.getAdminAccessToken();
         }
 
-        // 4. Return token + user info
         return Map.of(
                 "token", token,
                 "email", user.getEmail(),

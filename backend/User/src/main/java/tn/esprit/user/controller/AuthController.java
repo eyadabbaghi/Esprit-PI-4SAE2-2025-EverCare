@@ -12,7 +12,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // For frontend during development
+
 public class AuthController {
 
     private final UserService userService;

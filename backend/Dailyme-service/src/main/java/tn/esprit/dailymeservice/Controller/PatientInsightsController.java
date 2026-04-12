@@ -6,7 +6,7 @@ import tn.esprit.dailymeservice.Service.PatientInsightsService;
 
 @RestController
 @RequestMapping("/api/insights")
-@CrossOrigin
+
 public class PatientInsightsController {
 
     private final PatientInsightsService service;

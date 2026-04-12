@@ -16,6 +16,15 @@ public class SavedPlaceService {
     }
 
     public SavedPlace add(SavedPlace place) {
+
+        if (place.getPatientId() == null || place.getPatientId().isEmpty()) {
+            throw new RuntimeException("patientId is required");
+        }
+
+        if (place.getRadius() == null) {
+            place.setRadius(350.0);
+        }
+
         return repo.save(place);
     }
 

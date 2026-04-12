@@ -46,12 +46,12 @@ export interface ChangePasswordRequest {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   // EverCare Auth service (login/register/me/users)
- private evercareAuthUrl = 'http://localhost:8096/EverCare/auth';
+ private evercareAuthUrl = 'http://localhost:8089/EverCare/auth';
 
 
 
   // Dailyme service base (DailyMe features)
-  private dailymeBaseUrl = 'http://localhost:8097/dailyme';
+  private dailymeBaseUrl = 'http://localhost:8089/dailyme';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

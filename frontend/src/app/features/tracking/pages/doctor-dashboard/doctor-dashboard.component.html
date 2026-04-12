@@ -1,0 +1,226 @@
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <p class="eyebrow">EverCare Command</p>
+      <h1 class="title">Doctor Tracking Hub</h1>
+      <p class="subtitle">Unified live monitoring for patient movement, risk, and care alerts.</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Total</span>
+        <strong>{{ patients.length }}</strong>
+      </div>
+      <div class="summary-card safe">
+        <span>Safe</span>
+        <strong>{{ getPatientCount('SAFE') }}</strong>
+      </div>
+      <div class="summary-card warning">
+        <span>Warning</span>
+        <strong>{{ getPatientCount('WARNING') }}</strong>
+      </div>
+      <div class="summary-card danger">
+        <span>Danger</span>
+        <strong>{{ getPatientCount('DANGER') }}</strong>
+      </div>
+    </div>
+
+    <div class="list-head">
+      <span>Patient Roster</span>
+      <small>{{ patients.length }} active</small>
+    </div>
+
+    <div class="patient-list">
+      <button
+        *ngFor="let p of patients"
+        type="button"
+        class="patient-card"
+        [class.active]="selectedPatient?.patientId === p.patientId"
+        [ngClass]="getStatusClass(p)"
+        (click)="selectPatient(p)">
+        <div class="row">
+          <span class="name">
+            {{
+              p.firstName && p.lastName
+                ? (p.firstName + ' ' + p.lastName)
+                : ('Patient ' + (p.patientId || '').toString().substring(0, 8))
+            }}
+          </span>
+          <span class="badge" [ngClass]="getStatusClass(p)">
+            {{ getStatus(p) }}
+          </span>
+        </div>
+
+        <div class="patient-meta">
+          <span>Risk {{ p.riskScore ?? 0 }}</span>
+          <span>{{ p.timestamp | date:'shortTime' }}</span>
+        </div>
+
+        <div class="status" [ngClass]="getStatusClass(p)">
+          {{ getSmartMessage(p) }}
+        </div>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main" *ngIf="selectedPatient; else emptyState">
+    <section class="hero card" [ngClass]="getStatusClass(selectedPatient)">
+      <div class="hero-copy">
+        <p class="eyebrow dark">Current Patient</p>
+        <div class="hero-header">
+          <div>
+            <h2>
+              {{
+                selectedPatient.firstName && selectedPatient.lastName
+                  ? (selectedPatient.firstName + ' ' + selectedPatient.lastName)
+                  : ('Patient ' + (selectedPatient.patientId || '').toString().substring(0, 8))
+              }}
+            </h2>
+            <p class="patient-id">
+              ID: {{ (selectedPatient.patientId || '').toString().substring(0, 8) }}
+            </p>
+            <p>{{ getSmartMessage(selectedPatient) }}</p>
+          </div>
+
+          <span class="badge hero-badge" [ngClass]="getStatusClass(selectedPatient)">
+            {{ getStatus(selectedPatient) }}
+          </span>
+        </div>
+
+        <div class="hero-meta">
+          <div class="metric-tile">
+            <span>Coordinates</span>
+            <strong>
+              {{ selectedPatient.lat | number:'1.3-3' }},
+              {{ selectedPatient.lng | number:'1.3-3' }}
+            </strong>
+          </div>
+
+          <div class="metric-tile">
+            <span>Risk score</span>
+            <strong>{{ selectedPatient.riskScore ?? 0 }}</strong>
+          </div>
+
+          <div class="metric-tile">
+            <span>Last ping</span>
+            <strong>{{ selectedPatient.timestamp | date:'medium' }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel-grid">
+      <article class="card panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow dark">Overview</p>
+            <h3>Patient Snapshot</h3>
+          </div>
+
+          <span class="trend-badge" [ngClass]="getTrend().toLowerCase()">
+            {{ getTrend() }}
+          </span>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-tile">
+            <span>Status</span>
+            <strong>{{ getStatus(selectedPatient) }}</strong>
+          </div>
+
+          <div class="metric-tile">
+            <span>Zone</span>
+            <strong>{{ selectedPatient.insideSafeZone ? 'Inside safe zone' : 'Outside safe zone' }}</strong>
+          </div>
+
+          <div class="metric-tile">
+            <span>Alerts</span>
+            <strong>{{ displayAlerts.length }}</strong>
+          </div>
+
+          <div class="metric-tile">
+            <span>History points</span>
+            <strong>{{ history.length }}</strong>
+          </div>
+        </div>
+      </article>
+
+      <article class="card panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow dark">Alerts</p>
+            <h3>Care Team Feed</h3>
+          </div>
+
+          <span class="panel-count">{{ displayAlerts.length }}</span>
+        </div>
+
+        <div *ngIf="displayAlerts.length === 0" class="empty-state">
+          No danger or warning alerts yet for this patient.
+        </div>
+
+        <div *ngFor="let a of displayAlerts" class="alert-item" [ngClass]="getSeverityClass(a.severity)">
+          <div class="alert-copy">
+            <strong>{{ a.label }}</strong>
+            <span>{{ a.date }} · {{ a.time }}</span>
+          </div>
+
+          <span class="severity-pill" [ngClass]="getSeverityClass(a.severity)">
+            {{ a.severity | uppercase }}
+          </span>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel-grid secondary">
+      <article class="card panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow dark">Movement</p>
+            <h3>Recent Coordinates</h3>
+          </div>
+
+          <span class="panel-count">{{ history.length }}</span>
+        </div>
+
+        <div *ngIf="history.length === 0" class="empty-state">
+          Waiting for movement history from the backend.
+        </div>
+
+        <div *ngFor="let h of history.slice(0,6)" class="history-row">
+          <div class="history-copy">
+            <strong>{{ h.lat | number:'1.3-3' }}, {{ h.lng | number:'1.3-3' }}</strong>
+            <span>{{ h.timestamp | date:'medium' }}</span>
+          </div>
+
+          <span class="risk-pill">{{ h.riskScore ?? 0 }}</span>
+        </div>
+      </article>
+
+      <article class="card chart-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow dark">Analytics</p>
+            <h3>Risk Evolution</h3>
+          </div>
+
+          <span class="panel-note">Latest 10 backend readings</span>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <ng-template #emptyState>
+    <main class="main">
+      <section class="card empty-shell">
+        <p class="eyebrow dark">Doctor Dashboard</p>
+        <h2>No patient selected yet</h2>
+        <p>As soon as tracking data arrives, the live patient monitor will appear here.</p>
+      </section>
+    </main>
+  </ng-template>
+</div>

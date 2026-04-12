@@ -59,7 +59,7 @@
       </div>
       <button
   type="button"
-  (click)="navigate('/tracking/saved-places')"
+  (click)="navigate(getTrackingRoute())"
   [ngClass]="isActive('/tracking') 
     ? 'bg-[#F3E8FF] text-[#7C3AED]'
     : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
@@ -161,7 +161,7 @@
         </button>
       </div>
     </div> <div *ngIf="isMobileMenuOpen" class="md:hidden border-t border-[#C4B5FD] bg-white px-4 pb-4 space-y-2">
-      <button *ngFor="let item of navItems" type="button" class="w-full flex items-center justify-start px-3 py-2 rounded-md text-sm font-medium" [ngClass]="isActive(item.route) ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'" (click)="navigate(item.route)">
+      <button *ngFor="let item of navItems" type="button" class="w-full flex items-center justify-start px-3 py-2 rounded-md text-sm font-medium" [ngClass]="isActive(item.route) ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'" (click)="navigate(item.id === 'tracking' ? getTrackingRoute() : item.route)">
         {{ item.label }}
       </button>
 

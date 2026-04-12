@@ -9,13 +9,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
 
 import jakarta.validation.Valid;
+
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/daily-entries")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+
 public class DailyEntryController {
 
     private final DailyEntryService dailyEntryService;

@@ -36,7 +36,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     { id: 'appointments', label: 'Appointments', route: '/appointments' },
     { id: 'medical-folder', label: 'Medical Folder', route: '/medical-folder' },
     { id: 'alerts', label: 'Alerts', route: '/alerts' },
-    { id: 'tracking', label: 'Tracking', route: '/tracking/saved-places' },
+    { id: 'tracking', label: 'Tracking', route: '/tracking' },
   ];
 
   user: User | null = null;
@@ -258,12 +258,22 @@ closeTaskAlert() {
   }
 
   isActive(route: string): boolean {
+    if (route === '/tracking') {
+      return this.router.url.startsWith('/tracking');
+    }
     return this.router.url === route;
   }
 
   navigate(route: string): void {
     this.router.navigateByUrl(route);
     this.isMobileMenuOpen = false;
+  }
+
+  getTrackingRoute(): string {
+    const role = (this.user?.role || '').toString().toLowerCase();
+    if (role === 'doctor') return '/tracking/doctor';
+    if (role === 'caregiver') return '/tracking/caregiver';
+    return '/tracking/saved-places';
   }
 
   toggleMobileMenu(): void {

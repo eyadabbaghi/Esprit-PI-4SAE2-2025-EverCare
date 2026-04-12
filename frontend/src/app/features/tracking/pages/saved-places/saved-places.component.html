@@ -1,172 +1,355 @@
-<div class="min-h-screen bg-[#F7F5FF] p-6">
-  <div class="max-w-6xl mx-auto">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h2 class="text-2xl font-extrabold text-[#2D1B4E]">Saved Places</h2>
-        <p class="text-[#6B5B8C]">Add, update, or delete safe places for the patient.</p>
-      </div>
-
-      <button
-        (click)="openAdd()"
-        class="bg-[#7C3AED] text-white px-5 py-3 rounded-2xl font-semibold shadow hover:opacity-95"
-      >
-        + Add Place
-      </button>
-    </div>
-
-    <!-- List -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div
-        *ngFor="let p of places"
-        class="bg-white rounded-3xl p-5 shadow-sm border border-[#E9E3FF]"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-lg font-bold text-[#2D1B4E]">{{ p.label }}</span>
-              <span class="text-xs px-2 py-1 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-semibold">
-                {{ p.lat | number:'1.0-6' }}, {{ p.lng | number:'1.0-6' }}
-              </span>
-            </div>
-            <p class="text-[#6B5B8C] mt-1">{{ p.addressText }}</p>
-          </div>
-
-          <div class="flex gap-2">
-            <button
-              (click)="openEdit(p)"
-              class="px-3 py-2 rounded-xl bg-[#F3E8FF] text-[#7C3AED] font-semibold"
-            >
-              Edit
-            </button>
-
-            <button
-              (click)="remove(p.id)"
-              class="px-3 py-2 rounded-xl bg-[#FEE2E2] text-[#B91C1C] font-semibold"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="places.length === 0"
-      class="bg-white rounded-3xl p-8 border border-[#E9E3FF] text-center mt-4">
-      <div class="text-[#2D1B4E] font-bold text-lg">No places yet</div>
-      <div class="text-[#6B5B8C] mt-1">Add “Home”, “Hospital”, etc.</div>
-    </div>
+<div class="safe-zones-page page-container">
+  <div *ngIf="showToast" class="tracking-toast">
+    {{ toastMessage }}
   </div>
-</div>
 
-<!-- Modal -->
-<div *ngIf="isModalOpen" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-  <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-[#E9E3FF] overflow-hidden">
-
-    <div class="p-5 border-b border-[#EFEAFF] flex items-center justify-between">
-      <div>
-        <h3 class="text-xl font-extrabold text-[#2D1B4E]">
-          {{ isEditing ? 'Edit Place' : 'Add Place' }}
-        </h3>
-        <p class="text-[#6B5B8C] text-sm">
-          Search, click the map, drag the marker, or use GPS to pick a position.
-        </p>
+  <div class="page-shell">
+    <header class="safe-header surface-card">
+      <div class="header-copy">
+        <p class="eyebrow">Tracking Module</p>
+        <h1>📍 Safe Zones</h1>
+        <p class="subtitle">Define areas where the patient is safe.</p>
       </div>
 
-      <button (click)="closeModal()" class="text-[#6B5B8C] hover:text-[#2D1B4E] font-bold">✕</button>
-    </div>
+      <div class="header-actions">
+        <button
+          *ngIf="mode === 'setup' && places.length > 0"
+          type="button"
+          class="secondary-btn"
+          (click)="startTrackingMode()">
+          Start Monitoring
+        </button>
 
-    <form [formGroup]="form" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          *ngIf="mode === 'tracking'"
+          type="button"
+          class="secondary-btn"
+          (click)="goBackToSetup()">
+          Back to Safe Zones
+        </button>
 
-      <!-- Left -->
-      <div>
-        <label class="text-sm font-semibold text-[#2D1B4E]">Label</label>
-        <input
-          type="text"
-          formControlName="label"
-          class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3"
-          placeholder="Home / Hospital / ..."
-        />
+        <button
+          *ngIf="mode === 'setup'"
+          type="button"
+          class="primary-btn"
+          (click)="openAdd()">
+          + Add Safe Zone
+        </button>
+      </div>
+    </header>
 
-        <div class="mt-4">
-          <label class="text-sm font-semibold text-[#2D1B4E]">Search address</label>
+    <ng-container *ngIf="mode === 'setup'; else trackingMode">
+      <section class="setup-layout">
+        <article class="surface-card map-stage">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Live Map</p>
+              <h2>Safe Zone Overview</h2>
+            </div>
 
-          <div class="flex gap-2 mt-1">
-            <input
-              #searchBox
-              type="text"
-              class="flex-1 border border-[#E9E3FF] rounded-2xl p-3"
-              placeholder="Type an address..."
-            />
-            <button
-              type="button"
-              (click)="searchAddress(searchBox.value)"
-              class="bg-[#7C3AED] text-white px-4 rounded-2xl font-semibold hover:opacity-90"
-            >
-              Search
+            <button type="button" class="soft-btn" (click)="useMyLocation()">
+              Use current location
             </button>
           </div>
 
-          <div class="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              (click)="useMyLocation()"
-              [disabled]="isLocating"
-              class="bg-[#F3E8FF] text-[#7C3AED] px-4 py-2 rounded-2xl font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              📍 {{ isLocating ? 'Locating...' : 'Use my location' }}
-            </button>
+          <p class="panel-note">
+            Click anywhere on the map to prefill a new safe zone. Circles show each saved area and the current patient position.
+          </p>
 
-            <span *ngIf="locateError" class="text-xs text-red-600">
-              {{ locateError }}
+          <div #safeZonesMapContainer class="safe-zones-map"></div>
+
+          <div class="map-insights">
+            <div class="mini-stat">
+              <span>Current position</span>
+              <strong>
+                {{ hasLocationSnapshot ? (formatCoordinate(currentLat) + ', ' + formatCoordinate(currentLng)) : 'Waiting for location' }}
+              </strong>
+            </div>
+
+            <div class="mini-stat">
+              <span>Overall status</span>
+              <strong [ngClass]="getStatus().toLowerCase()">{{ getStatus() }}</strong>
+            </div>
+
+            <div class="mini-stat">
+              <span>Live guidance</span>
+              <strong>{{ getLiveSummaryText() }}</strong>
+            </div>
+          </div>
+        </article>
+
+        <aside class="zones-column">
+          <section class="summary-strip">
+            <article class="summary-card surface-card">
+              <span>Total zones</span>
+              <strong>{{ places.length }}</strong>
+            </article>
+
+            <article class="summary-card surface-card">
+              <span>Inside now</span>
+              <strong>{{ getInsidePlacesCount() }}</strong>
+            </article>
+
+            <article class="summary-card surface-card">
+              <span>Status</span>
+              <strong [ngClass]="getStatus().toLowerCase()">{{ getStatus() }}</strong>
+            </article>
+          </section>
+
+          <section class="zones-list">
+            <div *ngIf="places.length === 0" class="surface-card empty-state">
+              <div class="empty-illustration">📍</div>
+              <h3>No safe zones yet. Add one to start monitoring.</h3>
+              <p>
+                Use your current location or click directly on the map to create the first safe area.
+              </p>
+              <button type="button" class="primary-btn" (click)="openAddWithCurrentLocation()">
+                Add first safe zone
+              </button>
+            </div>
+
+            <article *ngFor="let p of places; let i = index" class="surface-card zone-card">
+              <div class="zone-card-head">
+                <div>
+                  <p class="zone-label">Safe Zone {{ i + 1 }}</p>
+                  <h3>📍 {{ getPlaceTitle(p, i) }}</h3>
+                </div>
+
+                <span class="status-pill" [ngClass]="getPlaceStateClass(p)">
+                  {{ getPlaceState(p) }}
+                </span>
+              </div>
+
+              <p class="zone-address">
+                {{ p.addressText || 'Custom monitored area' }}
+              </p>
+
+              <div class="zone-detail-grid">
+                <div>
+                  <span>Coordinates</span>
+                  <strong>{{ formatCoordinate(p.lat) }}, {{ formatCoordinate(p.lng) }}</strong>
+                </div>
+
+                <div>
+                  <span>Radius</span>
+                  <strong>{{ getPlaceRadius(p) }}m</strong>
+                </div>
+              </div>
+
+              <div class="zone-actions">
+                <button type="button" class="soft-btn" (click)="openEdit(p)">
+                  Edit
+                </button>
+
+                <button type="button" class="danger-btn" (click)="remove(p.id)">
+                  Delete
+                </button>
+              </div>
+            </article>
+          </section>
+        </aside>
+      </section>
+    </ng-container>
+
+    <ng-template #trackingMode>
+      <section class="tracking-layout">
+        <article class="surface-card tracking-hero" [ngClass]="getStatus().toLowerCase()">
+          <div>
+            <p class="eyebrow">Live Tracking</p>
+            <h2>{{ getStatus() }} monitoring session</h2>
+            <p class="subtitle">{{ getLiveSummaryText() }}</p>
+          </div>
+
+          <span class="status-pill large" [ngClass]="getStatus().toLowerCase()">
+            {{ getStatus() }}
+          </span>
+        </article>
+
+        <article class="surface-card tracking-map-card">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Movement Map</p>
+              <h3>Live patient position</h3>
+            </div>
+
+            <span class="location-chip">
+              {{ formatCoordinate(currentLat) }}, {{ formatCoordinate(currentLng) }}
             </span>
           </div>
-        </div>
 
-        <div class="mt-4">
-          <label class="text-sm font-semibold text-[#2D1B4E]">Address Text</label>
-          <textarea
-            formControlName="addressText"
-            rows="3"
-            class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3"
-            placeholder="Auto-filled after click/drag/GPS..."
-          ></textarea>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mt-4">
-          <div>
-            <label class="text-sm font-semibold text-[#2D1B4E]">Lat</label>
-            <input type="number" step="0.000001" formControlName="lat"
-              class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3" />
+          <div class="tracking-map-canvas">
+            <div id="monitoring-map" #trackingMapContainer class="tracking-map-inner"></div>
           </div>
 
-          <div>
-            <label class="text-sm font-semibold text-[#2D1B4E]">Lng</label>
-            <input type="number" step="0.000001" formControlName="lng"
-              class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3" />
+          <div class="guidance-row" *ngIf="!isInSafeZone && guidanceMessage">
+            <div class="guidance-message">
+              {{ guidanceMessage }}
+            </div>
+            <button type="button" class="lost-btn" (click)="handleLostClick()">
+              I am lost
+            </button>
           </div>
+
+          <div class="tracking-metrics">
+            <article class="metric-card">
+              <span>Status</span>
+              <strong [ngClass]="getStatus().toLowerCase()">{{ getStatus() }}</strong>
+            </article>
+
+            <article class="metric-card">
+              <span>Risk</span>
+              <strong>{{ riskLevel }}</strong>
+            </article>
+
+            <article class="metric-card">
+              <span>Movement</span>
+              <strong>{{ movementStatus }}</strong>
+            </article>
+
+            <article class="metric-card">
+              <span>Safe zones</span>
+              <strong>{{ places.length }}</strong>
+            </article>
+          </div>
+        </article>
+
+        <div class="tracking-panels">
+          <article class="surface-card info-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Alerts</p>
+                <h3>Recent alerts</h3>
+              </div>
+
+              <span class="panel-chip">{{ alerts.length }}</span>
+            </div>
+
+            <div *ngIf="alerts.length === 0" class="empty-inline">
+              No alerts yet for this patient.
+            </div>
+
+            <div *ngFor="let a of alerts" class="alert-row" [ngClass]="getAlertSeverityClass(a)">
+              <div>
+                <strong>{{ getAlertText(a) }}</strong>
+                <span>{{ a.date }} · {{ a.time }}</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="surface-card info-panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">History</p>
+                <h3>Location timeline</h3>
+              </div>
+
+              <span class="panel-chip">{{ history.length }}</span>
+            </div>
+
+            <div *ngIf="history.length === 0" class="empty-inline">
+              Waiting for tracking history.
+            </div>
+
+            <div class="history-list">
+              <div *ngFor="let h of history" class="history-row">
+                <div>
+                  <strong>{{ h.time }}</strong>
+                  <span>{{ h.date }}</span>
+                </div>
+
+                <div class="history-coords">
+                  {{ formatCoordinate(h.lat) }}, {{ formatCoordinate(h.lng) }}
+                </div>
+
+                <span class="status-pill" [ngClass]="getHistoryStatusClass(h.status)">
+                  {{ h.status }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </ng-template>
+  </div>
+
+  <app-tracking-assistant
+    [patientId]="patientId"
+    [mode]="mode"
+    [status]="getStatus()"
+    [lastZoneStatus]="lastZoneStatus"
+    [placesCount]="places.length"
+    [idleCounter]="idleCounter"
+    [currentLat]="currentLat"
+    [currentLng]="currentLng"
+    (actionSelected)="handleAssistantAction($event)">
+  </app-tracking-assistant>
+
+  <div *ngIf="isModalOpen" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Safe Zone Setup</p>
+          <h3>{{ isEditing ? 'Edit Safe Zone' : 'Add Safe Zone' }}</h3>
+        </div>
+
+        <button type="button" class="icon-btn" (click)="closeModal()">
+          ×
+        </button>
+      </div>
+
+      <div class="modal-body container">
+        <div [formGroup]="form" class="modal-form form-wrapper">
+          <div class="field-group">
+            <label>Safe zone name</label>
+            <input formControlName="label" placeholder="Home, Hospital, Clinic..." />
+          </div>
+
+          <div class="field-group">
+            <label>Address</label>
+            <textarea formControlName="addressText" placeholder="Optional note or address"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label>Radius (meters)</label>
+            <input formControlName="radius" type="number" min="50" max="1000" step="10" />
+            <small>The circle preview updates instantly as you adjust the radius.</small>
+          </div>
+
+          <div class="field-grid">
+            <div class="field-group">
+              <label>Latitude</label>
+              <input formControlName="lat" type="number" step="any" />
+            </div>
+
+            <div class="field-group">
+              <label>Longitude</label>
+              <input formControlName="lng" type="number" step="any" />
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="soft-btn" (click)="useMyLocation()">
+              Use current location
+            </button>
+            <span>Or click directly on the map to place the safe zone.</span>
+          </div>
+        </div>
+
+        <div class="modal-map-panel">
+          <div #mapContainer class="modal-map map-container"></div>
+          <p class="panel-note">Click the map to choose a location and review the radius preview.</p>
         </div>
       </div>
 
-      <!-- Right: Map -->
-      <div class="rounded-3xl overflow-hidden border border-[#E9E3FF]">
-        <div #mapContainer style="height: 420px; width: 100%;"></div>
+      <div class="modal-footer buttons">
+        <button type="button" class="secondary-btn" (click)="closeModal()">
+          Cancel
+        </button>
+
+        <button type="button" class="primary-btn" [disabled]="form.invalid" (click)="save()">
+          {{ isEditMode ? 'Update Safe Zone' : 'Save Safe Zone' }}
+        </button>
       </div>
-    </form>
-
-    <div class="p-5 border-t border-[#EFEAFF] flex items-center justify-end gap-3">
-      <button (click)="closeModal()" type="button"
-        class="px-5 py-3 rounded-2xl bg-[#F3E8FF] text-[#7C3AED] font-semibold">
-        Cancel
-      </button>
-
-      <button (click)="save()" type="button" [disabled]="form.invalid"
-        class="px-5 py-3 rounded-2xl bg-[#7C3AED] text-white font-semibold disabled:opacity-40">
-        {{ isEditing ? 'Save changes' : 'Create place' }}
-      </button>
     </div>
-
   </div>
 </div>

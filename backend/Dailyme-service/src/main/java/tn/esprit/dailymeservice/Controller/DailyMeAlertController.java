@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/dailyme-alerts")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+
 public class DailyMeAlertController {
 
     private final DailyMeAlertService service;

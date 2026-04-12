@@ -29,19 +29,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ❌ DISABLE CSRF (API mode)
                 .csrf(csrf -> csrf.disable())
-                // 1. ADD CORS Support explicitly
-                .cors(org.springframework.security.config.Customizer.withDefaults())
+
+                // ❌ DISABLE CORS HERE (Gateway handles it)
+                .cors(cors -> cors.disable())
+
+                // 🔐 AUTH RULES
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        // 2. Ensure your user endpoints are accessible to authenticated users
                         .requestMatchers("/users/**").authenticated()
                         .anyRequest().authenticated()
                 )
+
+                // 🔐 STATELESS SESSION (JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // 🔐 JWT FILTER
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

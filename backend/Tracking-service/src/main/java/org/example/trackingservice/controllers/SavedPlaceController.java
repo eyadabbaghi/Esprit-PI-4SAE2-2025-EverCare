@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/saved-places")
-@CrossOrigin(origins = "*")
+
 public class SavedPlaceController {
 
     private final SavedPlaceService service;

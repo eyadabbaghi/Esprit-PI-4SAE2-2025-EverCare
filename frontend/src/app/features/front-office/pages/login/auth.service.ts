@@ -76,7 +76,7 @@ export class AuthService {
 
   private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
   private clientId = 'frontend-app';
-  private clientSecret = 'yEs0lXWdnzAvF78IsXsW2Dw82e2X51hT'; // ← confidential client secret
+  private clientSecret = 'SMqMpg1PpqG4UcMOJM1WgTM0zNK5AhZF'; // ← confidential client secret
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

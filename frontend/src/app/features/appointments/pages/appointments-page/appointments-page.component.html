@@ -201,9 +201,9 @@
           </div>
           <div *ngIf="selectedDoctorId" class="space-y-3">
             <div class="flex items-center space-x-3">
-              <img [src]="getSelectedDoctor()?.profilePicture" class="w-12 h-12 rounded-full">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
               <div>
-                <h4 class="font-semibold">{{ getSelectedDoctor()?.name }}</h4>
+                <h4 class="font-semibold">{{ getSelectedDoctor().name }}</h4>
               </div>
             </div>
             <button class="w-full bg-[#7C3AED] text-white py-2 rounded-md hover:bg-[#6D28D9] transition-colors"
@@ -243,9 +243,9 @@
           <!-- Summary -->
           <div class="space-y-4">
             <div class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
-              <img [src]="getSelectedDoctor()?.profilePicture" class="w-12 h-12 rounded-full">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
               <div>
-                <p class="font-semibold">{{ getSelectedDoctor()?.name }}</p>
+                <p class="font-semibold">{{ getSelectedDoctor().name }}</p>
               </div>
             </div>
 

@@ -15,6 +15,7 @@
         <module name="Eureka-service" />
         <module name="Alerts" />
         <module name="Tracking-service" />
+        <module name="dailyme-service" />
         <module name="ApiGateway" />
         <module name="Dailyme-service" />
         <module name="notification-service" />
@@ -25,11 +26,15 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
         <module name="User" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="blog-service" target="17" />
+      <module name="configServer" target="17" />
+      <module name="evercare-ai-service" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -42,6 +47,7 @@
       <module name="User" options="-parameters" />
       <module name="appointment-service" options="-parameters" />
       <module name="communication-service" options="-parameters" />
+      <module name="dailyme-service" options="-parameters" />
       <module name="medical-record-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="spring-boot-starter-parent" options="-parameters" />

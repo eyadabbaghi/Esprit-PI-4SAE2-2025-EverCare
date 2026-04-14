@@ -1,62 +1,117 @@
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
 
-  <!-- ── Face Recovery Overlay ── -->
-  <div *ngIf="showFaceRecovery"
-       class="fixed inset-0 z-50 flex items-center justify-center"
-       style="background: rgba(10,0,30,0.97);">
+<!-- ── Face Recovery Overlay ── -->
+<div *ngIf="showFaceRecovery"
+     class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-lg">
 
-    <!-- SCANNING / PROCESSING -->
-    <ng-container *ngIf="recoveryState === 'scanning' || recoveryState === 'processing'">
-      <div class="text-center space-y-6 p-8 w-full max-w-md">
+  <!-- SCANNING / PROCESSING -->
+  <ng-container *ngIf="recoveryState === 'scanning' || recoveryState === 'processing'">
+    <div class="text-center space-y-6 p-10 w-full max-w-md rounded-3xl 
+       bg-purple-950/80 
+       backdrop-blur-xl 
+       border border-purple-700/30 
+       shadow-[0_0_80px_rgba(88,28,135,0.5)]">
 
-        <div class="text-5xl animate-pulse">🚨</div>
-        <h1 class="text-2xl font-bold text-red-400">Waiting for Patient...</h1>
-        <p class="text-purple-300 text-sm">
-          {{ recoveryState === 'processing' ? 'Verifying face...' : 'Scanning — please approach the camera' }}
-        </p>
+      <!-- Icon -->
+      <div class="flex justify-center">
+        <div class="w-16 h-16 rounded-full border border-purple-500/30 flex items-center justify-center">
+          <svg class="w-8 h-8 text-purple-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 11c1.657 0 3-1.567 3-3.5S13.657 4 12 4s-3 1.567-3 3.5S10.343 11 12 11z" />
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5 20c0-3.866 3.582-7 7-7s7 3.134 7 7" />
+          </svg>
+        </div>
+      </div>
 
-        <!-- Camera feed -->
-        <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden border-4
-                    border-purple-500 shadow-[0_0_40px_rgba(124,58,237,0.8)]">
-          <video #videoEl autoplay muted playsinline
-                 class="w-full h-full object-cover"
-                 style="transform: scaleX(-1);">
-          </video>
+      <!-- Title -->
+      <h1 class="text-2xl font-semibold text-white tracking-tight">
+        Face Recognition
+      </h1>
 
-          <!-- Processing overlay -->
-          <div *ngIf="recoveryState === 'processing'"
-               class="absolute inset-0 bg-purple-900/60 flex items-center justify-center">
-            <div class="text-4xl animate-spin">⚙️</div>
-          </div>
+      <!-- Subtitle -->
+      <p class="text-sm text-purple-300">
+        {{ recoveryState === 'processing'
+          ? 'Verifying identity...'
+          : 'Align your face within the frame' }}
+      </p>
 
-          <!-- Scan line -->
-          <div *ngIf="recoveryState === 'scanning'"
-               class="absolute inset-0 pointer-events-none overflow-hidden">
-            <div class="scan-line"></div>
-          </div>
+      <!-- Camera feed -->
+      <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden
+                  border border-purple-500/30 shadow-[0_0_60px_rgba(124,58,237,0.35)]">
+
+        <video #videoEl autoplay muted playsinline
+               class="w-full h-full object-cover"
+               style="transform: scaleX(-1);">
+        </video>
+
+        <!-- Soft glow overlay -->
+        <div class="absolute inset-0 rounded-full pointer-events-none
+                    bg-[radial-gradient(circle,transparent_60%,rgba(124,58,237,0.15))]">
         </div>
 
-        <!-- Attempt counter -->
-        <p class="text-gray-500 text-xs">
-          Scan attempts: {{ recoveryAttempts }} — camera is active and waiting
-        </p>
+        <!-- Processing overlay -->
+        <div *ngIf="recoveryState === 'processing'"
+             class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center space-y-3">
 
-        <button (click)="dismissFaceRecovery()" class="text-sm text-gray-400 underline">
-          Use password instead
-        </button>
+          <div class="w-10 h-10 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-xs text-purple-300">Analyzing...</span>
+        </div>
+
+        <!-- Scan animation -->
+        <div *ngIf="recoveryState === 'scanning'"
+             class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="scan-line"></div>
+        </div>
       </div>
-    </ng-container>
 
-    <!-- SUCCESS -->
-    <ng-container *ngIf="recoveryState === 'success'">
-      <div class="text-center space-y-6">
-        <div class="text-6xl">✅</div>
-        <h2 class="text-3xl font-bold text-green-400">Welcome back!</h2>
-        <p class="text-purple-200">Logging you in...</p>
+      <!-- Attempts -->
+      <p class="text-xs text-gray-400">
+        Attempts: <span class="text-white">{{ recoveryAttempts }}</span>
+      </p>
+
+      <!-- Alternative -->
+      <button (click)="dismissFaceRecovery()"
+              class="text-sm text-gray-400 hover:text-white transition underline underline-offset-4">
+        Use password instead
+      </button>
+    </div>
+  </ng-container>
+
+ <!-- SUCCESS -->
+<ng-container *ngIf="recoveryState === 'success'">
+  <div class="text-center space-y-6 p-10 w-full max-w-md rounded-3xl 
+              bg-purple-950/80 
+              backdrop-blur-xl 
+              border border-purple-700/30 
+              shadow-[0_0_80px_rgba(88,28,135,0.5)]">
+
+    <!-- Success Icon -->
+    <div class="flex justify-center">
+      <div class="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center
+                  border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+
+        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" stroke-width="3"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M5 13l4 4L19 7" />
+        </svg>
       </div>
-    </ng-container>
+    </div>
 
+    <!-- Text -->
+    <h2 class="text-2xl font-semibold text-white">
+      Authenticated
+    </h2>
+
+    <p class="text-sm text-purple-200">
+      Redirecting to your dashboard...
+    </p>
   </div>
+</ng-container>
+
+</div>
 
   <!-- ── Existing login page (completely unchanged) ── -->
   <div class="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">

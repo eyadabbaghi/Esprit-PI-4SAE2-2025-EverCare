@@ -1573,12 +1573,375 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 11
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1776207011225,
+      "startOffset": 2100,
+      "endOffset": 2373,
+      "codeContent": "                .route(\"notification-service\", r -\u003e r\n                        .path(\"/EverCare/api/notifications/**\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://notification-service\"))\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1776207016729,
+      "startOffset": 2373,
+      "endOffset": 3976,
+      "codeContent": "                .route(\"notification-service\", r -\u003e r\n                        .path(\"/EverCare/api/notifications/**\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://notification-service\"))\n\n                .route(\"communication-service\", r -\u003e r\n                        .path(\"/api/calls/**\",\n                                \"/api/conversations/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                .route(\"medical-record-service\", r -\u003e r\n                        .path(\"/api/medical-records/**\")\n                        .uri(\"lb://MEDICAL-RECORD-SERVICE\"))\n                .route(\"dailyme-service\", r -\u003e r\n                        .path(\"/api/daily-entries/**\", \"/api/dailyme-alerts/**\", \"/api/daily-tasks/**\", \"/api/journal/**\", \"/api/insights\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://DAILYME-SERVICE\"))\n\n                // 1. Route pour le WebSocket (doit être définie avant les routes HTTP générales)\n                .route(\"communication-websocket\", r -\u003e r\n                        .path(\"/ws-chat/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                 .route(\"communication-service\", r -\u003e r\n                                         .path(\"/communication-service/**\")\n                                         .filters(f -\u003e f.rewritePath(\"/communication-service/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                                         .uri(\"lb://COMMUNICATION-SERVICE\"))\n\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 27
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/pages/login/auth.service.ts",
+      "timestamp": 1776207366357,
+      "startOffset": 397,
+      "endOffset": 468,
+      "codeContent": "import { environment } from \u0027../../../../../environments/environment\u0027;\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/main.ts",
+      "timestamp": 1776207482158,
+      "startOffset": 0,
+      "endOffset": 126,
+      "codeContent": "\n// src/main.ts (very top)\n(window as any).global \u003d window;\n(window as any).process \u003d (window as any).process || { env: {} };\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207618473,
+      "startOffset": 51,
+      "endOffset": 166,
+      "codeContent": ", Inject, PLATFORM_ID, ChangeDetectorRef } from \u0027@angular/core\u0027;\nimport { isPlatformBrowser } from \u0027@angular/common",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207619773,
+      "startOffset": 232,
+      "endOffset": 298,
+      "codeContent": ", interval } from \u0027rxjs\u0027;\nimport { switchMap } from \u0027rxjs/operator",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207622238,
+      "startOffset": 2290,
+      "endOffset": 2490,
+      "codeContent": "if (route \u003d\u003d\u003d \u0027/\u0027) {\n      return this.router.url \u003d\u003d\u003d \u0027/\u0027;\n    }\n\n    return this.router.url \u003d\u003d\u003d route\n      || this.router.url.startsWith(`${route}/`)\n      || this.router.url.startsWith(`${route}?`)",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 7
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207622239,
+      "startOffset": 2601,
+      "endOffset": 2719,
+      "codeContent": "prescriptions\u0027, \u0027/medical-record\u0027,\n      \u0027/cognitive-stimulation\u0027, \u0027/alerts\u0027, \u0027/profile\u0027, \u0027/communication\u0027, \u0027/daily-me",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207622241,
+      "startOffset": 4639,
+      "endOffset": 9200,
+      "codeContent": "\n  // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d Task Notification Methods (new additions) \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\n  private getPatientId(user: User): string | null {\n    if (user.role !\u003d\u003d \u0027PATIENT\u0027) {\n      return null;\n    }\n\n    const u: any \u003d user;\n    const val \u003d\n      u.id ??\n      u.userId ??\n      u.patientId ??\n      u._id ??\n      u.username ??\n      u.email ??\n      null;\n    return val ? String(val) : null;\n  }\n\n  private startTaskWatcher(patientId: string): void {\n    if (this.taskWatcherSub) this.taskWatcherSub.unsubscribe();\n\n    // Initial check\n    this.dailyTaskService.getTasksByPatient(patientId).subscribe({\n      next: (tasks: DailyTask[]) \u003d\u003e this.checkTasksDue(tasks),\n      error: () \u003d\u003e {},\n    });\n\n    // Poll every 30 seconds\n    this.taskWatcherSub \u003d interval(30000)\n      .pipe(switchMap(() \u003d\u003e this.dailyTaskService.getTasksByPatient(patientId)))\n      .subscribe({\n        next: (tasks: DailyTask[]) \u003d\u003e this.checkTasksDue(tasks),\n        error: () \u003d\u003e {},\n      });\n  }\n\n  private checkTasksDue(tasks: DailyTask[]) {\n    const now \u003d Date.now();\n    const windowMs \u003d 60000; // ±1 minute\n\n    tasks.forEach((t: any) \u003d\u003e {\n      const dueMs \u003d this.getTaskDueMs(t);\n      if (!dueMs) return;\n\n      const isDueNow \u003d Math.abs(dueMs - now) \u003c\u003d windowMs;\n      if (!isDueNow) return;\n\n      // Prevent duplicates per day\n      const dayKey \u003d this.todayKey();\n      const uniqueKey \u003d `task_notified_${dayKey}_${t.id}_${t.scheduledTime || t.time || t.dueAt || dueMs}`;\n      const already \u003d localStorage.getItem(uniqueKey) \u003d\u003d\u003d \u00271\u0027;\n      if (already) return;\n\n      localStorage.setItem(uniqueKey, \u00271\u0027);\n\n      const title \u003d (t.title || t.name || \u0027Task\u0027).toString().trim();\n      const message \u003d `Time to do: ${title}`;\n\n      // Show alert\n      this.showInstantTaskAlert(title, message);\n      this.openTaskAlert(title, message);\n\n      // Add to task notifications\n      const newNotification: TaskNotification \u003d {\n        id: crypto.randomUUID(),\n        title: \u0027Task reminder\u0027,\n        message,\n        type: \u0027task\u0027,\n        time: \u0027Just now\u0027,\n        read: false,\n        severity: \u0027MEDIUM\u0027,\n        taskId: t.id,\n      };\n\n      this.taskNotifications \u003d [newNotification, ...this.taskNotifications];\n      this.shakeBell(); // Also shake bell for task notifications\n    });\n  }\n\n  private getTaskDueMs(t: any): number | null {\n    if (t.scheduledTime) return this.buildTodayMsFromHHmm(t.scheduledTime);\n    if (t.time) return this.buildTodayMsFromHHmm(t.time);\n    if (t.dueAt) {\n      const ms \u003d new Date(t.dueAt).getTime();\n      return isNaN(ms) ? null : ms;\n    }\n    return null;\n  }\n\n  private buildTodayMsFromHHmm(hhmm: string): number | null {\n    if (!hhmm) return null;\n\n    const parts \u003d String(hhmm).split(\u0027:\u0027);\n    if (parts.length \u003c 2) return null;\n\n    const hh \u003d Number(parts[0]);\n    const mm \u003d Number(parts[1]);\n    if (isNaN(hh) || isNaN(mm)) return null;\n\n    const d \u003d new Date();\n    d.setHours(hh, mm, 0, 0);\n    return d.getTime();\n  }\n\n  private todayKey(): string {\n    const d \u003d new Date();\n    const y \u003d d.getFullYear();\n    const m \u003d String(d.getMonth() + 1).padStart(2, \u00270\u0027);\n    const day \u003d String(d.getDate()).padStart(2, \u00270\u0027);\n    return `${y}-${m}-${day}`;\n  }\n\n  private showInstantTaskAlert(title: string, body: string): void {\n    try {\n      if (typeof window !\u003d\u003d \u0027undefined\u0027 \u0026\u0026 \u0027Notification\u0027 in window) {\n        if (Notification.permission \u003d\u003d\u003d \u0027granted\u0027) {\n          new Notification(`⏰ ${title}`, { body });\n        } else if (Notification.permission \u003d\u003d\u003d \u0027default\u0027) {\n          Notification.requestPermission();\n        }\n      } else {\n        console.log(`⏰ ${body}`);\n      }\n    } catch {\n      console.log(`⏰ ${body}`);\n    }\n  }\n\n  private openTaskAlert(title: string, message: string) {\n    this.taskAlertTitle \u003d title;\n    this.taskAlertMessage \u003d message;\n    this.showTaskAlert \u003d true;\n\n    if (this.alertTimer) clearTimeout(this.alertTimer);\n    this.alertTimer \u003d setTimeout(() \u003d\u003e {\n      this.showTaskAlert \u003d false;\n    }, 6000);\n  }\n\n  closeTaskAlert() {\n    this.showTaskAlert \u003d false;\n    if (this.alertTimer) clearTimeout(this.alertTimer);\n  }\n\n  protected getSeverityClasses(severity: \u0027LOW\u0027 | \u0027MEDIUM\u0027 | \u0027HIGH\u0027 | \u0027CRITICAL\u0027): string {\n    switch (severity) {\n      case \u0027CRITICAL\u0027:\n        return \u0027bg-[#FDE2E7] text-[#C06C84]\u0027;\n      case \u0027HIGH\u0027:\n        return \u0027bg-[#FCE7F3] text-[#BE185D]\u0027;\n      case \u0027MEDIUM\u0027:\n        return \u0027bg-[#EDE9FE] text-[#7C3AED]\u0027;\n      case \u0027LOW\u0027:\n        return \u0027bg-[#DCFCE7] text-[#15803D]\u0027;\n      default:\n        return \u0027bg-[#F3F4F6] text-[#6B7280]\u0027;\n    }\n  }\n}\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 162
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207625010,
+      "startOffset": 370,
+      "endOffset": 647,
+      "codeContent": "import { NotificationService, Notification as ActivityNotification } from \u0027../../../../core/services/notification.service\u0027;\nimport { DailyTaskService } from \u0027../../../daily-me/services/daily-task.service\u0027;\nimport { DailyTask } from \u0027../../../daily-me/models/daily-task.model\u0027;\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 4
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207626098,
+      "startOffset": 852,
+      "endOffset": 1159,
+      "codeContent": " | \u0027task\u0027;\n  time: string;\n  read: boolean;\n  severity?: \u0027LOW\u0027 | \u0027MEDIUM\u0027 | \u0027HIGH\u0027 | \u0027CRITICAL\u0027;\n}\n\ninterface TaskNotification {\n  id: string;\n  title: string;\n  message: string;\n  type: \u0027task\u0027;\n  time: string;\n  read: boolean;\n  severity?: \u0027LOW\u0027 | \u0027MEDIUM\u0027 | \u0027HIGH\u0027 | \u0027CRITICAL\u0027;\n  taskId?: number | string",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 15
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207628663,
+      "startOffset": 1440,
+      "endOffset": 1619,
+      "codeContent": "  private pollingSub!: Subscription;\n  private taskWatcherSub!: Subscription;\n  private clearedIds \u003d new Set\u003cstring\u003e();\n  private readonly CLEARED_KEY \u003d \u0027clearedNotificationIds\u0027;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207629530,
+      "startOffset": 1700,
+      "endOffset": 1858,
+      "codeContent": "  bellShaking \u003d false;\n\n  // Task alert properties\n  showTaskAlert \u003d false;\n  taskAlertTitle \u003d \u0027\u0027;\n  taskAlertMessage \u003d \u0027\u0027;\n  private alertTimer: any \u003d null;\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 8
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207631126,
+      "startOffset": 1986,
+      "endOffset": 2354,
+      "codeContent": "// Task notifications (separate array)\n  taskNotifications: TaskNotification[] \u003d [];\n\n  constructor(\n    private readonly router: Router,\n    private authService: AuthService,\n    private notificationService: NotificationService,\n    private dailyTaskService: DailyTaskService,\n    private cdr: ChangeDetectorRef,\n    @Inject(PLATFORM_ID) private platformId: Object\n  ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 11
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207632465,
+      "startOffset": 2361,
+      "endOffset": 2832,
+      "codeContent": " ngOnInit(): void {\n    this.userSub \u003d this.authService.currentUser$.subscribe(user \u003d\u003e {\n      this.user \u003d user;\n\n      // Start task watcher when user is available\n      if (user \u0026\u0026 user.role \u003d\u003d\u003d \u0027PATIENT\u0027 \u0026\u0026 isPlatformBrowser(this.platformId)) {\n        const patientId \u003d this.getPatientId(user);\n        if (patientId) {\n          this.startTaskWatcher(patientId);\n        }\n      } else if (this.taskWatcherSub) {\n        this.taskWatcherSub.unsubscribe();\n      }\n  ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 14
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207634164,
+      "startOffset": 2841,
+      "endOffset": 4560,
+      "codeContent": "  if (this.authService.getToken()) {\n      this.authService.fetchCurrentUser().subscribe({\n        error: () \u003d\u003e this.authService.logout()\n      });\n    }\n\n    if (isPlatformBrowser(this.platformId)) {\n      this.loadClearedIds();\n\n      // Activity notifications polling (exactly as before)\n      this.notificationService.getNotifications().subscribe({\n        next: (data) \u003d\u003e {\n          this.activityNotifications \u003d data\n            .filter(n \u003d\u003e !this.clearedIds.has(n.id))\n            .map(n \u003d\u003e ({ ...n, read: false }));\n        },\n        error: (err) \u003d\u003e console.error(\u0027Initial notification fetch failed\u0027, err)\n      });\n\n      this.pollingSub \u003d interval(10000)\n        .pipe(switchMap(() \u003d\u003e this.notificationService.getNotifications()))\n        .subscribe({\n          next: (fetched) \u003d\u003e {\n            const filtered \u003d fetched.filter(n \u003d\u003e !this.clearedIds.has(n.id));\n            const existingIds \u003d new Set(this.activityNotifications.map(n \u003d\u003e n.id));\n            const existingMap \u003d new Map(this.activityNotifications.map(n \u003d\u003e [n.id, n]));\n\n            const merged \u003d filtered.map(n \u003d\u003e ({\n              ...n,\n              read: existingIds.has(n.id) ? (existingMap.get(n.id)?.read ?? false) : false\n            }));\n\n            const hasNewItems \u003d filtered.some(n \u003d\u003e !existingIds.has(n.id));\n            const hasRemovedItems \u003d this.activityNotifications.some(n \u003d\u003e !filtered.find(f \u003d\u003e f.id \u003d\u003d\u003d n.id));\n\n            if (hasNewItems || hasRemovedItems) {\n              this.activityNotifications \u003d merged;\n              if (hasNewItems) {\n                this.shakeBell();\n              }\n            }\n          },\n          error: (err) \u003d\u003e console.error(\u0027Failed to fetch notifications\u0027, err)\n        });\n    }\n  ",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 46
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207636499,
+      "startOffset": 4637,
+      "endOffset": 5709,
+      "codeContent": "    if (this.pollingSub) this.pollingSub.unsubscribe();\n    if (this.taskWatcherSub) this.taskWatcherSub.unsubscribe();\n    if (this.alertTimer) clearTimeout(this.alertTimer);\n  }\n\n  // \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d Activity Notification Methods (exactly as before) \u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\n  private loadClearedIds(): void {\n    try {\n      const stored \u003d localStorage.getItem(this.CLEARED_KEY);\n      if (stored) {\n        const ids: string[] \u003d JSON.parse(stored);\n        this.clearedIds \u003d new Set(ids);\n      }\n    } catch {\n      this.clearedIds \u003d new Set();\n    }\n  }\n\n  private saveClearedIds(): void {\n    try {\n      localStorage.setItem(this.CLEARED_KEY, JSON.stringify([...this.clearedIds]));\n    } catch {\n      console.error(\u0027Failed to persist cleared notification IDs\u0027);\n    }\n  }\n\n  shakeBell(): void {\n    this.bellShaking \u003d false;\n    this.cdr.detectChanges();\n    setTimeout(() \u003d\u003e {\n      this.bellShaking \u003d true;\n      this.cdr.detectChanges();\n      setTimeout(() \u003d\u003e {\n        this.bellShaking \u003d false;\n        this.cdr.detectChanges();\n      }, 800);\n    }, 10);\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 39
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207638690,
+      "startOffset": 5760,
+      "endOffset": 6797,
+      "codeContent": "activityNotifications.filter(n \u003d\u003e !n.read).length +\n      this.taskNotifications.filter(n \u003d\u003e !n.read).length;\n  }\n\n  get cognitiveRoute(): string {\n    const role \u003d this.user?.role?.trim().toUpperCase();\n    return role \u003d\u003d\u003d \u0027PATIENT\u0027 || role \u003d\u003d\u003d \u0027CAREGIVER\u0027\n      ? \u0027/cognitive-stimulation\u0027\n      : \u0027/cognitive-stimulation/catalog\u0027;\n  }\n\n  get navItems(): NavItem[] {\n    return [\n      { id: \u0027home\u0027, label: \u0027Home\u0027, route: \u0027/\u0027 },\n      { id: \u0027activities\u0027, label: \u0027Activities\u0027, route: \u0027/activities\u0027 },\n      { id: \u0027appointments\u0027, label: \u0027Appointments\u0027, route: \u0027/appointments\u0027 },\n      { id: \u0027prescriptions\u0027, label: \u0027Prescriptions\u0027, route: \u0027/prescriptions\u0027 },\n      { id: \u0027medical-record\u0027, label: \u0027Medical Record\u0027, route: \u0027/medical-record\u0027 },\n      { id: \u0027cognitive-stimulation\u0027, label: \u0027Cognitive Care\u0027, route: this.cognitiveRoute },\n      { id: \u0027alerts\u0027, label: \u0027Alerts\u0027, route: \u0027/alerts\u0027 },\n      { id: \u0027daily-me\u0027, label: \u0027Daily Me\u0027, route: \u0027/daily-me\u0027 },\n      { id: \u0027communication\u0027, label: \u0027Messages\u0027, route: \u0027/communication\u0027 },\n    ]",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 23
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207641709,
+      "startOffset": 7792,
+      "endOffset": 8492,
+      "codeContent": "activityNotifications \u003d this.activityNotifications.map(n \u003d\u003e ({ ...n, read: true }));\n    this.taskNotifications \u003d this.taskNotifications.map(n \u003d\u003e ({ ...n, read: true }));\n  }\n\n  markActivityAsRead(id: string): void {\n    this.activityNotifications \u003d this.activityNotifications.map(n \u003d\u003e\n      n.id \u003d\u003d\u003d id ? { ...n, read: true } : n\n    );\n  }\n\n  markTaskAsRead(id: string): void {\n    this.taskNotifications \u003d this.taskNotifications.map(n \u003d\u003e\n      n.id \u003d\u003d\u003d id ? { ...n, read: true } : n\n    );\n  }\n\n  handleActivityNotificationClick(notification: ActivityNotification \u0026 { read: boolean }): void {\n    this.markActivityAsRead(notification.id);\n    this.navigate(`/activities/${notification.activityId}`",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 19
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207643401,
+      "startOffset": 8508,
+      "endOffset": 8851,
+      "codeContent": "TaskNotificationClick(notification: TaskNotification): void {\n    this.markTaskAsRead(notification.id);\n    this.navigate(\u0027/daily-me\u0027);\n  }\n\n  clearAllNotifications(): void {\n    this.activityNotifications.forEach(n \u003d\u003e this.clearedIds.add(n.id));\n    this.saveClearedIds();\n    this.activityNotifications \u003d [];\n    this.taskNotifications \u003d [];",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 10
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207644477,
+      "startOffset": 8862,
+      "endOffset": 9332,
+      "codeContent": "ActivityIcon(action: string): string {\n    switch (action) {\n      case \u0027CREATED\u0027: return \u0027🆕\u0027;\n      case \u0027UPDATED\u0027: return \u0027✏️\u0027;\n      case \u0027DELETED\u0027: return \u0027🗑️\u0027;\n      default: return \u0027📢\u0027;\n    }\n  }\n\n  getActivityTitle(action: string): string {\n    switch (action) {\n      case \u0027CREATED\u0027: return \u0027New activity available\u0027;\n      case \u0027UPDATED\u0027: return \u0027Activity updated\u0027;\n      case \u0027DELETED\u0027: return \u0027Activity removed\u0027;\n      default: return \u0027Activity notification",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 15
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207652226,
+      "startOffset": 9335,
+      "endOffset": 9602,
+      "codeContent": "  getActivityTitle(action: string): string {\n    switch (action) {\n      case \u0027CREATED\u0027: return \u0027New activity available\u0027;\n      case \u0027UPDATED\u0027: return \u0027Activity updated\u0027;\n      case \u0027DELETED\u0027: return \u0027Activity removed\u0027;\n      default: return \u0027Activity notification\u0027;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 7
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207654942,
+      "startOffset": 8852,
+      "endOffset": 9233,
+      "codeContent": "  clearAllNotifications(): void {\n    this.activityNotifications.forEach(n \u003d\u003e this.clearedIds.add(n.id));\n    this.saveClearedIds();\n    this.activityNotifications \u003d [];\n  }\n\n  getActivityIcon(action: string): string {\n    switch (action) {\n      case \u0027CREATED\u0027: return \u0027🆕\u0027;\n      case \u0027UPDATED\u0027: return \u0027✏️\u0027;\n      case \u0027DELETED\u0027: return \u0027🗑️\u0027;\n      default: return \u0027📢\u0027;\n    }\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 14
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207655946,
+      "startOffset": 8495,
+      "endOffset": 8966,
+      "codeContent": "    this.activityNotifications \u003d this.activityNotifications.map(n \u003d\u003e ({ ...n, read: true }));\n  }\n\n  markActivityAsRead(id: string): void {\n    this.activityNotifications \u003d this.activityNotifications.map(n \u003d\u003e\n      n.id \u003d\u003d\u003d id ? { ...n, read: true } : n\n    );\n  }\n\n  handleActivityNotificationClick(notification: ActivityNotification \u0026 { read: boolean }): void {\n    this.markActivityAsRead(notification.id);\n    this.navigate(`/activities/${notification.activityId}`);\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 13
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207658332,
+      "startOffset": 6799,
+      "endOffset": 6866,
+      "codeContent": "    return this.activityNotifications.filter(n \u003d\u003e !n.read).length;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207661265,
+      "startOffset": 5709,
+      "endOffset": 6563,
+      "codeContent": "    if (this.pollingSub) this.pollingSub.unsubscribe();\n  }\n\n  private loadClearedIds(): void {\n    try {\n      const stored \u003d localStorage.getItem(this.CLEARED_KEY);\n      if (stored) {\n        const ids: string[] \u003d JSON.parse(stored);\n        this.clearedIds \u003d new Set(ids);\n      }\n    } catch {\n      this.clearedIds \u003d new Set();\n    }\n  }\n\n  private saveClearedIds(): void {\n    try {\n      localStorage.setItem(this.CLEARED_KEY, JSON.stringify([...this.clearedIds]));\n    } catch {\n      console.error(\u0027Failed to persist cleared notification IDs\u0027);\n    }\n  }\n\n  shakeBell(): void {\n    this.bellShaking \u003d false;\n    this.cdr.detectChanges();\n    setTimeout(() \u003d\u003e {\n      this.bellShaking \u003d true;\n      this.cdr.detectChanges();\n      setTimeout(() \u003d\u003e {\n        this.bellShaking \u003d false;\n        this.cdr.detectChanges();\n      }, 800);\n    }, 10);\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 35
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207663311,
+      "startOffset": 4562,
+      "endOffset": 6225,
+      "codeContent": "    if (this.authService.getToken()) {\n      this.authService.fetchCurrentUser().subscribe({\n        error: () \u003d\u003e this.authService.logout()\n      });\n    }\n\n    if (isPlatformBrowser(this.platformId)) {\n      this.loadClearedIds();\n\n      this.notificationService.getNotifications().subscribe({\n        next: (data) \u003d\u003e {\n          this.activityNotifications \u003d data\n            .filter(n \u003d\u003e !this.clearedIds.has(n.id))\n            .map(n \u003d\u003e ({ ...n, read: false }));\n        },\n        error: (err) \u003d\u003e console.error(\u0027Initial notification fetch failed\u0027, err)\n      });\n\n      this.pollingSub \u003d interval(10000)\n        .pipe(switchMap(() \u003d\u003e this.notificationService.getNotifications()))\n        .subscribe({\n          next: (fetched) \u003d\u003e {\n            const filtered \u003d fetched.filter(n \u003d\u003e !this.clearedIds.has(n.id));\n            const existingIds \u003d new Set(this.activityNotifications.map(n \u003d\u003e n.id));\n            const existingMap \u003d new Map(this.activityNotifications.map(n \u003d\u003e [n.id, n]));\n\n            const merged \u003d filtered.map(n \u003d\u003e ({\n              ...n,\n              read: existingIds.has(n.id) ? (existingMap.get(n.id)?.read ?? false) : false\n            }));\n\n            const hasNewItems \u003d filtered.some(n \u003d\u003e !existingIds.has(n.id));\n            const hasRemovedItems \u003d this.activityNotifications.some(n \u003d\u003e !filtered.find(f \u003d\u003e f.id \u003d\u003d\u003d n.id));\n\n            if (hasNewItems || hasRemovedItems) {\n              this.activityNotifications \u003d merged;\n              if (hasNewItems) {\n                this.shakeBell();\n              }\n            }\n          },\n          error: (err) \u003d\u003e console.error(\u0027Failed to fetch notifications\u0027, err)\n        });\n    }\n  }\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 46
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207664216,
+      "startOffset": 2838,
+      "endOffset": 2960,
+      "codeContent": "  ngOnInit(): void {\n    this.userSub \u003d this.authService.currentUser$.subscribe(user \u003d\u003e {\n      this.user \u003d user;\n    });\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 5
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207665096,
+      "startOffset": 2359,
+      "endOffset": 2598,
+      "codeContent": "  constructor(\n    private readonly router: Router,\n    private authService: AuthService,\n    private notificationService: NotificationService,\n    private cdr: ChangeDetectorRef,\n    @Inject(PLATFORM_ID) private platformId: Object\n  ) {}\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 8
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207665854,
+      "startOffset": 1983,
+      "endOffset": 2059,
+      "codeContent": "  activityNotifications: (ActivityNotification \u0026 { read: boolean })[] \u003d [];\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207666643,
+      "startOffset": 1858,
+      "endOffset": 1881,
+      "codeContent": "  bellShaking \u003d false;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207668623,
+      "startOffset": 1619,
+      "endOffset": 1757,
+      "codeContent": "  private pollingSub!: Subscription;\n  private clearedIds \u003d new Set\u003cstring\u003e();\n  private readonly CLEARED_KEY \u003d \u0027clearedNotificationIds\u0027;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 4
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/ui/navigation/navigation.component.ts",
+      "timestamp": 1776207670482,
+      "startOffset": 647,
+      "endOffset": 771,
+      "codeContent": "import { NotificationService, Notification as ActivityNotification } from \u0027../../../../core/services/notification.service\u0027;\n",
+      "aiProbability": 70,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 143,
-      "totalLines": 6238
+      "usageCount": 176,
+      "totalLines": 6801
     }
   }
 }

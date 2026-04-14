@@ -68,7 +68,6 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -84,11 +83,13 @@ export class AuthService {
   // Keycloak configuration – use a public client (no secret) created in Keycloak -islem
   //private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
   //private clientId = 'frontend-app'; // Replace with your public client ID
+  // Keycloak configuration – use a public client (no secret) created in Keycloak (ISLEM)
+  //private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
+  //private clientId = 'frontend-app'; // Replace with your public client ID
 
   // Keycloak configuration – use a public client (no secret) created in Keycloak - badr
   private keycloakUrl = 'http://localhost:8090/realms/EverCareRealm/protocol/openid-connect/token';
   private clientId = 'frontend-app'; // Replace with your public client ID
-
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

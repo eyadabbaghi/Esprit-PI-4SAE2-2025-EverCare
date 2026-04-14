@@ -7,6 +7,7 @@ import { AuthService, User } from '../../pages/login/auth.service';
 import { NotificationService, Notification as ActivityNotification } from '../../../../core/services/notification.service';
 import { DailyTaskService } from '../../../daily-me/services/daily-task.service';
 import { DailyTask } from '../../../daily-me/models/daily-task.model';
+import { NotificationService, Notification as ActivityNotification } from '../../../../core/services/notification.service';
 
 interface NavItem {
   id: string;
@@ -47,6 +48,9 @@ export class NavigationComponent implements OnInit, OnDestroy {
   private taskWatcherSub!: Subscription;
   private clearedIds = new Set<string>();
   private readonly CLEARED_KEY = 'clearedNotificationIds';
+  private pollingSub!: Subscription;
+  private clearedIds = new Set<string>();
+  private readonly CLEARED_KEY = 'clearedNotificationIds';
 
   isMobileMenuOpen = false;
   notificationsOpen = false;
@@ -58,8 +62,10 @@ export class NavigationComponent implements OnInit, OnDestroy {
   taskAlertTitle = '';
   taskAlertMessage = '';
   private alertTimer: any = null;
+  bellShaking = false;
 
   // Activity notifications (exactly as before)
+  activityNotifications: (ActivityNotification & { read: boolean })[] = [];
   activityNotifications: (ActivityNotification & { read: boolean })[] = [];
 
   // Task notifications (separate array)
@@ -70,6 +76,13 @@ export class NavigationComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private notificationService: NotificationService,
     private dailyTaskService: DailyTaskService,
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+  constructor(
+    private readonly router: Router,
+    private authService: AuthService,
+    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
@@ -88,6 +101,10 @@ export class NavigationComponent implements OnInit, OnDestroy {
         this.taskWatcherSub.unsubscribe();
       }
     });
+  ngOnInit(): void {
+    this.userSub = this.authService.currentUser$.subscribe(user => {
+      this.user = user;
+    });
 
     if (this.authService.getToken()) {
       this.authService.fetchCurrentUser().subscribe({
@@ -99,6 +116,51 @@ export class NavigationComponent implements OnInit, OnDestroy {
       this.loadClearedIds();
 
       // Activity notifications polling (exactly as before)
+      this.notificationService.getNotifications().subscribe({
+        next: (data) => {
+          this.activityNotifications = data
+            .filter(n => !this.clearedIds.has(n.id))
+            .map(n => ({ ...n, read: false }));
+        },
+        error: (err) => console.error('Initial notification fetch failed', err)
+      });
+
+      this.pollingSub = interval(10000)
+        .pipe(switchMap(() => this.notificationService.getNotifications()))
+        .subscribe({
+          next: (fetched) => {
+            const filtered = fetched.filter(n => !this.clearedIds.has(n.id));
+            const existingIds = new Set(this.activityNotifications.map(n => n.id));
+            const existingMap = new Map(this.activityNotifications.map(n => [n.id, n]));
+
+            const merged = filtered.map(n => ({
+              ...n,
+              read: existingIds.has(n.id) ? (existingMap.get(n.id)?.read ?? false) : false
+            }));
+
+            const hasNewItems = filtered.some(n => !existingIds.has(n.id));
+            const hasRemovedItems = this.activityNotifications.some(n => !filtered.find(f => f.id === n.id));
+
+            if (hasNewItems || hasRemovedItems) {
+              this.activityNotifications = merged;
+              if (hasNewItems) {
+                this.shakeBell();
+              }
+            }
+          },
+          error: (err) => console.error('Failed to fetch notifications', err)
+        });
+    }
+  }
+    if (this.authService.getToken()) {
+      this.authService.fetchCurrentUser().subscribe({
+        error: () => this.authService.logout()
+      });
+    }
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadClearedIds();
+
       this.notificationService.getNotifications().subscribe({
         next: (data) => {
           this.activityNotifications = data
@@ -176,6 +238,40 @@ export class NavigationComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }, 800);
     }, 10);
+    if (this.pollingSub) this.pollingSub.unsubscribe();
+  }
+
+  private loadClearedIds(): void {
+    try {
+      const stored = localStorage.getItem(this.CLEARED_KEY);
+      if (stored) {
+        const ids: string[] = JSON.parse(stored);
+        this.clearedIds = new Set(ids);
+      }
+    } catch {
+      this.clearedIds = new Set();
+    }
+  }
+
+  private saveClearedIds(): void {
+    try {
+      localStorage.setItem(this.CLEARED_KEY, JSON.stringify([...this.clearedIds]));
+    } catch {
+      console.error('Failed to persist cleared notification IDs');
+    }
+  }
+
+  shakeBell(): void {
+    this.bellShaking = false;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.bellShaking = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.bellShaking = false;
+        this.cdr.detectChanges();
+      }, 800);
+    }, 10);
   }
 
   get unreadCount(): number {
@@ -202,6 +298,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
       { id: 'communication', label: 'Messages', route: '/communication' },
     ];
+    return this.activityNotifications.filter(n => !n.read).length;
   }
 
   isActive(route: string): boolean {
@@ -260,6 +357,18 @@ export class NavigationComponent implements OnInit, OnDestroy {
   handleActivityNotificationClick(notification: ActivityNotification & { read: boolean }): void {
     this.markActivityAsRead(notification.id);
     this.navigate(`/activities/${notification.activityId}`);
+    this.activityNotifications = this.activityNotifications.map(n => ({ ...n, read: true }));
+  }
+
+  markActivityAsRead(id: string): void {
+    this.activityNotifications = this.activityNotifications.map(n =>
+      n.id === id ? { ...n, read: true } : n
+    );
+  }
+
+  handleActivityNotificationClick(notification: ActivityNotification & { read: boolean }): void {
+    this.markActivityAsRead(notification.id);
+    this.navigate(`/activities/${notification.activityId}`);
   }
 
   handleTaskNotificationClick(notification: TaskNotification): void {
@@ -272,6 +381,10 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.saveClearedIds();
     this.activityNotifications = [];
     this.taskNotifications = [];
+  clearAllNotifications(): void {
+    this.activityNotifications.forEach(n => this.clearedIds.add(n.id));
+    this.saveClearedIds();
+    this.activityNotifications = [];
   }
 
   getActivityIcon(action: string): string {
@@ -283,6 +396,21 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
+  getActivityIcon(action: string): string {
+    switch (action) {
+      case 'CREATED': return '🆕';
+      case 'UPDATED': return '✏️';
+      case 'DELETED': return '🗑️';
+      default: return '📢';
+    }
+  }
+
+  getActivityTitle(action: string): string {
+    switch (action) {
+      case 'CREATED': return 'New activity available';
+      case 'UPDATED': return 'Activity updated';
+      case 'DELETED': return 'Activity removed';
+      default: return 'Activity notification';
   getActivityTitle(action: string): string {
     switch (action) {
       case 'CREATED': return 'New activity available';

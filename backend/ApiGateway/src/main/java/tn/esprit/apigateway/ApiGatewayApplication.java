@@ -46,7 +46,6 @@ public class ApiGatewayApplication {
                         .path("/EverCare/api/notifications/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("lb://notification-service"))
-
                 .route("communication-service", r -> r
                         .path("/api/calls/**",
                                 "/api/conversations/**")

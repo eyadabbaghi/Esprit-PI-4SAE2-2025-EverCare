@@ -1551,12 +1551,34 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 78
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1776206619406,
+      "startOffset": 2373,
+      "endOffset": 3737,
+      "codeContent": "\u003c\u003c\u003c\u003c\u003c\u003c\u003c HEAD\n\n                .route(\"communication-service\", r -\u003e r\n                        .path(\"/api/calls/**\",\n                                \"/api/conversations/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                .route(\"medical-record-service\", r -\u003e r\n                        .path(\"/api/medical-records/**\")\n                        .uri(\"lb://MEDICAL-RECORD-SERVICE\"))\n                .route(\"dailyme-service\", r -\u003e r\n                        .path(\"/api/daily-entries/**\", \"/api/dailyme-alerts/**\", \"/api/daily-tasks/**\", \"/api/journal/**\", \"/api/insights\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://DAILYME-SERVICE\"))\n\n                // 1. Route pour le WebSocket (doit être définie avant les routes HTTP générales)\n                .route(\"communication-websocket\", r -\u003e r\n                        .path(\"/ws-chat/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                 .route(\"communication-service\", r -\u003e r\n                                         .path(\"/communication-service/**\")\n                                         .filters(f -\u003e f.rewritePath(\"/communication-service/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                                         .uri(\"lb://COMMUNICATION-SERVICE\"))\n\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\u003e\u003e\u003e\u003e\u003e\u003e\u003e islem",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 25
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/frontend/src/app/features/front-office/pages/login/auth.service.ts",
+      "timestamp": 1776206619413,
+      "startOffset": 2070,
+      "endOffset": 2742,
+      "codeContent": "\u003c\u003c\u003c\u003c\u003c\u003c\u003c HEAD\n  // Keycloak configuration – use a public client (no secret) created in Keycloak -islem\n  //private keycloakUrl \u003d \u0027http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token\u0027;\n  //private clientId \u003d \u0027frontend-app\u0027; // Replace with your public client ID\n\n  // Keycloak configuration – use a public client (no secret) created in Keycloak - badr\n  private keycloakUrl \u003d \u0027http://localhost:8090/realms/EverCareRealm/protocol/openid-connect/token\u0027;\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n  // Keycloak configuration – use a public client (no secret) created in Keycloak\nprivate keycloakUrl \u003d \u0027http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token\u0027;\n\u003e\u003e\u003e\u003e\u003e\u003e\u003e islem",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 11
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 141,
-      "totalLines": 6202
+      "usageCount": 143,
+      "totalLines": 6238
     }
   }
 }

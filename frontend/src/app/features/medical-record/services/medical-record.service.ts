@@ -45,6 +45,12 @@ export class MedicalRecordService {
     return this.http.post<MedicalRecord>(`${this.apiUrl}/auto-create`, payload);
   }
 
+  // Patient-facing pages can recover from a missing record by asking the backend
+  // to create the minimal default entry on first access.
+  ensureForPatientId(patientId: string): Observable<MedicalRecord> {
+    return this.autoCreate({ patientId });
+  }
+
   update(id: string, payload: UpdateMedicalRecordRequest): Observable<MedicalRecord> {
     return this.http.put<MedicalRecord>(`${this.apiUrl}/${id}`, payload);
   }

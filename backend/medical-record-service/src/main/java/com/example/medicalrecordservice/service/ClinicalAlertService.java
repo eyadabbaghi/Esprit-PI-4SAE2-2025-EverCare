@@ -6,7 +6,6 @@ import com.example.medicalrecordservice.entity.AssessmentReport;
 import com.example.medicalrecordservice.entity.ClinicalAlert;
 import com.example.medicalrecordservice.repository.AssessmentReportRepository;
 import com.example.medicalrecordservice.repository.ClinicalAlertRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +19,18 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class ClinicalAlertService {
 
     private final ClinicalAlertRepository clinicalAlertRepository;
     private final AssessmentReportRepository assessmentReportRepository;
+
+    public ClinicalAlertService(
+            ClinicalAlertRepository clinicalAlertRepository,
+            AssessmentReportRepository assessmentReportRepository
+    ) {
+        this.clinicalAlertRepository = clinicalAlertRepository;
+        this.assessmentReportRepository = assessmentReportRepository;
+    }
 
     @Transactional
     public ClinicalAlertResponse createOpenAlert(AssessmentReport report, String reason) {

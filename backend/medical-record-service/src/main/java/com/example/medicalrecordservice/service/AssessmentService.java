@@ -11,7 +11,6 @@ import com.example.medicalrecordservice.repository.AssessmentReportRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -39,7 +38,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class AssessmentService {
 
     private static final String DISCLAIMER = "Ce rapport est une évaluation préliminaire et ne remplace pas un diagnostic médical.";
@@ -53,6 +51,18 @@ public class AssessmentService {
     private final MedicalRecordService medicalRecordService;
     private final ClinicalAlertService clinicalAlertService;
     private final ObjectMapper objectMapper;
+
+    public AssessmentService(
+            AssessmentReportRepository assessmentReportRepository,
+            MedicalRecordService medicalRecordService,
+            ClinicalAlertService clinicalAlertService,
+            ObjectMapper objectMapper
+    ) {
+        this.assessmentReportRepository = assessmentReportRepository;
+        this.medicalRecordService = medicalRecordService;
+        this.clinicalAlertService = clinicalAlertService;
+        this.objectMapper = objectMapper;
+    }
 
     public AssessmentReportResponse createAssessment(AssessmentCreateRequest request) {
         String patientId = normalizePatientId(request.getPatientId());

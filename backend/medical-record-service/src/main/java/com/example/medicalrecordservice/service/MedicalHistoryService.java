@@ -6,7 +6,6 @@ import com.example.medicalrecordservice.entity.MedicalHistoryType;
 import com.example.medicalrecordservice.entity.MedicalRecord;
 import com.example.medicalrecordservice.repository.MedicalHistoryRepository;
 import com.example.medicalrecordservice.repository.MedicalRecordRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class MedicalHistoryService {
 
     private static final long MAX_ENTRIES_PER_DAY = 10;
@@ -25,6 +23,16 @@ public class MedicalHistoryService {
     private final MedicalHistoryRepository historyRepository;
     private final MedicalRecordRepository recordRepository;
     private final MedicalRecordService medicalRecordService;
+
+    public MedicalHistoryService(
+            MedicalHistoryRepository historyRepository,
+            MedicalRecordRepository recordRepository,
+            MedicalRecordService medicalRecordService
+    ) {
+        this.historyRepository = historyRepository;
+        this.recordRepository = recordRepository;
+        this.medicalRecordService = medicalRecordService;
+    }
 
     public MedicalHistory addToRecord(UUID recordId, MedicalHistoryCreateRequest request) {
         MedicalRecord record = recordRepository.findById(recordId)

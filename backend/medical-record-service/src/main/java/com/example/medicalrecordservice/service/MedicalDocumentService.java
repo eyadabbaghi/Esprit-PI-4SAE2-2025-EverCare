@@ -4,7 +4,6 @@ import com.example.medicalrecordservice.entity.MedicalDocument;
 import com.example.medicalrecordservice.entity.MedicalRecord;
 import com.example.medicalrecordservice.repository.MedicalDocumentRepository;
 import com.example.medicalrecordservice.repository.MedicalRecordRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -23,7 +22,6 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class MedicalDocumentService {
 
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024L * 1024L;
@@ -33,6 +31,16 @@ public class MedicalDocumentService {
     private final MedicalDocumentRepository documentRepository;
     private final MedicalRecordRepository recordRepository;
     private final MedicalRecordService medicalRecordService;
+
+    public MedicalDocumentService(
+            MedicalDocumentRepository documentRepository,
+            MedicalRecordRepository recordRepository,
+            MedicalRecordService medicalRecordService
+    ) {
+        this.documentRepository = documentRepository;
+        this.recordRepository = recordRepository;
+        this.medicalRecordService = medicalRecordService;
+    }
 
     @Value("${app.documents.storage-path:uploads/medical-documents}")
     private String storagePath;
@@ -69,12 +77,11 @@ public class MedicalDocumentService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store file");
         }
 
-        MedicalDocument document = MedicalDocument.builder()
-                .fileName(originalFileName)
-                .fileType(extension)
-                .filePath(targetPath.toString())
-                .medicalRecord(record)
-                .build();
+        MedicalDocument document = new MedicalDocument();
+        document.setFileName(originalFileName);
+        document.setFileType(extension);
+        document.setFilePath(targetPath.toString());
+        document.setMedicalRecord(record);
 
         return documentRepository.save(document);
     }

@@ -41,17 +41,6 @@ interface TaskNotification {
   styleUrls: ['./navigation.component.css'],
 })
 export class NavigationComponent implements OnInit, OnDestroy {
-  navItems: NavItem[] = [
-    { id: 'home', label: 'Home', route: '/' },
-    { id: 'activities', label: 'Activities', route: '/activities' },
-    { id: 'appointments', label: 'Appointments', route: '/appointments' },
-    { id: 'pres', label: 'pres', route: '/prescriptions' },
-    { id: 'medical-folder', label: 'Medical Folder', route: '/medical-folder' },
-    { id: 'alerts', label: 'Alerts', route: '/alerts' },
-    { id: 'daily', label: 'Daily Me', route: '/daily-me' },
-    { id: 'communication', label: 'Messages', route: '/communication' },
-  ];
-
   user: User | null = null;
   private userSub!: Subscription;
   private pollingSub!: Subscription;
@@ -206,9 +195,12 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'home', label: 'Home', route: '/' },
       { id: 'activities', label: 'Activities', route: '/activities' },
       { id: 'appointments', label: 'Appointments', route: '/appointments' },
+      { id: 'prescriptions', label: 'Prescriptions', route: '/prescriptions' },
       { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
       { id: 'cognitive-stimulation', label: 'Cognitive Care', route: this.cognitiveRoute },
       { id: 'alerts', label: 'Alerts', route: '/alerts' },
+      { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
+      { id: 'communication', label: 'Messages', route: '/communication' },
     ];
   }
 
@@ -224,8 +216,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   navigate(route: string): void {
     const protectedRoutes = [
-      '/activities', '/appointments', '/medical-folder', '/alerts',
-      '/profile', '/messages', '/daily', '/blog'
+      '/activities', '/appointments', '/prescriptions', '/medical-record',
+      '/cognitive-stimulation', '/alerts', '/profile', '/communication', '/daily-me'
     ];
     if (protectedRoutes.includes(route) && !this.user) {
       this.router.navigateByUrl('/login');
@@ -469,7 +461,18 @@ export class NavigationComponent implements OnInit, OnDestroy {
     if (this.alertTimer) clearTimeout(this.alertTimer);
   }
 
-  protected getSeverityClasses(severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL") {
-    return undefined;
+  protected getSeverityClasses(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): string {
+    switch (severity) {
+      case 'CRITICAL':
+        return 'bg-[#FDE2E7] text-[#C06C84]';
+      case 'HIGH':
+        return 'bg-[#FCE7F3] text-[#BE185D]';
+      case 'MEDIUM':
+        return 'bg-[#EDE9FE] text-[#7C3AED]';
+      case 'LOW':
+        return 'bg-[#DCFCE7] text-[#15803D]';
+      default:
+        return 'bg-[#F3F4F6] text-[#6B7280]';
+    }
   }
 }

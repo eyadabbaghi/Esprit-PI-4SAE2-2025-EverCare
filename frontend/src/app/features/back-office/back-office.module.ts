@@ -12,6 +12,7 @@ import { StatsCardComponent } from './components/stats-card/stats-card.component
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { ChartWidgetComponent } from './components/chart-widget/chart-widget.component';
 import { NotificationPanelComponent } from './components/notification-panel/notification-panel.component';
+import { BackOfficeLayoutComponent } from '../../layouts/back-office-layout/back-office-layout.component';
 
 import { ActivitiesAdminComponent } from './pages/activities-admin/activities-admin.component';
 import { ActivityDetailsAdminComponent } from './pages/activity-details-admin/activity-details-admin.component';
@@ -25,6 +26,7 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
 
 @NgModule({
   declarations: [
+    BackOfficeLayoutComponent,
     DashboardComponent,
     UsersComponent,
     SettingsComponent,

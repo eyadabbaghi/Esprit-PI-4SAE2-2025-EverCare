@@ -245,6 +245,13 @@ export class MedicalRecordListComponent implements OnInit {
 
   private tryLoadOwnRecordCandidate(index: number, hasTechnicalError: boolean): void {
     if (index >= this.patientIdentifierCandidates.length) {
+      // If no record exists yet, fall back to backend auto-creation so patient
+      // self-service pages do not stay empty on first use.
+      if (!hasTechnicalError) {
+        this.ensureOwnRecord();
+        return;
+      }
+
       this.isLoading = false;
       if (hasTechnicalError) {
         this.errorMessage = 'Impossible de charger votre dossier médical.';
@@ -279,6 +286,35 @@ export class MedicalRecordListComponent implements OnInit {
     });
   }
 
+  private ensureOwnRecord(): void {
+    // Reuse the primary stable identifier when creating the default record.
+    const patientId = this.getPrimaryPatientIdentifier();
+    if (!patientId) {
+      this.isLoading = false;
+      this.errorMessage = 'Patient introuvable. Veuillez vous reconnecter.';
+      return;
+    }
+
+    this.medicalRecordService.ensureForPatientId(patientId).subscribe({
+      next: (record) => {
+        this.patientIdentifier = record.patientId;
+        this.records = [record];
+        this.hydratePatientNames(this.records);
+        this.totalElements = 1;
+        this.totalPages = 1;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+        this.errorMessage = 'Impossible de charger votre dossier médical.';
+      }
+    });
+  }
+
+  private getPrimaryPatientIdentifier(): string {
+    return this.patientIdentifierCandidates[0]?.trim() ?? '';
+  }
+
   private resolvePatientIdentifierCandidates(user: User | null): string[] {
     const candidates: string[] = [];
     if (typeof window !== 'undefined') {
@@ -291,10 +327,14 @@ export class MedicalRecordListComponent implements OnInit {
     if (user?.userId && user.userId.trim()) {
       candidates.push(user.userId.trim());
     }
-    if (user?.email && user.email.trim()) {
+
+    // Patient self-service should prefer stable identifiers and avoid probing
+    // unrelated values like display names, which only create noisy 404s.
+    if (!this.isPatientRole && user?.email && user.email.trim()) {
       candidates.push(user.email.trim());
     }
-    if (user?.name && user.name.trim()) {
+
+    if (!this.isPatientRole && user?.name && user.name.trim()) {
       candidates.push(user.name.trim());
     }
 

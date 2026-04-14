@@ -6,7 +6,6 @@ import com.example.medicalrecordservice.dto.MedicalRecordUpdateRequest;
 import com.example.medicalrecordservice.entity.MedicalRecord;
 import com.example.medicalrecordservice.service.MedicalRecordService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +16,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/medical-records")
-@RequiredArgsConstructor
-
 public class MedicalRecordController {
 
     private final MedicalRecordService medicalRecordService;
+
+    public MedicalRecordController(MedicalRecordService medicalRecordService) {
+        this.medicalRecordService = medicalRecordService;
+    }
 
     @PostMapping
     public ResponseEntity<MedicalRecord> create(@Valid @RequestBody MedicalRecordCreateRequest request) {

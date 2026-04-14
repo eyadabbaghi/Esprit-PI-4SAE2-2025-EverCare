@@ -7,11 +7,9 @@ import com.example.cognitivestimulationservice.dto.GameSessionResponse;
 import com.example.cognitivestimulationservice.dto.GameSessionUpdateRequest;
 import com.example.cognitivestimulationservice.service.GameSessionService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,12 +22,14 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Validated
 public class GameSessionController {
 
     private final GameSessionService gameSessionService;
+
+    public GameSessionController(GameSessionService gameSessionService) {
+        this.gameSessionService = gameSessionService;
+    }
 
     @GetMapping("/api/medical-records/{medicalRecordId}/recommended-games")
     public ResponseEntity<List<CognitiveGameResponse>> recommendedGames(@PathVariable UUID medicalRecordId) {

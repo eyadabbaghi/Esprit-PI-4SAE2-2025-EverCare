@@ -7,7 +7,6 @@ import com.example.medicalrecordservice.entity.AlzheimerStage;
 import com.example.medicalrecordservice.entity.MedicalRecord;
 import com.example.medicalrecordservice.repository.AssessmentReportRepository;
 import com.example.medicalrecordservice.repository.MedicalRecordRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,11 +18,18 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class MedicalRecordService {
 
     private final MedicalRecordRepository medicalRecordRepository;
     private final AssessmentReportRepository assessmentReportRepository;
+
+    public MedicalRecordService(
+            MedicalRecordRepository medicalRecordRepository,
+            AssessmentReportRepository assessmentReportRepository
+    ) {
+        this.medicalRecordRepository = medicalRecordRepository;
+        this.assessmentReportRepository = assessmentReportRepository;
+    }
 
     public MedicalRecord create(MedicalRecordCreateRequest request) {
         String patientId = normalizePatientId(request.getPatientId());

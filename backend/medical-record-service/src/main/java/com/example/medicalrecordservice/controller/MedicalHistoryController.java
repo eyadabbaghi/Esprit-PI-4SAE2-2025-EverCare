@@ -4,7 +4,6 @@ import com.example.medicalrecordservice.dto.MedicalHistoryCreateRequest;
 import com.example.medicalrecordservice.entity.MedicalHistory;
 import com.example.medicalrecordservice.service.MedicalHistoryService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,11 +14,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/medical-records/{recordId}/history")
-@RequiredArgsConstructor
-
 public class MedicalHistoryController {
 
     private final MedicalHistoryService historyService;
+
+    public MedicalHistoryController(MedicalHistoryService historyService) {
+        this.historyService = historyService;
+    }
 
     @PostMapping
     public ResponseEntity<MedicalHistory> add(@PathVariable UUID recordId, @Valid @RequestBody MedicalHistoryCreateRequest request) {

@@ -3,11 +3,9 @@ package com.example.medicalrecordservice.controller;
 import com.example.medicalrecordservice.dto.ClinicalAlertResponse;
 import com.example.medicalrecordservice.entity.AlertStatus;
 import com.example.medicalrecordservice.service.ClinicalAlertService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,12 +18,14 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/alerts")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Validated
 public class ClinicalAlertController {
 
     private final ClinicalAlertService clinicalAlertService;
+
+    public ClinicalAlertController(ClinicalAlertService clinicalAlertService) {
+        this.clinicalAlertService = clinicalAlertService;
+    }
 
     @GetMapping
     public ResponseEntity<Page<ClinicalAlertResponse>> list(

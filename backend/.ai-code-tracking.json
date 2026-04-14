@@ -1529,12 +1529,34 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 90
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/medical-record-service/src/main/java/com/example/medicalrecordservice/controller/MedicalDocumentController.java",
+      "timestamp": 1776187257194,
+      "startOffset": 197,
+      "endOffset": 1369,
+      "codeContent": "org.springframework.core.io.Resource;\nimport org.springframework.http.ContentDisposition;\nimport org.springframework.http.HttpHeaders;\nimport org.springframework.http.HttpStatus;\nimport org.springframework.http.MediaType;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.validation.annotation.Validated;\nimport org.springframework.web.bind.annotation.DeleteMapping;\nimport org.springframework.web.bind.annotation.GetMapping;\nimport org.springframework.web.bind.annotation.PathVariable;\nimport org.springframework.web.bind.annotation.PostMapping;\nimport org.springframework.web.bind.annotation.RequestPart;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RestController;\nimport org.springframework.web.multipart.MultipartFile;\n\nimport java.util.List;\nimport java.util.UUID;\n\n@RestController\n@RequestMapping(\"/api/medical-records/{recordId}/documents\")\npublic class MedicalDocumentController {\n\n    private final MedicalDocumentService documentService;\n\n    public MedicalDocumentController(MedicalDocumentService documentService) {\n        this.documentService \u003d documentService;\n    }",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 28
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/medical-record-service/src/main/java/com/example/medicalrecordservice/service/MedicalDocumentService.java",
+      "timestamp": 1776187378592,
+      "startOffset": 338,
+      "endOffset": 3853,
+      "codeContent": "org.springframework.beans.factory.annotation.Value;\nimport org.springframework.core.io.FileSystemResource;\nimport org.springframework.core.io.Resource;\nimport org.springframework.http.HttpStatus;\nimport org.springframework.stereotype.Service;\nimport org.springframework.util.StringUtils;\nimport org.springframework.web.multipart.MultipartFile;\nimport org.springframework.web.server.ResponseStatusException;\n\nimport java.io.IOException;\nimport java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.nio.file.Paths;\nimport java.util.List;\nimport java.util.Set;\nimport java.util.UUID;\n\n@Service\npublic class MedicalDocumentService {\n\n    private static final long MAX_FILE_SIZE_BYTES \u003d 5L * 1024L * 1024L;\n    private static final Set\u003cString\u003e ALLOWED_TYPES \u003d Set.of(\"pdf\", \"png\", \"jpg\", \"jpeg\");\n    private static final int MAX_DOCUMENTS_PER_RECORD \u003d 20;\n\n    private final MedicalDocumentRepository documentRepository;\n    private final MedicalRecordRepository recordRepository;\n    private final MedicalRecordService medicalRecordService;\n\n    public MedicalDocumentService(\n            MedicalDocumentRepository documentRepository,\n            MedicalRecordRepository recordRepository,\n            MedicalRecordService medicalRecordService\n    ) {\n        this.documentRepository \u003d documentRepository;\n        this.recordRepository \u003d recordRepository;\n        this.medicalRecordService \u003d medicalRecordService;\n    }\n\n    @Value(\"${app.documents.storage-path:uploads/medical-documents}\")\n    private String storagePath;\n\n    public MedicalDocument addToRecord(UUID recordId, MultipartFile file) {\n        MedicalRecord record \u003d recordRepository.findById(recordId)\n                .orElseThrow(() -\u003e new ResponseStatusException(HttpStatus.NOT_FOUND, \"MedicalRecord not found\"));\n        medicalRecordService.ensureRecordIsActive(record);\n\n        validateFile(file);\n        String originalFileName \u003d StringUtils.cleanPath(file.getOriginalFilename() \u003d\u003d null ? \"document\" : file.getOriginalFilename()).trim();\n        String extension \u003d extractExtension(originalFileName);\n        String storedFileName \u003d UUID.randomUUID() + \"-\" + originalFileName;\n\n        if (documentRepository.countByMedicalRecordId(recordId) \u003e\u003d MAX_DOCUMENTS_PER_RECORD) {\n            throw new ResponseStatusException(HttpStatus.CONFLICT,\n                    \"Maximum number of documents reached for this medical record (\" + MAX_DOCUMENTS_PER_RECORD + \")\");\n        }\n        if (documentRepository.existsByMedicalRecordIdAndFileNameIgnoreCase(recordId, originalFileName)) {\n            throw new ResponseStatusException(HttpStatus.CONFLICT,\n                    \"A document with the same name already exists for this medical record\");\n        }\n\n        Path basePath \u003d Paths.get(storagePath).toAbsolutePath().normalize();\n        Path targetPath \u003d basePath.resolve(storedFileName).normalize();\n        if (!targetPath.startsWith(basePath)) {\n            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, \"Invalid file path\");\n        }\n\n        try {\n            Files.createDirectories(basePath);\n            file.transferTo(targetPath);\n        } catch (IOException ex) {\n            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, \"Failed to store file\");\n        }\n\n        MedicalDocument document \u003d new MedicalDocument();\n        document.setFileName(originalFileName);\n        document.setFileType(extension);\n        document.setFilePath(targetPath.toString());\n        document.setMedicalRecord(record",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 78
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 139,
-      "totalLines": 6096
+      "usageCount": 141,
+      "totalLines": 6202
     }
   }
 }

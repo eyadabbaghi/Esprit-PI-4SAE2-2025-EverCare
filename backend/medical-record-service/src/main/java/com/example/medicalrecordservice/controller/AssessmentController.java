@@ -6,7 +6,6 @@ import com.example.medicalrecordservice.dto.AssessmentReportResponse;
 import com.example.medicalrecordservice.entity.AlzheimerStage;
 import com.example.medicalrecordservice.service.AssessmentService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ContentDisposition;
@@ -15,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,12 +30,14 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/assessments")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Validated
 public class AssessmentController {
 
     private final AssessmentService assessmentService;
+
+    public AssessmentController(AssessmentService assessmentService) {
+        this.assessmentService = assessmentService;
+    }
 
     @PostMapping
     public ResponseEntity<AssessmentReportResponse> create(@Valid @RequestBody AssessmentCreateRequest request) {

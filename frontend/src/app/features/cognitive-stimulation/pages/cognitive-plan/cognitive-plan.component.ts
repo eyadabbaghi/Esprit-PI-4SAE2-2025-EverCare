@@ -256,6 +256,13 @@ export class CognitivePlanComponent implements OnInit {
 
   private tryLoadOwnRecordCandidate(index: number, hasTechnicalError: boolean): void {
     if (index >= this.patientIdentifierCandidates.length) {
+      // Cognitive care depends on a medical record, so create the default one
+      // on first access instead of leaving the page blocked behind 404s.
+      if (!hasTechnicalError) {
+        this.ensureOwnRecord();
+        return;
+      }
+
       this.isLoading = false;
       this.infoMessage = hasTechnicalError
         ? ''
@@ -288,6 +295,32 @@ export class CognitivePlanComponent implements OnInit {
         this.errorMessage = 'Impossible de charger votre dossier cognitif.';
       }
     });
+  }
+
+  private ensureOwnRecord(): void {
+    // Reuse the primary stable identifier when creating the linked record.
+    const patientId = this.getPrimaryPatientIdentifier();
+    if (!patientId) {
+      this.isLoading = false;
+      this.infoMessage = 'Aucun dossier médical associé à votre session.';
+      return;
+    }
+
+    this.medicalRecordService.ensureForPatientId(patientId).subscribe({
+      next: (record) => {
+        this.currentRecord = record;
+        this.resolvePatientDisplayName(record.patientId);
+        this.loadCognitiveData(record.id);
+      },
+      error: () => {
+        this.isLoading = false;
+        this.errorMessage = 'Impossible de charger votre dossier cognitif.';
+      }
+    });
+  }
+
+  private getPrimaryPatientIdentifier(): string {
+    return this.patientIdentifierCandidates[0]?.trim() ?? '';
   }
 
   private loadCognitiveData(medicalRecordId: string): void {
@@ -391,10 +424,12 @@ export class CognitivePlanComponent implements OnInit {
       if (sourceUser.userId?.trim()) {
         candidates.push(sourceUser.userId.trim());
       }
-      if (sourceUser.email?.trim()) {
+
+      if (this.currentRole !== 'PATIENT' && sourceUser.email?.trim()) {
         candidates.push(sourceUser.email.trim());
       }
-      if (sourceUser.name?.trim()) {
+
+      if (this.currentRole !== 'PATIENT' && sourceUser.name?.trim()) {
         candidates.push(sourceUser.name.trim());
       }
     };

@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,7 +25,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class MedicalDocument {
 
     @Id
@@ -36,11 +34,31 @@ public class MedicalDocument {
     @Column(nullable = false)
     private String fileName;
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     @Column(nullable = false)
     private String fileType;
 
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
     @Column(nullable = false, length = 1000)
     private String filePath;
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -50,4 +68,8 @@ public class MedicalDocument {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medical_record_id", nullable = false)
     private MedicalRecord medicalRecord;
+
+    public void setMedicalRecord(MedicalRecord medicalRecord) {
+        this.medicalRecord = medicalRecord;
+    }
 }

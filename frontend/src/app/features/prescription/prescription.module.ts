@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { LucideAngularModule } from 'lucide-angular';
+import { Download, Loader, LucideAngularModule, Mail } from 'lucide-angular';
 
 import { PrescriptionRoutingModule } from './prescription-routing.module';
 
@@ -44,7 +44,7 @@ import { PrescriptionActionsComponent } from '../appointments/components/prescri
     CommonModule,
     FormsModule,
     HttpClientModule,
-    LucideAngularModule,
+    LucideAngularModule.pick({ Download, Loader, Mail }),
     PrescriptionRoutingModule
   ]
 })

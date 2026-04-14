@@ -28,12 +28,14 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { NewUserFlowComponent } from './pages/login/new-user-flow.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 
 // 👇 ADD THIS IMPORT
 import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.component';
 
 @NgModule({
   declarations: [
+    FrontOfficeLayoutComponent,
     HomeComponent,
     AboutComponent,
     ContactComponent,
@@ -57,9 +59,6 @@ import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.
     ProfileComponent,
     NewUserFlowComponent,
     SetupProfileComponent,
-    DoctorSearchModalComponent,
-    SetupProfileComponent,
-    // 👇 ADD THIS COMPONENT
     DoctorSearchModalComponent,
   ],
   imports: [

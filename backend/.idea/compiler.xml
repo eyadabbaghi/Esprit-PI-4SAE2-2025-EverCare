@@ -15,16 +15,17 @@
         <module name="Eureka-service" />
         <module name="Alerts" />
         <module name="Tracking-service" />
-        <module name="dailyme-service" />
         <module name="ApiGateway" />
         <module name="Dailyme-service" />
         <module name="notification-service" />
+        <module name="cognitive-stimulation-service" />
       </profile>
       <profile name="Annotation profile for microservices-parent" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
         <module name="User" />
@@ -33,6 +34,7 @@
     <bytecodeTargetLevel>
       <module name="blog-service" target="17" />
       <module name="configServer" target="17" />
+      <module name="dailyme-service" target="17" />
       <module name="evercare-ai-service" target="17" />
     </bytecodeTargetLevel>
   </component>
@@ -46,6 +48,7 @@
       <module name="Tracking-service" options="-parameters" />
       <module name="User" options="-parameters" />
       <module name="appointment-service" options="-parameters" />
+      <module name="cognitive-stimulation-service" options="-parameters" />
       <module name="communication-service" options="-parameters" />
       <module name="dailyme-service" options="-parameters" />
       <module name="medical-record-service" options="-parameters" />

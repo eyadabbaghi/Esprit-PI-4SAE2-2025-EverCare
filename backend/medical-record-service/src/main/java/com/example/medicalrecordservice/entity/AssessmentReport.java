@@ -8,6 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -66,7 +69,26 @@ public class AssessmentReport {
     @Column(nullable = false)
     private boolean active = true;
 
+    // The live table still has a required archived column. Keep both flags in sync
+    // so legacy rows remain readable and new inserts do not fail.
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean archived = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PostLoad
+    void syncActiveFromArchived() {
+        // Legacy rows still persist archived, while the application now reads active.
+        this.active = !this.archived;
+    }
+
+    @PrePersist
+    @PreUpdate
+    void syncArchivedFromActive() {
+        // Keep inserts and updates compatible with the existing table schema.
+        this.archived = !this.active;
+    }
 }

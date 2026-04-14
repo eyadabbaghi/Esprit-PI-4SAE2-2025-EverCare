@@ -10,6 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -70,6 +73,12 @@ public class ClinicalAlert {
     @Column(nullable = false)
     private boolean active = true;
 
+    // The live table still has a required archived column. Keep both flags in sync
+    // so alerts created from assessments remain compatible with existing schema.
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean archived = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -77,5 +86,18 @@ public class ClinicalAlert {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @PostLoad
+    void syncActiveFromArchived() {
+        // Legacy rows still persist archived, while the application now reads active.
+        this.active = !this.archived;
+    }
+
+    @PrePersist
+    @PreUpdate
+    void syncArchivedFromActive() {
+        // Keep inserts and updates compatible with the existing table schema.
+        this.archived = !this.active;
+    }
 }
 

@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, tap, catchError, delay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../../../../environments/environment';
 
 export interface LoginRequest {
   email: string;
@@ -72,6 +73,7 @@ export interface ChangePasswordRequest {
   providedIn: 'root'
 })
 export class AuthService {
+  //private apiUrl = environment.authApiUrl;
  // private apiUrl = 'http://localhost:8096/EverCare/auth';
   //private usersUrl = 'http://localhost:8096/EverCare/users';
 

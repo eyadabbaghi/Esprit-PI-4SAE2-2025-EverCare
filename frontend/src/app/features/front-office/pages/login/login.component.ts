@@ -1,9 +1,11 @@
 import { Component, NgZone, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, LoginRequest, RegisterRequest } from './auth.service';
+import { AssessmentService } from '../../../medical-record/services/assessment.service';
 
 // Custom validator for password strength (matches backend rules)
 export function strongPasswordValidator(): ValidatorFn {
@@ -54,6 +56,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private assessmentService: AssessmentService,
     private router: Router,
     private toastr: ToastrService,
     private ngZone: NgZone,
@@ -104,12 +107,11 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(credentials).subscribe({
       next: () => {
-        this.toastr.success('Login successful!', 'Welcome');
-        this.router.navigate(['/']);
+        this.redirectAfterLogin();
       },
       error: (err) => {
         console.error('Login error', err);
-        const errorMsg = err.error?.message || 'Login failed. Please check your credentials.';
+        const errorMsg = this.extractErrorMessage(err, 'Login failed. Please check your credentials.');
         this.toastr.error(errorMsg, 'Error');
         this.isLoading = false;
       },
@@ -141,7 +143,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         console.error('Registration error', err);
-        const errorMsg = err.error?.message || 'Registration failed. Please try again.';
+        const errorMsg = this.extractErrorMessage(err, 'Registration failed. Please try again.');
         this.toastr.error(errorMsg, 'Error');
         this.isLoading = false;
       },
@@ -229,4 +231,100 @@ export class LoginComponent implements OnInit {
   // Getters pour les formulaires
   get lf() { return this.loginForm.controls; }
   get rf() { return this.registerForm.controls; }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (err?.error) {
+      if (typeof err.error === 'string' && err.error.trim()) {
+        return err.error;
+      }
+      if (typeof err.error.message === 'string' && err.error.message.trim()) {
+        return err.error.message;
+      }
+      if (typeof err.error.error === 'string' && err.error.error.trim()) {
+        return err.error.error;
+      }
+    }
+
+    if (err?.status === 0) {
+      return 'Auth service unreachable. Verify backend User is running on port 8096.';
+    }
+
+    return fallback;
+  }
+
+  private redirectAfterLogin(): void {
+    this.authService.fetchCurrentUser().subscribe({
+      next: (user) => {
+        const role = user.role?.toUpperCase();
+
+        if (role === 'ADMIN') {
+          this.toastr.success('Login successful!', 'Welcome');
+          this.router.navigate(['/admin']);
+          return;
+        }
+
+        if (role === 'PATIENT') {
+          this.redirectPatientAfterLogin(user);
+          return;
+        }
+
+        this.toastr.success('Login successful!', 'Welcome');
+        this.router.navigate(['/medical-record']);
+      },
+      error: () => {
+        this.toastr.success('Login successful!', 'Welcome');
+        this.router.navigate(['/']);
+      }
+    });
+  }
+
+  private redirectPatientAfterLogin(user: { userId?: string; email?: string; name?: string }): void {
+    const patientId = this.resolvePatientIdentifier(user);
+
+    if (!patientId) {
+      this.toastr.success('Login successful!', 'Welcome');
+      this.router.navigate(['/assessment']);
+      return;
+    }
+
+    this.assessmentService.getByPatient(patientId).subscribe({
+      next: (reports) => {
+        this.toastr.success('Login successful!', 'Welcome');
+        if (reports.length === 0) {
+          this.router.navigate(['/assessment']);
+          return;
+        }
+        this.router.navigate(['/medical-record']);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.toastr.success('Login successful!', 'Welcome');
+        if (error.status === 404) {
+          this.router.navigate(['/assessment']);
+          return;
+        }
+        this.router.navigate(['/medical-record']);
+      }
+    });
+  }
+
+  private resolvePatientIdentifier(user: { userId?: string; email?: string; name?: string }): string {
+    if (user.userId && user.userId.trim()) {
+      return user.userId.trim();
+    }
+
+    if (user.email && user.email.trim()) {
+      return user.email.trim();
+    }
+
+    if (user.name && user.name.trim()) {
+      return user.name.trim();
+    }
+
+    const localPatientId = localStorage.getItem('patientId');
+    if (localPatientId && localPatientId.trim()) {
+      return localPatientId.trim();
+    }
+
+    return '';
+  }
 }

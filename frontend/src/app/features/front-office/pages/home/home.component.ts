@@ -54,12 +54,13 @@ export class HomeComponent implements OnInit {
       gradient: 'from-[#C4B5FD] to-[#A78BFA]',
     },
     {
-      id: 'medical-folder',
-      title: 'Medical Folder',
+      id: 'medical-record',
+      title: 'Medical Record',
       description: 'Access your complete medical history and documents',
       icon: '📁',
       color: 'bg-[#DDD6FE]',
       gradient: 'from-[#DDD6FE] to-[#C4B5FD]',
+      primaryRoute: '/medical-record',
     },
     {
       id: 'alerts',

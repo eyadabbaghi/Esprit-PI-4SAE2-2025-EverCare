@@ -51,11 +51,35 @@
         <button type="button" (click)="navigate('/medical-folder')"
                 [ngClass]="isActive('/medical-folder') ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
                 class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition">
+        <!-- Medical Record -->
+        <button
+          type="button"
+          (click)="navigate('/medical-record')"
+          [ngClass]="isActive('/medical-record')
+            ? 'bg-[#F3E8FF] text-[#7C3AED]'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
+          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition"
+        >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                   d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
           </svg>
-          Medical Folder
+          Medical Record
+        </button>
+
+        <button
+          type="button"
+          (click)="navigate(cognitiveRoute)"
+          [ngClass]="isActive('/cognitive-stimulation')
+            ? 'bg-[#F3E8FF] text-[#7C3AED]'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
+          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+              d="M10 4a2 2 0 114 0v1.2a6.5 6.5 0 015 6.3c0 3.4-2.6 6.3-6 6.5V20a1 1 0 11-2 0v-2c-3.4-.2-6-3.1-6-6.5a6.5 6.5 0 015-6.3V4zM8.5 11.5h7m-7 3h4"/>
+          </svg>
+          Cognitive Care
         </button>
 
      <!--    <button type="button" (click)="navigate('/blog')"

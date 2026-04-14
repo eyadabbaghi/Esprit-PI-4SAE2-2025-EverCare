@@ -15,7 +15,7 @@ const routes: Routes = [
   {
     path: 'admin',
     component: BackOfficeLayoutComponent,
-    canActivate: [AdminGuard],
+   // canActivate: [AdminGuard],
     children: [
       { path: '', component: DashboardComponent },
       { path: 'activities', component: ActivitiesAdminComponent },

@@ -83,6 +83,17 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/ping")
+    public ResponseEntity<?> ping(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userService.findByEmail(email);
+        user.setLastSeenAt(java.time.LocalDateTime.now());
+        // You need to expose save through userService or userRepository
+        // Add this method to UserService:
+        userService.updateLastSeen(email);
+        return ResponseEntity.ok().build();
+    }
+
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());

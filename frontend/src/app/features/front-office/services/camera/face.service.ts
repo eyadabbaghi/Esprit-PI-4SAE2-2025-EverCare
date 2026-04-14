@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuthService } from '../../pages/login/auth.service';
+import { AuthService, FaceLoginResponse } from '../../pages/login/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class FaceService {
@@ -14,8 +14,8 @@ export class FaceService {
     return this.http.post(`${this.authUrl}/setup-face-id`, { images }, { headers });
   }
 
-  faceLogin(keycloakId: string, image: string): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.authUrl}/face-login`, { keycloakId, image });
+  faceLogin(keycloakId: string, image: string): Observable<FaceLoginResponse> {
+    return this.http.post<FaceLoginResponse>(`${this.authUrl}/face-login`, { keycloakId, image });
   }
 
   hasFaceId(): Observable<{ hasFaceId: boolean }> {

@@ -47,56 +47,63 @@ export class NavigationComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
-  ngOnInit(): void {
-    this.userSub = this.authService.currentUser$.subscribe(user => {
-      this.user = user;
-    });
+ngOnInit(): void {
+  this.userSub = this.authService.currentUser$.subscribe(user => {
+    this.user = user;
+  });
 
-    if (this.authService.getToken()) {
+  if (this.authService.getToken()) {
+    // Skip fetch if user already loaded — prevents race with face recovery
+    if (!this.authService.getCurrentUserValue()) {
       this.authService.fetchCurrentUser().subscribe({
-        error: () => this.authService.logout()
+        error: (err) => {
+          if (err.status === 401 && !this.authService.getToken()) {
+            this.authService.logout();
+          }
+        }
       });
-    }
-
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadClearedIds();
-
-      this.notificationService.getNotifications().subscribe({
-        next: (data) => {
-          this.activityNotifications = data
-            .filter(n => !this.clearedIds.has(n.id))
-            .map(n => ({ ...n, read: false }));
-        },
-        error: (err) => console.error('Initial notification fetch failed', err)
-      });
-
-      this.pollingSub = interval(10000)
-        .pipe(switchMap(() => this.notificationService.getNotifications()))
-        .subscribe({
-          next: (fetched) => {
-            const filtered = fetched.filter(n => !this.clearedIds.has(n.id));
-            const existingIds = new Set(this.activityNotifications.map(n => n.id));
-            const existingMap = new Map(this.activityNotifications.map(n => [n.id, n]));
-
-            const merged = filtered.map(n => ({
-              ...n,
-              read: existingIds.has(n.id) ? (existingMap.get(n.id)?.read ?? false) : false
-            }));
-
-            const hasNewItems = filtered.some(n => !existingIds.has(n.id));
-            const hasRemovedItems = this.activityNotifications.some(n => !filtered.find(f => f.id === n.id));
-
-            if (hasNewItems || hasRemovedItems) {
-              this.activityNotifications = merged;
-              if (hasNewItems) {
-                this.shakeBell();
-              }
-            }
-          },
-          error: (err) => console.error('Failed to fetch notifications', err)
-        });
     }
   }
+
+  if (isPlatformBrowser(this.platformId)) {
+    this.loadClearedIds();
+
+    this.notificationService.getNotifications().subscribe({
+      next: (data) => {
+        this.activityNotifications = data
+          .filter(n => !this.clearedIds.has(n.id))
+          .map(n => ({ ...n, read: false }));
+      },
+      error: (err) => console.error('Initial notification fetch failed', err)
+    });
+
+    this.pollingSub = interval(10000)
+      .pipe(switchMap(() => this.notificationService.getNotifications()))
+      .subscribe({
+        next: (fetched) => {
+          const filtered = fetched.filter(n => !this.clearedIds.has(n.id));
+          const existingIds = new Set(this.activityNotifications.map(n => n.id));
+          const existingMap = new Map(this.activityNotifications.map(n => [n.id, n]));
+
+          const merged = filtered.map(n => ({
+            ...n,
+            read: existingIds.has(n.id) ? (existingMap.get(n.id)?.read ?? false) : false
+          }));
+
+          const hasNewItems = filtered.some(n => !existingIds.has(n.id));
+          const hasRemovedItems = this.activityNotifications.some(n => !filtered.find(f => f.id === n.id));
+
+          if (hasNewItems || hasRemovedItems) {
+            this.activityNotifications = merged;
+            if (hasNewItems) {
+              this.shakeBell();
+            }
+          }
+        },
+        error: (err) => console.error('Failed to fetch notifications', err)
+      });
+  }
+}
 
   ngOnDestroy(): void {
     if (this.userSub) this.userSub.unsubscribe();
@@ -203,7 +210,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   getActivityTitle(action: string): string {
     switch (action) {
-      case 'EVICARE_ALERT': return 'EviCare prevention alert'; 
+      case 'EVICARE_ALERT': return 'EviCare prevention alert';
       case 'CREATED': return 'New activity available';
       case 'UPDATED': return 'Activity updated';
       case 'DELETED': return 'Activity removed';
@@ -217,8 +224,10 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.authService.logout();
     this.profileOpen = false;
+    const user = this.authService.getCurrentUserValue();
+    const isPatient = user?.role === 'PATIENT';
+    this.authService.logout(isPatient);
   }
 
   goToProfile(): void {

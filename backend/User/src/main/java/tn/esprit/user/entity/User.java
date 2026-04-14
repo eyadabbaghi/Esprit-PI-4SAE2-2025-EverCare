@@ -38,6 +38,9 @@ public class User {
     @Column(unique = true)
     private String keycloakId;
 
+    @Column
+    private LocalDateTime lastSeenAt;
+
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
@@ -82,4 +85,5 @@ public class User {
         caregivers.remove(caregiver);
         caregiver.getPatients().remove(this);
     }
+
 }

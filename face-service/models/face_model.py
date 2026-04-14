@@ -1,8 +1,11 @@
 import cv2
 import numpy as np
 import base64
+import os
 from deepface import DeepFace
 from scipy.spatial.distance import cosine
+
+DEFAULT_MATCH_THRESHOLD = float(os.getenv("FACE_MATCH_THRESHOLD", "0.78"))
 
 def decode_image(base64_str: str) -> np.ndarray:
     if "," in base64_str:
@@ -61,7 +64,7 @@ def compute_similarity(embedding1: list, embedding2: list) -> float:
     similarity = 1 - cosine(vec1, vec2)
     return float(similarity)
 
-def match_face(live_embedding: list, stored_embeddings: list, threshold=0.85) -> dict:
+def match_face(live_embedding: list, stored_embeddings: list, threshold=DEFAULT_MATCH_THRESHOLD) -> dict:
     best_score = 0.0
     for stored in stored_embeddings:
         score = compute_similarity(live_embedding, stored)

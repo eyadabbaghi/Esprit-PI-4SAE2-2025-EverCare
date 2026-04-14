@@ -37,6 +37,8 @@ import { PatientCheckComponent } from './pages/alerts/components/patient-check/p
 import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog.component';
+import { FaceRecoveryComponent } from './pages/face-recovery/face-recovery.component';
+
 
 @NgModule({
   declarations: [
@@ -71,6 +73,7 @@ import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog
     FaceSetupComponent,
     FaceLoginComponent,
     ConfirmDialogComponent,
+    FaceRecoveryComponent,
   ],
   imports: [
     CommonModule,

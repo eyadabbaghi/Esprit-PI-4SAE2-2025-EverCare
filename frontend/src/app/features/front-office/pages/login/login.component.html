@@ -1,7 +1,67 @@
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+
+  <!-- ── Face Recovery Overlay ── -->
+  <div *ngIf="showFaceRecovery"
+       class="fixed inset-0 z-50 flex items-center justify-center"
+       style="background: rgba(10,0,30,0.97);">
+
+    <!-- SCANNING / PROCESSING -->
+    <ng-container *ngIf="recoveryState === 'scanning' || recoveryState === 'processing'">
+      <div class="text-center space-y-6 p-8 w-full max-w-md">
+
+        <div class="text-5xl animate-pulse">🚨</div>
+        <h1 class="text-2xl font-bold text-red-400">Waiting for Patient...</h1>
+        <p class="text-purple-300 text-sm">
+          {{ recoveryState === 'processing' ? 'Verifying face...' : 'Scanning — please approach the camera' }}
+        </p>
+
+        <!-- Camera feed -->
+        <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden border-4
+                    border-purple-500 shadow-[0_0_40px_rgba(124,58,237,0.8)]">
+          <video #videoEl autoplay muted playsinline
+                 class="w-full h-full object-cover"
+                 style="transform: scaleX(-1);">
+          </video>
+
+          <!-- Processing overlay -->
+          <div *ngIf="recoveryState === 'processing'"
+               class="absolute inset-0 bg-purple-900/60 flex items-center justify-center">
+            <div class="text-4xl animate-spin">⚙️</div>
+          </div>
+
+          <!-- Scan line -->
+          <div *ngIf="recoveryState === 'scanning'"
+               class="absolute inset-0 pointer-events-none overflow-hidden">
+            <div class="scan-line"></div>
+          </div>
+        </div>
+
+        <!-- Attempt counter -->
+        <p class="text-gray-500 text-xs">
+          Scan attempts: {{ recoveryAttempts }} — camera is active and waiting
+        </p>
+
+        <button (click)="dismissFaceRecovery()" class="text-sm text-gray-400 underline">
+          Use password instead
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- SUCCESS -->
+    <ng-container *ngIf="recoveryState === 'success'">
+      <div class="text-center space-y-6">
+        <div class="text-6xl">✅</div>
+        <h2 class="text-3xl font-bold text-green-400">Welcome back!</h2>
+        <p class="text-purple-200">Logging you in...</p>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- ── Existing login page (completely unchanged) ── -->
   <div class="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
 
-    <!-- Left Side - Branding (unchanged) -->
+    <!-- Left Side - Branding -->
     <div class="hidden md:flex flex-col justify-center space-y-6 p-8">
       <div class="flex items-center space-x-3">
         <img src="/logo.png" alt="EverCare logo"
@@ -9,18 +69,12 @@
              onerror="this.onerror=null; this.src='data:image/svg+xml,...';" />
         <h1 class="text-4xl font-bold text-[#2D1B4E]">EverCare</h1>
       </div>
-
-      <h2 class="text-3xl font-semibold text-[#2D1B4E]">
-        Caring for your loved ones, every day
-      </h2>
-
+      <h2 class="text-3xl font-semibold text-[#2D1B4E]">Caring for your loved ones, every day</h2>
       <p class="text-lg text-[#6B5B8C]">
         A comprehensive elderly care platform designed to support patients, caregivers,
         and healthcare professionals with warmth and compassion.
       </p>
-
       <div class="space-y-4 pt-4">
-        <!-- Feature 1 -->
         <div class="flex items-start space-x-3">
           <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
@@ -32,8 +86,6 @@
             <p class="text-sm text-[#6B5B8C]">Track moods, medications, and daily activities</p>
           </div>
         </div>
-
-        <!-- Feature 2 -->
         <div class="flex items-start space-x-3">
           <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
@@ -45,8 +97,6 @@
             <p class="text-sm text-[#6B5B8C]">Real-time incident tracking and emergency notifications</p>
           </div>
         </div>
-
-        <!-- Feature 3 -->
         <div class="flex items-start space-x-3">
           <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
@@ -64,7 +114,7 @@
     <!-- Right Side - Auth Forms -->
     <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6 pt-0">
       <div class="space-y-6">
-        <!-- Mobile Logo -->
+
         <div class="flex md:hidden items-center justify-center space-x-2">
           <div class="bg-[#7C3AED] rounded-full p-2">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="none">
@@ -82,22 +132,15 @@
         <!-- Tabs -->
         <div class="w-full">
           <div class="grid grid-cols-2 gap-1 bg-[#F1F5F9] p-1 rounded-xl">
-            <button
-              class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+            <button class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
               [class]="activeTab === 'login' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'"
-              (click)="onTabChange('login')">
-              Sign In
-            </button>
-            <button
-              class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              (click)="onTabChange('login')">Sign In</button>
+            <button class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
               [class]="activeTab === 'register' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'"
-              (click)="onTabChange('register')">
-              Sign Up
-            </button>
+              (click)="onTabChange('register')">Sign Up</button>
           </div>
         </div>
 
-        <!-- ==================== OFFICIAL GOOGLE BUTTON (visible on both tabs) ==================== -->
         <div *ngIf="activeTab === 'login' || activeTab === 'register'">
           <div class="relative my-6">
             <div class="absolute inset-0 flex items-center">
@@ -107,24 +150,16 @@
               <span class="bg-white px-2 text-[#6B5B8C]">Or continue with</span>
             </div>
           </div>
-
-          <!-- Google One Tap / Sign‑In button -->
           <div id="g_id_onload"
                data-client_id="122324853691-34s6l0e9bho0a65vlj82pf6o63u6b8vg.apps.googleusercontent.com"
                data-callback="handleGoogleResponse"
                data-auto_prompt="false">
           </div>
-          <div class="g_id_signin"
-               data-type="standard"
-               data-shape="rectangular"
-               data-theme="outline"
-               data-text="signin_with"
-               data-size="large"
-               data-logo_alignment="left"
-               data-width="100%">
+          <div class="g_id_signin" data-type="standard" data-shape="rectangular"
+               data-theme="outline" data-text="signin_with" data-size="large"
+               data-logo_alignment="left" data-width="100%">
           </div>
         </div>
-        <!-- ===================================================================================== -->
 
         <!-- Login Form -->
         <div *ngIf="activeTab === 'login'">
@@ -136,17 +171,11 @@
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
-                <input
-                  formControlName="email"
-                  type="email"
-                  placeholder="your.email@example.com"
+                <input formControlName="email" type="email" placeholder="your.email@example.com"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                  [class.border-red-500]="lf['email'].invalid && lf['email'].touched"
-                >
+                  [class.border-red-500]="lf['email'].invalid && lf['email'].touched">
               </div>
-              <div *ngIf="lf['email'].invalid && lf['email'].touched" class="text-red-500 text-xs">
-                Please enter a valid email
-              </div>
+              <div *ngIf="lf['email'].invalid && lf['email'].touched" class="text-red-500 text-xs">Please enter a valid email</div>
             </div>
 
             <div class="space-y-2">
@@ -156,44 +185,31 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input
-                  formControlName="password"
-                  type="password"
-                  placeholder="••••••••"
+                <input formControlName="password" type="password" placeholder="••••••••"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                  [class.border-red-500]="lf['password'].invalid && lf['password'].touched"
-                >
+                  [class.border-red-500]="lf['password'].invalid && lf['password'].touched">
               </div>
-              <div *ngIf="lf['password'].invalid && lf['password'].touched" class="text-red-500 text-xs">
-                Password is required
-              </div>
+              <div *ngIf="lf['password'].invalid && lf['password'].touched" class="text-red-500 text-xs">Password is required</div>
             </div>
 
-            <button
-              type="submit"
-              [disabled]="isLoading"
+            <button type="submit" [disabled]="isLoading"
               class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {{ isLoading ? 'Signing in...' : 'Sign In' }}
             </button>
 
-
             <div class="relative my-4">
-  <div class="absolute inset-0 flex items-center">
-    <span class="w-full border-t border-gray-200"></span>
-  </div>
-  <div class="relative flex justify-center text-xs">
-    <span class="bg-white px-2 text-gray-400">or</span>
-  </div>
-</div>
+              <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-200"></span></div>
+              <div class="relative flex justify-center text-xs"><span class="bg-white px-2 text-gray-400">or</span></div>
+            </div>
 
-<button type="button" (click)="goToFaceLogin()"
-  class="w-full border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/5 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center space-x-2">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-    <circle cx="12" cy="8" r="4"/>
-    <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
-  </svg>
-  <span>Continue with Face ID</span>
-</button>
+            <button type="button" (click)="goToFaceLogin()"
+              class="w-full border border-[#7C3AED] text-[#7C3AED] hover:bg-[#7C3AED]/5 font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center space-x-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+              </svg>
+              <span>Continue with Face ID</span>
+            </button>
           </form>
         </div>
 
@@ -207,12 +223,8 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
-                <input
-                  formControlName="name"
-                  type="text"
-                  placeholder="John Doe"
-                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                />
+                <input formControlName="name" type="text" placeholder="John Doe"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"/>
               </div>
             </div>
 
@@ -223,16 +235,11 @@
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
-                <input
-                  formControlName="email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                />
+                <input formControlName="email" type="email" placeholder="your.email@example.com"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"/>
               </div>
             </div>
 
-            <!-- Enhanced password field with strength meter -->
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Password</label>
               <div class="relative">
@@ -240,28 +247,19 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input
-                  formControlName="password"
-                  type="password"
-                  placeholder="••••••••"
+                <input formControlName="password" type="password" placeholder="••••••••"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                  [class.border-red-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
-                />
+                  [class.border-red-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"/>
               </div>
-
-              <!-- Password strength meter -->
               <div *ngIf="registerForm.get('password')?.value" class="mt-2">
                 <div class="flex justify-between mb-1 text-xs">
                   <span>Strength: {{ getPasswordStrength().message }}</span>
                   <span>{{ getPasswordStrength().level }}/4</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    class="h-2 rounded-full transition-all duration-300 {{ getStrengthColor() }}"
-                    [style.width.%]="getStrengthPercentage()"
-                  ></div>
+                  <div class="h-2 rounded-full transition-all duration-300 {{ getStrengthColor() }}"
+                       [style.width.%]="getStrengthPercentage()"></div>
                 </div>
-                <!-- Requirements checklist -->
                 <ul class="text-xs mt-2 space-y-1 text-[#6B5B8C]">
                   <li [class.text-green-600]="hasMinLength()">✓ At least 8 characters</li>
                   <li [class.text-green-600]="hasUpperCase()">✓ Contains uppercase letter</li>
@@ -269,8 +267,6 @@
                   <li [class.text-green-600]="hasSpecialChar()">✓ Contains special character (!&#64;#$%^&*)</li>
                 </ul>
               </div>
-
-              <!-- Error message -->
               <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-xs">
                 Password must be at least 8 characters, include an uppercase letter, a digit, and a special character (!&#64;#$%^&*)
               </div>
@@ -278,23 +274,19 @@
 
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">I am a...</label>
-              <select
-                formControlName="role"
+              <select formControlName="role"
                 class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
-                <option *ngFor="let role of userRoles" [value]="role.value">
-                  {{ role.label }}
-                </option>
+                <option *ngFor="let role of userRoles" [value]="role.value">{{ role.label }}</option>
               </select>
             </div>
 
-            <button
-              type="submit"
-              [disabled]="isLoading"
+            <button type="submit" [disabled]="isLoading"
               class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50">
               {{ isLoading ? 'Creating account...' : 'Create Account' }}
             </button>
           </form>
         </div>
+
       </div>
     </div>
   </div>

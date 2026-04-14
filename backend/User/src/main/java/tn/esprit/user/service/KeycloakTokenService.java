@@ -6,6 +6,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -32,6 +33,9 @@ public class KeycloakTokenService {
     @Value("${keycloak.face-client-secret}")    // ← add this
     private String faceClientSecret;
 
+    @Value("${keycloak.frontend-client-id:frontend-app}")
+    private String frontendClientId;
+
     private final RestTemplate restTemplate;
 
     public String getTokenForUser(String keycloakUserId) {
@@ -41,48 +45,35 @@ public class KeycloakTokenService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        // Step 1 — get face-login-service client token
-        MultiValueMap<String, String> step1 = new LinkedMultiValueMap<>();
-        step1.add("grant_type", "client_credentials");
-        step1.add("client_id", faceClientId);
-        step1.add("client_secret", faceClientSecret);
-
-        ResponseEntity<Map> step1Response = restTemplate.postForEntity(
-                tokenUrl, new HttpEntity<>(step1, headers), Map.class);
-
-        String serviceToken = (String) step1Response.getBody().get("access_token");
+        String serviceToken = getClientAccessToken(tokenUrl, headers, faceClientId, faceClientSecret);
         if (serviceToken == null) {
             throw new RuntimeException("Failed to get face service token");
         }
-        System.out.println("✅ Step 1 passed — got service token");
-
-        // Step 2 — try LEGACY token exchange (Keycloak < 26)
-        // Uses "urn:ietf:params:oauth:grant-type:token-exchange" with legacy params
-        MultiValueMap<String, String> legacyExchange = new LinkedMultiValueMap<>();
-        legacyExchange.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
-        legacyExchange.add("client_id", faceClientId);
-        legacyExchange.add("client_secret", faceClientSecret);
-        legacyExchange.add("subject_token", serviceToken);
-        legacyExchange.add("subject_token_type", "urn:ietf:params:oauth:token-type:access_token");
-        legacyExchange.add("requested_token_type", "urn:ietf:params:oauth:token-type:access_token");
-        legacyExchange.add("audience", "frontend-app");
-        // NOTE: No "requested_subject" — legacy exchange uses audience only
-        // The resulting token will be for the service account but scoped to frontend-app
+        MultiValueMap<String, String> exchange = new LinkedMultiValueMap<>();
+        exchange.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+        exchange.add("client_id", faceClientId);
+        exchange.add("client_secret", faceClientSecret);
+        exchange.add("subject_token", serviceToken);
+        exchange.add("subject_token_type", "urn:ietf:params:oauth:token-type:access_token");
+        exchange.add("requested_token_type", "urn:ietf:params:oauth:token-type:access_token");
+        exchange.add("requested_subject", keycloakUserId);
+        exchange.add("audience", frontendClientId);
 
         try {
-            ResponseEntity<Map> legacyResponse = restTemplate.postForEntity(
-                    tokenUrl, new HttpEntity<>(legacyExchange, headers), Map.class);
+            ResponseEntity<Map> exchangeResponse = restTemplate.postForEntity(
+                    tokenUrl, new HttpEntity<>(exchange, headers), Map.class);
 
-            String token = (String) legacyResponse.getBody().get("access_token");
+            String token = exchangeResponse.getBody() != null
+                    ? (String) exchangeResponse.getBody().get("access_token")
+                    : null;
             if (token != null) {
-                System.out.println("✅ Legacy token exchange succeeded");
                 return token;
             }
-        } catch (org.springframework.web.client.HttpClientErrorException e) {
-            System.err.println("❌ Legacy exchange failed: " + e.getResponseBodyAsString());
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Token exchange failed: " + e.getResponseBodyAsString(), e);
         }
 
-        throw new RuntimeException("All token exchange attempts failed");
+        throw new RuntimeException("Token exchange failed: no access token returned");
     }
 
     public String getAdminAccessToken() {
@@ -100,5 +91,25 @@ public class KeycloakTokenService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
         return (String) response.getBody().get("access_token");
+    }
+
+    private String getClientAccessToken(
+            String tokenUrl,
+            HttpHeaders headers,
+            String requesterClientId,
+            String requesterClientSecret
+    ) {
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", requesterClientId);
+        body.add("client_secret", requesterClientSecret);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                tokenUrl,
+                new HttpEntity<>(body, headers),
+                Map.class
+        );
+
+        return response.getBody() != null ? (String) response.getBody().get("access_token") : null;
     }
 }

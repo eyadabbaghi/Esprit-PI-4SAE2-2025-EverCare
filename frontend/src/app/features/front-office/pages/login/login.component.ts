@@ -1,45 +1,56 @@
-import { Component, NgZone, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, NgZone, OnInit, OnDestroy, Inject, PLATFORM_ID, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { AuthService, LoginRequest, RegisterRequest } from './auth.service';
+import { AuthService, FaceLoginResponse, LoginRequest, RegisterRequest } from './auth.service';
+import { FaceService } from '../../services/camera/face.service';
+import { CameraService } from '../../services/camera/camera.service';
+import { InactivityService } from '../services/inactivity/inactivity.service';
 
-// Custom validator for password strength (matches backend rules)
 export function strongPasswordValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const password = control.value;
     if (!password) return null;
-
     const hasUpperCase = /[A-Z]/.test(password);
     const hasDigit = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*()]/.test(password);
     const isValidLength = password.length >= 8;
-
     const valid = hasUpperCase && hasDigit && hasSpecial && isValidLength;
-
     return !valid ? { weakPassword: true } : null;
   };
 }
 
-// Extend Window interface to include our callback
 declare global {
   interface Window {
     handleGoogleResponse: (response: any) => void;
   }
 }
 
+type RecoveryState = 'scanning' | 'processing' | 'success';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
+  @ViewChild('videoEl') videoRef!: ElementRef<HTMLVideoElement>;
+
   isLoading = false;
   activeTab: 'login' | 'register' = 'login';
 
   loginForm!: FormGroup;
   registerForm!: FormGroup;
+
+  // Face recovery
+  showFaceRecovery = false;
+  recoveryState: RecoveryState = 'scanning';
+  recoveryAttempts = 0;
+  private keycloakId = '';
+  private scanLoopActive = false;
+  private audioCtx: AudioContext | null = null;
+  private beepIntervalId: any = null;
 
   userRoles = [
     { value: 'PATIENT', label: 'Patient' },
@@ -53,21 +64,159 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private toastr: ToastrService,
     private ngZone: NgZone,
-    @Inject(PLATFORM_ID) private platformId: Object   // <-- add this
+    private faceService: FaceService,
+    private camera: CameraService,
+    private inactivityService: InactivityService,
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
     this.initForms();
 
-    // Only define the global callback in the browser (not during SSR)
     if (isPlatformBrowser(this.platformId)) {
       window.handleGoogleResponse = (response) => {
-        this.ngZone.run(() => {
-          this.handleGoogleCredential(response.credential);
-        });
+        this.ngZone.run(() => this.handleGoogleCredential(response.credential));
       };
+
+      // Check if we should show face recovery panel
+      const isRecoveryActive = localStorage.getItem('face_recovery_active') === 'true';
+      this.keycloakId = localStorage.getItem('face_recovery_keycloakId') || '';
+
+      if (isRecoveryActive && this.keycloakId) {
+        this.inactivityService.stopLogoutWatcher();
+        this.showFaceRecovery = true;
+        this.startAlarm();
+        setTimeout(() => this.startRecoveryScan(), 500);
+      }
     }
   }
+
+  ngOnDestroy(): void {
+    this.scanLoopActive = false;
+    this.stopAlarm();
+    this.camera.stopCamera();
+  }
+
+  // ── Face Recovery ─────────────────────────────────────────────
+
+  async startRecoveryScan(): Promise<void> {
+    this.recoveryState = 'scanning';
+    this.cdr.detectChanges();
+    await this.waitForVideoElement();
+
+    try {
+      await this.camera.startCamera(this.videoRef.nativeElement);
+      this.scanLoopActive = true;
+      this.runScanLoop();
+    } catch {
+      this.cdr.detectChanges();
+    }
+  }
+
+  private runScanLoop(): void {
+    if (!this.scanLoopActive) return;
+
+    let frame: string;
+    try {
+      frame = this.camera.captureFrame(this.videoRef.nativeElement);
+    } catch {
+      setTimeout(() => this.runScanLoop(), 1000);
+      return;
+    }
+
+    this.recoveryState = 'processing';
+    this.cdr.detectChanges();
+
+    this.faceService.faceLogin(this.keycloakId, frame).subscribe({
+      next: (res: FaceLoginResponse) => {
+        this.scanLoopActive = false;
+        this.camera.stopCamera();
+        this.stopAlarm();
+
+        localStorage.removeItem('face_recovery_keycloakId');
+        localStorage.removeItem('face_recovery_email');
+        localStorage.removeItem('face_recovery_active');
+        localStorage.removeItem('face_recovery_since');
+
+        this.authService.completeFaceLogin(res).subscribe({
+          next: () => {
+            this.inactivityService.stopLogoutWatcher();
+            this.recoveryState = 'success';
+            this.cdr.detectChanges();
+            setTimeout(() => {
+              this.ngZone.run(() => this.router.navigate(['/']));
+            }, 1500);
+          },
+          error: () => {
+            this.toastr.error('Face login could not create a valid session. Please try password login.', 'Session error');
+            this.dismissFaceRecovery();
+          }
+        });
+      },
+      error: () => {
+        this.recoveryAttempts++;
+        this.recoveryState = 'scanning';
+        this.cdr.detectChanges();
+        if (this.scanLoopActive) {
+          setTimeout(() => this.runScanLoop(), 1500);
+        }
+      }
+    });
+  }
+
+  dismissFaceRecovery(): void {
+    this.scanLoopActive = false;
+    this.stopAlarm();
+    this.camera.stopCamera();
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('face_recovery_keycloakId');
+      localStorage.removeItem('face_recovery_email');
+      localStorage.removeItem('face_recovery_active');
+      localStorage.removeItem('face_recovery_since');
+    }
+    this.showFaceRecovery = false;
+    this.cdr.detectChanges();
+  }
+
+  // ── Alarm ─────────────────────────────────────────────────────
+
+  private startAlarm(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    this.beepIntervalId = setInterval(() => this.playBeep(), 800);
+  }
+
+  private playBeep(): void {
+    if (!this.audioCtx) return;
+    const osc = this.audioCtx.createOscillator();
+    const gain = this.audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(this.audioCtx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.4);
+    osc.start(this.audioCtx.currentTime);
+    osc.stop(this.audioCtx.currentTime + 0.4);
+  }
+
+  private stopAlarm(): void {
+    if (this.beepIntervalId) { clearInterval(this.beepIntervalId); this.beepIntervalId = null; }
+    if (this.audioCtx) { this.audioCtx.close(); this.audioCtx = null; }
+  }
+
+  private waitForVideoElement(): Promise<void> {
+    return new Promise((resolve) => {
+      const check = () => {
+        if (this.videoRef?.nativeElement) resolve();
+        else setTimeout(check, 50);
+      };
+      check();
+    });
+  }
+
+  // ── Existing login/register logic (unchanged) ─────────────────
 
   private initForms(): void {
     this.loginForm = this.fb.group({
@@ -88,108 +237,60 @@ export class LoginComponent implements OnInit {
   }
 
   handleLogin(): void {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
-
+    if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.isLoading = true;
     const credentials: LoginRequest = this.loginForm.value;
-
     this.authService.login(credentials).subscribe({
-      next: () => {
-        this.toastr.success('Login successful!', 'Welcome');
-        this.router.navigate(['/']);
-      },
+      next: () => { this.toastr.success('Login successful!', 'Welcome'); this.router.navigate(['/']); },
       error: (err) => {
-        console.error('Login error', err);
         const errorMsg = err.error?.message || 'Login failed. Please check your credentials.';
         this.toastr.error(errorMsg, 'Error');
         this.isLoading = false;
       },
-      complete: () => {
-        this.isLoading = false;
-      }
+      complete: () => { this.isLoading = false; }
     });
   }
 
   handleRegister(): void {
-    if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
-      return;
-    }
-
+    if (this.registerForm.invalid) { this.registerForm.markAllAsTouched(); return; }
     this.isLoading = true;
     const userData: RegisterRequest = this.registerForm.value;
-
     this.authService.register(userData).subscribe({
       next: () => {
-        // Registration and automatic login succeeded – now navigate
         this.router.navigate(['/setup-profile'], {
-          state: {
-            name: userData.name,
-            email: userData.email,
-            role: userData.role
-          }
+          state: { name: userData.name, email: userData.email, role: userData.role }
         });
       },
       error: (err) => {
-        console.error('Registration error', err);
         const errorMsg = err.error?.message || 'Registration failed. Please try again.';
         this.toastr.error(errorMsg, 'Error');
         this.isLoading = false;
       },
-      complete: () => {
-        this.isLoading = false;
-      }
+      complete: () => { this.isLoading = false; }
     });
   }
 
-  // Called when the user clicks the custom Google button (if you keep it)
   handleGoogleLogin(): void {
     this.toastr.info('Please use the official Google Sign‑In button', 'Info');
   }
 
-  // Actual handler for the credential received from Google
   handleGoogleCredential(idToken: string): void {
     this.isLoading = true;
     this.authService.googleLogin(idToken).subscribe({
-      next: () => {
-        this.toastr.success('Login successful!', 'Welcome');
-        this.router.navigate(['/']);
-      },
-      error: (err) => {
-        console.error(err);
-        this.toastr.error('Google login failed');
-        this.isLoading = false;
-      }
+      next: () => { this.toastr.success('Login successful!', 'Welcome'); this.router.navigate(['/']); },
+      error: (err) => { this.toastr.error('Google login failed'); this.isLoading = false; }
     });
   }
 
-  // Password strength meter helpers
   getPasswordStrength(): { level: number, message: string } {
     const password = this.registerForm?.get('password')?.value || '';
-    const checks = [
-      password.length >= 8,
-      /[A-Z]/.test(password),
-      /\d/.test(password),
-      /[!@#$%^&*()]/.test(password)
-    ];
+    const checks = [password.length >= 8, /[A-Z]/.test(password), /\d/.test(password), /[!@#$%^&*()]/.test(password)];
     const strengthLevel = checks.filter(Boolean).length;
-
-    let message = '';
-    if (strengthLevel === 0) message = 'Very weak';
-    else if (strengthLevel === 1) message = 'Weak';
-    else if (strengthLevel === 2) message = 'Fair';
-    else if (strengthLevel === 3) message = 'Good';
-    else message = 'Strong';
-
-    return { level: strengthLevel, message };
+    const messages = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    return { level: strengthLevel, message: messages[strengthLevel] };
   }
 
-  getStrengthPercentage(): number {
-    return (this.getPasswordStrength().level / 4) * 100;
-  }
+  getStrengthPercentage(): number { return (this.getPasswordStrength().level / 4) * 100; }
 
   getStrengthColor(): string {
     const level = this.getPasswordStrength().level;
@@ -200,31 +301,13 @@ export class LoginComponent implements OnInit {
     return 'bg-green-600';
   }
 
-  hasMinLength(): boolean {
-    const password = this.registerForm?.get('password')?.value;
-    return password && password.length >= 8;
-  }
-
-  hasUpperCase(): boolean {
-    const password = this.registerForm?.get('password')?.value;
-    return password && /[A-Z]/.test(password);
-  }
-
-  hasDigit(): boolean {
-    const password = this.registerForm?.get('password')?.value;
-    return password && /\d/.test(password);
-  }
-
-  hasSpecialChar(): boolean {
-    const password = this.registerForm?.get('password')?.value;
-    return password && /[!@#$%^&*()]/.test(password);
-  }
+  hasMinLength(): boolean { const p = this.registerForm?.get('password')?.value; return p && p.length >= 8; }
+  hasUpperCase(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[A-Z]/.test(p); }
+  hasDigit(): boolean { const p = this.registerForm?.get('password')?.value; return p && /\d/.test(p); }
+  hasSpecialChar(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[!@#$%^&*()]/.test(p); }
 
   get lf() { return this.loginForm.controls; }
   get rf() { return this.registerForm.controls; }
 
-
-  goToFaceLogin(): void {
-  this.router.navigate(['/face-login']);
-}
+  goToFaceLogin(): void { this.router.navigate(['/face-login']); }
 }

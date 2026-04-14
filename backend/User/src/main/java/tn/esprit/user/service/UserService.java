@@ -9,6 +9,7 @@ import tn.esprit.user.entity.User;
 import tn.esprit.user.entity.UserRole;
 import tn.esprit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final KeycloakAdminClient keycloakAdminClient;
     private final FaceService faceService;
-    private final KeycloakTokenService keycloakTokenService; // new — see 2.5
+    private final FaceLoginTokenService faceLoginTokenService;
     private final LoginEventService loginEventService;
 
     @Transactional
@@ -312,22 +313,25 @@ public class UserService {
         // ✅ Record face login event
         loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.FACE);
 
-        String token;
-        try {
-            token = keycloakTokenService.getTokenForUser(keycloakId);
-        } catch (Exception e) {
-            token = keycloakTokenService.getAdminAccessToken();
-        }
+        String token = faceLoginTokenService.generateToken(user);
 
         return Map.of(
                 "token", token,
                 "email", user.getEmail(),
-                "userId", user.getUserId()
+                "userId", user.getUserId(),
+                "user", mapToDto(user)
         );
     }
     public boolean hasFaceId(String email) {
         User user = findByEmail(email);
         if (user.getKeycloakId() == null) return false;
         return faceService.hasFaceRegistered(user.getKeycloakId());
+    }
+
+    @Transactional
+    public void updateLastSeen(String email) {
+        User user = findByEmail(email);
+        user.setLastSeenAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }

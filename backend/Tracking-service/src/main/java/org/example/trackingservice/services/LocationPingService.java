@@ -12,11 +12,14 @@ public class LocationPingService {
 
     private final LocationPingRepository repo;
     private final TrackingLogicService logic;
+    private final PatientValidationService patientValidationService;
 
     public LocationPingService(LocationPingRepository repo,
-                               TrackingLogicService logic) {
+                               TrackingLogicService logic,
+                               PatientValidationService patientValidationService) {
         this.repo = repo;
         this.logic = logic;
+        this.patientValidationService = patientValidationService;
     }
 
     // ================= GET ALL =================
@@ -34,6 +37,7 @@ public class LocationPingService {
     // ================= CREATE =================
     public LocationPing add(LocationPing ping) {
 
+        patientValidationService.validatePatientExists(ping.getPatientId());
         ping = logic.processPing(ping);
 
         return repo.save(ping);
@@ -41,36 +45,43 @@ public class LocationPingService {
 
     // ================= HISTORY =================
     public List<LocationPing> getByPatient(String patientId) {
+        patientValidationService.validatePatientExists(patientId);
         return repo.findByPatientIdOrderByTimestampDesc(patientId);
+    }
+
+    // ================= CLUSTERS =================
+    public List<double[]> getClusters(String patientId) {
+        patientValidationService.validatePatientExists(patientId);
+        return logic.detectClusters(patientId);
+    }
+
+    // ================= DANGER DURATION =================
+    public long getDangerDurationMinutes(String patientId) {
+        patientValidationService.validatePatientExists(patientId);
+        return logic.getDangerDurationMinutes(patientId);
+    }
+
+    public String getDangerLevel(long minutes) {
+        return logic.getDangerLevel(minutes);
     }
 
     // ================= GET LATEST =================
     public LocationPing getLatest(String patientId) {
+
+        patientValidationService.validatePatientExists(patientId);
+        return getLatestInternal(patientId);
+    }
+
+    private LocationPing getLatestInternal(String patientId) {
 
         List<LocationPing> list =
                 repo.findByPatientIdOrderByTimestampDesc(patientId);
 
         if (list.isEmpty()) return null;
 
-        LocationPing latest = list.get(0);
-
-        // 🔥 ONLY recompute SAFE ZONE (NOT speed/risk)
-        boolean inside = logic.isInsideSafeZoneDirect(latest);
-        latest.setInsideSafeZone(inside);
-
-        // 🔥 recompute risk ONLY based on safe zone
-        int risk = inside ? 0 : 80;
-        latest.setRiskScore(risk);
-        if (inside) {
-            latest.setRiskFactors(java.util.List.of());
-        } else {
-            latest.setRiskFactors(java.util.List.of("Outside safe zone"));
-        }
-
-        latest.setTrend(logic.calculateTrendDirect(latest));
-
-        return latest;
+        return logic.processPing(list.get(0));
     }
+
     // ================= HIGH RISK =================
     public List<LocationPing> getHighRiskPatients() {
         return repo.findHighRiskPatients();
@@ -88,6 +99,7 @@ public class LocationPingService {
 
         return repo.findInactiveSince(limit);
     }
+
     public List<LocationPing> getLatestPerPatient() {
 
         List<String> patientIds = repo.findDistinctPatientIds();
@@ -96,7 +108,7 @@ public class LocationPingService {
 
         for (String patientId : patientIds) {
 
-            LocationPing latest = getLatest(patientId);
+            LocationPing latest = getLatestInternal(patientId);
 
             if (latest != null) {
                 result.add(latest);

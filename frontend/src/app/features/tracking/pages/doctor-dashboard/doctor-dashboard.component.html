@@ -139,6 +139,14 @@
           </div>
 
           <div class="metric-tile">
+            <span>Danger duration</span>
+            <strong>{{ getDangerDurationLabel() }}</strong>
+            <small class="danger-duration-level" [ngClass]="getDangerDurationLevelClass()">
+              {{ getDangerDurationLevel() }}
+            </small>
+          </div>
+
+          <div class="metric-tile">
             <span>History points</span>
             <strong>{{ history.length }}</strong>
           </div>

@@ -19,6 +19,7 @@ import {
 } from '../../services/tracking-dashboard.service';
 
 type AssistantAction = 'use-current-location' | 'save-current-location' | 'open-add-safe-zone' | 'lost';
+type TrackingCluster = { lat: number; lng: number };
 
 @Component({
   selector: 'app-saved-places',
@@ -36,6 +37,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   places: any[] = [];
   alerts: any[] = [];
   history: any[] = [];
+  clusters: TrackingCluster[] = [];
 
   form: FormGroup;
   isModalOpen = false;
@@ -54,6 +56,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   trackingMap: any;
   trackingMarker: any;
   trackingMapLayer: any = null;
+  trackingClusterLayer: any = null;
   trackingPulse: any = null;
   trackingGuidanceLayer: any = null;
 
@@ -161,6 +164,44 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (e) => console.log('failed loading places', e)
       });
+  }
+
+  loadClusters() {
+    this.http
+      .get<TrackingCluster[]>(`http://localhost:8089/tracking/clusters/${this.patientId}`)
+      .subscribe({
+        next: (data) => {
+          this.clusters = data || [];
+          this.drawClusters(this.clusters);
+        },
+        error: (e) => console.log('failed loading clusters', e)
+      });
+  }
+
+  drawClusters(clusters: TrackingCluster[]) {
+    if (!this.trackingMap || !this.leaflet) return;
+
+    if (!this.trackingClusterLayer) {
+      this.trackingClusterLayer = this.leaflet.layerGroup().addTo(this.trackingMap);
+    }
+
+    this.trackingClusterLayer.clearLayers();
+
+    clusters.forEach((cluster) => {
+      if (typeof cluster?.lat !== 'number' || typeof cluster?.lng !== 'number') {
+        return;
+      }
+
+      const circle = this.leaflet.circle([cluster.lat, cluster.lng], {
+        radius: 50,
+        color: 'purple',
+        fillColor: '#a855f7',
+        fillOpacity: 0.3
+      });
+
+      circle.bindPopup('Frequent Location (AI)');
+      circle.addTo(this.trackingClusterLayer);
+    });
   }
 
   getStatus(ping: Partial<TrackingPingDto> | null | undefined = this.latestBackendPing): TrackingStatus {
@@ -405,6 +446,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.loadTrackingMap();
       this.startTracking();
+      this.loadClusters();
     }, 300);
   }
 
@@ -445,6 +487,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
         next: () => {
           console.log('sent to backend');
           this.loadPatientStatusFromBackend();
+          this.loadClusters();
         },
         error: (e) => console.log('send failed', e)
       });
@@ -562,6 +605,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.trackingMapLayer = null;
+    this.trackingClusterLayer = null;
     this.trackingMarker = null;
     this.trackingPulse = null;
 
@@ -579,6 +623,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.trackingMapLayer = leafletLib.layerGroup().addTo(this.trackingMap);
     this.refreshTrackingMapLayers(true);
+    this.drawClusters(this.clusters);
 
     setTimeout(() => this.trackingMap.invalidateSize(), 100);
   }
@@ -984,7 +1029,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       const lng = Number(place.lng);
       const radius = this.getPlaceRadius(place);
       const zoneState = this.getPlaceState(place);
-      const circleColor = zoneState === 'INSIDE' ? '#059669' : '#7c3aed';
+      const circleColor = zoneState === 'INSIDE' ? '#059669' : '#10b981';
 
       this.leaflet.circle([lat, lng], {
         radius,

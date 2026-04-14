@@ -12,6 +12,7 @@ export interface TrackingPingDto {
   insideSafeZone?: boolean;
   riskScore?: number;
   speed?: number;
+  trend?: string;
 }
 
 export type TrackingStatus = 'SAFE' | 'WARNING' | 'DANGER';
@@ -32,6 +33,11 @@ export interface TrackingAlertDto {
   text?: string;
   time?: string;
   date?: string;
+}
+
+export interface TrackingDangerDurationDto {
+  minutes: number;
+  level?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -146,10 +152,28 @@ export class TrackingDashboardService {
       );
   }
 
+  getDangerDuration(patientId: string): Observable<TrackingDangerDurationDto> {
+    return this.http
+      .get<TrackingDangerDurationDto>(
+        `${this.apiBase}/danger-duration/${patientId}`,
+        this.requestOptions()
+      )
+      .pipe(
+        tap((data) =>
+          console.log(`[DoctorDashboard] danger duration ${patientId}:`, data)
+        ),
+        catchError((error) => {
+          console.error(`[DoctorDashboard] danger duration error ${patientId}`, error);
+          return of({ minutes: 0, level: 'LOW' });
+        })
+      );
+  }
+
   getStatus(ping: Partial<TrackingPingDto> | null | undefined): TrackingStatus {
-    if (!ping?.insideSafeZone) return 'DANGER';
+    if (!ping) return 'SAFE';
+    if (ping.insideSafeZone) return 'SAFE';
     if ((ping.riskScore ?? 0) >= 70) return 'DANGER';
-    if ((ping.riskScore ?? 0) >= 40) return 'WARNING';
+    if ((ping.riskScore ?? 0) > 0) return 'WARNING';
     return 'SAFE';
   }
 

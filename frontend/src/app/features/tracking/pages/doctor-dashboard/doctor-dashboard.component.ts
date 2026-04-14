@@ -3,6 +3,7 @@ import Chart from 'chart.js/auto';
 import {
   DoctorPatientVm,
   TrackingAlertDto,
+  TrackingDangerDurationDto,
   TrackingDashboardService,
   TrackingPingDto,
   TrackingStatus
@@ -18,6 +19,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   patients: DoctorPatientVm[] = [];
   selectedPatient: DoctorPatientVm | null = null;
   history: TrackingPingDto[] = [];
+  dangerDuration: TrackingDangerDurationDto | null = null;
   alerts: Array<{ label: string; severity: string; time: string; date: string }> = [];
   displayAlerts: Array<{ label: string; severity: string; time: string; date: string }> = [];
   statusMessage = '';
@@ -39,6 +41,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
         this.loadSelectedPatientStatus();
         this.loadHistoryThenChart();
         this.loadBackendAlerts();
+        this.loadDangerDuration();
       }
     }, 5000);
   }
@@ -82,31 +85,37 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   // 🔥 TREND
-  getTrend(): 'IMPROVING' | 'WORSENING' | 'STABLE' {
-    if (!this.history || this.history.length < 2) return 'STABLE';
+  getTrend(): 'CRITICAL' | 'IMPROVING' | 'WORSENING' | 'STABLE' {
+    const backendTrend = (this.selectedPatient?.trend || this.history[0]?.trend || '').toUpperCase();
+
+    if (
+      backendTrend === 'CRITICAL' ||
+      backendTrend === 'WORSENING' ||
+      backendTrend === 'IMPROVING' ||
+      backendTrend === 'STABLE'
+    ) {
+      return backendTrend;
+    }
 
     const currentRisk = this.selectedPatient?.riskScore ?? this.history[0]?.riskScore ?? 0;
-    if (this.getStatus(this.selectedPatient) === 'SAFE' && currentRisk === 0) return 'STABLE';
-
-    const midpoint = Math.floor(this.history.length / 2);
-    if (midpoint === 0) return 'STABLE';
-
-    const firstHalf = this.history.slice(0, midpoint);
-    const secondHalf = this.history.slice(midpoint);
-
-    const firstAvg = this.averageRisk(firstHalf);
-    const secondAvg = this.averageRisk(secondHalf);
-
-    if (secondAvg > firstAvg) return 'WORSENING';
-    if (secondAvg < firstAvg) return 'IMPROVING';
+    if (currentRisk >= 80) return 'CRITICAL';
+    if (currentRisk >= 60) return 'WORSENING';
+    if (currentRisk === 0) return 'STABLE';
 
     return 'STABLE';
   }
 
-  private averageRisk(points: TrackingPingDto[]): number {
-    if (!points.length) return 0;
-    const total = points.reduce((sum, point) => sum + (point.riskScore ?? 0), 0);
-    return total / points.length;
+  getDangerDurationLabel(): string {
+    const minutes = this.dangerDuration?.minutes ?? 0;
+    return `${minutes} min`;
+  }
+
+  getDangerDurationLevel(): string {
+    return (this.dangerDuration?.level || 'LOW').toUpperCase();
+  }
+
+  getDangerDurationLevelClass(): string {
+    return this.getDangerDurationLevel().toLowerCase();
   }
 
   loadPatients() {
@@ -143,6 +152,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.loadSelectedPatientStatus();
     this.loadHistoryThenChart();
     this.loadBackendAlerts();
+    this.loadDangerDuration();
   }
 
   loadSelectedPatientStatus() {
@@ -199,6 +209,16 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
         }));
         this.updateDisplayedAlerts(this.alertsPrimed);
         this.alertsPrimed = true;
+      }
+    });
+  }
+
+  loadDangerDuration() {
+    if (!this.selectedPatient) return;
+
+    this.trackingDashboardService.getDangerDuration(this.selectedPatient.patientId).subscribe({
+      next: (dangerDuration) => {
+        this.dangerDuration = dangerDuration;
       }
     });
   }

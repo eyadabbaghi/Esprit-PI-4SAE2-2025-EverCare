@@ -13,6 +13,7 @@ import { PLATFORM_ID } from '@angular/core';
 import {
   DoctorPatientVm,
   TrackingAlertDto,
+  TrackingDangerDurationDto,
   TrackingDashboardService,
   TrackingPingDto,
   TrackingStatus
@@ -31,6 +32,7 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
   alerts: Array<{ label: string; severity: string; time: string; date: string }> = [];
   history: TrackingPingDto[] = [];
   safeZones: any[] = [];
+  dangerDuration: TrackingDangerDurationDto | null = null;
 
   showToast = false;
   toastMessage = '';
@@ -115,6 +117,19 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
     return 'safe';
   }
 
+  getDangerDurationLabel(): string {
+    const minutes = this.dangerDuration?.minutes ?? 0;
+    return `${minutes} min`;
+  }
+
+  getDangerDurationLevel(): string {
+    return (this.dangerDuration?.level || 'LOW').toUpperCase();
+  }
+
+  getDangerDurationLevelClass(): string {
+    return this.getDangerDurationLevel().toLowerCase();
+  }
+
   handleAssistantAction(action: AssistantAction) {
     if (action === 'lost') {
       this.triggerGuidance('Follow the path to reach your safe zone');
@@ -186,6 +201,7 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
     this.loadAlerts(patientId);
     this.loadHistory(patientId);
     this.loadSafeZones(patientId);
+    this.loadDangerDuration(patientId);
   }
 
   private loadAlerts(patientId: string) {
@@ -219,6 +235,14 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
           this.updateGuidanceIfOutside();
         }
       });
+  }
+
+  private loadDangerDuration(patientId: string) {
+    this.trackingDashboardService.getDangerDuration(patientId).subscribe({
+      next: (dangerDuration) => {
+        this.dangerDuration = dangerDuration;
+      }
+    });
   }
 
   private updateGuidanceIfOutside() {

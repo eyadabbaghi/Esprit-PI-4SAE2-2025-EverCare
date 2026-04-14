@@ -181,6 +181,18 @@
             <div id="monitoring-map" #trackingMapContainer class="tracking-map-inner"></div>
           </div>
 
+          <div class="map-legend">
+            <div class="legend-item">
+              <span class="legend-swatch safe-zone"></span>
+              <span>Green -> Safe Zone (manual)</span>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-swatch ai-zone"></span>
+              <span>Purple -> AI Detected Zone (clustering)</span>
+            </div>
+          </div>
+
           <div class="guidance-row" *ngIf="!isInSafeZone && guidanceMessage">
             <div class="guidance-message">
               {{ guidanceMessage }}

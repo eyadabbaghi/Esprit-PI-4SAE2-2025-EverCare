@@ -22,6 +22,13 @@
         <span>Last seen</span>
         <strong>{{ selectedPatient?.timestamp | date:'medium' }}</strong>
       </div>
+      <div class="summary-metric">
+        <span>Danger duration</span>
+        <strong>{{ getDangerDurationLabel() }}</strong>
+        <small class="danger-duration-pill" [ngClass]="getDangerDurationLevelClass()">
+          {{ getDangerDurationLevel() }}
+        </small>
+      </div>
     </div>
   </header>
 

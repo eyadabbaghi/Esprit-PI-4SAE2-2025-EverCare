@@ -306,6 +306,33 @@
   color: var(--brand-dark);
 }
 
+.danger-duration-level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.55rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.danger-duration-level.low {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.danger-duration-level.medium {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+.danger-duration-level.critical {
+  background: rgba(239, 68, 68, 0.16);
+  color: #991b1b;
+}
+
 .badge,
 .severity-pill,
 .trend-badge,
@@ -392,6 +419,12 @@
 .trend-badge.improving {
   background: rgba(16, 185, 129, 0.15);
   color: #047857;
+}
+
+.trend-badge.critical {
+  background: rgba(239, 68, 68, 0.18);
+  color: #991b1b;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.16);
 }
 
 .trend-badge.declining,

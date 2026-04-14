@@ -38,6 +38,7 @@ public class SecurityConfig {
                 // 🔐 AUTH RULES
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/internal/users/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/users/**").authenticated()
                         .anyRequest().authenticated()

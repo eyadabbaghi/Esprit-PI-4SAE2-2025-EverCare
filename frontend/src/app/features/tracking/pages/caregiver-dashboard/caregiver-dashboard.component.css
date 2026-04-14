@@ -81,6 +81,33 @@
   font-size: 1.1rem;
 }
 
+.danger-duration-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.45rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.danger-duration-pill.low {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.danger-duration-pill.medium {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+.danger-duration-pill.critical {
+  background: rgba(239, 68, 68, 0.16);
+  color: #991b1b;
+}
+
 .eyebrow {
   margin: 0 0 0.25rem;
   font-size: 0.72rem;

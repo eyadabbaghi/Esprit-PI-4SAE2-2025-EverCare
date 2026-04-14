@@ -12,6 +12,7 @@ public interface LocationPingRepository extends JpaRepository<LocationPing, Long
 
     // âœ… EXISTING (KEEP)
     List<LocationPing> findByPatientIdOrderByTimestampDesc(String patientId);
+    List<LocationPing> findTop100ByPatientIdOrderByTimestampDesc(String patientId);
 
     // ðŸ”¥ 1. Get last 2 pings (for behavior detection)
     @Query("""

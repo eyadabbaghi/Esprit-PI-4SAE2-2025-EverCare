@@ -23,7 +23,7 @@ export interface ClinicalMeasurementResponse {
 
 export interface SafetyCheckResult {
   isSafe: boolean;
-  level: 'INFO' | 'WARNING' | 'CRITICAL';
+  level: 'INFO' | 'WARNING' | 'CRITICAL' | 'MILD' | 'MODERATE' | 'SEVERE';
   message: string;
   suggestedDose?: string;
   interactions?: string[];

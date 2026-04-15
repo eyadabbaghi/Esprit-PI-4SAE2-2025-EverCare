@@ -69,6 +69,57 @@
       </div>
     </div>
 
+    <!-- Drug Interaction Warning - Mild (Yellow) -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'MILD'" 
+         class="rounded-lg p-4 mb-4 border border-yellow-200 bg-yellow-50">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🟡</span>
+        <div class="flex-1">
+          <span class="font-bold text-sm uppercase text-yellow-700">MILD INTERACTION</span>
+          <p class="text-sm text-yellow-700">{{ safetyWarning.message }}</p>
+          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
+            <ul class="text-xs text-yellow-700 list-disc list-inside">
+              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drug Interaction Warning - Moderate (Orange) -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'MODERATE'" 
+         class="rounded-lg p-4 mb-4 border border-orange-300 bg-orange-50">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🟠</span>
+        <div class="flex-1">
+          <span class="font-bold text-sm uppercase text-orange-700">MODERATE INTERACTION</span>
+          <p class="text-sm text-orange-700">{{ safetyWarning.message }}</p>
+          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
+            <ul class="text-xs text-orange-700 list-disc list-inside">
+              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drug Interaction Warning - Severe (Red) -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'SEVERE'" 
+         class="rounded-lg p-4 mb-4 border border-red-400 bg-red-100">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🔴</span>
+        <div class="flex-1">
+          <span class="font-bold text-sm uppercase text-red-700">SEVERE INTERACTION</span>
+          <p class="text-sm text-red-700">{{ safetyWarning.message }}</p>
+          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
+            <ul class="text-xs text-red-700 list-disc list-inside">
+              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Critical Warning Banner -->
     <div *ngIf="safetyWarning && safetyWarning.level === 'CRITICAL'" 
          class="rounded-lg p-4 mb-4 border border-red-300 bg-red-50">

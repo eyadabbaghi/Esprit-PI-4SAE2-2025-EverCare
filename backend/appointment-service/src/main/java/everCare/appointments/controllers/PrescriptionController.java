@@ -98,6 +98,13 @@ public class PrescriptionController {
                 if (!safetyResult.isSafe()) {
                     log.warn("Safety check warning for prescription: {}", safetyResult.getMessage());
                 }
+
+                var interactionResult = prescriptionSafetyService.checkDrugInteractionsWithPrescriptions(
+                        request, request.getPatientId(), medicament);
+
+                if (!interactionResult.isSafe()) {
+                    log.warn("Drug interaction check: {}", interactionResult.getMessage());
+                }
             }
         }
 

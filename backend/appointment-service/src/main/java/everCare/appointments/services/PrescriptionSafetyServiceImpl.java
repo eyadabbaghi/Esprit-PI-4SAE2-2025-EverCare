@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class PrescriptionSafetyServiceImpl implements PrescriptionSafetyService {
 
+    private final DrugInteractionChecker drugInteractionChecker;
+
     @Override
     public SafetyCheckResult checkSafety(PrescriptionRequestDTO prescription, ClinicalMeasurement measurement) {
         return SafetyCheckResult.builder()
@@ -384,6 +386,46 @@ public class PrescriptionSafetyServiceImpl implements PrescriptionSafetyService 
                 .suggestedDose(null)
                 .interactions(interactions)
                 .contraindications(contraindicationsList)
+                .build();
+    }
+
+    @Override
+    public SafetyCheckResult checkDrugInteractionsWithPrescriptions(PrescriptionRequestDTO prescription,
+                                                                 String patientId,
+                                                                 Medicament newMedicament) {
+        if (patientId == null || newMedicament == null) {
+            return SafetyCheckResult.builder()
+                    .isSafe(true)
+                    .level("INFO")
+                    .message("No interactions to check.")
+                    .build();
+        }
+
+        java.time.LocalDate startDate = prescription.getDateDebut() != null ? prescription.getDateDebut() : java.time.LocalDate.now();
+        java.time.LocalDate endDate = prescription.getDateFin();
+
+        var result = drugInteractionChecker.checkInteractions(patientId, newMedicament, startDate, endDate);
+
+        if (result.isHasInteractions()) {
+            List<String> interactionMessages = new ArrayList<>();
+            for (var detail : result.getInteractions()) {
+                interactionMessages.add(detail.getInteractingDrug() + " conflicts with " + detail.getExistingMedication());
+            }
+            String level = result.getLevel();
+            boolean critical = "SEVERE".equals(level);
+
+            return SafetyCheckResult.builder()
+                    .isSafe(!critical)
+                    .level(level)
+                    .message("Drug interaction detected: " + String.join("; ", interactionMessages))
+                    .interactions(interactionMessages)
+                    .build();
+        }
+
+        return SafetyCheckResult.builder()
+                .isSafe(true)
+                .level("INFO")
+                .message("No interactions with current prescriptions.")
                 .build();
     }
 }

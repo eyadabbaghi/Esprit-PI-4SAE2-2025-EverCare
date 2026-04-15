@@ -19,9 +19,11 @@ import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component';
 import { LucideAngularModule, FileText, Plus, Trash2, Edit, Eye } from 'lucide-angular';
 // Import the image cropper standalone component
 import { ImageCropperComponent } from 'ngx-image-cropper';
+import { BackOfficeLayoutComponent } from '../../layouts/back-office-layout/back-office-layout.component';
 
 @NgModule({
   declarations: [
+    BackOfficeLayoutComponent,
     DashboardComponent,
     UsersComponent,
     SettingsComponent,

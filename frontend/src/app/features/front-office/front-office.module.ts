@@ -38,10 +38,12 @@ import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog.component';
 import { FaceRecoveryComponent } from './pages/face-recovery/face-recovery.component';
+import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 
 
 @NgModule({
   declarations: [
+    FrontOfficeLayoutComponent,
     HomeComponent,
     AboutComponent,
     ContactComponent,

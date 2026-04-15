@@ -14,7 +14,7 @@ import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component'; //
 
 const routes: Routes = [
   {
-    path: 'admin',
+    path: '',
     component: BackOfficeLayoutComponent,
    // canActivate: [AdminGuard],
     children: [

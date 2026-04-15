@@ -7,14 +7,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
-import { BackOfficeLayoutComponent } from './layouts/back-office-layout/back-office-layout.component';
-import { SidebarComponent } from './layouts/back-office-layout/sidebar/sidebar.component';
-import { NavbarComponent } from './layouts/back-office-layout/navbar/navbar.component';
-import { FooterComponent } from './layouts/back-office-layout/footer/footer.component';
-import { FrontOfficeLayoutComponent } from './layouts/front-office-layout/front-office-layout.component';
-import { HeaderComponent } from './layouts/front-office-layout/header/header.component';
-import { HeroComponent } from './layouts/front-office-layout/hero/hero.component';
-import { LayoutsModule } from './layouts/layouts.module';
 import { BackOfficeModule } from './features/back-office/back-office.module';
 import { FrontOfficeModule } from './features/front-office/front-office.module';
 import { AppointmentsModule } from './features/appointments/appointments.module';
@@ -42,13 +34,6 @@ import { AlertAlarmComponent } from './alert-alarm/alert-alarm.component';
 @NgModule({
   declarations: [
     AppComponent,
-    BackOfficeLayoutComponent,
-    SidebarComponent,
-    NavbarComponent,
-    FooterComponent,
-    FrontOfficeLayoutComponent,
-    HeaderComponent,
-    HeroComponent,
     AddIncidentDialogComponent,
     AddAlertDialogComponent,
     IncidentDetailsDialogComponent, // <-- add here
@@ -60,7 +45,6 @@ import { AlertAlarmComponent } from './alert-alarm/alert-alarm.component';
     HttpClientModule,
     CoreModule,
     SharedModule,
-    LayoutsModule,
     BackOfficeModule,
     FrontOfficeModule,
     AppointmentsModule,

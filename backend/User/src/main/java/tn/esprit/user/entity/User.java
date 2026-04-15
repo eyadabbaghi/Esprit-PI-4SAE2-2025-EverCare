@@ -2,8 +2,10 @@ package tn.esprit.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;      // added
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -33,8 +35,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(unique = true)
+    private String keycloakId;
+
+    @Column
+    private LocalDateTime lastSeenAt;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -45,8 +50,42 @@ public class User {
 
     private LocalDateTime createdAt;
 
-    // New fields
-    private LocalDate dateOfBirth;          // date of birth
-    private String emergencyContact;         // emergency contact info
-    private String profilePicture;           // URL or path to profile picture
+    // Common profile fields
+    private LocalDate dateOfBirth;
+    private String emergencyContact;
+    private String profilePicture;
+
+    // Doctor-specific fields
+    private Integer yearsExperience;
+    private String specialization;
+    private String medicalLicense;
+    private String workplaceType; // "hospital" or "private"
+    private String workplaceName;
+
+    private String doctorEmail;
+    // Many-to-many between patients and caregivers
+    @ManyToMany
+    @JoinTable(
+            name = "patient_caregiver",
+            joinColumns = @JoinColumn(name = "patient_id"),
+            inverseJoinColumns = @JoinColumn(name = "caregiver_id")
+    )
+    @Builder.Default
+    private Set<User> caregivers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "caregivers")
+    @Builder.Default
+    private Set<User> patients = new HashSet<>();
+
+    // Helper methods to maintain bidirectional relationship
+    public void addCaregiver(User caregiver) {
+        caregivers.add(caregiver);
+        caregiver.getPatients().add(this);
+    }
+
+    public void removeCaregiver(User caregiver) {
+        caregivers.remove(caregiver);
+        caregiver.getPatients().remove(this);
+    }
+
 }

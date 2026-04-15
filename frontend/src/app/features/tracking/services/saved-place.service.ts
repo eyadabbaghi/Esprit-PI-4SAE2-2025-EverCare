@@ -7,7 +7,7 @@ import { SavedPlace } from '../models/saved-place.model';
 export class SavedPlaceService {
 
   // âœ… ApiGateway base (change port if needed)
-private baseUrl = 'http://localhost:8099/tracking/saved-places';
+private baseUrl = 'http://localhost:8089/tracking/saved-places';
 
   constructor(private http: HttpClient) {}
 

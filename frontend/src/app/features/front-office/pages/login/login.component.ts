@@ -151,20 +151,13 @@ export class LoginComponent implements OnInit {
 
         this.toastr.success('Registration successful!', 'Welcome');
 
-        // same redirect logic
-        const user = JSON.parse(localStorage.getItem('current_user') || '{}');
-
-        if (user?.role === 'DOCTOR') {
-          this.router.navigate(['/tracking/doctor']);
-          return;
-        }
-
-        if (user?.role === 'CAREGIVER') {
-          this.router.navigate(['/tracking/caregiver']);
-          return;
-        }
-
-        this.router.navigate(['/']);
+        this.router.navigate(['/setup-profile'], {
+          state: {
+            name: userData.name,
+            email: userData.email,
+            role: userData.role
+          }
+        });
       },
 
       error: (err) => {

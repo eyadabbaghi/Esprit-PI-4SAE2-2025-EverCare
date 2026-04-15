@@ -8,6 +8,8 @@ import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ActivityDetailsComponent } from './pages/activity-details/activity-details.component';
 import { AlertsComponent } from './pages/alerts/alerts.component';
 import { ProfileComponent } from './pages/profile/profile.component';
+import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 
 import { DailyMeListComponent } from '../daily-me/daily-me-list/daily-me-list.component';
 
@@ -19,6 +21,8 @@ const routes: Routes = [
       { path: '', component: HomeComponent, pathMatch: 'full' },
 
       { path: 'login', component: LoginComponent },
+      { path: 'setup-profile', component: SetupProfileComponent },
+      { path: 'setup-face-id', component: FaceSetupComponent },
       { path: 'activities', component: ActivitiesComponent },
       { path: 'activities/:id', component: ActivityDetailsComponent },
       { path: 'alerts', component: AlertsComponent },

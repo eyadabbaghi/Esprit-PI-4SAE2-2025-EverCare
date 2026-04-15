@@ -13,7 +13,7 @@ import { AdminGuard } from '../../core/guards/admin.guard';
 
 const routes: Routes = [
   {
-    path: 'admin',
+    path: '',
     component: BackOfficeLayoutComponent,
     canActivate: [AdminGuard],
     children: [

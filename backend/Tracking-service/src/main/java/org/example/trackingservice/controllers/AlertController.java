@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tracking/alerts")
+@RequestMapping("/alerts")
 
 public class AlertController {
 
@@ -15,6 +15,11 @@ public class AlertController {
 
     public AlertController(AlertService service) {
         this.service = service;
+    }
+
+    @PostMapping
+    public Alert createAlert(@RequestBody Alert alert) {
+        return service.createManualAlert(alert);
     }
 
     @GetMapping("/patient/{patientId}")

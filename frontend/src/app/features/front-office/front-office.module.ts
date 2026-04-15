@@ -20,6 +20,8 @@ import { AlzheimersAssessmentComponent } from './ui/alzheimers-assessment/alzhei
 import { SharedModule } from '../../shared/shared.module';
 import { LucideAngularModule } from 'lucide-angular';
 import { NewUserFlowComponent } from './pages/login/new-user-flow.component';
+import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 
 
 import { DailyMeModule } from '../daily-me/daily-me.module';
@@ -38,6 +40,8 @@ import { DailyMeModule } from '../daily-me/daily-me.module';
     WelcomePopupComponent,
     AlzheimersAssessmentComponent,
     NewUserFlowComponent,
+    SetupProfileComponent,
+    FaceSetupComponent,
   ],
   imports: [
     CommonModule,

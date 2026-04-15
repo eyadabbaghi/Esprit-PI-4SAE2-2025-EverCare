@@ -112,16 +112,4 @@
       </section>
     </aside>
   </section>
-
-  <app-tracking-assistant
-    [patientId]="selectedPatient?.patientId || 'default'"
-    [mode]="'tracking'"
-    [status]="getStatus(selectedPatient)"
-    [lastZoneStatus]="null"
-    [placesCount]="safeZones.length"
-    [idleCounter]="0"
-    [currentLat]="selectedPatient?.lat || 0"
-    [currentLng]="selectedPatient?.lng || 0"
-    (actionSelected)="handleAssistantAction($event)">
-  </app-tracking-assistant>
 </div>

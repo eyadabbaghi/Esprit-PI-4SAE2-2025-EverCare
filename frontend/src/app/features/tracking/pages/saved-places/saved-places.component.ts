@@ -20,6 +20,14 @@ import {
 
 type AssistantAction = 'use-current-location' | 'save-current-location' | 'open-add-safe-zone' | 'lost';
 type TrackingCluster = { lat: number; lng: number };
+type BrowserLocationOptions = {
+  centerSetupMap?: boolean;
+  centerTrackingMap?: boolean;
+  centerModalMap?: boolean;
+  persistToBackend?: boolean;
+  toastMessage?: string;
+  silent?: boolean;
+};
 
 @Component({
   selector: 'app-saved-places',
@@ -74,6 +82,8 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   currentLat = 0;
   currentLng = 0;
   hasLocationSnapshot = false;
+  currentAccuracyMeters: number | null = null;
+  isResolvingLocation = false;
 
   movementStatus = 'Tracking';
   riskLevel = 'Low';
@@ -84,6 +94,17 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   lastPosition: any = null;
   idleCounter = 0;
+  private lastBrowserLocationCapturedAt = 0;
+  private precisionWatchId: number | null = null;
+  private precisionTimer: any = null;
+  private readonly preferredAccuracyMeters = 35;
+  private readonly acceptableAccuracyMeters = 120;
+  private readonly precisionTimeoutMs = 15000;
+  private lastBackendPingSentAt = 0;
+  private backendPingMutedUntil = 0;
+  private lastBackendPingLat: number | null = null;
+  private lastBackendPingLng: number | null = null;
+  private readonly backendPingMinIntervalMs = 12000;
 
   lastZoneStatus: 'INSIDE' | 'OUTSIDE' | null = null;
   guidanceMessage = '';
@@ -133,6 +154,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
+    this.stopPrecisionCapture();
 
     this.formChangesSubscription?.unsubscribe();
 
@@ -228,7 +250,11 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isInSafeZone = this.currentStatus === 'SAFE';
     this.riskLevel = this.currentStatus;
 
-    if (typeof ping.lat === 'number' && typeof ping.lng === 'number') {
+    if (
+      typeof ping.lat === 'number' &&
+      typeof ping.lng === 'number' &&
+      this.shouldUseBackendCoordinates(ping)
+    ) {
       this.currentLat = ping.lat;
       this.currentLng = ping.lng;
       this.hasLocationSnapshot = true;
@@ -246,6 +272,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refreshSetupMapLayers();
     this.refreshTrackingMapLayers();
     this.updateGuidance();
+    this.persistLocalTrackingSnapshot();
   }
 
   syncStatusAlert(previousStatus: TrackingStatus, nextStatus: TrackingStatus, ping: TrackingPingDto) {
@@ -395,26 +422,14 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   sendCurrentLocation() {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const payload = {
-        patientId: this.patientId,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
-
-      this.currentLat = payload.lat;
-      this.currentLng = payload.lng;
-      this.hasLocationSnapshot = true;
-      this.refreshSetupMapLayers();
-
-      this.http.post(
-        'http://localhost:8089/tracking/location-pings',
-        payload
-      ).subscribe(() => {
-        console.log('forced refresh ping');
-        this.loadPatientStatusFromBackend();
-      });
-    });
+    this.requestPreciseLocation(
+      {
+        centerSetupMap: this.mode === 'setup',
+        centerTrackingMap: this.mode === 'tracking',
+        persistToBackend: true
+      },
+      'Could not capture your current location.'
+    );
   }
 
   remove(id: number) {
@@ -445,6 +460,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
     setTimeout(() => {
       this.loadTrackingMap();
+      this.sendCurrentLocation();
       this.startTracking();
       this.loadClusters();
     }, 300);
@@ -462,46 +478,37 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startTracking() {
-    this.watchId = navigator.geolocation.watchPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+    this.watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (!this.shouldAcceptLiveFix(pos.coords.accuracy)) {
+          return;
+        }
 
-      this.currentLat = lat;
-      this.currentLng = lng;
-      this.hasLocationSnapshot = true;
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
 
-      this.updateTrackingMap(lat, lng);
-      this.checkSafeZone(lat, lng);
-      this.detectIdle(lat, lng);
+        this.applyBrowserLocation(lat, lng, {
+          accuracyMeters: pos.coords.accuracy,
+          centerTrackingMap: true,
+          persistToBackend: true
+        });
+        this.checkSafeZone(lat, lng);
+        this.detectIdle(lat, lng);
 
-      const payload = {
-        patientId: this.patientId,
-        lat,
-        lng
-      };
+        this.history.unshift({
+          time: new Date().toLocaleTimeString(),
+          date: new Date().toLocaleDateString(),
+          timestamp: new Date().toISOString(),
+          lat,
+          lng,
+          status: this.currentStatus
+        });
 
-      this.http.post(
-        'http://localhost:8089/tracking/location-pings',
-        payload
-      ).subscribe({
-        next: () => {
-          console.log('sent to backend');
-          this.loadPatientStatusFromBackend();
-          this.loadClusters();
-        },
-        error: (e) => console.log('send failed', e)
-      });
-
-      this.history.unshift({
-        time: new Date().toLocaleTimeString(),
-        date: new Date().toLocaleDateString(),
-        lat,
-        lng,
-        status: this.currentStatus
-      });
-
-      localStorage.setItem(`history_${this.patientId}`, JSON.stringify(this.history));
-    });
+        localStorage.setItem(`history_${this.patientId}`, JSON.stringify(this.history));
+      },
+      (error) => console.log('watch position failed', error),
+      this.getGeoOptions()
+    );
   }
 
   triggerAlert(msg: string, severity: string = 'HIGH') {
@@ -561,6 +568,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.riskLevel = inside ? 'Low' : 'High';
     this.refreshSetupMapLayers();
     this.updateGuidance();
+    this.persistLocalTrackingSnapshot();
 
     if (this.latestBackendPing) {
       this.applyBackendStatus(this.latestBackendPing);
@@ -683,19 +691,15 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   useMyLocation() {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-
-      this.currentLat = lat;
-      this.currentLng = lng;
-      this.hasLocationSnapshot = true;
-      this.form.patchValue({ lat, lng });
-
-      this.syncModalPreviewToForm(true);
-      this.refreshSetupMapLayers(true);
-      this.showTransientToast('Current location loaded.');
-    });
+    this.requestPreciseLocation(
+      {
+        centerSetupMap: true,
+        centerModalMap: true,
+        persistToBackend: true,
+        toastMessage: 'Current location loaded.'
+      },
+      'Could not access your current location.'
+    );
   }
 
   handleAssistantAction(action: AssistantAction) {
@@ -849,15 +853,13 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadCurrentLocationSnapshot(centerMap = false) {
     if (!navigator.geolocation) return;
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.currentLat = pos.coords.latitude;
-        this.currentLng = pos.coords.longitude;
-        this.hasLocationSnapshot = true;
-        this.refreshSetupMapLayers(centerMap);
+    this.requestPreciseLocation(
+      {
+        centerSetupMap: centerMap,
+        persistToBackend: true,
+        silent: true
       },
-      (error) => console.log('failed getting location snapshot', error),
-      { enableHighAccuracy: true, timeout: 10000 }
+      'Could not get a precise location snapshot.'
     );
   }
 
@@ -1002,16 +1004,16 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.hasLocationSnapshot) {
       this.trackingPulse = this.leaflet.circle([this.currentLat, this.currentLng], {
         radius: 120,
-        color: '#c4b5fd',
-        fillColor: '#a78bfa',
-        fillOpacity: 0.08,
+        color: '#93c5fd',
+        fillColor: '#60a5fa',
+        fillOpacity: 0.12,
         weight: 1
       }).addTo(this.trackingMapLayer);
 
       this.trackingMarker = this.leaflet.circleMarker([this.currentLat, this.currentLng], {
         radius: 9,
-        color: '#4c1d95',
-        fillColor: '#7c3aed',
+        color: '#1d4ed8',
+        fillColor: '#2563eb',
         fillOpacity: 1,
         weight: 3
       }).addTo(this.trackingMapLayer);
@@ -1078,16 +1080,16 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.hasLocationSnapshot) {
       this.setupCurrentPulse = this.leaflet.circle([this.currentLat, this.currentLng], {
         radius: 120,
-        color: '#c4b5fd',
-        fillColor: '#a78bfa',
-        fillOpacity: 0.08,
+        color: '#93c5fd',
+        fillColor: '#60a5fa',
+        fillOpacity: 0.12,
         weight: 1
       }).addTo(this.setupMapLayer);
 
       this.setupCurrentMarker = this.leaflet.circleMarker([this.currentLat, this.currentLng], {
         radius: 9,
-        color: '#4c1d95',
-        fillColor: '#7c3aed',
+        color: '#1d4ed8',
+        fillColor: '#2563eb',
         fillOpacity: 1,
         weight: 3
       }).addTo(this.setupMapLayer);
@@ -1160,6 +1162,307 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (centerMap) {
       this.map.setView([lat, lng], Math.max(this.map.getZoom(), 14));
     }
+  }
+
+  private applyBrowserLocation(
+    lat: number,
+    lng: number,
+    options: {
+      accuracyMeters?: number;
+      centerSetupMap?: boolean;
+      centerTrackingMap?: boolean;
+      centerModalMap?: boolean;
+      persistToBackend?: boolean;
+      toastMessage?: string;
+      silent?: boolean;
+    } = {}
+  ) {
+    this.currentLat = lat;
+    this.currentLng = lng;
+    this.hasLocationSnapshot = true;
+    this.lastBrowserLocationCapturedAt = Date.now();
+    this.currentAccuracyMeters = this.normalizeAccuracy(options.accuracyMeters);
+
+    if (this.latestBackendPing) {
+      this.latestBackendPing = {
+        ...this.latestBackendPing,
+        lat,
+        lng
+      };
+    }
+
+    this.refreshSetupMapLayers();
+
+    if (options.centerSetupMap && this.setupMap) {
+      this.setupMap.setView([lat, lng], Math.max(this.setupMap.getZoom(), 15));
+    }
+
+    if (this.trackingMap) {
+      this.refreshTrackingMapLayers(!!options.centerTrackingMap);
+    }
+
+    if (this.map) {
+      this.syncModalPreviewToForm(!!options.centerModalMap);
+    }
+
+    if (options.persistToBackend) {
+      this.pushCurrentLocationPing(lat, lng);
+    }
+
+    this.persistLocalTrackingSnapshot();
+
+    if (options.toastMessage && !options.silent) {
+      this.showTransientToast(options.toastMessage);
+    }
+  }
+
+  private pushCurrentLocationPing(lat: number, lng: number) {
+    if (!this.shouldPushBackendPing(lat, lng)) {
+      return;
+    }
+
+    this.lastBackendPingSentAt = Date.now();
+    this.lastBackendPingLat = lat;
+    this.lastBackendPingLng = lng;
+
+    this.http.post('http://localhost:8089/tracking/location-pings', {
+      patientId: this.patientId,
+      lat,
+      lng
+    }).subscribe({
+      next: () => {
+        this.backendPingMutedUntil = 0;
+        console.log('sent current location to backend');
+        this.loadPatientStatusFromBackend();
+        this.loadClusters();
+      },
+      error: (e) => {
+        console.log('send failed', e);
+        this.backendPingMutedUntil = Date.now() + 30000;
+      }
+    });
+  }
+
+  private shouldUseBackendCoordinates(ping: TrackingPingDto) {
+    if (!this.hasLocationSnapshot) return true;
+
+    const backendTimestamp = ping.timestamp ? new Date(ping.timestamp).getTime() : 0;
+    if (!backendTimestamp) return this.lastBrowserLocationCapturedAt === 0;
+
+    return backendTimestamp >= this.lastBrowserLocationCapturedAt;
+  }
+
+  private requestPreciseLocation(options: BrowserLocationOptions, failureMessage: string) {
+    if (!navigator.geolocation) {
+      if (!options.silent) {
+        this.showTransientToast('Geolocation is not supported on this device.');
+      }
+      return;
+    }
+
+    this.stopPrecisionCapture();
+    this.isResolvingLocation = true;
+
+    let bestPosition: GeolocationPosition | null = null;
+
+    const finalize = (position?: GeolocationPosition | null) => {
+      const finalPosition = position || bestPosition;
+      const accuracy = this.normalizeAccuracy(finalPosition?.coords.accuracy);
+      const shouldWarnWeakAccuracy = accuracy !== null && accuracy > this.acceptableAccuracyMeters;
+      const toastMessage = shouldWarnWeakAccuracy
+        ? `Location is approximate (${Math.round(accuracy)}m). Turn on device location for a better fix.`
+        : options.toastMessage;
+
+      this.stopPrecisionCapture();
+      this.isResolvingLocation = false;
+
+      if (!finalPosition) {
+        if (!options.silent) {
+          this.showTransientToast(failureMessage);
+        }
+        return;
+      }
+
+      this.form.patchValue(
+        {
+          lat: finalPosition.coords.latitude,
+          lng: finalPosition.coords.longitude
+        },
+        { emitEvent: !!this.isModalOpen }
+      );
+
+      this.applyBrowserLocation(finalPosition.coords.latitude, finalPosition.coords.longitude, {
+        ...options,
+        accuracyMeters: finalPosition.coords.accuracy,
+        toastMessage
+      });
+    };
+
+    this.precisionWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const accuracy = this.normalizeAccuracy(position.coords.accuracy) ?? Number.POSITIVE_INFINITY;
+        const bestAccuracy = this.normalizeAccuracy(bestPosition?.coords.accuracy) ?? Number.POSITIVE_INFINITY;
+
+        if (!bestPosition || accuracy < bestAccuracy) {
+          bestPosition = position;
+
+          if (this.isModalOpen) {
+            this.form.patchValue(
+              {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              },
+              { emitEvent: true }
+            );
+          }
+
+          this.applyBrowserLocation(position.coords.latitude, position.coords.longitude, {
+            ...options,
+            accuracyMeters: position.coords.accuracy,
+            persistToBackend: false,
+            toastMessage: undefined,
+            silent: true
+          });
+        }
+
+        if (accuracy <= this.preferredAccuracyMeters) {
+          finalize(position);
+        }
+      },
+      (error) => {
+        console.log('precise location capture failed', error);
+        finalize(bestPosition);
+      },
+      this.getGeoOptions()
+    );
+
+    this.precisionTimer = setTimeout(() => finalize(bestPosition), this.precisionTimeoutMs);
+  }
+
+  private stopPrecisionCapture() {
+    if (this.precisionWatchId !== null) {
+      navigator.geolocation.clearWatch(this.precisionWatchId);
+      this.precisionWatchId = null;
+    }
+
+    if (this.precisionTimer) {
+      clearTimeout(this.precisionTimer);
+      this.precisionTimer = null;
+    }
+  }
+
+  private shouldAcceptLiveFix(accuracy?: number | null) {
+    const normalizedAccuracy = this.normalizeAccuracy(accuracy);
+
+    if (normalizedAccuracy === null) {
+      return true;
+    }
+
+    if (this.currentAccuracyMeters === null) {
+      return true;
+    }
+
+    if (normalizedAccuracy <= this.acceptableAccuracyMeters) {
+      return true;
+    }
+
+    return normalizedAccuracy < this.currentAccuracyMeters;
+  }
+
+  private shouldPushBackendPing(lat: number, lng: number) {
+    const now = Date.now();
+
+    if (now < this.backendPingMutedUntil) {
+      return false;
+    }
+
+    if (this.lastBackendPingSentAt === 0) {
+      return true;
+    }
+
+    if (
+      this.lastBackendPingLat === null ||
+      this.lastBackendPingLng === null
+    ) {
+      return true;
+    }
+
+    const movedDistance = this.getDistance(
+      this.lastBackendPingLat,
+      this.lastBackendPingLng,
+      lat,
+      lng
+    );
+
+    if (movedDistance >= 8) {
+      return true;
+    }
+
+    return now - this.lastBackendPingSentAt >= this.backendPingMinIntervalMs;
+  }
+
+  private normalizeAccuracy(value?: number | null) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+
+    return value;
+  }
+
+  private persistLocalTrackingSnapshot() {
+    if (typeof localStorage === 'undefined' || !this.patientId || !this.hasLocationSnapshot) {
+      return;
+    }
+
+    const riskScore =
+      this.currentStatus === 'DANGER' ? 80 :
+      this.currentStatus === 'WARNING' ? 35 :
+      0;
+
+    localStorage.setItem(
+      `tracking_live_position_${this.patientId}`,
+      JSON.stringify({
+        patientId: this.patientId,
+        lat: this.currentLat,
+        lng: this.currentLng,
+        timestamp: new Date(this.lastBrowserLocationCapturedAt || Date.now()).toISOString(),
+        insideSafeZone: this.isInSafeZone,
+        riskScore,
+        speed: this.latestBackendPing?.speed ?? null,
+        trend: this.currentStatus,
+        accuracyMeters: this.currentAccuracyMeters,
+        source: 'browser'
+      })
+    );
+  }
+
+  getAccuracyLabel() {
+    if (this.isResolvingLocation) {
+      return 'Finding precise GPS...';
+    }
+
+    if (this.currentAccuracyMeters === null) {
+      return 'Waiting for GPS';
+    }
+
+    const rounded = Math.round(this.currentAccuracyMeters);
+    if (rounded <= this.preferredAccuracyMeters) {
+      return `Precise (${rounded}m)`;
+    }
+
+    if (rounded <= this.acceptableAccuracyMeters) {
+      return `Good (${rounded}m)`;
+    }
+
+    return `Approximate (${rounded}m)`;
+  }
+
+  private getGeoOptions(): PositionOptions {
+    return {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
+    };
   }
 
   private showTransientToast(message: string) {

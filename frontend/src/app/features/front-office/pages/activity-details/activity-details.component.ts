@@ -1,15 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, forkJoin } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
-type ActivityType = 'Relaxation' | 'Cognitive' | 'Physical' | 'Social' | 'Creative';
+import { AuthService, User } from '../login/auth.service';
+import {
+  Activity,
+  ActivityDetails,
+  ActivityService,
+  ActivityWithUserData,
+} from '../../../../core/services/activity.service';
+
 type DifficultyLevel = 'Easy' | 'Moderate' | 'Challenging';
 type AlzheimerStage = 'Early' | 'Moderate' | 'Advanced';
 
-interface Activity {
+interface ActivityView {
   id: string;
   name: string;
-  type: ActivityType;
+  type: string;
   duration: number;
   scheduledTime?: string;
   description: string;
@@ -23,10 +31,13 @@ interface Activity {
   completed: boolean;
   favorite: boolean;
   doctorSuggested?: boolean;
-  completedAt?: Date;
+  recommendedByDoctor?: boolean;
+  doctorName?: string;
+  completedAt?: string;
   imageUrl: string;
   rating: number;
   totalRatings: number;
+  userRating: number | null;
 }
 
 @Component({
@@ -34,250 +45,38 @@ interface Activity {
   templateUrl: './activity-details.component.html',
   styleUrls: ['./activity-details.component.css'],
 })
-export class ActivityDetailsComponent implements OnInit {
-  activity: Activity | null = null;
+export class ActivityDetailsComponent implements OnInit, OnDestroy {
+  activity: ActivityView | null = null;
   userRating = 0;
+
+  private user: User | null = null;
+  private readonly sub = new Subscription();
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly toastr: ToastrService,
+    private readonly authService: AuthService,
+    private readonly activityService: ActivityService,
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
+    const activityId = this.route.snapshot.paramMap.get('id');
+    if (!activityId) {
       this.router.navigate(['/activities']);
       return;
     }
 
-    const all = this.buildMockActivities();
-    this.activity = all.find((a) => a.id === id) ?? null;
-
-    if (!this.activity) {
-      this.toastr.error('Activity not found');
-      this.router.navigate(['/activities']);
-    }
+    this.sub.add(
+      this.authService.currentUser$.subscribe((user) => {
+        this.user = user;
+        this.loadActivity(activityId);
+      }),
+    );
   }
 
-  private buildMockActivities(): Activity[] {
-    // Keep this in sync with ActivitiesComponent
-    return [
-      {
-        id: '1',
-        name: 'Morning Breathing Exercise',
-        type: 'Relaxation',
-        duration: 10,
-        scheduledTime: '08:00 AM',
-        description:
-          'Gentle breathing exercises to start the day with calm and focus. This mindfulness practice helps reduce anxiety and promotes mental clarity.',
-        instructions: [
-          'Find a comfortable seated position in a quiet space',
-          'Close your eyes gently or maintain a soft gaze',
-          'Breathe in slowly through your nose for 4 counts',
-          'Hold your breath gently for 2 counts',
-          'Breathe out slowly through your mouth for 6 counts',
-          'Repeat this cycle for 10 minutes',
-          'Notice how your body relaxes with each breath',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: 'Daily',
-        supervision: 'Independent or minimal supervision',
-        benefits: [
-          'Reduces anxiety and stress',
-          'Improves focus and concentration',
-          'Promotes relaxation and calm',
-          'Enhances overall well-being',
-        ],
-        completed: false,
-        favorite: true,
-        doctorSuggested: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1562658048-b4c459feab21?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.8,
-        totalRatings: 142,
-      },
-      {
-        id: '2',
-        name: 'Memory Card Game',
-        type: 'Cognitive',
-        duration: 20,
-        scheduledTime: '10:00 AM',
-        description:
-          'Fun card matching game to exercise memory and recognition skills. This engaging activity stimulates cognitive function and provides mental exercise.',
-        instructions: [
-          'Lay out 12 cards face down in a grid pattern',
-          'Turn over two cards at a time',
-          'Try to find matching pairs',
-          'Remember where cards are located',
-          'Continue until all pairs are found',
-          'Celebrate each successful match',
-        ],
-        difficulty: 'Moderate',
-        recommendedStage: ['Early', 'Moderate'],
-        frequency: '3 times per week',
-        supervision: 'Caregiver presence recommended',
-        benefits: [
-          'Enhances memory recall',
-          'Improves concentration and focus',
-          'Provides mental stimulation',
-          'Boosts confidence',
-        ],
-        precautions: [
-          'Start with fewer cards if needed',
-          'Take breaks if frustrated',
-          'Keep sessions positive and encouraging',
-        ],
-        completed: true,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1737505599159-5ffc1dcbc08f?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.5,
-        totalRatings: 98,
-      },
-      {
-        id: '3',
-        name: 'Gentle Walking',
-        type: 'Physical',
-        duration: 30,
-        scheduledTime: '04:00 PM',
-        description:
-          'Light walking exercise in a safe, familiar environment. Regular walking helps maintain physical health, mobility, and mental well-being.',
-        instructions: [
-          'Wear comfortable, supportive shoes',
-          'Choose a safe, familiar walking area',
-          'Maintain a comfortable, steady pace',
-          'Stay hydrated with water breaks',
-          'Walk for 15-30 minutes based on comfort',
-          'Use walking aids if needed',
-          'Cool down with gentle stretches',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate'],
-        frequency: 'Daily',
-        supervision: 'Companion recommended for safety',
-        benefits: [
-          'Improves cardiovascular health',
-          'Boosts mood and energy',
-          'Maintains mobility and balance',
-          'Provides social interaction',
-        ],
-        precautions: [
-          'Ensure safe walking path',
-          'Avoid extreme weather conditions',
-          'Monitor for fatigue',
-        ],
-        completed: false,
-        favorite: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1764628039015-222c6d30c68d?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.7,
-        totalRatings: 215,
-      },
-      {
-        id: '4',
-        name: 'Music Therapy Session',
-        type: 'Creative',
-        duration: 25,
-        scheduledTime: '02:00 PM',
-        description:
-          'Listen to favorite songs and engage with familiar melodies. Music therapy triggers positive memories and enhances emotional well-being.',
-        instructions: [
-          'Choose familiar, favorite songs from their era',
-          'Create a comfortable listening environment',
-          'Encourage singing or humming along',
-          'Discuss memories associated with the music',
-          'Use simple instruments if available',
-          'Share stories about the songs',
-          'End with a calming piece',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '4 times per week',
-        supervision: 'Minimal supervision needed',
-        benefits: [
-          'Triggers positive memories',
-          'Reduces stress and anxiety',
-          'Enhances emotional well-being',
-          'Provides enjoyment and comfort',
-        ],
-        completed: false,
-        favorite: true,
-        doctorSuggested: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1741770067276-a10e15ff5197?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.9,
-        totalRatings: 187,
-      },
-      {
-        id: '5',
-        name: 'Photo Album Review',
-        type: 'Cognitive',
-        duration: 30,
-        scheduledTime: '11:00 AM',
-        description:
-          'Review family photos and discuss memories together. This activity stimulates memory recall and provides meaningful social connection.',
-        instructions: [
-          'Gather family photo albums or digital photos',
-          'Sit in a comfortable, well-lit area',
-          'Look through photos together slowly',
-          'Ask gentle questions about the photos',
-          'Listen to stories and memories',
-          'Label photos if helpful for future reference',
-          'Focus on positive memories and emotions',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '3 times per week',
-        supervision: 'Caregiver participation required',
-        benefits: [
-          'Stimulates memory recall',
-          'Provides social interaction',
-          'Strengthens family bonds',
-          'Triggers positive emotions',
-        ],
-        completed: false,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1587955793432-7c4ff80918ba?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.6,
-        totalRatings: 156,
-      },
-      {
-        id: '6',
-        name: 'Simple Art & Coloring',
-        type: 'Creative',
-        duration: 40,
-        description:
-          'Creative expression through simple art activities. Art therapy provides sensory stimulation and promotes relaxation.',
-        instructions: [
-          'Set up art supplies in a comfortable space',
-          'Provide coloring books or simple drawing materials',
-          'Encourage free expression without judgment',
-          'No pressure for perfection - focus on enjoyment',
-          'Display finished artwork proudly',
-          'Clean up together as part of the activity',
-          'Praise effort and creativity',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '2-3 times per week',
-        supervision: 'Minimal supervision needed',
-        benefits: [
-          'Promotes creativity and self-expression',
-          'Reduces anxiety and stress',
-          'Provides sensory stimulation',
-          'Builds confidence',
-        ],
-        completed: false,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1761034036989-24640be78e90?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.4,
-        totalRatings: 123,
-      },
-    ];
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
   backToList(): void {
@@ -288,12 +87,151 @@ export class ActivityDetailsComponent implements OnInit {
     if (!this.activity) {
       return;
     }
-    this.userRating = rating;
-    this.activity.rating =
-      (this.activity.rating * this.activity.totalRatings + rating) /
-      (this.activity.totalRatings + 1);
-    this.activity.totalRatings += 1;
-    this.toastr.success(`You rated this activity ${rating} star${rating !== 1 ? 's' : ''}`);
+
+    const userId = String(this.user?.userId || '').trim();
+    const role = String(this.user?.role || '').toLowerCase();
+
+    if (!userId || role !== 'patient') {
+      this.toastr.info('Only patients can rate activities from this page');
+      return;
+    }
+
+    this.sub.add(
+      this.activityService.rateActivity(userId, this.activity.id, rating).subscribe({
+        next: () => {
+          this.userRating = rating;
+          this.activity = {
+            ...this.activity!,
+            rating:
+              (this.activity!.rating * this.activity!.totalRatings + rating) /
+              (this.activity!.totalRatings + 1),
+            totalRatings: this.activity!.totalRatings + 1,
+            userRating: rating,
+          };
+          this.toastr.success(`You rated this activity ${rating} star${rating !== 1 ? 's' : ''}`);
+        },
+        error: () => {
+          this.toastr.error('Could not submit your rating');
+        },
+      }),
+    );
+  }
+
+  private loadActivity(activityId: string): void {
+    const userId = String(this.user?.userId || '').trim();
+    const role = String(this.user?.role || '').toLowerCase();
+
+    if (role === 'patient' && userId) {
+      this.loadPatientActivity(userId, activityId);
+      return;
+    }
+
+    this.loadCatalogActivity(activityId);
+  }
+
+  private loadPatientActivity(userId: string, activityId: string): void {
+    this.sub.add(
+      this.activityService.getActivityForUser(userId, activityId).subscribe({
+        next: (activity) => {
+          this.activity = this.mapUserActivity(activity);
+          this.userRating = activity.userRating ?? 0;
+        },
+        error: () => {
+          this.toastr.error('Activity not found');
+          this.router.navigate(['/activities']);
+        },
+      }),
+    );
+  }
+
+  private loadCatalogActivity(activityId: string): void {
+    this.sub.add(
+      forkJoin({
+        activity: this.activityService.getActivityById(activityId),
+        details: this.activityService.getDetailsByActivityId(activityId),
+      }).subscribe({
+        next: ({ activity, details }) => {
+          this.activity = this.mapCatalogActivity(activity, details[0]);
+          this.userRating = 0;
+        },
+        error: () => {
+          this.toastr.error('Activity not found');
+          this.router.navigate(['/activities']);
+        },
+      }),
+    );
+  }
+
+  private mapUserActivity(activity: ActivityWithUserData): ActivityView {
+    return {
+      id: activity.id,
+      name: activity.name,
+      type: activity.type,
+      duration: Number(activity.duration || 0),
+      scheduledTime: activity.scheduledTime,
+      description: activity.description,
+      instructions: activity.instructions || [],
+      difficulty: activity.difficulty || 'Easy',
+      recommendedStage: activity.recommendedStage || [],
+      frequency: activity.frequency || 'Not specified',
+      supervision: activity.supervision || 'Not specified',
+      benefits: activity.benefits || [],
+      precautions: activity.precautions || [],
+      completed: !!activity.completed,
+      favorite: !!activity.favorite,
+      doctorSuggested: !!activity.doctorSuggested,
+      recommendedByDoctor: !!activity.recommendedByDoctor,
+      doctorName: activity.doctorName,
+      completedAt: activity.completedAt,
+      imageUrl: this.resolveImageUrl(activity.imageUrl),
+      rating: Number(activity.rating || 0),
+      totalRatings: Number(activity.totalRatings || 0),
+      userRating: activity.userRating ?? null,
+    };
+  }
+
+  private mapCatalogActivity(activity: Activity, details?: ActivityDetails): ActivityView {
+    return {
+      id: activity.id,
+      name: activity.name,
+      type: activity.type,
+      duration: Number(activity.duration || 0),
+      scheduledTime: activity.scheduledTime,
+      description: activity.description,
+      instructions: details?.instructions || [],
+      difficulty: details?.difficulty || 'Easy',
+      recommendedStage: details?.recommendedStage || [],
+      frequency: details?.frequency || 'Flexible',
+      supervision: details?.supervision || 'Not specified',
+      benefits: details?.benefits || [],
+      precautions: details?.precautions || [],
+      completed: false,
+      favorite: false,
+      doctorSuggested: !!activity.doctorSuggested,
+      recommendedByDoctor: false,
+      doctorName: undefined,
+      completedAt: undefined,
+      imageUrl: this.resolveImageUrl(activity.imageUrl),
+      rating: Number(activity.rating || 0),
+      totalRatings: Number(activity.totalRatings || 0),
+      userRating: null,
+    };
+  }
+
+  private resolveImageUrl(imageUrl?: string): string {
+    const value = String(imageUrl || '').trim();
+    if (!value) {
+      return '/assets/logo.png';
+    }
+
+    if (
+      value.startsWith('http://') ||
+      value.startsWith('https://') ||
+      value.startsWith('/assets/')
+    ) {
+      return value;
+    }
+
+    return `${this.activityService.apiUrl}${value.startsWith('/') ? value : `/${value}`}`;
   }
 }
-

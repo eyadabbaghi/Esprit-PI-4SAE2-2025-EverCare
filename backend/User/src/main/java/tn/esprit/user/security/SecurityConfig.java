@@ -3,15 +3,20 @@ package tn.esprit.user.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import tn.esprit.user.service.FaceLoginTokenService;
+
+import javax.crypto.SecretKey;
 
 @Configuration
 @EnableWebSecurity
@@ -19,44 +24,55 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final LocalUserJwtAuthenticationConverter jwtAuthenticationConverter;
+    private final FaceLoginTokenService faceLoginTokenService;
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
         http
-                // ❌ DISABLE CSRF (API mode)
                 .csrf(csrf -> csrf.disable())
-
-                // ❌ DISABLE CORS HERE (Gateway handles it)
-                .cors(cors -> cors.disable())
-
-                // 🔐 AUTH RULES
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/internal/users/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/users/**").authenticated()
+                        .requestMatchers(
+                                "/auth/register",
+                                "/auth/login",
+                                "/auth/face-login",
+                                "/users/by-email",
+                                "/users/activity/**",
+                                "/uploads/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // 🔐 STATELESS SESSION (JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // 🔐 JWT FILTER
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter)
+                        )
+                );
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public JwtDecoder jwtDecoder(
+            @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwkSetUri
+    ) {
+        JwtDecoder keycloakDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        SecretKey localSigningKey = faceLoginTokenService.getSigningKey();
+        JwtDecoder localDecoder = NimbusJwtDecoder.withSecretKey(localSigningKey)
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
+
+        return token -> decodeWithFallback(token, keycloakDecoder, localDecoder);
+    }
+
+    private Jwt decodeWithFallback(String token, JwtDecoder keycloakDecoder, JwtDecoder localDecoder) {
+        try {
+            return keycloakDecoder.decode(token);
+        } catch (JwtException firstFailure) {
+            return localDecoder.decode(token);
+        }
     }
 }

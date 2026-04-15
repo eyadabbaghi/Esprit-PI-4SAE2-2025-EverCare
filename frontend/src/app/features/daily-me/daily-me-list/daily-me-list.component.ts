@@ -526,7 +526,7 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
 
   // ✅ Patients for doctor
   loadPatients(): void {
-    const url = 'http://localhost:8096/EverCare/users/patients';
+    const url = 'http://localhost:8089/EverCare/users/search';
 
     const token =
       localStorage.getItem('token') ||
@@ -536,7 +536,13 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
 
     const headers: any = token ? { Authorization: `Bearer ${token}` } : {};
 
-    this.http.get<any>(url, { headers }).subscribe({
+    this.http.get<any>(url, {
+      headers,
+      params: {
+        q: '',
+        role: 'PATIENT'
+      }
+    }).subscribe({
       next: (res: any) => {
         const list: any[] =
           Array.isArray(res) ? res :

@@ -40,6 +40,11 @@ export interface TrackingDangerDurationDto {
   level?: string;
 }
 
+interface CachedTrackingPing extends TrackingPingDto {
+  accuracyMeters?: number | null;
+  source?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TrackingDashboardService {
 
@@ -81,7 +86,12 @@ export class TrackingDashboardService {
                 new Date(b.timestamp ?? 0).getTime() -
                 new Date(a.timestamp ?? 0).getTime()
             )
-        )
+        ),
+        map((patients) => patients.length ? patients : this.getLatestPatientsFromCache()),
+        catchError((error) => {
+          console.error('[DoctorDashboard] latest patients error', error);
+          return of(this.getLatestPatientsFromCache());
+        })
       );
   }
 
@@ -103,12 +113,15 @@ export class TrackingDashboardService {
             data?.riskScore
           )
         ),
-
-        map((data) => (data ? this.toDoctorPatient(data) : null)),
+        map((data) => {
+          const resolved = data || this.getCachedTrackingPing(patientId);
+          return resolved ? this.toDoctorPatient(resolved) : null;
+        }),
 
         catchError((error) => {
           console.error(`[DoctorDashboard] status error ${patientId}`, error);
-          return of(null);
+          const cached = this.getCachedTrackingPing(patientId);
+          return of(cached ? this.toDoctorPatient(cached) : null);
         })
       );
   }
@@ -130,7 +143,12 @@ export class TrackingDashboardService {
             'latest riskScore=',
             data?.[0]?.riskScore
           )
-        )
+        ),
+        map((history) => history?.length ? history : this.getCachedHistory(patientId)),
+        catchError((error) => {
+          console.error(`[DoctorDashboard] history error ${patientId}`, error);
+          return of(this.getCachedHistory(patientId));
+        })
       );
   }
 
@@ -145,9 +163,10 @@ export class TrackingDashboardService {
         tap((data) =>
           console.log(`[DoctorDashboard] alerts ${patientId}:`, data)
         ),
+        map((alerts) => alerts?.length ? alerts : this.getCachedAlerts(patientId)),
         catchError((error) => {
           console.error(`[DoctorDashboard] alerts error ${patientId}`, error);
-          return of([]);
+          return of(this.getCachedAlerts(patientId));
         })
       );
   }
@@ -184,6 +203,129 @@ export class TrackingDashboardService {
       name: `Patient ${ping.patientId}`,
       status: this.getStatus(ping)
     };
+  }
+
+  private getLatestPatientsFromCache(): DoctorPatientVm[] {
+    if (typeof localStorage === 'undefined') {
+      return [];
+    }
+
+    const cachedPatients: DoctorPatientVm[] = [];
+
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key || !key.startsWith('tracking_live_position_')) {
+        continue;
+      }
+
+      const patientId = key.replace('tracking_live_position_', '');
+      const cachedPing = this.getCachedTrackingPing(patientId);
+
+      if (cachedPing) {
+        cachedPatients.push(this.toDoctorPatient(cachedPing));
+      }
+    }
+
+    return cachedPatients.sort(
+      (left, right) =>
+        new Date(right.timestamp ?? 0).getTime() -
+        new Date(left.timestamp ?? 0).getTime()
+    );
+  }
+
+  private getCachedTrackingPing(patientId: string): CachedTrackingPing | null {
+    if (typeof localStorage === 'undefined' || !patientId) {
+      return null;
+    }
+
+    try {
+      const raw = localStorage.getItem(`tracking_live_position_${patientId}`);
+      if (!raw) {
+        return this.getCachedHistory(patientId)[0] || null;
+      }
+
+      const parsed = JSON.parse(raw);
+      if (
+        typeof parsed?.lat !== 'number' ||
+        typeof parsed?.lng !== 'number'
+      ) {
+        return null;
+      }
+
+      return {
+        patientId: parsed.patientId || patientId,
+        lat: parsed.lat,
+        lng: parsed.lng,
+        timestamp: parsed.timestamp || new Date().toISOString(),
+        insideSafeZone: parsed.insideSafeZone,
+        riskScore: parsed.riskScore,
+        speed: parsed.speed,
+        trend: parsed.trend,
+        accuracyMeters: parsed.accuracyMeters,
+        source: parsed.source || 'local-cache'
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private getCachedHistory(patientId: string): TrackingPingDto[] {
+    if (typeof localStorage === 'undefined' || !patientId) {
+      return [];
+    }
+
+    try {
+      const raw = localStorage.getItem(`history_${patientId}`);
+      const parsed = JSON.parse(raw || '[]');
+
+      return (Array.isArray(parsed) ? parsed : [])
+        .map((entry) => ({
+          patientId,
+          lat: Number(entry?.lat),
+          lng: Number(entry?.lng),
+          timestamp: entry?.timestamp || this.toIsoTimestamp(entry?.date, entry?.time),
+          insideSafeZone: entry?.status === 'SAFE',
+          riskScore: entry?.status === 'DANGER' ? 80 : entry?.status === 'WARNING' ? 35 : 0,
+          trend: entry?.status
+        }))
+        .filter((entry) => Number.isFinite(entry.lat) && Number.isFinite(entry.lng))
+        .sort(
+          (left, right) =>
+            new Date(right.timestamp ?? 0).getTime() -
+            new Date(left.timestamp ?? 0).getTime()
+        );
+    } catch {
+      return [];
+    }
+  }
+
+  private getCachedAlerts(patientId: string): TrackingAlertDto[] {
+    if (typeof localStorage === 'undefined' || !patientId) {
+      return [];
+    }
+
+    try {
+      const raw = localStorage.getItem(`alerts_${patientId}`);
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private toIsoTimestamp(date?: string, time?: string) {
+    if (!date && !time) {
+      return new Date().toISOString();
+    }
+
+    const parsedDate = new Date(`${date || ''} ${time || ''}`.trim());
+    const parsedTime = parsedDate.getTime();
+
+    if (!Number.isFinite(parsedTime)) {
+      return new Date().toISOString();
+    }
+
+    return parsedDate.toISOString();
   }
 
   // ================= REQUEST OPTIONS =================

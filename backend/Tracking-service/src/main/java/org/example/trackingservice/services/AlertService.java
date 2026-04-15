@@ -114,4 +114,20 @@ public class AlertService {
     public List<Alert> getPatientAlerts(String patientId) {
         return alertRepo.findByPatientIdOrderByTimestampDesc(patientId);
     }
+
+    public Alert createManualAlert(Alert alert) {
+        Alert manualAlert = new Alert();
+        manualAlert.setPatientId(alert.getPatientId());
+        manualAlert.setMessage(alert.getMessage());
+        manualAlert.setSeverity(alert.getSeverity());
+
+        Alert saved = alertRepo.save(manualAlert);
+
+        messagingTemplate.convertAndSend(
+                "/topic/alerts/" + manualAlert.getPatientId(),
+                saved
+        );
+
+        return saved;
+    }
 }

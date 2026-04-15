@@ -1,5 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import Chart from 'chart.js/auto';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   DoctorPatientVm,
   TrackingAlertDto,
@@ -8,6 +10,7 @@ import {
   TrackingPingDto,
   TrackingStatus
 } from '../../services/tracking-dashboard.service';
+import { Patient, UserService } from '../../../../core/services/user.service';
 
 @Component({
   selector: 'app-doctor-dashboard',
@@ -29,7 +32,10 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   private alertsPrimed = false;
   private criticalAlertAudio: HTMLAudioElement | null = null;
 
-  constructor(private readonly trackingDashboardService: TrackingDashboardService) {}
+  constructor(
+    private readonly trackingDashboardService: TrackingDashboardService,
+    private readonly userService: UserService
+  ) {}
 
   ngOnInit() {
     this.initializeAlertAudio();
@@ -60,19 +66,76 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     return this.getStatus(p).toLowerCase();
   }
 
+  getPatientName(patient: DoctorPatientVm | null): string {
+    const fullName = String(patient?.name || '').trim();
+    if (fullName) return fullName;
+
+    if (patient?.firstName && patient?.lastName) {
+      return `${patient.firstName} ${patient.lastName}`;
+    }
+
+    if (patient?.patientId) {
+      return `Patient ${(patient.patientId || '').toString().substring(0, 8)}`;
+    }
+
+    return 'Patient';
+  }
+
+  getPatientIdShort(patient: DoctorPatientVm | null): string {
+    return (patient?.patientId || '').toString().substring(0, 8) || 'N/A';
+  }
+
+  hasLiveLocation(patient: Partial<TrackingPingDto> | null | undefined): boolean {
+    return !!patient?.timestamp;
+  }
+
+  getLivePatientsCount(): number {
+    return this.patients.filter((patient) => this.hasLiveLocation(patient)).length;
+  }
+
+  getCoordinatesLabel(patient: DoctorPatientVm | null): string {
+    if (!this.hasLiveLocation(patient)) {
+      return 'Waiting for live ping';
+    }
+
+    return `${Number(patient?.lat ?? 0).toFixed(3)}, ${Number(patient?.lng ?? 0).toFixed(3)}`;
+  }
+
+  getLastPingLabel(patient: DoctorPatientVm | null): string {
+    if (!patient?.timestamp) {
+      return 'No live ping yet';
+    }
+
+    return new Date(patient.timestamp).toLocaleString();
+  }
+
+  getZoneLabel(patient: DoctorPatientVm | null): string {
+    if (!this.hasLiveLocation(patient)) {
+      return 'Waiting for live ping';
+    }
+
+    return patient?.insideSafeZone ? 'Inside safe zone' : 'Outside safe zone';
+  }
+
   getSeverityClass(severity?: string): string {
     return (severity || 'medium').toLowerCase();
   }
 
   getPatientCount(status: TrackingStatus): number {
-    return this.patients.filter((patient) => this.getStatus(patient) === status).length;
+    return this.patients.filter((patient) => (
+      this.hasLiveLocation(patient) && this.getStatus(patient) === status
+    )).length;
   }
 
   // 🔥 SMART MESSAGE
   getSmartMessage(p: any): string {
+    if (!this.hasLiveLocation(p)) {
+      return 'Waiting for first live location update';
+    }
+
     const status = this.getStatus(p);
 
-    if (!p.insideSafeZone)
+    if (p.insideSafeZone === false)
       return "🚨 Patient left safe zone — immediate attention required";
 
     if (status === 'DANGER')
@@ -119,25 +182,63 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadPatients() {
-    this.trackingDashboardService.getLatestPatients().subscribe({
-      next: (patients) => {
+    const providerEmail = this.getProviderEmail();
+    const providerRole = this.getProviderRole();
 
-        if (!patients || patients.length === 0) {
+    forkJoin({
+      trackedPatients: this.trackingDashboardService.getLatestPatients().pipe(
+        catchError((error) => {
+          console.error('failed loading tracked patients', error);
+          return of([] as DoctorPatientVm[]);
+        })
+      ),
+      directoryPatients: this.userService.getLinkedPatientsForProvider(providerEmail, providerRole).pipe(
+        catchError((error) => {
+          console.error('failed loading patient directory', error);
+          return of([] as Patient[]);
+        })
+      )
+    }).subscribe({
+      next: ({ trackedPatients, directoryPatients }) => {
+        const linkedPatientIds = new Set(
+          (directoryPatients || []).map((patient) => patient.userId).filter(Boolean)
+        );
+        const relevantTrackedPatients = linkedPatientIds.size
+          ? trackedPatients.filter((patient) => linkedPatientIds.has(patient.patientId))
+          : trackedPatients;
+        const patients = directoryPatients.length
+          ? this.mergePatients(directoryPatients, relevantTrackedPatients)
+          : relevantTrackedPatients;
+
+        if (!patients.length) {
           this.patients = [];
           this.selectedPatient = null;
           this.displayAlerts = [];
-          this.statusMessage = 'Waiting for patient data...';
+          this.statusMessage = providerEmail
+            ? 'No linked patients found yet.'
+            : 'Waiting for patient data...';
           return;
         }
 
-        this.patients = patients.map(p => ({
-          ...p,
-          status: this.getStatus(p)
+        this.patients = patients.map((patient) => ({
+          ...patient,
+          status: this.getStatus(patient)
         }));
+
+        if (this.selectedPatient?.patientId) {
+          const refreshedSelectedPatient = this.patients.find(
+            (patient) => patient.patientId === this.selectedPatient?.patientId
+          );
+
+          this.selectedPatient = refreshedSelectedPatient || null;
+        }
 
         if (!this.selectedPatient) {
           this.selectPatient(this.patients[0]);
+          return;
         }
+
+        this.updateStatusMessage();
       }
     });
   }
@@ -362,5 +463,115 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
     this.displayAlerts = [];
     this.syncAlertFeedback(enableSound);
+  }
+
+  private mergePatients(directoryPatients: Patient[], trackedPatients: DoctorPatientVm[]): DoctorPatientVm[] {
+    const trackedById = new Map<string, DoctorPatientVm>();
+
+    trackedPatients.forEach((patient) => {
+      if (patient?.patientId) {
+        trackedById.set(patient.patientId, patient);
+      }
+    });
+
+    const knownPatientIds = new Set<string>();
+    const mergedDirectoryPatients = (directoryPatients || [])
+      .filter((patient) => !!patient?.userId)
+      .map((patient) => {
+        knownPatientIds.add(patient.userId);
+        const trackedPatient = trackedById.get(patient.userId);
+        return trackedPatient
+          ? this.applyPatientIdentity(trackedPatient, patient)
+          : this.toPatientPlaceholder(patient);
+      });
+
+    const trackedOnlyPatients = trackedPatients.filter(
+      (patient) => patient?.patientId && !knownPatientIds.has(patient.patientId)
+    );
+
+    return [...mergedDirectoryPatients, ...trackedOnlyPatients].sort((left, right) => {
+      const liveDelta = this.toTimestamp(right.timestamp) - this.toTimestamp(left.timestamp);
+      if (liveDelta !== 0) {
+        return liveDelta;
+      }
+
+      return this.getPatientName(left).localeCompare(this.getPatientName(right));
+    });
+  }
+
+  private applyPatientIdentity(trackedPatient: DoctorPatientVm, patient: Patient): DoctorPatientVm {
+    const name = String(patient.name || trackedPatient.name || patient.email || '').trim();
+    const { firstName, lastName } = this.splitName(name);
+
+    return {
+      ...trackedPatient,
+      name: name || trackedPatient.name,
+      firstName: firstName || trackedPatient.firstName,
+      lastName: lastName || trackedPatient.lastName
+    };
+  }
+
+  private toPatientPlaceholder(patient: Patient): DoctorPatientVm {
+    const name = String(patient.name || patient.email || '').trim() || `Patient ${patient.userId}`;
+    const { firstName, lastName } = this.splitName(name);
+
+    return {
+      patientId: patient.userId,
+      lat: 0,
+      lng: 0,
+      name,
+      firstName,
+      lastName,
+      status: 'SAFE',
+      riskScore: 0
+    };
+  }
+
+  private splitName(name: string): { firstName?: string; lastName?: string } {
+    const parts = name.split(/\s+/).filter(Boolean);
+
+    if (parts.length <= 1) {
+      return { firstName: parts[0] };
+    }
+
+    return {
+      firstName: parts[0],
+      lastName: parts.slice(1).join(' ')
+    };
+  }
+
+  private toTimestamp(value?: string): number {
+    if (!value) {
+      return 0;
+    }
+
+    const parsed = new Date(value).getTime();
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private getProviderEmail(): string {
+    if (typeof localStorage === 'undefined') {
+      return '';
+    }
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      return String(storedUser?.email || '').trim().toLowerCase();
+    } catch {
+      return '';
+    }
+  }
+
+  private getProviderRole(): string {
+    if (typeof localStorage === 'undefined') {
+      return '';
+    }
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      return String(storedUser?.role || '').trim().toUpperCase();
+    } catch {
+      return '';
+    }
   }
 }

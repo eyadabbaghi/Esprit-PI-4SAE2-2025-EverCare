@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tracking")
+@RequestMapping
 public class TrackingController {
 
     private final LocationPingService locationPingService;

@@ -47,8 +47,8 @@
               <h2>Safe Zone Overview</h2>
             </div>
 
-            <button type="button" class="soft-btn" (click)="useMyLocation()">
-              Use current location
+            <button type="button" class="soft-btn" (click)="useMyLocation()" [disabled]="isResolvingLocation">
+              {{ isResolvingLocation ? 'Finding precise GPS...' : 'Use current location' }}
             </button>
           </div>
 
@@ -69,6 +69,11 @@
             <div class="mini-stat">
               <span>Overall status</span>
               <strong [ngClass]="getStatus().toLowerCase()">{{ getStatus() }}</strong>
+            </div>
+
+            <div class="mini-stat">
+              <span>GPS accuracy</span>
+              <strong>{{ getAccuracyLabel() }}</strong>
             </div>
 
             <div class="mini-stat">
@@ -183,6 +188,11 @@
 
           <div class="map-legend">
             <div class="legend-item">
+              <span class="legend-swatch" style="background: #2563eb;"></span>
+              <span>Blue -> Current live location</span>
+            </div>
+
+            <div class="legend-item">
               <span class="legend-swatch safe-zone"></span>
               <span>Green -> Safe Zone (manual)</span>
             </div>
@@ -216,6 +226,11 @@
             <article class="metric-card">
               <span>Movement</span>
               <strong>{{ movementStatus }}</strong>
+            </article>
+
+            <article class="metric-card">
+              <span>GPS accuracy</span>
+              <strong>{{ getAccuracyLabel() }}</strong>
             </article>
 
             <article class="metric-card">
@@ -340,8 +355,8 @@
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="soft-btn" (click)="useMyLocation()">
-              Use current location
+            <button type="button" class="soft-btn" (click)="useMyLocation()" [disabled]="isResolvingLocation">
+              {{ isResolvingLocation ? 'Finding precise GPS...' : 'Use current location' }}
             </button>
             <span>Or click directly on the map to place the safe zone.</span>
           </div>

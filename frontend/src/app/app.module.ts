@@ -16,7 +16,6 @@ import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 import { LayoutsModule } from './layouts/layouts.module';
 
-import { BackOfficeModule } from './features/back-office/back-office.module';
 import { FrontOfficeModule } from './features/front-office/front-office.module';
 import { AppointmentsModule } from './features/appointments/appointments.module';
 import { DailyMeModule } from './features/daily-me/daily-me.module';
@@ -36,7 +35,6 @@ import { AuthInterceptor } from './features/front-office/pages/login/auth.interc
 
 // ✅ ng2-charts v6 setup
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { TrackingModule } from './features/tracking/tracking.module';
 import { DailymeAlertsComponent } from './pages/dailyme-alerts/dailyme-alerts.component';
 import { DailymeAlertCardComponent } from './components/dailyme-alert-card/dailyme-alert-card.component';
 
@@ -61,7 +59,6 @@ import { DailymeAlertCardComponent } from './components/dailyme-alert-card/daily
     SharedModule,
     LayoutsModule,
 
-    BackOfficeModule,
     FrontOfficeModule,
     AppointmentsModule,
     DailyMeModule,
@@ -76,10 +73,8 @@ import { DailymeAlertCardComponent } from './components/dailyme-alert-card/daily
       progressBar: true,
       closeButton: true
     }),
-
     ReactiveFormsModule,
-    FormsModule,
-    TrackingModule
+    FormsModule
   ],
   providers: [
     provideClientHydration(),

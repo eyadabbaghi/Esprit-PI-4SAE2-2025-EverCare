@@ -10,6 +10,8 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   DoctorPatientVm,
   TrackingAlertDto,
@@ -18,6 +20,7 @@ import {
   TrackingPingDto,
   TrackingStatus
 } from '../../services/tracking-dashboard.service';
+import { Patient, UserService } from '../../../../core/services/user.service';
 
 type AssistantAction = 'use-current-location' | 'save-current-location' | 'open-add-safe-zone' | 'lost';
 
@@ -52,6 +55,7 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
 
   constructor(
     private readonly trackingDashboardService: TrackingDashboardService,
+    private readonly userService: UserService,
     private readonly http: HttpClient,
     @Inject(PLATFORM_ID) private readonly platformId: Object
   ) {}
@@ -173,9 +177,61 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
   }
 
   private loadPatients() {
-    this.trackingDashboardService.getLatestPatients().subscribe({
-      next: (patients) => {
-        this.patients = patients || [];
+    const providerEmail = this.getProviderEmail();
+    const providerRole = this.getProviderRole();
+
+    forkJoin({
+      trackedPatients: this.trackingDashboardService.getLatestPatients().pipe(
+        catchError((error) => {
+          console.error('failed loading tracked patients', error);
+          return of([] as DoctorPatientVm[]);
+        })
+      ),
+      linkedPatients: this.userService.getLinkedPatientsForProvider(providerEmail, providerRole).pipe(
+        catchError((error) => {
+          console.error('failed loading linked patients', error);
+          return of([] as Patient[]);
+        })
+      )
+    }).subscribe({
+      next: ({ trackedPatients, linkedPatients }) => {
+        const linkedPatientIds = new Set(
+          (linkedPatients || []).map((patient) => patient.userId).filter(Boolean)
+        );
+        const patients = linkedPatientIds.size
+          ? trackedPatients.filter((patient) => linkedPatientIds.has(patient.patientId))
+          : (trackedPatients || []);
+        const linkedById = new Map(
+          (linkedPatients || []).map((patient) => [patient.userId, patient] as const)
+        );
+        const resolvedPatients = (patients.length ? patients : (linkedPatients || []).map((patient) =>
+          this.toPatientPlaceholder(patient)
+        )).map((patient) => {
+          const linkedPatient = linkedById.get(patient.patientId);
+
+          if (!linkedPatient) {
+            return patient;
+          }
+
+          const name = String(linkedPatient.name || linkedPatient.email || patient.name || '').trim();
+          const parts = name.split(/\s+/).filter(Boolean);
+
+          return {
+            ...patient,
+            name: name || patient.name,
+            firstName: parts[0] || patient.firstName,
+            lastName: parts.length > 1 ? parts.slice(1).join(' ') : patient.lastName
+          };
+        });
+        this.patients = resolvedPatients;
+
+        if (
+          this.selectedPatient?.patientId &&
+          !this.patients.some((patient) => patient.patientId === this.selectedPatient?.patientId)
+        ) {
+          this.selectedPatient = null;
+        }
+
         if (!this.selectedPatient && this.patients.length > 0) {
           this.selectPatient(this.patients[0]);
         }
@@ -231,6 +287,11 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
       .subscribe({
         next: (zones) => {
           this.safeZones = zones || [];
+          this.refreshMapLayers();
+          this.updateGuidanceIfOutside();
+        },
+        error: () => {
+          this.safeZones = this.getCachedSafeZones(patientId);
           this.refreshMapLayers();
           this.updateGuidanceIfOutside();
         }
@@ -289,16 +350,16 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
 
     this.currentPulse = this.leaflet.circle(currentPoint, {
       radius: 120,
-      color: '#c4b5fd',
-      fillColor: '#a78bfa',
-      fillOpacity: 0.08,
+      color: '#93c5fd',
+      fillColor: '#60a5fa',
+      fillOpacity: 0.12,
       weight: 1
     }).addTo(this.mapLayer);
 
     this.currentMarker = this.leaflet.circleMarker(currentPoint, {
       radius: 9,
-      color: '#4c1d95',
-      fillColor: '#7c3aed',
+      color: '#1d4ed8',
+      fillColor: '#2563eb',
       fillOpacity: 1,
       weight: 3
     }).addTo(this.mapLayer);
@@ -399,5 +460,60 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
     setTimeout(() => {
       this.showToast = false;
     }, 2400);
+  }
+
+  private getCachedSafeZones(patientId: string) {
+    if (typeof localStorage === 'undefined') {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(localStorage.getItem(`places_${patientId}`) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private toPatientPlaceholder(patient: Patient): DoctorPatientVm {
+    const name = String(patient.name || patient.email || '').trim() || `Patient ${patient.userId}`;
+    const parts = name.split(/\s+/).filter(Boolean);
+
+    return {
+      patientId: patient.userId,
+      lat: 0,
+      lng: 0,
+      name,
+      firstName: parts[0],
+      lastName: parts.length > 1 ? parts.slice(1).join(' ') : undefined,
+      status: 'SAFE',
+      riskScore: 0
+    };
+  }
+
+  private getProviderEmail(): string {
+    if (typeof localStorage === 'undefined') {
+      return '';
+    }
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      return String(storedUser?.email || '').trim().toLowerCase();
+    } catch {
+      return '';
+    }
+  }
+
+  private getProviderRole(): string {
+    if (typeof localStorage === 'undefined') {
+      return '';
+    }
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      return String(storedUser?.role || '').trim().toUpperCase();
+    } catch {
+      return '';
+    }
   }
 }

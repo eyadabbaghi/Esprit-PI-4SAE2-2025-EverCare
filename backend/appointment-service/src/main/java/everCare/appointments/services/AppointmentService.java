@@ -1,8 +1,6 @@
 package everCare.appointments.services;
 
 import everCare.appointments.entities.Appointment;
-import everCare.appointments.entities.User;
-import everCare.appointments.entities.ConsultationType;
 import java.time.LocalDateTime;
 import java.util.List;
 

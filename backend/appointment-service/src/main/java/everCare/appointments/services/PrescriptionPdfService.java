@@ -66,48 +66,44 @@ public class PrescriptionPdfService {
             log.info("Prescription found: {}", prescription.getPrescriptionId());
             
 // Validate prescription data to prevent NullPointerException
-            if (prescription.getPatient() == null) {
-                throw new RuntimeException("Patient information is missing for prescription ID: " + prescriptionId);
+            if (prescription.getPatientId() == null || prescription.getPatientId().isBlank()) {
+                throw new RuntimeException("Patient ID is missing for prescription ID: " + prescriptionId);
             }
-            if (prescription.getDoctor() == null) {
-                throw new RuntimeException("Doctor information is missing for prescription ID: " + prescriptionId);
-            }
-            if (prescription.getPatient().getUserId() == null) {
-                throw new RuntimeException("Patient user ID is missing for prescription ID: " + prescriptionId);
-            }
-            if (prescription.getDoctor().getUserId() == null) {
-                throw new RuntimeException("Doctor user ID is missing for prescription ID: " + prescriptionId);
+            if (prescription.getDoctorId() == null || prescription.getDoctorId().isBlank()) {
+                throw new RuntimeException("Doctor ID is missing for prescription ID: " + prescriptionId);
             }
             
-            log.info("Fetching patient data for user ID: {}", prescription.getPatient().getUserId());
+            log.info("Fetching patient data for user ID: {}", prescription.getPatientId());
             UserSimpleDTO userPatient = patientFeignClient
-                    .getUserById(prescription.getPatient().getUserId());
+                    .getUserById(prescription.getPatientId());
             log.info("Patient data fetched successfully: {}", userPatient.getName());
             
-if (userPatient == null) {
-                throw new RuntimeException("Failed to fetch patient data for user ID: " + prescription.getPatient().getUserId());
+            if (userPatient == null) {
+                throw new RuntimeException("Failed to fetch patient data for user ID: " + prescription.getPatientId());
             }
             
             // Map UserSimpleDTO to PatientSimpleDTO
             log.info("Mapping user data to patient DTO...");
             PatientSimpleDTO patient = new PatientSimpleDTO();
-            patient.setUserId(userPatient.getUserId());
+            if (userPatient.getUserId() != null) {
+                patient.setUserId(java.util.UUID.fromString(userPatient.getUserId()));
+            }
             patient.setName(userPatient.getName());
             patient.setEmail(userPatient.getEmail());
             patient.setPhone(userPatient.getPhone());
             patient.setCreatedAt(userPatient.getCreatedAt());
-            patient.setDateOfBirth(userPatient.getDateOfBirth());
+            patient.setDateOfBirth(userPatient.getDateOfBirth() != null ? userPatient.getDateOfBirth() : null);
             patient.setEmergencyContact(userPatient.getEmergencyContact());
             patient.setProfilePicture(userPatient.getProfilePicture());
             patient.setDoctorEmail(userPatient.getDoctorEmail());
             
-            log.info("Fetching doctor data for user ID: {}", prescription.getDoctor().getUserId());
+            log.info("Fetching doctor data for user ID: {}", prescription.getDoctorId());
             UserSimpleDTO doctor = patientFeignClient
-                    .getUserById(prescription.getDoctor().getUserId());
+                    .getUserById(prescription.getDoctorId());
             log.info("Doctor data fetched successfully: {}", doctor.getName());
             
-if (doctor == null) {
-                throw new RuntimeException("Failed to fetch doctor data for user ID: " + prescription.getDoctor().getUserId());
+            if (doctor == null) {
+                throw new RuntimeException("Failed to fetch doctor data for user ID: " + prescription.getDoctorId());
             }
 
             log.info("Generating QR code...");
@@ -358,8 +354,8 @@ if (doctor == null) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("resourceType", "MedicationRequest");
         payload.put("id",           prescription.getPrescriptionId());
-        payload.put("patient",      prescription.getPatient().getUserId());
-        payload.put("practitioner", prescription.getDoctor().getUserId());
+        payload.put("patient",      prescription.getPatientId());
+        payload.put("practitioner", prescription.getDoctorId());
         payload.put("date",         prescription.getDatePrescription().toString());
         payload.put("validUntil",   prescription.getDateFin().toString());
         payload.put("medications",  new Map[]{medObj});

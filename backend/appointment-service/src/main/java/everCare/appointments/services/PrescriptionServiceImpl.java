@@ -1,16 +1,23 @@
+/**
+ * PrescriptionServiceImpl - Service implementation for Prescription operations.
+ * 
+ * CHANGED: Replaced UserRepository with UserFeignClient.
+ * User validation is now done via Feign client to User microservice.
+ * Prescription entity now uses String patientId/doctorId instead of User objects.
+ */
 package everCare.appointments.services;
 
 import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.dtos.StatusCountDTO;
 import everCare.appointments.dtos.TopMedicamentDTO;
+import everCare.appointments.dtos.UserSimpleDTO;
 import everCare.appointments.entities.Prescription;
-import everCare.appointments.entities.User;
 import everCare.appointments.entities.Medicament;
 import everCare.appointments.entities.Appointment;
 import everCare.appointments.exceptions.ResourceNotFoundException;
+import everCare.appointments.feign.UserFeignClient;
 import everCare.appointments.repositories.PrescriptionRepository;
-import everCare.appointments.repositories.UserRepository;
 import everCare.appointments.repositories.MedicamentRepository;
 import everCare.appointments.repositories.AppointmentRepository;
 import everCare.appointments.specifications.PrescriptionSpecifications;
@@ -35,7 +42,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
-    private final UserRepository userRepository;
+    private final UserFeignClient userFeignClient;
     private final MedicamentRepository medicamentRepository;
     private final AppointmentRepository appointmentRepository;
 
@@ -45,67 +52,74 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription createPrescription(Prescription prescription) {
         validatePrescriptionDates(prescription.getDateDebut(), prescription.getDateFin());
         ensureMedicamentIsActive(prescription.getMedicament());
-        ensureNoOverlap(prescription.getPatient(), prescription.getMedicament(), prescription.getDateDebut(), prescription.getDateFin(), null);
+        
+        if (prescription.getPatientId() != null && prescription.getMedicament() != null) {
+            ensureNoOverlap(prescription.getPatientId(), prescription.getMedicament(), 
+                prescription.getDateDebut(), prescription.getDateFin(), null);
+        }
 
         prescription.setCreatedAt(LocalDateTime.now());
-
-        // Set default status
         if (prescription.getStatut() == null) {
             prescription.setStatut("ACTIVE");
         }
-
         return prescriptionRepository.save(prescription);
     }
 
     @Override
     public Prescription createPrescriptionFromConsultation(String patientId, String doctorId,
-                                                           String appointmentId, String medicamentId,
-                                                           LocalDate dateDebut, LocalDate dateFin,
-                                                           String posologie, String instructions,
-                                                           Boolean renouvelable, Integer nombreRenouvellements,
-                                                           String priseMatin, String priseMidi, String priseSoir,
-                                                           String resumeSimple, String notesMedecin) {
+            String appointmentId, String medicamentId,
+            LocalDate dateDebut, LocalDate dateFin,
+            String posologie, String instructions,
+            Boolean renouvelable, Integer nombreRenouvellements,
+            String priseMatin, String priseMidi, String priseSoir,
+            String resumeSimple, String notesMedecin) {
 
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
+        // Validate patient exists via Feign
+        UserSimpleDTO patient = userFeignClient.getUserById(patientId);
+        if (patient == null) {
+            throw new ResourceNotFoundException("Patient not found with id: " + patientId);
+        }
 
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
+        // Validate doctor exists via Feign
+        UserSimpleDTO doctor = userFeignClient.getUserById(doctorId);
+        if (doctor == null) {
+            throw new ResourceNotFoundException("Doctor not found with id: " + doctorId);
+        }
 
         Medicament medicament = medicamentRepository.findById(medicamentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
+            .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
 
         ensureMedicamentIsActive(medicament);
         validatePrescriptionDates(dateDebut, dateFin);
-        ensureNoOverlap(patient, medicament, dateDebut, dateFin, null);
+        ensureNoOverlap(patientId, medicament, dateDebut, dateFin, null);
 
         Appointment appointment = appointmentId == null || appointmentId.isBlank()
-                ? null
-                : appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + appointmentId));
+            ? null
+            : appointmentRepository.findById(appointmentId)
+                .orElse(null);
 
         Prescription prescription = Prescription.builder()
-                .prescriptionId(UUID.randomUUID().toString())
-                .patient(patient)
-                .doctor(doctor)
-                .appointment(appointment)
-                .medicament(medicament)
-                .datePrescription(LocalDate.now())
-                .dateDebut(dateDebut)
-                .dateFin(dateFin)
-                .posologie(posologie)
-                .instructions(instructions)
-                .statut("ACTIVE")
-                .renouvelable(Boolean.TRUE.equals(renouvelable))
-                .nombreRenouvellements(Boolean.TRUE.equals(renouvelable)
-                        ? Math.max(nombreRenouvellements != null ? nombreRenouvellements : 0, 0)
-                        : 0)
-                .priseMatin(priseMatin)
-                .priseMidi(priseMidi)
-                .priseSoir(priseSoir)
-                .resumeSimple(resumeSimple)
-                .notesMedecin(notesMedecin)
-                .build();
+            .prescriptionId(UUID.randomUUID().toString())
+            .patientId(patientId)
+            .doctorId(doctorId)
+            .appointment(appointment)
+            .medicament(medicament)
+            .datePrescription(LocalDate.now())
+            .dateDebut(dateDebut)
+            .dateFin(dateFin)
+            .posologie(posologie)
+            .instructions(instructions)
+            .statut("ACTIVE")
+            .renouvelable(Boolean.TRUE.equals(renouvelable))
+            .nombreRenouvellements(Boolean.TRUE.equals(renouvelable)
+                ? Math.max(nombreRenouvellements != null ? nombreRenouvellements : 0, 0)
+                : 0)
+            .priseMatin(priseMatin)
+            .priseMidi(priseMidi)
+            .priseSoir(priseSoir)
+            .resumeSimple(resumeSimple)
+            .notesMedecin(notesMedecin)
+            .build();
 
         return prescriptionRepository.save(prescription);
     }
@@ -120,35 +134,32 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public Prescription getPrescriptionById(String id) {
         return prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Prescription not found with id: " + id));
     }
 
     @Override
     public List<Prescription> getPrescriptionsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        return prescriptionRepository.findByPatient(patient);
+        validateUserExists(patientId, "Patient");
+        return prescriptionRepository.findByPatientId(patientId);
     }
 
     @Override
     public List<Prescription> getPrescriptionsByDoctor(String doctorId) {
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
-        return prescriptionRepository.findByDoctor(doctor);
+        validateUserExists(doctorId, "Doctor");
+        return prescriptionRepository.findByDoctorId(doctorId);
     }
 
     @Override
     public List<Prescription> getPrescriptionsByMedicament(String medicamentId) {
         Medicament medicament = medicamentRepository.findById(medicamentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
+            .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
         return prescriptionRepository.findByMedicament(medicament);
     }
 
     @Override
     public List<Prescription> getActivePrescriptionsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        return prescriptionRepository.findActiveByPatient(patient);
+        validateUserExists(patientId, "Patient");
+        return prescriptionRepository.findActiveByPatientId(patientId);
     }
 
     @Override
@@ -175,7 +186,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     // ========== UPDATE ==========
 
-
     @Override
     public Prescription terminatePrescription(String id) {
         Prescription prescription = getPrescriptionById(id);
@@ -189,53 +199,41 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         Prescription prescription = getPrescriptionById(id);
         ensureMedicamentIsActive(prescription.getMedicament());
 
-        // Check 1: is it marked as renewable at all?
-        if (prescription.getNombreRenouvellements() == null
-                || prescription.getNombreRenouvellements() <= 0) {
+        if (prescription.getNombreRenouvellements() == null || prescription.getNombreRenouvellements() <= 0) {
             throw new RuntimeException("Prescription " + id + " is not renewable.");
         }
 
-        // Check 2 (THE FIX): are there renewals remaining?
-        if (prescription.getNombreRenouvellements() <= 0) {
-            throw new RuntimeException(
-                    "No renewals remaining for prescription " + id + "."
-            );
-        }
-
-        // Check 3: can only renew an ACTIVE prescription
         if (!"ACTIVE".equals(prescription.getStatut())) {
-            throw new RuntimeException(
-                    "Cannot renew prescription with status: " + prescription.getStatut()
-                            + ". Only ACTIVE prescriptions can be renewed."
-            );
+            throw new RuntimeException("Cannot renew prescription with status: " + prescription.getStatut());
         }
 
         LocalDate newDateDebut = prescription.getDateFin().plusDays(1);
         validatePrescriptionDates(newDateDebut, newDateFin);
-        ensureNoOverlap(prescription.getPatient(), prescription.getMedicament(), newDateDebut, newDateFin, id);
+        
+        if (prescription.getPatientId() != null && prescription.getMedicament() != null) {
+            ensureNoOverlap(prescription.getPatientId(), prescription.getMedicament(), newDateDebut, newDateFin, id);
+        }
 
-        // Build the new prescription — start date is old end date + 1 day
         Prescription newPrescription = Prescription.builder()
-                .prescriptionId(UUID.randomUUID().toString())
-                .patient(prescription.getPatient())
-                .doctor(prescription.getDoctor())
-                .medicament(prescription.getMedicament())
-                .datePrescription(LocalDate.now())
-                .dateDebut(newDateDebut)
-                .dateFin(newDateFin)
-                .posologie(prescription.getPosologie())
-                .instructions(prescription.getInstructions())
-                .statut("ACTIVE")
-                .renouvelable(prescription.getRenouvelable())
-                .nombreRenouvellements(prescription.getNombreRenouvellements() - 1) // decrement safely
-                .priseMatin(prescription.getPriseMatin())
-                .priseMidi(prescription.getPriseMidi())
-                .priseSoir(prescription.getPriseSoir())
-                .resumeSimple(prescription.getResumeSimple())
-                .createdAt(LocalDateTime.now())
-                .build();
+            .prescriptionId(UUID.randomUUID().toString())
+            .patientId(prescription.getPatientId())
+            .doctorId(prescription.getDoctorId())
+            .medicament(prescription.getMedicament())
+            .datePrescription(LocalDate.now())
+            .dateDebut(newDateDebut)
+            .dateFin(newDateFin)
+            .posologie(prescription.getPosologie())
+            .instructions(prescription.getInstructions())
+            .statut("ACTIVE")
+            .renouvelable(prescription.getRenouvelable())
+            .nombreRenouvellements(prescription.getNombreRenouvellements() - 1)
+            .priseMatin(prescription.getPriseMatin())
+            .priseMidi(prescription.getPriseMidi())
+            .priseSoir(prescription.getPriseSoir())
+            .resumeSimple(prescription.getResumeSimple())
+            .createdAt(LocalDateTime.now())
+            .build();
 
-        // Mark the old prescription as renewed (not TERMINEE — different meaning)
         prescription.setStatut("RENOUVELEE");
         prescription.setUpdatedAt(LocalDateTime.now());
         prescriptionRepository.save(prescription);
@@ -278,7 +276,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public Prescription generatePdf(String id) {
         Prescription prescription = getPrescriptionById(id);
-        // Logic to generate PDF
         String pdfUrl = "/pdfs/prescription_" + id + ".pdf";
         prescription.setPdfUrl(pdfUrl);
         prescription.setUpdatedAt(LocalDateTime.now());
@@ -301,9 +298,8 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public void deletePrescriptionsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        List<Prescription> prescriptions = prescriptionRepository.findByPatient(patient);
+        validateUserExists(patientId, "Patient");
+        List<Prescription> prescriptions = prescriptionRepository.findByPatientId(patientId);
         prescriptionRepository.deleteAll(prescriptions);
     }
 
@@ -311,28 +307,36 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public List<Prescription> searchPrescriptions(String patientName, String doctorName, String medicamentName, 
-                                                 String status, LocalDate dateFrom, LocalDate dateTo) {
+            String status, LocalDate dateFrom, LocalDate dateTo) {
         List<Prescription> prescriptions = getAllPrescriptions();
         
-        // Filter by patient name
         if (patientName != null && !patientName.trim().isEmpty()) {
+            // Filter by patient name - fetch via Feign
             prescriptions = prescriptions.stream()
-                .filter(p -> p.getPatient() != null && 
-                           p.getPatient().getName() != null &&
-                           p.getPatient().getName().toLowerCase().contains(patientName.toLowerCase()))
+                .filter(p -> p.getPatientId() != null)
+                .filter(p -> {
+                    try {
+                        var patient = userFeignClient.getUserById(p.getPatientId());
+                        return patient != null && patient.getName() != null &&
+                            patient.getName().toLowerCase().contains(patientName.toLowerCase());
+                    } catch (Exception e) { return false; }
+                })
                 .toList();
         }
         
-        // Filter by doctor name
         if (doctorName != null && !doctorName.trim().isEmpty()) {
             prescriptions = prescriptions.stream()
-                .filter(p -> p.getDoctor() != null && 
-                           p.getDoctor().getName() != null &&
-                           p.getDoctor().getName().toLowerCase().contains(doctorName.toLowerCase()))
+                .filter(p -> p.getDoctorId() != null)
+                .filter(p -> {
+                    try {
+                        var doctor = userFeignClient.getUserById(p.getDoctorId());
+                        return doctor != null && doctor.getName() != null &&
+                            doctor.getName().toLowerCase().contains(doctorName.toLowerCase());
+                    } catch (Exception e) { return false; }
+                })
                 .toList();
         }
         
-        // Filter by medicament name
         if (medicamentName != null && !medicamentName.trim().isEmpty()) {
             prescriptions = prescriptions.stream()
                 .filter(p -> p.getMedicament() != null && 
@@ -341,25 +345,21 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .toList();
         }
         
-        // Filter by status
         if (status != null && !status.trim().isEmpty()) {
             prescriptions = prescriptions.stream()
                 .filter(p -> status.equals(p.getStatut()))
                 .toList();
         }
         
-        // Filter by date range
         if (dateFrom != null) {
             prescriptions = prescriptions.stream()
-                .filter(p -> p.getDatePrescription() != null && 
-                           !p.getDatePrescription().isBefore(dateFrom))
+                .filter(p -> p.getDatePrescription() != null && !p.getDatePrescription().isBefore(dateFrom))
                 .toList();
         }
         
         if (dateTo != null) {
             prescriptions = prescriptions.stream()
-                .filter(p -> p.getDatePrescription() != null && 
-                           !p.getDatePrescription().isAfter(dateTo))
+                .filter(p -> p.getDatePrescription() != null && !p.getDatePrescription().isAfter(dateTo))
                 .toList();
         }
         
@@ -368,23 +368,13 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public Page<Prescription> filterPrescriptions(String patientId, String doctorId, String medicamentId,
-                                                  String status, Boolean renewable, Boolean expired,
-                                                  Boolean expiringSoon, LocalDate dateFrom, LocalDate dateTo,
-                                                  Boolean hasAppointment, Pageable pageable) {
+            String status, Boolean renewable, Boolean expired, Boolean expiringSoon, 
+            LocalDate dateFrom, LocalDate dateTo, Boolean hasAppointment, Pageable pageable) {
         return prescriptionRepository.findAll(
-                PrescriptionSpecifications.withFilters(
-                        patientId,
-                        doctorId,
-                        medicamentId,
-                        status,
-                        renewable,
-                        expired,
-                        expiringSoon,
-                        dateFrom,
-                        dateTo,
-                        hasAppointment
-                ),
-                pageable
+            PrescriptionSpecifications.withFilters(
+                patientId, doctorId, medicamentId, status, renewable, expired,
+                expiringSoon, dateFrom, dateTo, hasAppointment
+            ), pageable
         );
     }
 
@@ -398,20 +388,18 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public List<Prescription> getTodayPrescriptions(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-
-        return prescriptionRepository.findActiveByPatient(patient).stream()
-                .filter(p -> p.getDateDebut() != null)
-                .filter(p -> !p.getDateDebut().isAfter(LocalDate.now()))
-                .filter(p -> p.getDateFin() == null || !p.getDateFin().isBefore(LocalDate.now()))
-                .toList();
+        validateUserExists(patientId, "Patient");
+        return prescriptionRepository.findActiveByPatientId(patientId).stream()
+            .filter(p -> p.getDateDebut() != null)
+            .filter(p -> !p.getDateDebut().isAfter(LocalDate.now()))
+            .filter(p -> p.getDateFin() == null || !p.getDateFin().isBefore(LocalDate.now()))
+            .toList();
     }
 
     @Override
     public long countByMedicament(String medicamentId) {
         Medicament medicament = medicamentRepository.findById(medicamentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
+            .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + medicamentId));
         return prescriptionRepository.countByMedicament(medicament);
     }
 
@@ -419,94 +407,38 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public Prescription updatePrescriptionFromRequest(String id, PrescriptionRequestDTO request) {
         Prescription existingPrescription = getPrescriptionById(id);
 
-        Medicament targetMedicament = existingPrescription.getMedicament();
-
-        // Resolve medicament from ID if provided
         if (request.getMedicamentId() != null) {
             Medicament medicament = medicamentRepository.findById(request.getMedicamentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + request.getMedicamentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found"));
             existingPrescription.setMedicament(medicament);
-            targetMedicament = medicament;
         }
 
-        if (request.getDateDebut() != null) {
-            existingPrescription.setDateDebut(request.getDateDebut());
-        }
-
-        if (request.getDateFin() != null) {
-            existingPrescription.setDateFin(request.getDateFin());
-        }
+        if (request.getDateDebut() != null) existingPrescription.setDateDebut(request.getDateDebut());
+        if (request.getDateFin() != null) existingPrescription.setDateFin(request.getDateFin());
 
         validatePrescriptionDates(existingPrescription.getDateDebut(), existingPrescription.getDateFin());
-        ensureMedicamentIsActive(targetMedicament);
-        ensureNoOverlap(
-                existingPrescription.getPatient(),
-                targetMedicament,
-                existingPrescription.getDateDebut(),
-                existingPrescription.getDateFin(),
-                existingPrescription.getPrescriptionId()
-        );
-
-        if (request.getPosologie() != null) {
-            existingPrescription.setPosologie(request.getPosologie());
-        }
-
-        if (request.getInstructions() != null) {
-            existingPrescription.setInstructions(request.getInstructions());
-        }
-
-        // Statut should NOT be updatable freely via a generic update —
-        // use the dedicated endpoints (terminate, cancel, renew) instead.
-        // Removing this to prevent status bypass.
-
-        if (request.getPriseMatin() != null) {
-            existingPrescription.setPriseMatin(request.getPriseMatin());
-        }
-
-        if (request.getPriseMidi() != null) {
-            existingPrescription.setPriseMidi(request.getPriseMidi());
-        }
-
-        if (request.getPriseSoir() != null) {
-            existingPrescription.setPriseSoir(request.getPriseSoir());
-        }
-
-        if (request.getNotesMedecin() != null) {
-            existingPrescription.setNotesMedecin(request.getNotesMedecin());
-        }
-
-        if (request.getResumeSimple() != null) {
-            existingPrescription.setResumeSimple(request.getResumeSimple());
-        }
-
-        // Only update renouvelable if explicitly set to true
-        // (avoids the primitive boolean defaulting-to-false problem)
-        if (request.getRenouvelable() != null) {
-            existingPrescription.setRenouvelable(request.getRenouvelable());
-        }
-
-        if (request.getNombreRenouvellements() != null) {
-            existingPrescription.setNombreRenouvellements(request.getNombreRenouvellements());
-        }
+        
+        if (request.getPosologie() != null) existingPrescription.setPosologie(request.getPosologie());
+        if (request.getInstructions() != null) existingPrescription.setInstructions(request.getInstructions());
+        if (request.getPriseMatin() != null) existingPrescription.setPriseMatin(request.getPriseMatin());
+        if (request.getPriseMidi() != null) existingPrescription.setPriseMidi(request.getPriseMidi());
+        if (request.getPriseSoir() != null) existingPrescription.setPriseSoir(request.getPriseSoir());
+        if (request.getNotesMedecin() != null) existingPrescription.setNotesMedecin(request.getNotesMedecin());
+        if (request.getResumeSimple() != null) existingPrescription.setResumeSimple(request.getResumeSimple());
+        if (request.getRenouvelable() != null) existingPrescription.setRenouvelable(request.getRenouvelable());
+        if (request.getNombreRenouvellements() != null) existingPrescription.setNombreRenouvellements(request.getNombreRenouvellements());
 
         existingPrescription.setUpdatedAt(LocalDateTime.now());
-
         return prescriptionRepository.save(existingPrescription);
     }
 
     @Override
     public Prescription cancelPrescription(String id) {
         Prescription prescription = getPrescriptionById(id);
-
-        // Can only cancel an ACTIVE prescription
         if (!"ACTIVE".equals(prescription.getStatut())) {
-            throw new RuntimeException(
-                    "Cannot cancel prescription with status: " + prescription.getStatut()
-                            + ". Only ACTIVE prescriptions can be cancelled."
-            );
+            throw new RuntimeException("Cannot cancel prescription with status: " + prescription.getStatut());
         }
-
-        prescription.setStatut("INTERROMPUE"); // matches your entity's statut values
+        prescription.setStatut("INTERROMPUE");
         prescription.setUpdatedAt(LocalDateTime.now());
         return prescriptionRepository.save(prescription);
     }
@@ -514,16 +446,15 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public PrescriptionAnalyticsSummaryDTO getAnalyticsSummary(String doctorId) {
         LocalDate today = LocalDate.now();
-
         return PrescriptionAnalyticsSummaryDTO.builder()
-                .total(prescriptionRepository.countScoped(doctorId))
-                .active(prescriptionRepository.countByStatusScoped(doctorId, "ACTIVE"))
-                .expired(prescriptionRepository.countExpiredScoped(doctorId, today))
-                .expiringSoon(prescriptionRepository.countExpiringSoonScoped(doctorId, today, today.plusDays(7)))
-                .renewed(prescriptionRepository.countByStatusScoped(doctorId, "RENOUVELEE"))
-                .interrupted(prescriptionRepository.countByStatusScoped(doctorId, "INTERROMPUE"))
-                .completed(prescriptionRepository.countByStatusScoped(doctorId, "TERMINEE"))
-                .build();
+            .total(prescriptionRepository.countScoped(doctorId))
+            .active(prescriptionRepository.countByStatusScoped(doctorId, "ACTIVE"))
+            .expired(prescriptionRepository.countExpiredScoped(doctorId, today))
+            .expiringSoon(prescriptionRepository.countExpiringSoonScoped(doctorId, today, today.plusDays(7)))
+            .renewed(prescriptionRepository.countByStatusScoped(doctorId, "RENOUVELEE"))
+            .interrupted(prescriptionRepository.countByStatusScoped(doctorId, "INTERROMPUE"))
+            .completed(prescriptionRepository.countByStatusScoped(doctorId, "TERMINEE"))
+            .build();
     }
 
     @Override
@@ -533,15 +464,15 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     @Override
     public List<TopMedicamentDTO> getTopMedicaments(String doctorId, int limit) {
-        List<TopMedicamentDTO> medicaments = prescriptionRepository.getTopMedicaments(doctorId);
-        return medicaments.stream().limit(Math.max(limit, 1)).toList();
+        return prescriptionRepository.getTopMedicaments(doctorId).stream().limit(Math.max(limit, 1)).toList();
     }
+
+    // ========== HELPER METHODS ==========
 
     private void validatePrescriptionDates(LocalDate dateDebut, LocalDate dateFin) {
         if (dateDebut == null || dateFin == null) {
             throw new ResponseStatusException(BAD_REQUEST, "Prescription start and end dates are required.");
         }
-
         if (dateFin.isBefore(dateDebut)) {
             throw new ResponseStatusException(BAD_REQUEST, "Prescription end date must be on or after start date.");
         }
@@ -551,31 +482,27 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         if (medicament == null) {
             throw new ResponseStatusException(BAD_REQUEST, "A medicament is required.");
         }
-
         if (!medicament.isActif()) {
             throw new ResponseStatusException(CONFLICT, "Inactive medicaments cannot be prescribed.");
         }
     }
 
-    private void ensureNoOverlap(User patient, Medicament medicament, LocalDate dateDebut, LocalDate dateFin, String excludedPrescriptionId) {
-        if (patient == null || medicament == null || dateDebut == null || dateFin == null) {
+    private void ensureNoOverlap(String patientId, Medicament medicament, LocalDate dateDebut, LocalDate dateFin, String excludedPrescriptionId) {
+        if (patientId == null || medicament == null || dateDebut == null || dateFin == null) {
             return;
         }
-
         boolean overlaps = prescriptionRepository.existsOverlappingPrescription(
-                patient,
-                medicament,
-                dateDebut,
-                dateFin,
-                excludedPrescriptionId
+            patientId, medicament, dateDebut, dateFin, excludedPrescriptionId
         );
-
         if (overlaps) {
-            throw new ResponseStatusException(
-                    CONFLICT,
-                    "An overlapping prescription already exists for this patient and medicament."
-            );
+            throw new ResponseStatusException(CONFLICT, "An overlapping prescription already exists.");
         }
     }
 
+    private void validateUserExists(String userId, String userType) {
+        UserSimpleDTO user = userFeignClient.getUserById(userId);
+        if (user == null) {
+            throw new ResourceNotFoundException(userType + " not found with id: " + userId);
+        }
+    }
 }

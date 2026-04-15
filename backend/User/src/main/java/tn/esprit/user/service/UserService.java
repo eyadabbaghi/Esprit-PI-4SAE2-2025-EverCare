@@ -334,4 +334,25 @@ public class UserService {
         user.setLastSeenAt(LocalDateTime.now());
         userRepository.save(user);
     }
+
+    public List<UserDto> getCaregiversByPatientId(String patientId) {
+        User patient = findByUserId(patientId);
+        return patient.getCaregivers().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> getCaregiversByPatientEmail(String email) {
+        User patient = findByEmail(email);
+        return patient.getCaregivers().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> getPatientsByCaregiveId(String caregiverId) {
+        User caregiver = findByUserId(caregiverId);
+        return caregiver.getPatients().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
 }

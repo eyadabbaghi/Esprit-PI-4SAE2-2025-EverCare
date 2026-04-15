@@ -150,8 +150,8 @@ public class PrescriptionController {
     }
 
     private boolean isMappablePrescription(everCare.appointments.entities.Prescription prescription) {
-        return prescription.getPatient() != null
-                && prescription.getDoctor() != null
+        return prescription.getPatientId() != null && !prescription.getPatientId().isBlank()
+                && prescription.getDoctorId() != null && !prescription.getDoctorId().isBlank()
                 && prescription.getMedicament() != null;
     }
 
@@ -382,8 +382,8 @@ public class PrescriptionController {
             @RequestBody(required = false) PdfEmailRequest request) {
         everCare.appointments.entities.Prescription prescription = prescriptionService.getPrescriptionById(id);
         accessControlService.assertCanManagePrescription(prescription);
-        UserSimpleDTO patient = patientFeignClient.getUserById(prescription.getPatient().getUserId());
-        UserSimpleDTO doctor = patientFeignClient.getUserById(prescription.getDoctor().getUserId());
+        UserSimpleDTO patient = patientFeignClient.getUserById(prescription.getPatientId());
+        UserSimpleDTO doctor = patientFeignClient.getUserById(prescription.getDoctorId());
 
         // Generate PDF
         byte[] pdfBytes = prescriptionPdfService.generatePdf(id);
@@ -531,7 +531,7 @@ public class PrescriptionController {
         LocalDate today = LocalDate.now();
 
         List<PrescriptionResponseDTO> filtered = prescriptionService.getPrescriptionsByDoctor(doctorId).stream()
-                .filter(prescription -> patientId == null || prescription.getPatient().getUserId().equals(patientId))
+                .filter(prescription -> patientId == null || prescription.getPatientId().equals(patientId))
                 .filter(prescription -> medicamentId == null || prescription.getMedicament().getMedicamentId().equals(medicamentId))
                 .filter(prescription -> status == null || prescription.getStatut().equals(status))
                 .filter(prescription -> renewable == null || Boolean.TRUE.equals(prescription.getRenouvelable()) == renewable)
@@ -669,13 +669,14 @@ public class PrescriptionController {
                     .setFontSize(14).setBold());
             
             // Get patient information
-            if (prescription.getPatient() != null) {
-                doc.add(new Paragraph("Patient ID: " + prescription.getPatient().getUserId()));
-                if (prescription.getPatient().getName() != null) {
-                    doc.add(new Paragraph("Name: " + prescription.getPatient().getName()));
+            if (prescription.getPatientId() != null && !prescription.getPatientId().isBlank()) {
+                UserSimpleDTO patientUser = patientFeignClient.getUserById(prescription.getPatientId());
+                doc.add(new Paragraph("Patient ID: " + prescription.getPatientId()));
+                if (patientUser != null && patientUser.getName() != null) {
+                    doc.add(new Paragraph("Name: " + patientUser.getName()));
                 }
-                if (prescription.getPatient().getEmail() != null) {
-                    doc.add(new Paragraph("Email: " + prescription.getPatient().getEmail()));
+                if (patientUser != null && patientUser.getEmail() != null) {
+                    doc.add(new Paragraph("Email: " + patientUser.getEmail()));
                 }
             }
             
@@ -684,13 +685,14 @@ public class PrescriptionController {
                     .setFontSize(14).setBold());
             
             // Get doctor information
-            if (prescription.getDoctor() != null) {
-                doc.add(new Paragraph("Doctor ID: " + prescription.getDoctor().getUserId()));
-                if (prescription.getDoctor().getName() != null) {
-                    doc.add(new Paragraph("Name: " + prescription.getDoctor().getName()));
+            if (prescription.getDoctorId() != null && !prescription.getDoctorId().isBlank()) {
+                UserSimpleDTO doctorUser = patientFeignClient.getUserById(prescription.getDoctorId());
+                doc.add(new Paragraph("Doctor ID: " + prescription.getDoctorId()));
+                if (doctorUser != null && doctorUser.getName() != null) {
+                    doc.add(new Paragraph("Name: " + doctorUser.getName()));
                 }
-                if (prescription.getDoctor().getSpecialization() != null) {
-                    doc.add(new Paragraph("Specialization: " + prescription.getDoctor().getSpecialization()));
+                if (doctorUser != null && doctorUser.getSpecialization() != null) {
+                    doc.add(new Paragraph("Specialization: " + doctorUser.getSpecialization()));
                 }
             }
             
@@ -743,8 +745,13 @@ public class PrescriptionController {
             
             doc.add(new Paragraph(" "));
             doc.add(new Paragraph("_________________________"));
-            if (prescription.getDoctor() != null && prescription.getDoctor().getName() != null) {
-                doc.add(new Paragraph(prescription.getDoctor().getName()));
+            if (prescription.getDoctorId() != null) {
+                try {
+                    var doctor = patientFeignClient.getUserById(prescription.getDoctorId());
+                    doc.add(new Paragraph(doctor != null ? doctor.getName() : "Doctor"));
+                } catch (Exception e) {
+                    doc.add(new Paragraph("Doctor"));
+                }
             } else {
                 doc.add(new Paragraph("Doctor Signature"));
             }

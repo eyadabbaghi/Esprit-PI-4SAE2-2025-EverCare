@@ -1,7 +1,6 @@
 package everCare.appointments.services;
 
 import everCare.appointments.entities.Availability;
-import everCare.appointments.entities.User;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;

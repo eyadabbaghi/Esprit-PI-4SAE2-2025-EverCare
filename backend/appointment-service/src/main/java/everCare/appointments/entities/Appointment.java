@@ -1,4 +1,17 @@
+/**
+ * Appointment - Entity for appointment records.
+ * 
+ * CHANGED: Replaced @ManyToOne User relationships with String userId fields.
+ * User data is now fetched from User microservice via Feign client instead of
+ * being stored locally. This eliminates data duplication and ensures consistency.
+ * 
+ * Fields changed:
+ * - User patient -> String patientId
+ * - User doctor -> String doctorId  
+ * - User caregiver -> String caregiverId (nullable)
+ */
 package everCare.appointments.entities;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -25,30 +38,29 @@ public class Appointment {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ========== LIENS VERS AUTRES ENTITÉS ==========
+    // ========== USER REFERENCES (IDs only - data fetched via Feign) ==========
 
-    @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
-    private User patient;  // User with role = PATIENT
+    @Column(name = "patient_id", nullable = false)
+    private String patientId;
 
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private User doctor;   // User with role = DOCTOR
+    @Column(name = "doctor_id", nullable = false)
+    private String doctorId;
 
-    @ManyToOne
-    @JoinColumn(name = "caregiver_id")
-    private User caregiver; // User with role = CAREGIVER (optional)
+    @Column(name = "caregiver_id")
+    private String caregiverId;
+
+    // ========== CONSULTATION TYPE ==========
 
     @ManyToOne
     @JoinColumn(name = "consultation_type_id")
     private ConsultationType consultationType;
 
-    // ========== DATES ET HORAIRES ==========
+    // ========== DATES AND TIMES ==========
 
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
 
-    // ========== STATUT ==========
+    // ========== STATUS ==========
 
     private String status; // SCHEDULED, CONFIRMED_BY_PATIENT, CONFIRMED_BY_CAREGIVER, COMPLETED, CANCELLED, MISSED
 
@@ -57,15 +69,15 @@ public class Appointment {
     private LocalDateTime confirmationDatePatient;
     private LocalDateTime confirmationDateCaregiver;
 
-    // ========== PRÉSENCE AIDANT ==========
+    // ========== CAREGIVER PRESENCE ==========
 
     private String caregiverPresence; // PHYSICAL, REMOTE, NONE
 
-    // ========== LIEN VIDÉO ==========
+    // ========== VIDEO LINK ==========
 
-    private String videoLink; // Lien unique pour la consultation
+    private String videoLink;
 
-    // ========== RÉCURRENCE ==========
+    // ========== RECURRENCE ==========
 
     private boolean isRecurring;
     private String recurrencePattern; // WEEKLY, BIWEEKLY, MONTHLY
@@ -73,12 +85,12 @@ public class Appointment {
     // ========== NOTES ==========
 
     @Column(length = 1000)
-    private String doctorNotes; // Notes du médecin (privées)
+    private String doctorNotes;
 
     @Column(length = 500)
-    private String simpleSummary; // Résumé simple pour patient (3 pictos)
+    private String simpleSummary;
 
-    // ========== SUIVI ==========
+    // ========== TRACKING ==========
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

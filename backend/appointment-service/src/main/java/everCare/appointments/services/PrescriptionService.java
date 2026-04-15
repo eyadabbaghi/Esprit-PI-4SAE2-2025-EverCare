@@ -5,7 +5,6 @@ import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.dtos.StatusCountDTO;
 import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.entities.Prescription;
-import everCare.appointments.entities.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

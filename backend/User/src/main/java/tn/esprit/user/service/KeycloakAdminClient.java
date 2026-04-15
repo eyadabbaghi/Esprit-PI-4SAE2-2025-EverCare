@@ -17,6 +17,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * Client for Keycloak Admin REST API operations.
+ * 
+ * CHANGED: Fixed 401 error on registration by using master realm admin credentials
+ * instead of service account client credentials which were not properly configured.
+ * 
+ * Before: Used client_credentials grant type with realm-specific client
+ * After: Uses password grant type with master realm admin user
+ * 
+ * Configuration: keycloak.admin-user and keycloak.admin-password in application.properties
+ */
 @Service
 public class KeycloakAdminClient {
 
@@ -26,16 +37,15 @@ public class KeycloakAdminClient {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.client-id}")
-    private String clientId;
+    // CHANGED: Added configurable admin credentials for master realm authentication
+    @Value("${keycloak.admin-user:admin}")
+    private String adminUser;
 
-    @Value("${keycloak.client-secret}")
-    private String clientSecret;
+    @Value("${keycloak.admin-password:admin}")
+    private String adminPassword;
 
     private final RestTemplate restTemplate;
 
-    // ✅ Single constructor — no Lombok, no conflict
-    // Creates its own RestTemplate with logging interceptor
     public KeycloakAdminClient() {
         this.restTemplate = new RestTemplate();
         restTemplate.setInterceptors(Collections.singletonList(new ClientHttpRequestInterceptor() {
@@ -44,7 +54,6 @@ public class KeycloakAdminClient {
                 System.out.println("=== HTTP Request ===");
                 System.out.println("Method: " + request.getMethod());
                 System.out.println("URI: " + request.getURI());
-                System.out.println("Headers: " + request.getHeaders());
                 if (body.length > 0) {
                     System.out.println("Body: " + new String(body, StandardCharsets.UTF_8));
                 }
@@ -55,17 +64,20 @@ public class KeycloakAdminClient {
         }));
     }
 
+    // CHANGED: Now uses master realm admin token instead of realm-specific service account
     private String getAdminAccessToken() {
-        String tokenUrl = authServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+        // Changed from /realms/{realm}/... to /realms/master/...
+        String tokenUrl = authServerUrl + "/realms/master/protocol/openid-connect/token";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("User-Agent", "curl/7.68.0");
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "client_credentials");
-        body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
+        // CHANGED: From client_credentials to password grant type
+        body.add("grant_type", "password");
+        body.add("client_id", "admin-cli");
+        body.add("username", adminUser);
+        body.add("password", adminPassword);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);

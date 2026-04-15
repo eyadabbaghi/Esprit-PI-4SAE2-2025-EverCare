@@ -1,13 +1,19 @@
+/**
+ * AppointmentServiceImpl - Service implementation for Appointment operations.
+ * 
+ * CHANGED: Replaced UserRepository with UserFeignClient.
+ * User validation is now done via Feign client to User microservice.
+ * Appointment entity now uses String IDs instead of User objects.
+ */
 package everCare.appointments.services;
 
 import everCare.appointments.entities.Appointment;
-import everCare.appointments.entities.User;
 import everCare.appointments.entities.ConsultationType;
 import everCare.appointments.exceptions.ResourceNotFoundException;
+import everCare.appointments.feign.UserFeignClient;
+import everCare.appointments.dtos.UserSimpleDTO;
 import everCare.appointments.repositories.AppointmentRepository;
-import everCare.appointments.repositories.UserRepository;
 import everCare.appointments.repositories.ConsultationTypeRepository;
-import everCare.appointments.services.AppointmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,74 +27,68 @@ import java.util.UUID;
 public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
-    private final UserRepository userRepository;
+    private final UserFeignClient userFeignClient;
     private final ConsultationTypeRepository consultationTypeRepository;
 
     // ========== CREATE ==========
 
     @Override
     public Appointment createAppointment(Appointment appointment) {
-        // Generate ID if not present
         if (appointment.getAppointmentId() == null) {
             appointment.setAppointmentId(UUID.randomUUID().toString());
         }
-
-        // Set creation timestamp
         appointment.setCreatedAt(LocalDateTime.now());
 
-        // ========== FIX: Load actual entities from database ==========
-
-        // Load patient from database
-        if (appointment.getPatient() != null && appointment.getPatient().getUserId() != null) {
-            User patient = userRepository.findById(appointment.getPatient().getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + appointment.getPatient().getUserId()));
-            appointment.setPatient(patient);
-        } else {
+        // Validate patient exists via Feign
+        if (appointment.getPatientId() == null || appointment.getPatientId().isBlank()) {
             throw new ResourceNotFoundException("Patient is required");
         }
-
-        // Load doctor from database
-        if (appointment.getDoctor() != null && appointment.getDoctor().getUserId() != null) {
-            User doctor = userRepository.findById(appointment.getDoctor().getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + appointment.getDoctor().getUserId()));
-            appointment.setDoctor(doctor);
-        } else {
-            throw new ResourceNotFoundException("Doctor is required");
+        UserSimpleDTO patient = userFeignClient.getUserById(appointment.getPatientId());
+        if (patient == null) {
+            throw new ResourceNotFoundException("Patient not found with id: " + appointment.getPatientId());
         }
 
-        // Load caregiver if present
-        if (appointment.getCaregiver() != null && appointment.getCaregiver().getUserId() != null) {
-            User caregiver = userRepository.findById(appointment.getCaregiver().getUserId())
-                    .orElse(null); // Caregiver is optional
-            appointment.setCaregiver(caregiver);
+        // Validate doctor exists via Feign
+        if (appointment.getDoctorId() == null || appointment.getDoctorId().isBlank()) {
+            throw new ResourceNotFoundException("Doctor is required");
+        }
+        UserSimpleDTO doctor = userFeignClient.getUserById(appointment.getDoctorId());
+        if (doctor == null) {
+            throw new ResourceNotFoundException("Doctor not found with id: " + appointment.getDoctorId());
+        }
+
+        // Validate caregiver if provided
+        if (appointment.getCaregiverId() != null && !appointment.getCaregiverId().isBlank()) {
+            UserSimpleDTO caregiver = userFeignClient.getUserById(appointment.getCaregiverId());
+            if (caregiver == null) {
+                throw new ResourceNotFoundException("Caregiver not found with id: " + appointment.getCaregiverId());
+            }
         }
 
         // Load consultation type
         if (appointment.getConsultationType() != null && appointment.getConsultationType().getTypeId() != null) {
             ConsultationType consultationType = consultationTypeRepository.findById(appointment.getConsultationType().getTypeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Consultation type not found with id: " + appointment.getConsultationType().getTypeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation type not found with id: " + appointment.getConsultationType().getTypeId()));
             appointment.setConsultationType(consultationType);
         } else {
             throw new ResourceNotFoundException("Consultation type is required");
         }
 
-        // ========== END OF FIX ==========
-
         // Calculate end time based on consultation type duration
         if (appointment.getConsultationType() != null && appointment.getStartDateTime() != null) {
             ConsultationType type = appointment.getConsultationType();
             appointment.setEndDateTime(appointment.getStartDateTime()
-                    .plusMinutes(type.getDefaultDurationMinutes()));
+                .plusMinutes(type.getDefaultDurationMinutes()));
         }
 
         // Generate video link
-        if (appointment.getVideoLink() == null && appointment.getPatient() != null && appointment.getDoctor() != null) {
-            String patientId = appointment.getPatient().getUserId().length() >= 8
-                    ? appointment.getPatient().getUserId().substring(0, 8)
-                    : appointment.getPatient().getUserId();
-            String doctorId = appointment.getDoctor().getUserId().length() >= 8
-                    ? appointment.getDoctor().getUserId().substring(0, 8)
-                    : appointment.getDoctor().getUserId();
+        if (appointment.getVideoLink() == null) {
+            String patientId = appointment.getPatientId().length() >= 8
+                ? appointment.getPatientId().substring(0, 8)
+                : appointment.getPatientId();
+            String doctorId = appointment.getDoctorId().length() >= 8
+                ? appointment.getDoctorId().substring(0, 8)
+                : appointment.getDoctorId();
             appointment.setVideoLink("https://consult.evercare.com/room/" + doctorId + "-" + patientId);
         }
 
@@ -110,28 +110,25 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public Appointment getAppointmentById(String id) {
         return appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with id: " + id));
     }
 
     @Override
     public List<Appointment> getAppointmentsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        return appointmentRepository.findByPatient(patient);
+        validateUserExists(patientId, "Patient");
+        return appointmentRepository.findByPatientId(patientId);
     }
 
     @Override
     public List<Appointment> getAppointmentsByDoctor(String doctorId) {
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
-        return appointmentRepository.findByDoctor(doctor);
+        validateUserExists(doctorId, "Doctor");
+        return appointmentRepository.findByDoctorId(doctorId);
     }
 
     @Override
     public List<Appointment> getAppointmentsByCaregiver(String caregiverId) {
-        User caregiver = userRepository.findById(caregiverId)
-                .orElseThrow(() -> new ResourceNotFoundException("Caregiver not found with id: " + caregiverId));
-        return appointmentRepository.findByCaregiver(caregiver);
+        validateUserExists(caregiverId, "Caregiver");
+        return appointmentRepository.findByCaregiverId(caregiverId);
     }
 
     @Override
@@ -146,23 +143,20 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<Appointment> getAppointmentsByDoctorAndDateRange(String doctorId, LocalDateTime start, LocalDateTime end) {
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
-        return appointmentRepository.findByDoctorAndStartDateTimeBetween(doctor, start, end);
+        validateUserExists(doctorId, "Doctor");
+        return appointmentRepository.findByDoctorIdAndStartDateTimeBetween(doctorId, start, end);
     }
 
     @Override
     public List<Appointment> getFutureAppointmentsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        return appointmentRepository.findFutureByPatient(patient, LocalDateTime.now());
+        validateUserExists(patientId, "Patient");
+        return appointmentRepository.findFutureByPatientId(patientId, LocalDateTime.now());
     }
 
     @Override
     public boolean isDoctorAvailable(String doctorId, LocalDateTime dateTime) {
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
-        int count = appointmentRepository.countByDoctorAndDateTime(doctor, dateTime);
+        validateUserExists(doctorId, "Doctor");
+        int count = appointmentRepository.countByDoctorIdAndDateTime(doctorId, dateTime);
         return count == 0;
     }
 
@@ -174,10 +168,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (appointmentDetails.getStartDateTime() != null) {
             existingAppointment.setStartDateTime(appointmentDetails.getStartDateTime());
-            // Recalculate end time
             if (existingAppointment.getConsultationType() != null) {
                 existingAppointment.setEndDateTime(appointmentDetails.getStartDateTime()
-                        .plusMinutes(existingAppointment.getConsultationType().getDefaultDurationMinutes()));
+                    .plusMinutes(existingAppointment.getConsultationType().getDefaultDurationMinutes()));
             }
         }
 
@@ -197,17 +190,14 @@ public class AppointmentServiceImpl implements AppointmentService {
             existingAppointment.setSimpleSummary(appointmentDetails.getSimpleSummary());
         }
 
-        // Load caregiver if provided
-        if (appointmentDetails.getCaregiver() != null && appointmentDetails.getCaregiver().getUserId() != null) {
-            User caregiver = userRepository.findById(appointmentDetails.getCaregiver().getUserId())
-                    .orElse(null);
-            existingAppointment.setCaregiver(caregiver);
+        if (appointmentDetails.getCaregiverId() != null && !appointmentDetails.getCaregiverId().isBlank()) {
+            validateUserExists(appointmentDetails.getCaregiverId(), "Caregiver");
+            existingAppointment.setCaregiverId(appointmentDetails.getCaregiverId());
         }
 
-        // Load consultation type if provided
         if (appointmentDetails.getConsultationType() != null && appointmentDetails.getConsultationType().getTypeId() != null) {
             ConsultationType consultationType = consultationTypeRepository.findById(appointmentDetails.getConsultationType().getTypeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Consultation type not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation type not found"));
             existingAppointment.setConsultationType(consultationType);
         }
 
@@ -247,10 +237,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = getAppointmentById(id);
         appointment.setStartDateTime(newDateTime);
 
-        // Recalculate end time
         if (appointment.getConsultationType() != null) {
             appointment.setEndDateTime(newDateTime
-                    .plusMinutes(appointment.getConsultationType().getDefaultDurationMinutes()));
+                .plusMinutes(appointment.getConsultationType().getDefaultDurationMinutes()));
         }
 
         appointment.setStatus("RESCHEDULED");
@@ -284,9 +273,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public void deleteAppointmentsByPatient(String patientId) {
-        User patient = userRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + patientId));
-        List<Appointment> appointments = appointmentRepository.findByPatient(patient);
+        validateUserExists(patientId, "Patient");
+        List<Appointment> appointments = appointmentRepository.findByPatientId(patientId);
         appointmentRepository.deleteAll(appointments);
     }
 
@@ -294,9 +282,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public long countAppointmentsByDoctorAndDate(String doctorId, LocalDateTime date) {
-        User doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with id: " + doctorId));
-        return appointmentRepository.countByDoctorAndDateTime(doctor, date);
+        validateUserExists(doctorId, "Doctor");
+        return appointmentRepository.countByDoctorIdAndDateTime(doctorId, date);
     }
 
     @Override
@@ -305,9 +292,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalDateTime reminderWindowEnd = reminderTime.plusHours(1);
 
         return appointmentRepository.findByStartDateTimeBetween(reminderWindowStart, reminderWindowEnd)
-                .stream()
-                .filter(a -> a.getStatus().equals("SCHEDULED") || a.getStatus().equals("CONFIRMED_BY_PATIENT"))
-                .toList();
+            .stream()
+            .filter(a -> a.getStatus().equals("SCHEDULED") || a.getStatus().equals("CONFIRMED_BY_PATIENT"))
+            .toList();
     }
 
     @Override
@@ -319,5 +306,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
+    // ========== HELPER METHODS ==========
 
+    private void validateUserExists(String userId, String userType) {
+        UserSimpleDTO user = userFeignClient.getUserById(userId);
+        if (user == null) {
+            throw new ResourceNotFoundException(userType + " not found with id: " + userId);
+        }
+    }
 }

@@ -1,3 +1,9 @@
+/**
+ * PrescriptionAccessControlService - Service for prescription access control.
+ * 
+ * CHANGED: Updated to work with String patientId/doctorId instead of User entities.
+ * User data is fetched via Feign client.
+ */
 package everCare.appointments.services;
 
 import everCare.appointments.dtos.CaregiverPatientsResponseDTO;
@@ -75,15 +81,15 @@ public class PrescriptionAccessControlService {
             return;
         }
 
-        if (role == UserRole.DOCTOR && requesterId.equals(prescription.getDoctor().getUserId())) {
+        if (role == UserRole.DOCTOR && requesterId.equals(prescription.getDoctorId())) {
             return;
         }
 
-        if (role == UserRole.PATIENT && requesterId.equals(prescription.getPatient().getUserId())) {
+        if (role == UserRole.PATIENT && requesterId.equals(prescription.getPatientId())) {
             return;
         }
 
-        if (role == UserRole.CAREGIVER && isLinkedCaregiver(requesterId, prescription.getPatient().getUserId())) {
+        if (role == UserRole.CAREGIVER && isLinkedCaregiver(requesterId, prescription.getPatientId())) {
             return;
         }
 
@@ -102,7 +108,7 @@ public class PrescriptionAccessControlService {
     }
 
     public void assertCanManagePrescription(Prescription prescription) {
-        assertCanManagePrescription(prescription.getDoctor().getUserId());
+        assertCanManagePrescription(prescription.getDoctorId());
     }
 
     private boolean isLinkedCaregiver(String caregiverId, String patientId) {
@@ -112,6 +118,6 @@ public class PrescriptionAccessControlService {
         }
 
         return response.getPatients().stream()
-                .anyMatch(patient -> String.valueOf(patient.getUserId()).equals(patientId));
+            .anyMatch(patient -> String.valueOf(patient.getUserId()).equals(patientId));
     }
 }

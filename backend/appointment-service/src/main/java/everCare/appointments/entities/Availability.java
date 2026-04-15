@@ -1,3 +1,9 @@
+/**
+ * Availability - Entity for doctor availability slots.
+ * 
+ * CHANGED: Replaced @ManyToOne User relationship with String doctorId.
+ * User data is now fetched from User microservice via Feign client.
+ */
 package everCare.appointments.entities;
 
 import jakarta.persistence.*;
@@ -27,30 +33,29 @@ public class Availability {
         }
     }
 
-    // ========== LIEN VERS MÉDECIN ==========
+    // ========== DOCTOR REFERENCE (ID only - data fetched via Feign) ==========
 
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private User doctor; // User with role = DOCTOR
+    @Column(name = "doctor_id", nullable = false)
+    private String doctorId;
 
-    // ========== CRÉNEAU ==========
+    // ========== SLOT ==========
 
-    private DayOfWeek dayOfWeek; // LUNDI, MARDI, etc.
+    private DayOfWeek dayOfWeek; // MONDAY, TUESDAY, etc.
 
     private LocalTime startTime;
     private LocalTime endTime;
 
-    // ========== PÉRIODE DE VALIDITÉ ==========
+    // ========== VALIDITY PERIOD ==========
 
     private LocalDate validFrom;
     private LocalDate validTo;
 
-    // ========== RÉCURRENCE ==========
+    // ========== RECURRENCE ==========
 
     private String recurrence; // WEEKLY, BIWEEKLY, MONTHLY, ONCE
 
     // ========== EXCEPTIONS ==========
 
-    private boolean isBlocked; // Pour congés, réunions
+    private boolean isBlocked; // For vacations, meetings
     private String blockReason;
 }

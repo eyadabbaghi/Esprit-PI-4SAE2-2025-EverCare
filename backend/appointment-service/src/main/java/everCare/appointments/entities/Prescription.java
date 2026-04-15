@@ -1,14 +1,15 @@
+/**
+ * Prescription - Entity for prescription records.
+ * 
+ * CHANGED: Replaced @ManyToOne User relationships with String userId fields.
+ * User data is now fetched from User microservice via Feign client.
+ */
 package everCare.appointments.entities;
 
-import everCare.appointments.entities.User;
-import everCare.appointments.entities.Appointment;
-import everCare.appointments.entities.Medicament;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -32,67 +33,64 @@ public class Prescription {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ========== LIENS VERS AUTRES ENTITÉS ==========
+    // ========== USER REFERENCES (IDs only - data fetched via Feign) ==========
 
-    @ManyToOne
-    @JoinColumn(name = "patient_id", nullable = false)
-    private User patient;                     // Patient concerné
+    @Column(name = "patient_id", nullable = false)
+    private String patientId;
 
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
-    private User doctor;                       // Médecin prescripteur
+    @Column(name = "doctor_id", nullable = false)
+    private String doctorId;
+
+    // ========== APPOINTMENT REFERENCE ==========
 
     @ManyToOne
     @JoinColumn(name = "appointment_id")
-    private Appointment appointment;            // Consultation associée
+    private Appointment appointment;
 
-    // ========== RELATION AVEC MEDICAMENT ==========
+    // ========== MEDICAMENT RELATION ==========
 
     @ManyToOne
     @JoinColumn(name = "medicament_id", nullable = false)
-    private Medicament medicament;              // Médicament prescrit
+    private Medicament medicament;
 
     // ========== DATES ==========
 
     @Column(nullable = false)
-    private LocalDate datePrescription;         // Date de prescription
+    private LocalDate datePrescription;
 
-    private LocalDate dateDebut;                 // Date de début du traitement
+    private LocalDate dateDebut;
+    private LocalDate dateFin;
 
-    private LocalDate dateFin;                    // Date de fin prévisionnelle
+    // ========== DOSAGE ==========
 
-    // ========== POSOLOGIE ==========
+    private String posologie;
+    private String instructions;
 
-    private String posologie;                    // "1 comprimé matin et soir"
+    // ========== STATUS ==========
 
-    private String instructions;                  // "À prendre au cours du repas"
-
-    // ========== STATUT ==========
-
-    private String statut;                        // ACTIVE, TERMINEE, INTERROMPUE
+    private String statut; // ACTIVE, TERMINEE, INTERROMPUE
 
     @Builder.Default
     private Boolean renouvelable = false;
 
     @Builder.Default
     private Integer nombreRenouvellements = 0;
-    // ========== POUR PATIENTS ALZHEIMER ==========
 
-    private String priseMatin;                    // "Donépézil 10mg"
-    private String priseMidi;                      // "Mémantine 10mg"
-    private String priseSoir;                       // "Mémantine 10mg"
+    // ========== FOR ALZHEIMER PATIENTS ==========
+
+    private String priseMatin;
+    private String priseMidi;
+    private String priseSoir;
 
     @Column(length = 500)
-    private String resumeSimple;                    // Résumé pour patient (ex: "💊 bleu = matin")
+    private String resumeSimple;
 
-    private String pdfUrl;                           // Lien vers PDF généré
+    private String pdfUrl;
 
-    // ========== SUIVI ==========
+    // ========== TRACKING ==========
 
-    private String notesMedecin;                     // Notes privées
+    private String notesMedecin;
 
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
-
 }

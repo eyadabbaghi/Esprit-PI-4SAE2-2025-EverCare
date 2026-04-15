@@ -1,6 +1,7 @@
 package everCare.appointments.dtos;
 
 import lombok.Data;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,9 +12,8 @@ public class PatientSimpleDTO {
     private String email;
     private String phone;
     private LocalDateTime createdAt;
-    private LocalDateTime dateOfBirth;
+    private LocalDate dateOfBirth;
     private String emergencyContact;
     private String profilePicture;
     private String doctorEmail;
-    // Don't include caregivers list to avoid circular reference
 }

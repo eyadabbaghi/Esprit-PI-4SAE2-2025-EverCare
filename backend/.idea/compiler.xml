@@ -10,15 +10,17 @@
         <module name="Activities" />
         <module name="spring-boot-starter-parent" />
         <module name="appointment-service" />
-        <module name="medical-record-service" />
         <module name="communication-service" />
-        <module name="Eureka-service" />
-        <module name="Alerts" />
-        <module name="Tracking-service" />
         <module name="ApiGateway" />
         <module name="Dailyme-service" />
         <module name="notification-service" />
         <module name="cognitive-stimulation-service" />
+        <module name="medical-record-service" />
+        <module name="configServer" />
+        <module name="Eureka-service" />
+        <module name="evercare-ai-service" />
+        <module name="Alerts" />
+        <module name="Tracking-service" />
       </profile>
       <profile name="Annotation profile for microservices-parent" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -26,16 +28,21 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
         <module name="User" />
       </profile>
+      <profile name="Annotation profile for blog-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
+        </processorPath>
+        <module name="blog-service" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="blog-service" target="17" />
-      <module name="configServer" target="17" />
       <module name="dailyme-service" target="17" />
-      <module name="evercare-ai-service" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -48,6 +55,7 @@
       <module name="Tracking-service" options="-parameters" />
       <module name="User" options="-parameters" />
       <module name="appointment-service" options="-parameters" />
+      <module name="blog-service" options="-parameters" />
       <module name="cognitive-stimulation-service" options="-parameters" />
       <module name="communication-service" options="-parameters" />
       <module name="dailyme-service" options="-parameters" />

@@ -1936,12 +1936,23 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/ApiGateway/src/main/java/tn/esprit/apigateway/ApiGatewayApplication.java",
+      "timestamp": 1776209329467,
+      "startOffset": 1459,
+      "endOffset": 3852,
+      "codeContent": "filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://COGNITIVE-STIMULATION-SERVICE\"))\n                .route(\"user-service\", r -\u003e r\n                        .path(\"/EverCare/auth/**\", \"/EverCare/users/**\", \"/EverCare/test/**\")\n                        .uri(\"lb://User-service\"))\n                .route(\"appointment-service\", r -\u003e r\n                        .path(\"/EverCare/appointments/**\",\n                                \"/EverCare/availabilities/**\",\n                                \"/EverCare/consultation-types/**\",\n                                \"/EverCare/medicaments/**\",\n                                \"/EverCare/prescriptions/**\")\n                        .uri(\"lb://APPOINTMENT-SERVICE\"))\n                .route(\"notification-service\", r -\u003e r\n                        .path(\"/EverCare/api/notifications/**\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://notification-service\"))\n                .route(\"communication-service\", r -\u003e r\n                        .path(\"/api/calls/**\",\n                                \"/api/conversations/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                .route(\"medical-record-service\", r -\u003e r\n                        .path(\"/api/medical-records/**\")\n                        .uri(\"lb://MEDICAL-RECORD-SERVICE\"))\n                .route(\"dailyme-service\", r -\u003e r\n                        .path(\"/api/daily-entries/**\", \"/api/dailyme-alerts/**\", \"/api/daily-tasks/**\", \"/api/journal/**\", \"/api/insights\")\n                        .filters(f -\u003e f.rewritePath(\"/EverCare/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                        .uri(\"lb://DAILYME-SERVICE\"))\n\n                // 1. Route pour le WebSocket (doit être définie avant les routes HTTP générales)\n                .route(\"communication-websocket\", r -\u003e r\n                        .path(\"/ws-chat/**\")\n                        .uri(\"lb://COMMUNICATION-SERVICE\"))\n                 .route(\"communication-service\", r -\u003e r\n                                         .path(\"/communication-service/**\")\n                                         .filters(f -\u003e f.rewritePath(\"/communication-service/(?\u003csegment\u003e.*)\", \"/${segment}\"))\n                                         .uri(\"lb://COMMUNICATION-SERVICE\"))\n\n                .build();\n    }\n\n\n\n\n\n}\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 46
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 176,
-      "totalLines": 6801
+      "usageCount": 177,
+      "totalLines": 6847
     }
   }
 }

@@ -7,14 +7,48 @@ import { PageResponse } from '../models/page.model';
 import { PrescriptionAnalyticsSummary, StatusCount, TopMedicament } from '../models/prescription-analytics.model';
 import { environment } from '../../../../environments/environment';
 
+// Import clinical measurement types
+export interface ClinicalMeasurementResponse {
+  measurementId: string;
+  patientId: string;
+  appointmentId?: string;
+  weight: number;
+  kidneyTestResult: string;
+  severeLiverProblem: boolean;
+  currentMedications?: string;
+  allergies?: string;
+  measuredAt: string;
+  measuredBy: string;
+}
+
+export interface SafetyCheckResult {
+  isSafe: boolean;
+  level: 'INFO' | 'WARNING' | 'CRITICAL';
+  message: string;
+  suggestedDose?: string;
+  interactions?: string[];
+  contraindications?: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PrescriptionService {
 
   private readonly API_URL = `${environment.apiUrl}/prescriptions`;
+  private readonly CLINICAL_MEASUREMENT_URL = `${environment.apiUrl}/clinical-measurements`;
 
   constructor(private http: HttpClient) {}
+
+  // ========== CLINICAL MEASUREMENTS ==========
+
+  getClinicalMeasurementByAppointment(appointmentId: string): Observable<ClinicalMeasurementResponse> {
+    return this.http.get<ClinicalMeasurementResponse>(`${this.CLINICAL_MEASUREMENT_URL}/appointment/${appointmentId}`);
+  }
+
+  getLatestClinicalMeasurement(patientId: string): Observable<ClinicalMeasurementResponse> {
+    return this.http.get<ClinicalMeasurementResponse>(`${this.CLINICAL_MEASUREMENT_URL}/patient/${patientId}/latest`);
+  }
 
   // ========== CREATE ==========
 

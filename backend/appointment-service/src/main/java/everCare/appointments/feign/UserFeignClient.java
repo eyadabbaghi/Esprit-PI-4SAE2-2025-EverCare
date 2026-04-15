@@ -44,4 +44,10 @@ public interface UserFeignClient {
      */
     @GetMapping("/EverCare/users/search")
     List<UserSimpleDTO> searchUsersByRole(@RequestParam("q") String term, @RequestParam("role") String role);
+
+    /**
+     * Get caregivers for a patient
+     */
+    @GetMapping("/users/{patientId}/caregivers")
+    List<UserSimpleDTO> getCaregiversByPatientId(@PathVariable("patientId") String patientId);
 }

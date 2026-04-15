@@ -46,4 +46,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
     // Check if doctor is available at specific time
     @Query("SELECT COUNT(a) FROM Appointment a WHERE a.doctorId = :doctorId AND a.startDateTime = :dateTime AND a.status != 'CANCELLED'")
     int countByDoctorIdAndDateTime(@Param("doctorId") String doctorId, @Param("dateTime") LocalDateTime dateTime);
+
+    // Find appointments for tomorrow (pre-consultation form trigger)
+    @Query("SELECT a FROM Appointment a WHERE a.startDateTime >= :startOfDay AND a.startDateTime < :endOfDay AND a.status IN ('SCHEDULED', 'CONFIRMED_BY_PATIENT')")
+    List<Appointment> findTomorrowAppointments(@Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MedicamentService {
 
@@ -15,8 +16,8 @@ public interface MedicamentService {
 
     // ========== READ ==========
     List<Medicament> getAllMedicaments();
-    Medicament getMedicamentById(String id);
-    Medicament getMedicamentByCodeCIP(String codeCIP);
+    Optional<Medicament> getMedicamentById(String id);
+    Optional<Medicament> getMedicamentByCodeCIP(String codeCIP);
     List<Medicament> searchMedicaments(String keyword);
     List<Medicament> getActiveMedicaments();
     List<Medicament> getMedicamentsByLaboratoire(String laboratoire);

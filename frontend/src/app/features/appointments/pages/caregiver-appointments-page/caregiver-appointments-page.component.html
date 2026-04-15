@@ -19,40 +19,61 @@
       {{ successMessage }}
     </div>
 
+    <!-- Submit Clinical Data Button (for upcoming appointments) -->
+    <div *ngIf="patient && getUpcomingAppointments().length > 0" class="bg-gradient-to-r from-[#7C3AED] to-[#9F7AEA] rounded-xl p-4 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-semibold text-lg">📊 Submit Clinical Data</h3>
+          <p class="text-white/80 text-sm">Help the doctor by providing patient measurements before appointments</p>
+        </div>
+        <button (click)="openClinicalMeasurementModal(getUpcomingAppointments()[0])"
+                class="bg-white text-[#7C3AED] px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition">
+          Add Measurements
+        </button>
+      </div>
+    </div>
 
+    <!-- Simple Appointments Display -->
+    <div *ngIf="patient" class="space-y-4">
+      <div class="bg-white rounded-xl p-4 shadow-sm">
+        <h3 class="font-semibold text-[#2D1B4E] mb-4">Upcoming Appointments</h3>
+        <div *ngIf="getUpcomingAppointments().length === 0" class="text-gray-500 text-center py-4">
+          No upcoming appointments
+        </div>
+        <div *ngFor="let apt of getUpcomingAppointments()" class="border-b py-3 last:border-0">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-medium text-[#2D1B4E]">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>
+              <p class="text-sm text-gray-500">{{ apt.status }}</p>
+            </div>
+            <button (click)="viewAppointmentDetails(apt)" class="text-[#7C3AED] text-sm">View</button>
+          </div>
+        </div>
+      </div>
 
-    <!-- Upcoming Appointments List Component -->
-    <app-appointments-list
-      *ngIf="patient"
-      title="Upcoming Appointments"
-      subtitle="Appointments that need your attention"
-      emptyMessage="No upcoming appointments"
-      [appointments]="getUpcomingAppointments()"
-      [canConfirmFn]="canConfirm.bind(this)"
-      [canJoinCallFn]="canJoinCall.bind(this)"
-      (onCardClick)="viewAppointmentDetails($event)"
-      (onConfirm)="confirmAppointment($event)"
-      (onJoinCall)="joinVideoCall($event)">
-    </app-appointments-list>
+      <div *ngIf="getPastAppointments().length > 0" class="bg-white rounded-xl p-4 shadow-sm">
+        <h3 class="font-semibold text-[#2D1B4E] mb-4">Past Appointments</h3>
+        <div *ngFor="let apt of getPastAppointments()" class="border-b py-3 last:border-0">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-medium text-gray-600">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>
+              <p class="text-sm text-gray-500">{{ apt.status }}</p>
+            </div>
+            <button (click)="viewAppointmentDetails(apt)" class="text-gray-500 text-sm">View</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Past Appointments List Component -->
-    <app-appointments-list
-      *ngIf="patient && getPastAppointments().length > 0"
-      title="Past Appointments"
-      subtitle="Appointment history"
-      emptyMessage="No past appointments"
-      [appointments]="getPastAppointments()"
-      (onCardClick)="viewAppointmentDetails($event)">
-    </app-appointments-list>
-
-    <!-- Appointment Details Modal Component -->
-    <app-appointment-details-modal
-      *ngIf="showDetailsModal"
-      [appointment]="selectedAppointment"
-
-      (onClose)="closeDetailsModal()"
-      >
-    </app-appointment-details-modal>
+    <!-- Clinical Measurement Modal -->
+    <app-clinical-measurement-modal
+      *ngIf="showClinicalMeasurementModal"
+      [patientId]="patient?.userId || ''"
+      [appointmentId]="clinicalMeasurementAppointment?.appointmentId || ''"
+      [patientName]="patient?.name || ''"
+      (onClose)="closeClinicalMeasurementModal()"
+      (onSubmit)="onClinicalMeasurementSubmitted()">
+    </app-clinical-measurement-modal>
 
   </div>
 </div>

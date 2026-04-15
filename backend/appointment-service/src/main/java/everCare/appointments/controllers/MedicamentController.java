@@ -2,6 +2,7 @@ package everCare.appointments.controllers;
 
 import everCare.appointments.dtos.MedicamentAnalyticsSummaryDTO;
 import everCare.appointments.dtos.MedicamentUsageStatsDTO;
+import everCare.appointments.dtos.MedicationDosingRulesDTO;
 import everCare.appointments.entities.Medicament;
 import everCare.appointments.services.MedicamentService;
 import everCare.appointments.services.PrescriptionAccessControlService;
@@ -41,14 +42,18 @@ public class MedicamentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Medicament> getMedicamentById(@PathVariable String id) {
-        return ResponseEntity.ok(medicamentService.getMedicamentById(id));
+        return medicamentService.getMedicamentById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // ========== READ BY CODE CIP ==========
 
     @GetMapping("/code/{codeCIP}")
     public ResponseEntity<Medicament> getMedicamentByCodeCIP(@PathVariable String codeCIP) {
-        return ResponseEntity.ok(medicamentService.getMedicamentByCodeCIP(codeCIP));
+        return medicamentService.getMedicamentByCodeCIP(codeCIP)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // ========== SEARCH ==========
@@ -183,5 +188,46 @@ public class MedicamentController {
         }
 
         return ResponseEntity.ok(medicamentService.getUsageStats(doctorScope, limit));
+    }
+
+    // ========== DOSING RULES ==========
+
+    @GetMapping("/{id}/dosing-rules")
+    public ResponseEntity<MedicationDosingRulesDTO> getDosingRules(@PathVariable String id) {
+        var medicamentOpt = medicamentService.getMedicamentById(id);
+        if (medicamentOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var m = medicamentOpt.get();
+        return ResponseEntity.ok(MedicationDosingRulesDTO.builder()
+                .medicamentId(m.getMedicamentId())
+                .maxDosePerDay(m.getMaxDosePerDay())
+                .weightMaxDose(m.getWeightMaxDose())
+                .renalAdjustment(m.getRenalAdjustment())
+                .hepaticAdjustment(m.getHepaticAdjustment())
+                .contraindications(m.getContreIndications())
+                .commonInteractions(m.getCommonInteractions())
+                .doseCalculation(m.getDoseCalculation())
+                .build());
+    }
+
+    @PutMapping("/{id}/dosing-rules")
+    public ResponseEntity<Medicament> updateDosingRules(
+            @PathVariable String id,
+            @RequestBody MedicationDosingRulesDTO rules) {
+        accessControlService.assertAdminAccess();
+        var medicamentOpt = medicamentService.getMedicamentById(id);
+        if (medicamentOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var medicament = medicamentOpt.get();
+        medicament.setMaxDosePerDay(rules.getMaxDosePerDay());
+        medicament.setWeightMaxDose(rules.getWeightMaxDose());
+        medicament.setRenalAdjustment(rules.getRenalAdjustment());
+        medicament.setHepaticAdjustment(rules.getHepaticAdjustment());
+        medicament.setContreIndications(rules.getContraindications());
+        medicament.setCommonInteractions(rules.getCommonInteractions());
+        medicament.setDoseCalculation(rules.getDoseCalculation());
+        return ResponseEntity.ok(medicamentService.updateMedicament(id, medicament));
     }
 }

@@ -26,8 +26,6 @@ import { ExceptionFormModalComponent } from './components/exception-form-modal/e
 import { ConsultationTypeManagerComponent } from './components/consultation-type-manager/consultation-type-manager.component';
 import { AvailabilityManagerComponent } from './components/availability-management/availability-management.component';
 import { CaregiverAppointmentsPageComponent } from './pages/caregiver-appointments-page/caregiver-appointments-page.component';
-import { PatientInfoCardComponent } from './components/patient-info-card/patient-info-card.component';
-import { AppointmentsListComponent } from './components/appointments-list/appointments-list.component';
 import { RouterModule } from '@angular/router';
 import { ToastrModule } from 'ngx-toastr';
 import { LucideAngularModule } from 'lucide-angular';
@@ -61,9 +59,6 @@ import { UserAppointmentsComponent } from './pages/user-appointments/user-appoin
     AvailabilityManagerComponent,
     ExceptionFormModalComponent,
     ConsultationTypeManagerComponent,
-    CaregiverAppointmentsPageComponent,
-    PatientInfoCardComponent,
-    AppointmentsListComponent,
     // NEW
     VideoConsultationPageComponent,
     JitsiMeetComponent,
@@ -73,6 +68,7 @@ import { UserAppointmentsComponent } from './pages/user-appointments/user-appoin
     CommonModule,
     AppointmentsRoutingModule,
     FormsModule,
+    CaregiverAppointmentsPageComponent,
     WeeklyScheduleComponent,
     RouterModule,
     ToastrModule.forRoot(),

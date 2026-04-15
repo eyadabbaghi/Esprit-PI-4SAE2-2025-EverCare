@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Appointment } from '../../../appointments/models/appointment';
 import { User } from '../../models/user';
 import { AppointmentService } from '../../services/appointments.service';
@@ -6,9 +7,12 @@ import { AuthService } from '../../../front-office/pages/login/auth.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import {CaregiverPatientService} from '../../services/patient-caregiver-relation.service';
+import { ClinicalMeasurementModalComponent } from '../../components/clinical-measurement-modal/clinical-measurement-modal.component';
 
 @Component({
   selector: 'app-caregiver-appointments-page',
+  standalone: true,
+  imports: [CommonModule, ClinicalMeasurementModalComponent],
   templateUrl: './caregiver-appointments-page.component.html'
 })
 export class CaregiverAppointmentsPageComponent implements OnInit {
@@ -21,6 +25,8 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   showDetailsModal = false;
+  showClinicalMeasurementModal = false;
+  clinicalMeasurementAppointment: Appointment | null = null;
 
   constructor(
     private appointmentService: AppointmentService,
@@ -259,5 +265,49 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
       'CANCELLED': 'bg-[#FEF2F2] text-[#C06C84]'
     };
     return classes[status] || 'bg-[#F1F5F9] text-[#6B5B8C]';
+  }
+
+  /**
+   * Check if appointment is tomorrow (for showing submit clinical data button)
+   */
+  isTomorrow(appointment: Appointment): boolean {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const aptDate = new Date(appointment.startDateTime);
+    return aptDate.toDateString() === tomorrow.toDateString();
+  }
+
+  /**
+   * Check if appointment is upcoming (for showing submit clinical data button)
+   */
+  isUpcoming(appointment: Appointment): boolean {
+    const now = new Date();
+    const aptDate = new Date(appointment.startDateTime);
+    return aptDate > now && appointment.status !== 'CANCELLED';
+  }
+
+  /**
+   * Open clinical measurement modal
+   */
+  openClinicalMeasurementModal(appointment: Appointment): void {
+    this.clinicalMeasurementAppointment = appointment;
+    this.showClinicalMeasurementModal = true;
+  }
+
+  /**
+   * Close clinical measurement modal
+   */
+  closeClinicalMeasurementModal(): void {
+    this.showClinicalMeasurementModal = false;
+    this.clinicalMeasurementAppointment = null;
+  }
+
+  /**
+   * Handle clinical measurement submitted
+   */
+  onClinicalMeasurementSubmitted(): void {
+    this.closeClinicalMeasurementModal();
+    this.successMessage = 'Clinical measurements submitted successfully!';
+    setTimeout(() => this.successMessage = '', 3000);
   }
 }

@@ -19,6 +19,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -49,18 +50,13 @@ public class MedicamentServiceImpl implements MedicamentService {
     }
 
     @Override
-    public Medicament getMedicamentById(String id) {
-        return medicamentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
+    public Optional<Medicament> getMedicamentById(String id) {
+        return medicamentRepository.findById(id);
     }
 
     @Override
-    public Medicament getMedicamentByCodeCIP(String codeCIP) {
-        Medicament medicament = medicamentRepository.findByCodeCIP(codeCIP);
-        if (medicament == null) {
-            throw new ResourceNotFoundException("Medicament not found with code CIP: " + codeCIP);
-        }
-        return medicament;
+    public Optional<Medicament> getMedicamentByCodeCIP(String codeCIP) {
+        return Optional.ofNullable(medicamentRepository.findByCodeCIP(codeCIP));
     }
 
     @Override
@@ -96,7 +92,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament updateMedicament(String id, Medicament medicamentDetails) {
-        Medicament existingMedicament = getMedicamentById(id);
+        Medicament existingMedicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
 
         if (medicamentDetails.getCodeCIP() != null) {
             validateCodeCipUniqueness(medicamentDetails.getCodeCIP(), id);
@@ -146,7 +143,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament activateMedicament(String id) {
-        Medicament medicament = getMedicamentById(id);
+        Medicament medicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
         medicament.setActif(true);
         medicament.setUpdatedAt(LocalDateTime.now());
         return medicamentRepository.save(medicament);
@@ -154,7 +152,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament deactivateMedicament(String id) {
-        Medicament medicament = getMedicamentById(id);
+        Medicament medicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
         medicament.setActif(false);
         medicament.setUpdatedAt(LocalDateTime.now());
         return medicamentRepository.save(medicament);
@@ -162,7 +161,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament updatePhoto(String id, String photoUrl) {
-        Medicament medicament = getMedicamentById(id);
+        Medicament medicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
         medicament.setPhotoUrl(photoUrl);
         medicament.setUpdatedAt(LocalDateTime.now());
         return medicamentRepository.save(medicament);
@@ -170,7 +170,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public Medicament updateNotice(String id, String notice) {
-        Medicament medicament = getMedicamentById(id);
+        Medicament medicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
         medicament.setNoticeSimplifiee(notice);
         medicament.setUpdatedAt(LocalDateTime.now());
         return medicamentRepository.save(medicament);
@@ -180,7 +181,8 @@ public class MedicamentServiceImpl implements MedicamentService {
 
     @Override
     public void deleteMedicament(String id) {
-        Medicament medicament = getMedicamentById(id);
+        Medicament medicament = getMedicamentById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicament not found with id: " + id));
 
         if (prescriptionRepository.countByMedicament(medicament) > 0) {
             throw new ResponseStatusException(

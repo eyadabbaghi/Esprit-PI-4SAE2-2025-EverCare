@@ -1,0 +1,104 @@
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-[#7C3AED] to-[#9F7AEA] p-4 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-white text-lg font-semibold">📊 Clinical Measurements</h3>
+        <button (click)="close()" class="text-white/80 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-white/80 text-sm mt-1">For: {{ patientName }}</p>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="submitted" class="p-8 text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h4 class="text-lg font-semibold text-[#2D1B4E] mb-2">Submitted Successfully!</h4>
+      <p class="text-gray-600 mb-4">Your clinical measurements have been sent to the doctor.</p>
+      <button (click)="close()" class="px-6 py-2 bg-[#7C3AED] text-white rounded-lg hover:bg-[#6D28D9]">
+        Close
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form *ngIf="!submitted" [formGroup]="form" (ngSubmit)="submit()" class="p-4 space-y-4">
+      
+      <!-- Weight -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-1">
+          Weight <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <input type="number" formControlName="weight" 
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                 placeholder="Enter weight in kg" step="0.1" min="20" max="300">
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">kg</span>
+        </div>
+        <p *ngIf="weight?.touched && weight?.invalid" class="text-red-500 text-xs mt-1">
+          Please enter a valid weight (20-300 kg)
+        </p>
+      </div>
+
+      <!-- Kidney Test Result -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-1">
+          Kidney Test Result (eGFR)
+        </label>
+        <input type="text" formControlName="kidneyTestResult"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+               placeholder="e.g., eGFR: 45 or 'none'">
+        <p class="text-gray-500 text-xs mt-1">Enter eGFR value or 'none' if not available</p>
+      </div>
+
+      <!-- Severe Liver Problem -->
+      <div class="flex items-center gap-3">
+        <input type="checkbox" formControlName="severeLiverProblem" 
+               class="w-5 h-5 text-[#7C3AED] rounded focus:ring-[#7C3AED]">
+        <label class="text-sm text-[#2D1B4E]">
+          Patient has severe liver problem
+        </label>
+      </div>
+
+      <!-- Current Medications -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-1">
+          Current Medications
+        </label>
+        <textarea formControlName="currentMedications" rows="2"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                  placeholder="List current medications (comma separated)"></textarea>
+      </div>
+
+      <!-- Allergies -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-1">
+          Known Allergies
+        </label>
+        <textarea formControlName="allergies" rows="2"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                  placeholder="List known allergies"></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex gap-3 pt-2">
+        <button type="button" (click)="close()" 
+                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="loading || form.invalid"
+                class="flex-1 px-4 py-2 bg-[#7C3AED] text-white rounded-lg hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="loading" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span>
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

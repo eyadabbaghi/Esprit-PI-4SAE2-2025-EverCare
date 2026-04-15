@@ -77,6 +77,7 @@ export interface PrescriptionRequest {
   resumeSimple?: string;
 
   notesMedecin?: string;
+  overrideJustification?: string;
 }
 
 export interface PrescriptionFilterParams {

@@ -5,10 +5,13 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
+import everCare.appointments.dtos.ClinicalMeasurementResponseDTO;
+import everCare.appointments.dtos.MedicamentResponseDTO;
 import everCare.appointments.dtos.PdfEmailRequest;
 import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.dtos.PrescriptionResponseDTO;
+import everCare.appointments.dtos.SafetyCheckResult;
 import everCare.appointments.dtos.StatusCountDTO;
 import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.dtos.PatientSimpleDTO;
@@ -16,9 +19,12 @@ import everCare.appointments.dtos.UserSimpleDTO;
 import everCare.appointments.feign.NotificationFeignClient;
 import everCare.appointments.feign.PatientFeignClient;
 import everCare.appointments.mappers.PrescriptionMapper;
+import everCare.appointments.services.ClinicalMeasurementService;
+import everCare.appointments.services.MedicamentService;
 import everCare.appointments.services.PrescriptionPdfService;
 import everCare.appointments.services.PrescriptionAccessControlService;
 import everCare.appointments.services.PrescriptionService;
+import everCare.appointments.services.PrescriptionSafetyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -51,17 +57,49 @@ public class PrescriptionController {
     private final PrescriptionPdfService prescriptionPdfService;
     private final NotificationFeignClient notificationFeignClient;
     private final PatientFeignClient patientFeignClient;
+    private final ClinicalMeasurementService clinicalMeasurementService;
+    private final PrescriptionSafetyService prescriptionSafetyService;
+    private final MedicamentService medicamentService;
 
     // ========== CREATE ==========
 
     /**
      * Creates a prescription from a request body DTO.
-     * Replaces both the old createPrescription and createPrescriptionFromConsultation endpoints.
-     * The client sends IDs (patientId, doctorId, medicamentId, appointmentId) — not full objects.
+     * Includes safety check based on clinical measurements.
      */
     @PostMapping
-    public ResponseEntity<PrescriptionResponseDTO> createPrescription(@RequestBody PrescriptionRequestDTO request) {
+    public ResponseEntity<?> createPrescription(@RequestBody PrescriptionRequestDTO request) {
         accessControlService.assertCanManagePrescription(request.getDoctorId());
+
+        ClinicalMeasurementResponseDTO measurement = null;
+        if (request.getAppointmentId() != null) {
+            measurement = clinicalMeasurementService.getByAppointmentId(request.getAppointmentId());
+        }
+
+        if (measurement == null && request.getPatientId() != null) {
+            measurement = clinicalMeasurementService.getLatestForPatient(request.getPatientId());
+        }
+
+        if (measurement != null && request.getMedicamentId() != null) {
+            var medicamentOpt = medicamentService.getMedicamentById(request.getMedicamentId());
+            if (medicamentOpt.isPresent()) {
+                var medicament = medicamentOpt.get();
+                var safetyResult = prescriptionSafetyService.checkSafetyWithDTO(
+                        request, measurement, medicament);
+
+                if (!safetyResult.isSafe() && "CRITICAL".equals(safetyResult.getLevel()) 
+                        && (request.getOverrideJustification() == null || request.getOverrideJustification().isBlank())) {
+                    return ResponseEntity.badRequest().body(java.util.Map.of(
+                            "safetyWarning", safetyResult,
+                            "error", "CRITICAL safety issue. Override justification required."
+                    ));
+                }
+
+                if (!safetyResult.isSafe()) {
+                    log.warn("Safety check warning for prescription: {}", safetyResult.getMessage());
+                }
+            }
+        }
 
         PrescriptionResponseDTO response = mapper.toResponse(
                 prescriptionService.createPrescriptionFromConsultation(

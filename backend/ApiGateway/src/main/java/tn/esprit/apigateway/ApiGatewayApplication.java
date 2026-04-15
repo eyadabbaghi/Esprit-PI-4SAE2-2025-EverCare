@@ -50,7 +50,8 @@ public class ApiGatewayApplication {
                                 "/EverCare/availabilities/**",
                                 "/EverCare/consultation-types/**",
                                 "/EverCare/medicaments/**",
-                                "/EverCare/prescriptions/**")
+                                "/EverCare/prescriptions/**",
+                                "/EverCare/api/clinical-measurements/**")
                         .uri("lb://APPOINTMENT-SERVICE"))
                 .route("notification-service", r -> r
                         .path("/EverCare/api/notifications/**")

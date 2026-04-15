@@ -38,7 +38,8 @@ public class SecurityConfig {
                                 "/auth/face-login",
                                 "/users/by-email",
                                 "/users/activity/**",
-                                "/uploads/**"
+                                "/uploads/**",
+                                "/users/{id}"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -1,0 +1,127 @@
+<h2 mat-dialog-title class="text-2xl flex items-center gap-2">
+    🔔
+  {{ data.alert ? 'Edit Alert' : 'Create New Alert' }}
+</h2>
+
+<form [formGroup]="form">
+  <mat-dialog-content class="max-w-2xl max-h-[70vh] overflow-y-auto">
+    <div class="space-y-6">
+      <!-- Incident info -->
+      <div class="p-4 bg-[#F3E8FF] rounded-lg">
+        <p class="text-sm text-[#6B5B8C] mb-1">Alert for incident:</p>
+        <p class="font-semibold text-[#2D1B4E]">{{ data.incident.title }}</p>
+      </div>
+
+      <!-- Recipient selection -->
+      <div>
+        <label class="text-base font-semibold text-[#2D1B4E] mb-3 block">Select Recipient</label>
+        <div *ngIf="loading" class="text-center py-4 text-[#6B5B8C]">Loading contacts...</div>
+        <div *ngIf="!loading && contacts.length === 0" class="text-center py-4 text-[#6B5B8C]">No caregivers or doctors associated with this patient.</div>
+        <div class="space-y-2">
+          <div *ngFor="let contact of contacts"
+               class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+               [ngClass]="form.get('targetId')?.value === contact.userId ? 'border-[#7C3AED] bg-[#F3E8FF]' : 'border-[#DDD6FE]'"
+               (click)="form.patchValue({ targetId: contact.userId })">
+            <div class="w-10 h-10 rounded-full bg-[#C4B5FD] flex items-center justify-center text-xs font-semibold overflow-hidden">
+              <ng-container *ngIf="contact.profilePicture; else initials">
+                <img [src]="contact.profilePicture" alt="" class="w-full h-full object-cover">
+              </ng-container>
+              <ng-template #initials>
+                <span class="text-[#7C3AED]">{{ getInitials(contact.name) }}</span>
+              </ng-template>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium text-[#2D1B4E]">{{ contact.name }}</p>
+              <p class="text-xs text-[#6B5B8C]">{{ contact.role }}</p>
+            </div>
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                 [ngClass]="form.get('targetId')?.value === contact.userId ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#DDD6FE]'">
+              <span *ngIf="form.get('targetId')?.value === contact.userId" class="text-white text-xs">✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert Label -->
+      <div>
+        <label class="text-base font-semibold text-[#2D1B4E] mb-2 block">Alert Label (optional)</label>
+        <mat-form-field class="w-full">
+          <input matInput placeholder="e.g., Medication reminder" formControlName="label">
+        </mat-form-field>
+      </div>
+
+      <!-- Schedule -->
+      <div>
+        <label class="text-base font-semibold text-[#2D1B4E] mb-2 block">Schedule</label>
+        <div class="flex items-center gap-4 mb-3">
+          <mat-checkbox formControlName="immediate">Send immediately</mat-checkbox>
+        </div>
+        <div *ngIf="!form.get('immediate')?.value" class="space-y-4">
+          <!-- Time picker (24h format) -->
+          <div>
+            <label class="text-sm font-medium text-[#374151] mb-1 block">Time (24h)</label>
+            <mat-form-field class="w-40">
+              <input matInput type="time" formControlName="scheduledTime">
+            </mat-form-field>
+          </div>
+          <!-- Repeat days -->
+          <div>
+            <label class="text-sm font-medium text-[#374151] mb-2 block">Repeat on</label>
+            <div class="flex flex-wrap gap-2">
+              <button *ngFor="let day of daysOfWeek" type="button"
+                      class="px-3 py-1 rounded-full border text-sm transition"
+                      [ngClass]="form.get('repeatDays')?.value.includes(day.value) ? 'bg-[#7C3AED] text-white border-[#7C3AED]' : 'bg-white border-[#DDD6FE] text-[#6B5B8C]'"
+                      (click)="toggleRepeatDay(day.value)">
+                {{ day.label }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification channels -->
+      <div>
+        <label class="text-base font-semibold text-[#2D1B4E] mb-3 block">Notification Channels</label>
+        <div class="grid grid-cols-3 gap-3">
+          <div *ngFor="let ch of notificationChannels"
+               class="flex flex-col items-center p-3 border-2 rounded-xl cursor-pointer transition-all"
+               [ngClass]="form.get('notificationChannels')?.value.includes(ch.id) ? 'border-[#7C3AED] bg-[#F3E8FF]' : 'border-[#DDD6FE]'"
+               (click)="toggleChannel(ch.id, !form.get('notificationChannels')?.value.includes(ch.id))">
+            <span class="text-2xl mb-1">🔔</span>
+            <span class="text-xs font-medium">{{ ch.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div *ngIf="form.get('targetId')?.value && form.get('notificationChannels')?.value.length"
+           class="p-4 bg-gradient-to-r from-[#F3E8FF] to-white rounded-lg border border-[#C4B5FD]">
+        <h4 class="font-semibold text-[#2D1B4E] mb-2">Alert Preview</h4>
+        <p class="text-sm text-[#6B5B8C]">
+          Alert will be sent to <span class="font-semibold text-[#7C3AED]">{{ getSelectedContactName() }}</span>
+          via <span class="font-semibold text-[#7C3AED]">{{ notificationChannelsDisplay }}</span>
+        </p>
+        <p *ngIf="form.get('label')?.value" class="text-sm text-[#6B5B8C] mt-2">
+          Label: <span class="font-semibold">{{ form.get('label')?.value }}</span>
+        </p>
+        <div *ngIf="!form.get('immediate')?.value">
+          <p class="text-sm text-[#6B5B8C] mt-1">
+            Scheduled at {{ form.get('scheduledTime')?.value }} on
+            <span *ngIf="form.get('repeatDays')?.value.length; else once">
+              {{ form.get('repeatDays')?.value.join(', ') }}
+            </span>
+            <ng-template #once>next occurrence</ng-template>
+          </p>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="p-4 border-t border-[#C4B5FD]">
+  <button mat-button type="button" (click)="cancel()" class="border border-[#C4B5FD] rounded-full px-4 py-2">Cancel</button>
+  <button mat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid"
+          class="bg-[#7C3AED] text-white rounded-full px-6 py-2 hover:bg-[#6D28D9] disabled:opacity-50">
+    {{ data.alert ? 'Update' : 'Create' }} Alert
+  </button>
+</mat-dialog-actions>
+</form>

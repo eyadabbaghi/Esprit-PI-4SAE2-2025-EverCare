@@ -1,0 +1,222 @@
+<nav class="bg-white border-b border-[#C4B5FD] sticky top-0 z-40 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <button type="button" class="flex items-center space-x-3 cursor-pointer" (click)="navigate('/')">
+        <img src="/logo.png" alt="EverCare logo" class="h-9 w-9 rounded-xl object-contain" />
+        <span class="text-xl font-bold text-[#2D1B4E]">EverCare</span>
+      </button>
+
+      <div class="hidden md:flex items-center space-x-1">
+        <button
+          *ngFor="let item of navItems"
+          type="button"
+          (click)="navigate(item.route)"
+          [ngClass]="isActive(item.route) ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
+          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <button
+            id="notifications-button"
+            type="button"
+            class="relative inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#F3E8FF] transition-colors"
+            (click)="openAlerts()"
+          >
+            <svg class="w-5 h-5 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24" [class.bell-shake]="bellShaking">
+              <path
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 10-12 0v3a2 2 0 01-.6 1.6L4 17h5m6 0a3 3 0 11-6 0"
+              />
+            </svg>
+            <span
+              *ngIf="unreadCount > 0"
+              class="absolute -top-1 -right-1 w-5 h-5 bg-[#C06C84] rounded-full text-white text-xs flex items-center justify-center font-semibold"
+            >
+              {{ unreadCount }}
+            </span>
+          </button>
+
+          <div
+            *ngIf="notificationsOpen"
+            id="notifications-dropdown"
+            class="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50"
+          >
+            <div class="px-4 py-2 flex items-center justify-between">
+              <span class="text-sm font-semibold text-[#2D1B4E]">Notifications</span>
+              <div class="flex items-center gap-2">
+                <button type="button" class="text-xs text-[#7C3AED] hover:underline" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+                  Mark all as read
+                </button>
+                <button
+                  type="button"
+                  class="text-xs text-[#C06C84] hover:underline"
+                  *ngIf="activityNotifications.length > 0 || taskNotifications.length > 0"
+                  (click)="clearAllNotifications()"
+                >
+                  Clear all
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t border-[#E5E7EB] max-h-96 overflow-y-auto">
+              <ng-container *ngIf="taskNotifications.length > 0">
+                <div class="px-4 py-1 bg-[#F9FAFB]">
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Tasks</span>
+                </div>
+                <button
+                  type="button"
+                  *ngFor="let notification of taskNotifications"
+                  class="w-full text-left px-4 py-3 border-b border-[#E5E7EB] hover:bg-[#F9FAFB]"
+                  [ngClass]="{ 'bg-[#F3E8FF]': !notification.read }"
+                  (click)="handleTaskNotificationClick(notification)"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="text-xs font-semibold text-[#2D1B4E]">{{ notification.title }}</p>
+                        <span
+                          *ngIf="notification.severity"
+                          class="text-[10px] px-2 py-0.5 rounded-full"
+                          [ngClass]="getSeverityClasses(notification.severity)"
+                        >
+                          {{ notification.severity }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-[#6B5B8C] line-clamp-2">{{ notification.message }}</p>
+                      <p class="text-[10px] text-[#9CA3AF] mt-1">{{ notification.time }}</p>
+                    </div>
+                  </div>
+                </button>
+              </ng-container>
+
+              <ng-container *ngIf="activityNotifications.length > 0">
+                <div class="px-4 py-1 bg-[#F9FAFB]">
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Activities</span>
+                </div>
+                <button
+                  type="button"
+                  *ngFor="let notification of activityNotifications"
+                  class="w-full text-left px-4 py-3 border-b border-[#E5E7EB] hover:bg-[#F9FAFB] flex gap-3"
+                  [ngClass]="{ 'bg-[#F3E8FF]': !notification.read }"
+                  (click)="handleActivityNotificationClick(notification)"
+                >
+                  <div class="mt-1 text-base">{{ getActivityIcon(notification.action) }}</div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-[#2D1B4E]">{{ getActivityTitle(notification.action) }}</p>
+                    <p class="text-xs text-[#6B5B8C] line-clamp-2">{{ notification.details }}</p>
+                    <p class="text-[10px] text-[#9CA3AF] mt-1">{{ notification.timestamp | date:'short' }}</p>
+                  </div>
+                </button>
+              </ng-container>
+
+              <div *ngIf="activityNotifications.length === 0 && taskNotifications.length === 0" class="py-6 text-center text-[#6B5B8C] text-sm">
+                No notifications
+              </div>
+            </div>
+
+            <button type="button" class="w-full text-center text-xs text-[#7C3AED] py-2 hover:bg-[#F3E8FF]" (click)="navigate('/alerts')">
+              View all alerts
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="user" class="hidden md:flex items-center space-x-2 relative">
+          <button
+            id="profile-button"
+            type="button"
+            class="flex items-center space-x-2 px-2 py-1 rounded-full hover:bg-[#F3E8FF] transition-all duration-200"
+            (click)="toggleProfileMenu()"
+          >
+            <div class="w-9 h-9 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold overflow-hidden">
+              <ng-container *ngIf="user.profilePicture; else initials">
+                <img [src]="user.profilePicture" alt="Profile" class="w-full h-full object-cover" />
+              </ng-container>
+              <ng-template #initials>
+                <span class="text-[#7C3AED]">{{ getInitials(user.name) }}</span>
+              </ng-template>
+            </div>
+
+            <div class="flex flex-col text-left">
+              <span class="text-sm font-medium text-[#2D1B4E]">{{ user.name }}</span>
+              <span class="text-[11px] text-[#6B5B8C] capitalize">{{ user.role }}</span>
+            </div>
+          </button>
+
+          <div
+            id="profile-dropdown"
+            *ngIf="profileOpen"
+            class="absolute right-0 mt-2 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50 transition-all duration-200"
+          >
+            <button class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center gap-2" (click)="goToProfile()">
+              My Profile
+            </button>
+            <button
+              class="w-full text-left px-4 py-2 text-sm text-[#C06C84] hover:bg-red-50 flex items-center gap-2 border-t border-[#F3E8FF]"
+              (click)="logout()"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!user" class="hidden md:block">
+          <button
+            type="button"
+            class="flex items-center gap-2 px-3 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9]"
+            (click)="navigate('/login')"
+          >
+            Log In
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#F3E8FF]"
+          (click)="toggleMobileMenu()"
+        >
+          <span *ngIf="!isMobileMenuOpen">☰</span>
+          <span *ngIf="isMobileMenuOpen">✕</span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="showTaskAlert" class="mt-3 rounded-xl border border-[#C4B5FD] bg-[#F8F5FF] px-4 py-3 text-sm text-[#2D1B4E] flex items-start justify-between gap-3">
+      <div>
+        <div class="font-semibold">{{ taskAlertTitle }}</div>
+        <div>{{ taskAlertMessage }}</div>
+      </div>
+      <button type="button" class="text-[#7C3AED] hover:text-[#6D28D9]" (click)="closeTaskAlert()">✕</button>
+    </div>
+
+    <div *ngIf="isMobileMenuOpen" class="md:hidden border-t border-[#C4B5FD] bg-white px-4 pb-4 pt-3 space-y-2">
+      <button
+        *ngFor="let item of navItems"
+        type="button"
+        class="w-full flex items-center justify-start px-3 py-2 rounded-md text-sm font-medium"
+        [ngClass]="isActive(item.route) ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
+        (click)="navigate(item.route)"
+      >
+        {{ item.label }}
+      </button>
+
+      <div *ngIf="user" class="border-t border-[#E5E7EB] pt-2 mt-2">
+        <div class="px-3 py-2 text-sm text-[#2D1B4E] font-medium">{{ user.name }} - {{ user.role }}</div>
+        <button type="button" class="w-full flex items-center justify-start px-3 py-2 text-sm text-[#C06C84] hover:bg-red-50" (click)="logout()">
+          Log out
+        </button>
+      </div>
+
+      <div *ngIf="!user" class="border-t border-[#E5E7EB] pt-2 mt-2">
+        <button type="button" class="w-full flex items-center justify-start px-3 py-2 text-sm text-[#7C3AED]" (click)="navigate('/login')">
+          Log In
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

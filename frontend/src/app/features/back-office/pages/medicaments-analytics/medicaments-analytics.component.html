@@ -1,0 +1,59 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="mx-auto max-w-7xl space-y-6">
+    <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Medicament Analytics</h1>
+        <p class="text-sm text-[#6B5B8C]">Understand usage, active catalog coverage and deactivated-but-used items.</p>
+      </div>
+      <button type="button" (click)="goToCatalog()" class="rounded-full border border-[#DDD6FE] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+        Back to catalog
+      </button>
+    </header>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="rounded-xl border border-[#DDD6FE] bg-white p-8 text-center text-sm text-[#6B5B8C] shadow-sm">
+      Loading medicament analytics...
+    </div>
+
+    <ng-container *ngIf="!loading && summary">
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Total</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.totalMedicaments }}</p></div>
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Active</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.activeMedicaments }}</p></div>
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Inactive</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.inactiveMedicaments }}</p></div>
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Used</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.usedMedicaments }}</p></div>
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Unused</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.unusedMedicaments }}</p></div>
+        <div class="rounded-xl border border-[#DDD6FE] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Deactivated But Used</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.deactivatedUsedMedicaments }}</p></div>
+      </section>
+
+      <section class="rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-sm">
+        <div class="mb-4">
+          <h2 class="text-lg font-semibold text-[#2D1B4E]">Top Usage</h2>
+          <p class="text-sm text-[#6B5B8C]">Most prescribed medicaments with active treatment visibility.</p>
+        </div>
+
+        <div *ngIf="usage.length === 0" class="text-sm text-[#6B5B8C]">No usage data available.</div>
+
+        <div class="space-y-4" *ngIf="usage.length > 0">
+          <div *ngFor="let item of usage; trackBy: trackByUsage" class="rounded-xl border border-[#F3E8FF] p-4">
+            <div class="mb-2 flex items-center justify-between gap-4">
+              <div>
+                <div class="font-medium text-[#2D1B4E]">{{ item.nomCommercial }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ item.activePrescriptions }} active · {{ item.lastPrescribedDate ? (item.lastPrescribedDate | date:'mediumDate') : 'No recent date' }}</div>
+              </div>
+              <span class="rounded-full px-2 py-1 text-xs font-medium" [ngClass]="item.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'">
+                {{ item.actif ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="mb-1 flex items-center justify-between text-sm">
+              <span class="text-[#6B5B8C]">{{ item.totalPrescriptions }} total prescriptions</span>
+            </div>
+            <div class="h-3 rounded-full bg-[#F3E8FF]"><div class="h-3 rounded-full bg-[#7C3AED]" [style.width.%]="getUsageWidth(item.totalPrescriptions)"></div></div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>

@@ -1,0 +1,68 @@
+<div class="relative pl-8 pb-4 border-l-2 border-[#C4B5FD] last:border-l-0 last:pb-0"
+     [class.last:border-l-0]="isLast">
+
+  <!-- Time Dot -->
+  <div class="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-[#7C3AED] border-2 border-white"></div>
+
+  <!-- Appointment Card -->
+  <div class="bg-[#F9FAFB] rounded-lg border border-[#E5E7EB] p-4 hover:border-[#C4B5FD] transition-colors cursor-pointer"
+       (click)="onClick.emit(appointment)">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="flex-1">
+        <!-- Time and Status -->
+        <div class="flex items-center space-x-3 mb-2">
+          <span class="font-semibold text-[#2D1B4E]">{{ appointment.startDateTime | date:'HH:mm' }}</span>
+          <span class="text-sm text-[#6B5B8C]">- {{ appointment.endDateTime | date:'HH:mm' }}</span>
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                [class]="getStatusClass(appointment.status)">
+                {{ getStatusLabel(appointment.status) }}
+              </span>
+        </div>
+
+        <!-- Patient Info -->
+        <div class="flex items-center space-x-3">
+          <img [src]="appointment.patientPhoto" class="w-10 h-10 rounded-full">
+          <div>
+            <h4 class="font-semibold text-[#2D1B4E]">{{ appointment.patientName }}</h4>
+            <p class="text-xs text-[#6B5B8C]">{{ appointment.consultationTypeName }} - {{ getDuration() }} min</p>
+          </div>
+        </div>
+
+        <!-- Cognitive Info (for Alzheimer patients) -->
+        <div *ngIf="cognitiveInfo" class="mt-2 flex items-center space-x-2">
+              <span class="text-xs bg-[#F3E8FF] px-2 py-0.5 rounded-full">
+                🧠 {{ cognitiveInfo }}
+              </span>
+          <span *ngIf="appointment.caregiverName" class="text-xs bg-[#E6F0FA] px-2 py-0.5 rounded-full">
+                👥 {{ appointment.caregiverName }}
+              </span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-2">
+        <button *ngIf="showStartButton"
+                class="px-3 py-1 bg-[#7C3AED] text-white text-sm rounded-md hover:bg-[#6D28D9] transition-colors"
+                (click)="onStart.emit(appointment); $event.stopPropagation()">
+          Start
+        </button>
+        <button *ngIf="showJoinButton"
+                class="px-3 py-1 border border-[#7C3AED] text-[#7C3AED] text-sm rounded-md hover:bg-[#F3E8FF] transition-colors"
+                (click)="onJoin.emit(appointment.videoLink); $event.stopPropagation()">
+          Join Call
+        </button>
+        <button class="px-3 py-1 border border-[#E2E8F0] text-sm rounded-md hover:bg-[#F3E8FF] transition-colors"
+                (click)="onViewProfile.emit(appointment.patientId); $event.stopPropagation()">
+          Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Doctor Notes -->
+    <div *ngIf="appointment.doctorNotes" class="mt-2 text-sm bg-[#F3E8FF] p-2 rounded">
+      <span class="font-medium text-[#2D1B4E]">Notes: </span>
+      <span class="text-[#6B5B8C]">{{ appointment.doctorNotes }}</span>
+    </div>
+  </div>
+</div>

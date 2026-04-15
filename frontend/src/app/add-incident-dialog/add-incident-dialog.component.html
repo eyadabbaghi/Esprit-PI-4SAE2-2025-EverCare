@@ -1,0 +1,149 @@
+<h2 mat-dialog-title class="text-2xl flex items-center gap-2">
+    ⚠️
+  {{ data.incident ? 'Edit Incident' : 'Report New Incident' }}
+</h2>
+
+<form [formGroup]="form">
+
+  <mat-dialog-content class="space-y-6">
+
+    <!-- Progress -->
+    <div class="flex items-center justify-center gap-3 mb-6">
+      <div class="w-10 h-10 flex items-center justify-center rounded-full font-semibold"
+           [ngClass]="step === 'details' ? 'bg-[#7C3AED] text-white shadow-lg' : 'bg-[#DDD6FE] text-gray-600'">
+        1
+      </div>
+      <div class="h-1 w-16 bg-[#DDD6FE] rounded-full"></div>
+      <div class="w-10 h-10 flex items-center justify-center rounded-full font-semibold"
+           [ngClass]="step === 'review' ? 'bg-[#7C3AED] text-white shadow-lg' : 'bg-[#DDD6FE] text-gray-600'">
+        2
+      </div>
+    </div>
+
+    <ng-container [ngSwitch]="step">
+
+      <!-- ================= STEP 1 ================= -->
+      <div *ngSwitchCase="'details'" class="space-y-4">
+
+        <!-- SEVERITY -->
+        <div>
+          <label class="block text-sm font-medium mb-2">Severity</label>
+          <div class="grid grid-cols-4 gap-3">
+            <button
+              type="button"
+              *ngFor="let sev of severityOptions"
+              (click)="form.get('severity')?.setValue(sev)"
+              class="p-3 rounded-2xl border-2 transition-all flex flex-col items-center hover:scale-105"
+              [ngClass]="
+                form.get('severity')?.value === sev
+                  ? 'border-[#7C3AED] bg-gradient-to-br from-[#EDE9FE] to-[#F3E8FF] shadow-md'
+                  : 'border-[#DDD6FE] bg-white'
+              "
+            >
+              <span class="text-2xl">
+                {{ sev === 'LOW' ? '🙂' :
+                   sev === 'MEDIUM' ? '😐' :
+                   sev === 'HIGH' ? '⚠️' : '🚨' }}
+              </span>
+              <span class="text-xs font-semibold mt-1">{{ sev }}</span>
+            </button>
+          </div>
+          <mat-error *ngIf="form.get('severity')?.invalid && form.get('severity')?.touched">
+            Severity is required
+          </mat-error>
+        </div>
+
+        <!-- TYPE + PATIENT -->
+        <div class="grid grid-cols-2 gap-4">
+
+          <mat-form-field class="w-full">
+            <mat-label>Type</mat-label>
+            <mat-select formControlName="type">
+              <mat-option *ngFor="let t of typeOptions" [value]="t">{{ t }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <ng-container *ngIf="userRole !== 'patient'; else readonlyPatient">
+            <mat-form-field class="w-full">
+              <mat-label>Patient</mat-label>
+              <mat-select formControlName="patientId">
+                <mat-option *ngFor="let p of patients" [value]="p.userId">{{ p.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+
+          <ng-template #readonlyPatient>
+            <mat-form-field class="w-full">
+              <mat-label>Patient</mat-label>
+              <input matInput [value]="currentUser?.name" disabled />
+            </mat-form-field>
+          </ng-template>
+
+        </div>
+
+        <!-- TITLE -->
+        <mat-form-field class="w-full">
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" />
+        </mat-form-field>
+
+        <!-- DESCRIPTION -->
+        <mat-form-field class="w-full">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="4" formControlName="description"></textarea>
+        </mat-form-field>
+
+        <!-- LOCATION -->
+        <mat-form-field class="w-full">
+          <mat-label>Location</mat-label>
+          <input matInput formControlName="location" />
+        </mat-form-field>
+
+        <!-- AI SUGGESTION -->
+        <div *ngIf="showAISuggestion"
+             class="p-4 rounded-2xl border border-[#7C3AED] bg-gradient-to-br from-[#F3E8FF] to-[#EDE9FE] shadow-md">
+          <p class="font-semibold mb-2">✨ AI Suggestion</p>
+          <p class="text-sm mb-3">{{ aiSuggestion }}</p>
+          <button mat-button color="primary" type="button" (click)="applyAISuggestion()">
+            Apply Suggestion
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ================= STEP 2 ================= -->
+      <div *ngSwitchCase="'review'" class="space-y-4">
+        <div class="p-4 rounded-2xl border bg-gradient-to-br from-[#F9FAFB] to-[#EEEAFB] shadow-md space-y-1">
+          <p><strong>Severity:</strong> {{ form.value.severity }}</p>
+          <p><strong>Type:</strong> {{ form.value.type }}</p>
+          <p><strong>Patient:</strong> {{ getPatientName(form.getRawValue().patientId) }}</p>
+          <p><strong>Title:</strong> {{ form.value.title }}</p>
+          <p><strong>Description:</strong> {{ form.value.description }}</p>
+          <p><strong>Location:</strong> {{ form.value.location }}</p>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="space-x-2">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+
+    <button
+      *ngIf="step === 'details'"
+      mat-button
+      color="primary"
+      type="button"
+      (click)="nextStep()"
+      [disabled]="form.invalid">
+      Next
+    </button>
+
+    <ng-container *ngIf="step === 'review'">
+      <button mat-button type="button" (click)="previousStep()">Back</button>
+      <button mat-button color="primary" type="button" (click)="save()">Create</button>
+    </ng-container>
+  </mat-dialog-actions>
+
+</form>

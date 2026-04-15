@@ -1,0 +1,12 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-1 flex space-x-1">
+  <button *ngFor="let tab of tabs"
+          class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-medium"
+          [class.bg-[#7C3AED]]="activeTab === tab.id"
+          [class.text-white]="activeTab === tab.id"
+          [class.text-[#2D1B4E]]="activeTab !== tab.id"
+          [class.hover:bg-[#F3E8FF]]="activeTab !== tab.id"
+          (click)="onTabChange(tab.id)">
+    <span class="mr-2">{{ tab.icon }}</span>
+    {{ tab.label }}
+  </button>
+</div>

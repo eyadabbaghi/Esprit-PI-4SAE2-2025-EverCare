@@ -1,0 +1,39 @@
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hover effects for main activity cards */
+.activity-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(45, 27, 78, 0.15);
+}
+
+/* Hover effects for sidebar cards */
+.activity-sidebar-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.activity-sidebar-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12);
+}
+
+/* Hover for quick info tiles */
+.activity-quick-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.activity-quick-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.16);
+}
+

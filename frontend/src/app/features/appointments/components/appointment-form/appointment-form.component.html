@@ -1,0 +1,120 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/50" (click)="onClose.emit()"></div>
+
+  <div class="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-[#2D1B4E]">{{ title }}</h2>
+          <p class="text-sm text-[#6B5B8C] mt-1">{{ subtitle }}</p>
+        </div>
+        <button class="p-1 hover:bg-[#F3E8FF] rounded-full" (click)="onClose.emit()">
+          <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div class="space-y-4">
+        <!-- Doctor -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-[#1E293B]">Médecin *</label>
+          <select
+            [(ngModel)]="formData.doctorId"
+            (change)="onDoctorChange.emit(formData.doctorId)"
+            class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+            <option value="">Choisir un médecin</option>
+            <option *ngFor="let doctor of doctors" [value]="doctor.userId">
+              {{ doctor.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Consultation Type -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-[#1E293B]">Type de consultation *</label>
+          <select
+            [(ngModel)]="formData.consultationTypeId"
+            (change)="onTypeChange.emit(formData.consultationTypeId)"
+            class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+            <option value="">Choisir le type</option>
+            <option *ngFor="let type of consultationTypes" [value]="type.typeId">
+              {{ type.name }} ({{ type.alzheimerDuration }} min)
+            </option>
+          </select>
+        </div>
+
+        <!-- Date and Time -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[#1E293B]">Date *</label>
+            <input
+              type="date"
+              [(ngModel)]="formData.date"
+              (change)="onDateChange.emit(formData.date)"
+              [min]="minDate"
+              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[#1E293B]">Heure *</label>
+            <select
+              [(ngModel)]="formData.time"
+              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+              [disabled]="!availableSlots.length">
+              <option value="">Choisir un créneau</option>
+              <option *ngFor="let slot of availableSlots" [value]="slot">
+                {{ slot }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Caregiver -->
+        <div class="space-y-2" *ngIf="caregivers.length > 0">
+          <label class="text-sm font-medium text-[#1E293B]">Aidant (optionnel)</label>
+          <select
+            [(ngModel)]="formData.caregiverId"
+            class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+            <option value="">Sans aidant</option>
+            <option *ngFor="let caregiver of caregivers" [value]="caregiver.userId">
+              {{ caregiver.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Caregiver Presence -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-[#1E293B]">Présence de l'aidant</label>
+          <select
+            [(ngModel)]="formData.caregiverPresence"
+            class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+            <option value="NONE">Seul(e)</option>
+            <option value="PHYSICAL">Avec moi</option>
+            <option value="REMOTE">En visio</option>
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-[#1E293B]">Notes (optionnel)</label>
+          <textarea
+            [(ngModel)]="formData.notes"
+            rows="2"
+            placeholder="Informations complémentaires..."
+            class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+              </textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          (click)="onSubmit.emit(formData)"
+          [disabled]="!isValid()"
+          class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ submitText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

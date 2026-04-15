@@ -1,0 +1,289 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+  <div class="w-full max-w-3xl">
+    <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6">
+      <div class="space-y-6">
+        <!-- Header -->
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center space-x-2 mb-2">
+            <img src="/logo.png" alt="EverCare logo" class="h-10 w-10 rounded-xl object-contain" />
+            <h1 class="text-2xl font-bold text-[#2D1B4E]">EverCare</h1>
+          </div>
+          <h2 class="text-3xl font-semibold text-[#2D1B4E]">Complete Your Profile</h2>
+          <p class="text-sm text-[#6B5B8C]">Let's set up your profile to personalize your EverCare experience</p>
+          <div class="flex justify-center">
+            <div class="px-4 py-2 rounded-full border-2 capitalize text-sm font-semibold {{ getRoleColor() }}">
+              {{ role }} Account
+            </div>
+          </div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <!-- Profile Picture Upload -->
+          <div class="flex flex-col items-center space-y-4">
+            <div class="relative w-32 h-32">
+              <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
+                <ng-container *ngIf="profileImage; else initials">
+                  <img [src]="profileImage" alt="Profile" class="w-full h-full object-cover">
+                </ng-container>
+                <ng-template #initials>
+                  <span>{{ getInitials() }}</span>
+                </ng-template>
+              </div>
+              <input
+                type="file"
+                id="profile-picture-input"
+                accept="image/*"
+                class="hidden"
+                (change)="onFileSelected($event)"
+              />
+              <button
+                type="button"
+                class="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
+                (click)="triggerFileInput()"
+              >
+                📷
+              </button>
+            </div>
+            <p class="text-sm text-[#6B5B8C]">Recommended: Square image, at least 200x200px</p>
+          </div>
+
+          <!-- Common Fields -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Date of Birth -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Date of Birth <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📅</span>
+                <input
+                  type="date"
+                  formControlName="dateOfBirth"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [class.border-red-500]="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched" class="text-red-500 text-xs">
+                Date of birth is required.
+              </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Phone Number <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📞</span>
+                <input
+                  type="tel"
+                  formControlName="phoneNumber"
+                  placeholder="+1 (555) 123-4567"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [class.border-red-500]="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched" class="text-red-500 text-xs">
+                Phone number is required.
+              </div>
+            </div>
+          </div>
+
+          <!-- Caregiver Fields -->
+          <div *ngIf="role === 'CAREGIVER'" class="space-y-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <span>👥</span> Caregiver Information
+            </h3>
+            <div class="space-y-2">
+  <label class="text-sm font-medium text-[#1E293B]">Patient's Email Address</label>
+  <div class="relative">
+    <span class="absolute left-3 top-2.5 text-[#6B5B8C]">✉️</span>
+    <input
+      type="email"
+      formControlName="connectedEmail"
+      placeholder="patient@example.com"
+      class="w-full pl-10 pr-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+      [class.border-red-500]="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched"
+    />
+  </div>
+  <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
+    Please enter a valid email address if you provide one.
+  </div>
+  <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
+    <span>⚠️</span> This field is very important. You can add it now or later from your profile.
+  </p>
+</div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📞</span>
+                <input
+                  type="tel"
+                  formControlName="emergencyContact"
+                  placeholder="+1 (555) 987-6543"
+                  class="w-full pl-10 pr-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched" class="text-red-500 text-xs">
+                Emergency contact is required.
+              </div>
+            </div>
+          </div>
+
+          <!-- Patient Fields -->
+          <div *ngIf="role === 'PATIENT'" class="space-y-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <span>👤</span> Patient Information
+            </h3>
+            <div class="space-y-2">
+  <label class="text-sm font-medium text-[#1E293B]">Caregiver's Email Address</label>
+  <div class="relative">
+    <span class="absolute left-3 top-2.5 text-[#6B5B8C]">✉️</span>
+    <input
+      type="email"
+      formControlName="connectedEmail"
+      placeholder="caregiver@example.com"
+      class="w-full pl-10 pr-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      [class.border-red-500]="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched"
+    />
+  </div>
+  <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
+    Please enter a valid email address if you provide one.
+  </div>
+  <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
+    <span>⚠️</span> This field is very important. You can add it now or later from your profile.
+  </p>
+</div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📞</span>
+                <input
+                  type="tel"
+                  formControlName="emergencyContact"
+                  placeholder="+1 (555) 987-6543"
+                  class="w-full pl-10 pr-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched" class="text-red-500 text-xs">
+                Emergency contact is required.
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor Fields -->
+          <div *ngIf="role === 'DOCTOR'" class="space-y-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <span>💼</span> Medical Professional Information
+            </h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-[#1E293B]">Years of Experience <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">⏱️</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    formControlName="yearsExperience"
+                    placeholder="10"
+                    class="w-full pl-10 pr-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    [class.border-red-500]="profileForm.get('yearsExperience')?.invalid && profileForm.get('yearsExperience')?.touched"
+                  />
+                </div>
+                <div *ngIf="profileForm.get('yearsExperience')?.invalid && profileForm.get('yearsExperience')?.touched" class="text-red-500 text-xs">
+                  Years of experience is required (0-60).
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-[#1E293B]">Specialization</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">💼</span>
+                  <input
+                    type="text"
+                    formControlName="specialization"
+                    placeholder="Neurology, Geriatrics, etc."
+                    class="w-full pl-10 pr-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Medical License Number</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📜</span>
+                <input
+                  type="text"
+                  formControlName="medicalLicense"
+                  placeholder="MD123456"
+                  class="w-full pl-10 pr-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+            <div class="space-y-2">
+  <label class="text-sm font-medium text-[#1E293B]">Workplace Type <span class="text-red-500">*</span></label>
+  <div class="flex gap-4">
+    <label class="flex items-center space-x-2 cursor-pointer">
+      <input
+        type="radio"
+        name="workplaceType"
+        [value]="'hospital'"
+        [ngModel]="workplaceType"
+        (ngModelChange)="workplaceType = $event"
+        [ngModelOptions]="{standalone: true}"
+        class="w-4 h-4 text-[#7C3AED] focus:ring-[#7C3AED]"
+      />
+      <span class="text-[#2D1B4E]">Hospital</span>
+    </label>
+    <label class="flex items-center space-x-2 cursor-pointer">
+      <input
+        type="radio"
+        name="workplaceType"
+        [value]="'private'"
+        [ngModel]="workplaceType"
+        (ngModelChange)="workplaceType = $event"
+        [ngModelOptions]="{standalone: true}"
+        class="w-4 h-4 text-[#7C3AED] focus:ring-[#7C3AED]"
+      />
+      <span class="text-[#2D1B4E]">Private Practice</span>
+    </label>
+  </div>
+
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">
+                {{ workplaceType === 'hospital' ? 'Hospital Name' : 'Practice Name' }} <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🏢</span>
+                <input
+                  type="text"
+                  formControlName="workplace"
+                  [placeholder]="workplaceType === 'hospital' ? 'City General Hospital' : 'Dr. Smith Medical Office'"
+                  class="w-full pl-10 pr-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  [class.border-red-500]="profileForm.get('workplace')?.invalid && profileForm.get('workplace')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('workplace')?.invalid && profileForm.get('workplace')?.touched" class="text-red-500 text-xs">
+                Workplace name is required.
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-4">
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {{ isLoading ? 'Setting up...' : 'Complete Profile Setup' }}
+            </button>
+          </div>
+
+          <p class="text-center text-sm text-[#6B5B8C]">
+            You can update your profile information anytime from your account settings
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

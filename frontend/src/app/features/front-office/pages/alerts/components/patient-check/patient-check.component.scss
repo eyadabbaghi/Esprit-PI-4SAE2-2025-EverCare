@@ -1,0 +1,60 @@
+.patient-check-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: #0f172a;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  width: 320px;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+
+  .incoming-banner {
+    text-align: center;
+    .icon-pulse {
+      font-size: 3rem;
+      animation: pulse 1.5s infinite;
+    }
+    h2 { font-size: 1.1rem; margin: 12px 0 4px; }
+    p  { font-size: 0.85rem; color: #94a3b8; }
+  }
+
+  .streaming-banner {
+    text-align: center;
+    p { font-size: 0.85rem; color: #10b981; margin-bottom: 8px; }
+    .live-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1s infinite;
+    }
+  }
+
+  .local-preview {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 2px solid #10b981;
+  }
+
+  .btn-cancel {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.15); opacity: 0.7; }
+}

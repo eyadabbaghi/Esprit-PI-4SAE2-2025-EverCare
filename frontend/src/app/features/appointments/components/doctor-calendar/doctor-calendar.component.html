@@ -1,0 +1,140 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-4">
+    <!-- Calendar Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-[#2D1B4E]">{{ monthName }} {{ currentYear }}</h3>
+      <div class="flex space-x-2">
+        <button
+          class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+          (click)="previousMonth()">
+          <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button
+          class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+          (click)="nextMonth()">
+          <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Day Headers -->
+    <div class="grid grid-cols-7 gap-1 mb-2">
+      <div *ngFor="let day of dayHeaders"
+           class="text-center text-sm font-semibold text-[#6B5B8C] py-2">
+        {{ day }}
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="grid grid-cols-7 gap-1">
+      <!-- Days -->
+      <div *ngFor="let day of calendarDays"
+           class="aspect-square p-1 rounded-lg border transition-all cursor-pointer"
+           [class]="getDayClass(day)"
+           (click)="selectDay(day)">
+
+        <!-- Day Number -->
+        <div class="text-sm font-medium text-center"
+             [class]="getDayNumberClass(day)">
+          {{ day.dayNumber }}
+        </div>
+
+        <!-- Appointment Indicators -->
+        <div class="mt-1 flex flex-wrap gap-1 justify-center">
+          <!-- Dot indicators for appointments -->
+          <ng-container *ngFor="let apt of getAppointmentIcons(day)">
+                <span class="inline-block w-2 h-2 rounded-full"
+                      [class]="getAppointmentTypeColor(apt)">
+                </span>
+          </ng-container>
+        </div>
+
+        <!-- Appointment Count Badge (if more than 3) -->
+        <div *ngIf="day.appointmentCount > 3"
+             class="mt-1 text-center">
+              <span class="inline-flex items-center justify-center w-5 h-5 text-xs bg-[#7C3AED] text-white rounded-full">
+                +{{ day.appointmentCount - 3 }}
+              </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-4 flex items-center justify-center space-x-4 text-xs text-[#6B5B8C] border-t pt-3">
+      <div class="flex items-center">
+        <span class="inline-block w-3 h-3 rounded-full bg-[#7C3AED] mr-1"></span>
+        <span>In-person</span>
+      </div>
+      <div class="flex items-center">
+        <span class="inline-block w-3 h-3 rounded-full bg-[#2D1B4E] mr-1"></span>
+        <span>Video call</span>
+      </div>
+      <div class="flex items-center">
+        <span class="inline-block w-3 h-3 rounded-full bg-[#F97316] mr-1"></span>
+        <span>With caregiver</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Day Details -->
+  <div *ngIf="selectedDay" class="border-t border-[#C4B5FD] p-4 bg-[#F9FAFB]">
+    <div class="flex justify-between items-center mb-3">
+      <h4 class="font-semibold text-[#2D1B4E]">
+        Appointments for {{ selectedDay.date | date:'fullDate' }}
+      </h4>
+      <span class="text-sm text-[#6B5B8C]">{{ selectedDay.appointmentCount }} total</span>
+    </div>
+
+    <!-- Appointment List for Selected Day -->
+    <div class="space-y-2 max-h-60 overflow-y-auto pr-2">
+      <div *ngFor="let apt of selectedDay.appointments"
+           class="p-3 bg-white rounded-lg border border-[#E5E7EB] hover:border-[#C4B5FD] transition-colors cursor-pointer"
+           (click)="onAppointmentClick.emit(apt)">
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <!-- Time -->
+            <span class="text-sm font-medium text-[#2D1B4E]">{{ apt.startDateTime | date:'HH:mm' }}</span>
+
+            <!-- Patient Info -->
+            <div>
+              <p class="font-medium text-[#2D1B4E]">{{ apt.patientName }}</p>
+              <p class="text-xs text-[#6B5B8C]">{{ apt.consultationTypeName }}</p>
+            </div>
+          </div>
+
+          <!-- Type Indicator -->
+          <span class="inline-block w-2 h-2 rounded-full"
+                [class]="getAppointmentTypeColor(apt)">
+              </span>
+        </div>
+
+        <!-- Caregiver Info -->
+        <div *ngIf="apt.caregiverName" class="mt-1 text-xs text-[#6B5B8C] flex items-center">
+          <svg class="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          {{ apt.caregiverName }}
+        </div>
+
+        <!-- Status -->
+        <div class="mt-1">
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                    [class]="getStatusClass(apt.status)">
+                {{ getStatusLabel(apt.status) }}
+              </span>
+        </div>
+      </div>
+
+      <!-- Empty State for Selected Day -->
+      <div *ngIf="selectedDay.appointments.length === 0" class="text-center py-6">
+        <p class="text-[#6B5B8C]">No appointments scheduled for this day</p>
+      </div>
+    </div>
+  </div>
+</div>

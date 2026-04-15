@@ -1,0 +1,18 @@
+<div class="consultation-page">
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <h2>⚠️ {{ error }}</h2>
+    <a routerLink="/appointments">← Back to Appointments</a>
+  </div>
+
+  <!-- Jitsi component -->
+  <app-jitsi-meet
+    *ngIf="isReady"
+    [roomName]="roomName"
+    [userName]="userName"
+    [userEmail]="userEmail"
+    [isDoctor]="isDoctor">
+  </app-jitsi-meet>
+
+</div>

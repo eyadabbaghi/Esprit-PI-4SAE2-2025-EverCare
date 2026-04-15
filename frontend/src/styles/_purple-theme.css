@@ -1,0 +1,58 @@
+/* src/styles/_purple-theme.css */
+
+/* 1️⃣ Base Angular Material theme */
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+/* 2️⃣ Dialog container overrides */
+::ng-deep .mat-dialog-container {
+  padding: 1.5rem; /* Tailwind p-6 */
+  border-radius: 1rem; /* rounded-2xl */
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+  background: linear-gradient(to bottom right, #F3E8FF, #EDE9FE); /* soft purple gradient */
+  font-family: 'Fame', sans-serif;
+  min-width: 500px;
+  max-width: 700px;
+}
+
+/* 3️⃣ Buttons and selects customization */
+::ng-deep .mat-button, 
+::ng-deep .mat-raised-button, 
+::ng-deep .mat-stroked-button {
+  background: linear-gradient(to right, #7C3AED, #9333EA);
+  color: white;
+  border-radius: 0.75rem; /* rounded-xl */
+  font-weight: 600;
+}
+
+::ng-deep .mat-button:hover,
+::ng-deep .mat-raised-button:hover {
+  opacity: 0.9;
+}
+
+/* 4️⃣ Form field focus */
+::ng-deep .mat-form-field-appearance-outline .mat-form-field-outline {
+  border-color: #D8B4FE; /* light purple border */
+}
+
+::ng-deep .mat-form-field.mat-focused .mat-form-field-outline {
+  border-color: #7C3AED; /* primary purple */
+}
+
+/* 5️⃣ Mat-select panel */
+::ng-deep .mat-select-panel {
+  border-radius: 0.75rem; /* rounded-xl */
+}
+
+/* 6️⃣ Progress steps / circles */
+::ng-deep .mat-step-header {
+  background: #DDD6FE; /* default gray */
+  border-radius: 50%;
+  color: #7C3AED; /* active purple */
+}
+
+/* 7️⃣ Optional: override error text */
+::ng-deep .mat-error {
+  color: #BE185D; /* soft red-ish for contrast */
+}
+
+/* 8️⃣ Tailwind utility classes you use (optional) */

@@ -2937,12 +2937,23 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/User/src/main/java/tn/esprit/user/service/UserService.java",
+      "timestamp": 1776215763727,
+      "startOffset": 10884,
+      "endOffset": 12744,
+      "codeContent": "\n\n    @Transactional\n    public void setupFaceId(String email, List\u003cString\u003e images) {\n        User user \u003d findByEmail(email);\n        if (user.getKeycloakId() \u003d\u003d null) {\n            throw new RuntimeException(\"User has no Keycloak ID\");\n        }\n        boolean success \u003d faceService.registerFace(user.getKeycloakId(), images);\n        if (!success) {\n            throw new RuntimeException(\"Failed to register face embeddings\");\n        }\n    }\n\n    public Map\u003cString, Object\u003e faceLogin(String keycloakId, String base64Image) {\n        Map result \u003d faceService.verifyFace(keycloakId, base64Image);\n        boolean matched \u003d Boolean.TRUE.equals(result.get(\"matched\"));\n\n        if (!matched) {\n            double score \u003d result.get(\"score\") !\u003d null ?\n                    ((Number) result.get(\"score\")).doubleValue() : 0.0;\n            throw new RuntimeException(\"Face not recognized. Score: \" + score);\n        }\n\n        User user \u003d userRepository.findByKeycloakId(keycloakId)\n                .orElseThrow(() -\u003e new RuntimeException(\"User not found\"));\n\n        // ✅ Record face login event\n        loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.FACE);\n\n        String token \u003d faceLoginTokenService.generateToken(user);\n\n        return Map.of(\n                \"token\", token,\n                \"email\", user.getEmail(),\n                \"userId\", user.getUserId(),\n                \"user\", mapToDto(user)\n        );\n    }\n    public boolean hasFaceId(String email) {\n        User user \u003d findByEmail(email);\n        if (user.getKeycloakId() \u003d\u003d null) return false;\n        return faceService.hasFaceRegistered(user.getKeycloakId());\n    }\n\n    @Transactional\n    public void updateLastSeen(String email) {\n        User user \u003d findByEmail(email);\n        user.setLastSeenAt(LocalDateTime.now());\n        userRepository.save(user);\n    }\n",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 52
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 267,
-      "totalLines": 9472
+      "usageCount": 268,
+      "totalLines": 9524
     }
   }
 }

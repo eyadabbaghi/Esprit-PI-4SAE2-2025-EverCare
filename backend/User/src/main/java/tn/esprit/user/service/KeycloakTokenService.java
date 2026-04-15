@@ -2,10 +2,7 @@ package tn.esprit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -24,64 +21,34 @@ public class KeycloakTokenService {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.frontend-client-id}")
-    private String frontendClientId;
+    @Value("${keycloak.client-id}")
+    private String clientId;
 
-    @Value("${keycloak.frontend-client-secret}")
-    private String frontendClientSecret;
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
 
-    @Value("${keycloak.face-client-id}")
+    @Value("${keycloak.face-client-id}")        // ← add this
     private String faceClientId;
 
-    @Value("${keycloak.face-client-secret}")
+    @Value("${keycloak.face-client-secret}")    // ← add this
     private String faceClientSecret;
+
+    @Value("${keycloak.frontend-client-id:frontend-app}")
+    private String frontendClientId;
 
     private final RestTemplate restTemplate;
 
-    public String getTokenForCredentials(String email, String password) {
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "password");
-        body.add("client_id", frontendClientId);
-        body.add("client_secret", frontendClientSecret);
-        body.add("username", email);
-        body.add("password", password);
-        body.add("scope", "openid profile email");
-
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    tokenUrl(),
-                    formRequest(body),
-                    Map.class
-            );
-
-            String token = response.getBody() != null
-                    ? (String) response.getBody().get("access_token")
-                    : null;
-
-            if (token == null || token.isBlank()) {
-                throw new IllegalStateException("Keycloak did not return an access token");
-            }
-
-            return token;
-        } catch (HttpClientErrorException exception) {
-            String responseBody = exception.getResponseBodyAsString();
-            if (responseBody.contains("\"error\":\"invalid_grant\"")) {
-                throw new IllegalArgumentException("Invalid email or password", exception);
-            }
-            if (responseBody.contains("\"error\":\"invalid_client\"")
-                    || responseBody.contains("\"error\":\"unauthorized_client\"")) {
-                throw new IllegalStateException("Login client is misconfigured in Keycloak", exception);
-            }
-            throw new IllegalStateException("Keycloak authentication failed", exception);
-        }
-    }
-
     public String getTokenForUser(String keycloakUserId) {
-        String serviceToken = getClientAccessToken(faceClientId, faceClientSecret);
-        if (serviceToken == null || serviceToken.isBlank()) {
-            throw new IllegalStateException("Failed to get face service token");
-        }
+        String tokenUrl = authServerUrl + "/realms/" + realm
+                + "/protocol/openid-connect/token";
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        String serviceToken = getClientAccessToken(tokenUrl, headers, faceClientId, faceClientSecret);
+        if (serviceToken == null) {
+            throw new RuntimeException("Failed to get face service token");
+        }
         MultiValueMap<String, String> exchange = new LinkedMultiValueMap<>();
         exchange.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
         exchange.add("client_id", faceClientId);
@@ -93,53 +60,56 @@ public class KeycloakTokenService {
         exchange.add("audience", frontendClientId);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    tokenUrl(),
-                    formRequest(exchange),
-                    Map.class
-            );
+            ResponseEntity<Map> exchangeResponse = restTemplate.postForEntity(
+                    tokenUrl, new HttpEntity<>(exchange, headers), Map.class);
 
-            String token = response.getBody() != null
-                    ? (String) response.getBody().get("access_token")
+            String token = exchangeResponse.getBody() != null
+                    ? (String) exchangeResponse.getBody().get("access_token")
                     : null;
-
-            if (token == null || token.isBlank()) {
-                throw new IllegalStateException("Token exchange failed: no access token returned");
+            if (token != null) {
+                return token;
             }
-
-            return token;
-        } catch (HttpClientErrorException exception) {
-            throw new IllegalStateException(
-                    "Token exchange failed: " + exception.getResponseBodyAsString(),
-                    exception
-            );
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("Token exchange failed: " + e.getResponseBodyAsString(), e);
         }
+
+        throw new RuntimeException("Token exchange failed: no access token returned");
     }
 
-    private String getClientAccessToken(String clientId, String clientSecret) {
+    public String getAdminAccessToken() {
+        String tokenUrl = authServerUrl + "/realms/" + realm
+                + "/protocol/openid-connect/token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "client_credentials");
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
 
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+        return (String) response.getBody().get("access_token");
+    }
+
+    private String getClientAccessToken(
+            String tokenUrl,
+            HttpHeaders headers,
+            String requesterClientId,
+            String requesterClientSecret
+    ) {
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", requesterClientId);
+        body.add("client_secret", requesterClientSecret);
+
         ResponseEntity<Map> response = restTemplate.postForEntity(
-                tokenUrl(),
-                formRequest(body),
+                tokenUrl,
+                new HttpEntity<>(body, headers),
                 Map.class
         );
 
-        return response.getBody() != null
-                ? (String) response.getBody().get("access_token")
-                : null;
-    }
-
-    private HttpEntity<MultiValueMap<String, String>> formRequest(MultiValueMap<String, String> body) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return new HttpEntity<>(body, headers);
-    }
-
-    private String tokenUrl() {
-        return authServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+        return response.getBody() != null ? (String) response.getBody().get("access_token") : null;
     }
 }

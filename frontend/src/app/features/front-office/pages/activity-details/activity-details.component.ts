@@ -1,63 +1,54 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, forkJoin } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-
-import { AuthService, User } from '../login/auth.service';
-import {
-  Activity,
-  ActivityDetails,
-  ActivityService,
-  ActivityWithUserData,
-} from '../../../../core/services/activity.service';
-
-type DifficultyLevel = 'Easy' | 'Moderate' | 'Challenging';
-type AlzheimerStage = 'Early' | 'Moderate' | 'Advanced';
-
-interface ActivityView {
-  id: string;
-  name: string;
-  type: string;
-  duration: number;
-  scheduledTime?: string;
-  description: string;
-  instructions: string[];
-  difficulty: DifficultyLevel;
-  recommendedStage: AlzheimerStage[];
-  frequency: string;
-  supervision: string;
-  benefits: string[];
-  precautions?: string[];
-  completed: boolean;
-  favorite: boolean;
-  doctorSuggested?: boolean;
-  recommendedByDoctor?: boolean;
-  doctorName?: string;
-  completedAt?: string;
-  imageUrl: string;
-  rating: number;
-  totalRatings: number;
-  userRating: number | null;
-}
+import { ActivityService, ActivityWithUserData } from '../../../../core/services/activity.service';
+import { AuthService } from '../login/auth.service';
+import { RoutineActivity } from '../activities/activities.component';
 
 @Component({
   selector: 'app-activity-details',
   templateUrl: './activity-details.component.html',
   styleUrls: ['./activity-details.component.css'],
 })
-export class ActivityDetailsComponent implements OnInit, OnDestroy {
-  activity: ActivityView | null = null;
+export class ActivityDetailsComponent implements OnInit {
+  activity: ActivityWithUserData | null = null;
   userRating = 0;
+  userId: string | null = null;
+  Math = Math;
 
-  private user: User | null = null;
-  private readonly sub = new Subscription();
+  // Translation and summarization
+  languages = [
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+  ];
+  selectedLang: string = 'fr';
+  translatedActivity: any = null;
+  showOriginal: boolean = true;
+  translating: boolean = false;
+  currentTranslationLang: string = '';
+
+  summary: string = '';
+  summaryLoading: boolean = false;
+  showSummaryModal: boolean = false;
+
+  // ─── ROUTINE ──────────────────────────────────────────────────────────────
+  isInRoutine: boolean = false;
+  pinAnimating: boolean = false;
+  showPinToast: boolean = false;
+
+  private get routineStorageKey(): string {
+    return `routine_${this.userId}`;
+  }
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly toastr: ToastrService,
-    private readonly authService: AuthService,
-    private readonly activityService: ActivityService,
+    private activityService: ActivityService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -67,171 +58,160 @@ export class ActivityDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.sub.add(
-      this.authService.currentUser$.subscribe((user) => {
-        this.user = user;
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.userId) {
+        this.userId = user.userId;
         this.loadActivity(activityId);
-      }),
-    );
+        this.checkRoutineStatus(activityId);
+      }
+    });
   }
 
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
+  loadActivity(activityId: string): void {
+    if (!this.userId) return;
+    this.activityService.getActivityForUser(this.userId, activityId).subscribe({
+      next: (data) => {
+        this.activity = data;
+        this.userRating = data.userRating || 0;
+        this.checkRoutineStatus(data.id);
+      },
+      error: (err) => {
+        console.error('Failed to load activity', err);
+        this.toastr.error('Activity not found');
+        this.router.navigate(['/activities']);
+      }
+    });
   }
 
+  // ─── ROUTINE METHODS ──────────────────────────────────────────────────────
+  private getRoutineActivities(): RoutineActivity[] {
+    try {
+      const raw = localStorage.getItem(this.routineStorageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveRoutineActivities(items: RoutineActivity[]): void {
+    try {
+      localStorage.setItem(this.routineStorageKey, JSON.stringify(items));
+    } catch {
+      console.error('Failed to save routine');
+    }
+  }
+
+  checkRoutineStatus(activityId: string): void {
+    const items = this.getRoutineActivities();
+    this.isInRoutine = items.some(r => r.id === activityId);
+  }
+
+  toggleRoutine(): void {
+    if (!this.activity || !this.userId) return;
+
+    this.pinAnimating = true;
+    setTimeout(() => this.pinAnimating = false, 400);
+
+    const items = this.getRoutineActivities();
+
+    if (this.isInRoutine) {
+      const updated = items.filter(r => r.id !== this.activity!.id);
+      this.saveRoutineActivities(updated);
+      this.isInRoutine = false;
+      this.toastr.info(`"${this.activity.name}" removed from your routine`);
+    } else {
+      const newItem: RoutineActivity = {
+        id: this.activity.id,
+        name: this.activity.name,
+        type: this.activity.type,
+        duration: this.activity.duration,
+        imageUrl: this.activity.imageUrl,
+        completed: false,
+        pinnedAt: new Date().toISOString()
+      };
+      items.unshift(newItem);
+      this.saveRoutineActivities(items);
+      this.isInRoutine = true;
+
+      // Show inline toast
+      this.showPinToast = true;
+      setTimeout(() => this.showPinToast = false, 2500);
+    }
+  }
+
+  // ─── ORIGINAL METHODS ─────────────────────────────────────────────────────
   backToList(): void {
     this.router.navigate(['/activities']);
   }
 
   rate(rating: number): void {
-    if (!this.activity) {
+    if (!this.activity || !this.userId) return;
+    this.activityService.rateActivity(this.userId, this.activity.id, rating).subscribe({
+      next: (updated) => {
+        this.activity!.rating = updated.rating;
+        this.activity!.totalRatings = updated.totalRatings;
+        this.userRating = rating;
+        this.toastr.success(`You rated this activity ${rating} star${rating !== 1 ? 's' : ''}`);
+      },
+      error: (err) => {
+        console.error('Rate failed', err);
+        this.toastr.error('Failed to submit rating');
+      }
+    });
+  }
+
+  getImageUrl(relativePath: string): string {
+    if (!relativePath) return '/assets/logo.png';
+    if (relativePath.startsWith('http')) return relativePath;
+    return `${this.activityService.apiUrl}${relativePath}`;
+  }
+
+  translate(lang: string = this.selectedLang): void {
+    if (!this.activity || this.translating) return;
+    if (this.translatedActivity && this.currentTranslationLang === lang) {
+      this.showOriginal = !this.showOriginal;
       return;
     }
-
-    const userId = String(this.user?.userId || '').trim();
-    const role = String(this.user?.role || '').toLowerCase();
-
-    if (!userId || role !== 'patient') {
-      this.toastr.info('Only patients can rate activities from this page');
-      return;
-    }
-
-    this.sub.add(
-      this.activityService.rateActivity(userId, this.activity.id, rating).subscribe({
-        next: () => {
-          this.userRating = rating;
-          this.activity = {
-            ...this.activity!,
-            rating:
-              (this.activity!.rating * this.activity!.totalRatings + rating) /
-              (this.activity!.totalRatings + 1),
-            totalRatings: this.activity!.totalRatings + 1,
-            userRating: rating,
-          };
-          this.toastr.success(`You rated this activity ${rating} star${rating !== 1 ? 's' : ''}`);
-        },
-        error: () => {
-          this.toastr.error('Could not submit your rating');
-        },
-      }),
-    );
+    this.translating = true;
+    this.activityService.translateActivity(this.activity.id, lang).subscribe({
+      next: (translated) => {
+        this.translatedActivity = translated;
+        this.currentTranslationLang = lang;
+        this.showOriginal = false;
+        this.translating = false;
+        this.toastr.success(`Activity translated to ${this.getLanguageName(lang)}`);
+      },
+      error: (err) => {
+        console.error('Translation failed', err);
+        this.toastr.error('Translation failed');
+        this.translating = false;
+      }
+    });
   }
 
-  private loadActivity(activityId: string): void {
-    const userId = String(this.user?.userId || '').trim();
-    const role = String(this.user?.role || '').toLowerCase();
-
-    if (role === 'patient' && userId) {
-      this.loadPatientActivity(userId, activityId);
-      return;
-    }
-
-    this.loadCatalogActivity(activityId);
+  getLanguageName(code: string): string {
+    const lang = this.languages.find(l => l.code === code);
+    return lang ? lang.name : code;
   }
 
-  private loadPatientActivity(userId: string, activityId: string): void {
-    this.sub.add(
-      this.activityService.getActivityForUser(userId, activityId).subscribe({
-        next: (activity) => {
-          this.activity = this.mapUserActivity(activity);
-          this.userRating = activity.userRating ?? 0;
-        },
-        error: () => {
-          this.toastr.error('Activity not found');
-          this.router.navigate(['/activities']);
-        },
-      }),
-    );
+  summarize(): void {
+    if (!this.activity || this.summaryLoading) return;
+    this.summaryLoading = true;
+    this.activityService.summarizeActivity(this.activity.id).subscribe({
+      next: (summary) => {
+        this.summary = summary;
+        this.summaryLoading = false;
+        this.showSummaryModal = true;
+      },
+      error: (err) => {
+        console.error('Summarization failed', err);
+        this.toastr.error('Summarization failed');
+        this.summaryLoading = false;
+      }
+    });
   }
 
-  private loadCatalogActivity(activityId: string): void {
-    this.sub.add(
-      forkJoin({
-        activity: this.activityService.getActivityById(activityId),
-        details: this.activityService.getDetailsByActivityId(activityId),
-      }).subscribe({
-        next: ({ activity, details }) => {
-          this.activity = this.mapCatalogActivity(activity, details[0]);
-          this.userRating = 0;
-        },
-        error: () => {
-          this.toastr.error('Activity not found');
-          this.router.navigate(['/activities']);
-        },
-      }),
-    );
-  }
-
-  private mapUserActivity(activity: ActivityWithUserData): ActivityView {
-    return {
-      id: activity.id,
-      name: activity.name,
-      type: activity.type,
-      duration: Number(activity.duration || 0),
-      scheduledTime: activity.scheduledTime,
-      description: activity.description,
-      instructions: activity.instructions || [],
-      difficulty: activity.difficulty || 'Easy',
-      recommendedStage: activity.recommendedStage || [],
-      frequency: activity.frequency || 'Not specified',
-      supervision: activity.supervision || 'Not specified',
-      benefits: activity.benefits || [],
-      precautions: activity.precautions || [],
-      completed: !!activity.completed,
-      favorite: !!activity.favorite,
-      doctorSuggested: !!activity.doctorSuggested,
-      recommendedByDoctor: !!activity.recommendedByDoctor,
-      doctorName: activity.doctorName,
-      completedAt: activity.completedAt,
-      imageUrl: this.resolveImageUrl(activity.imageUrl),
-      rating: Number(activity.rating || 0),
-      totalRatings: Number(activity.totalRatings || 0),
-      userRating: activity.userRating ?? null,
-    };
-  }
-
-  private mapCatalogActivity(activity: Activity, details?: ActivityDetails): ActivityView {
-    return {
-      id: activity.id,
-      name: activity.name,
-      type: activity.type,
-      duration: Number(activity.duration || 0),
-      scheduledTime: activity.scheduledTime,
-      description: activity.description,
-      instructions: details?.instructions || [],
-      difficulty: details?.difficulty || 'Easy',
-      recommendedStage: details?.recommendedStage || [],
-      frequency: details?.frequency || 'Flexible',
-      supervision: details?.supervision || 'Not specified',
-      benefits: details?.benefits || [],
-      precautions: details?.precautions || [],
-      completed: false,
-      favorite: false,
-      doctorSuggested: !!activity.doctorSuggested,
-      recommendedByDoctor: false,
-      doctorName: undefined,
-      completedAt: undefined,
-      imageUrl: this.resolveImageUrl(activity.imageUrl),
-      rating: Number(activity.rating || 0),
-      totalRatings: Number(activity.totalRatings || 0),
-      userRating: null,
-    };
-  }
-
-  private resolveImageUrl(imageUrl?: string): string {
-    const value = String(imageUrl || '').trim();
-    if (!value) {
-      return '/assets/logo.png';
-    }
-
-    if (
-      value.startsWith('http://') ||
-      value.startsWith('https://') ||
-      value.startsWith('/assets/')
-    ) {
-      return value;
-    }
-
-    return `${this.activityService.apiUrl}${value.startsWith('/') ? value : `/${value}`}`;
+  closeSummaryModal(): void {
+    this.showSummaryModal = false;
   }
 }

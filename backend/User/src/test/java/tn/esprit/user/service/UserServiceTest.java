@@ -14,7 +14,6 @@ import tn.esprit.user.repository.UserRepository;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,9 +27,6 @@ class UserServiceTest {
 
     @Mock
     private KeycloakAdminClient keycloakAdminClient;
-
-    @Mock
-    private KeycloakTokenService keycloakTokenService;
 
     @Mock
     private FaceService faceService;
@@ -49,23 +45,13 @@ class UserServiceTest {
         RegisterRequest request = new RegisterRequest();
         request.setName("Jane Doe");
         request.setEmail("jane@example.com");
-        request.setPassword("StrongPass1!");
         request.setRole(UserRole.PATIENT);
 
         when(userRepository.existsByEmail("jane@example.com")).thenReturn(false);
-        when(keycloakAdminClient.findUserIdByEmail("jane@example.com")).thenReturn(Optional.empty());
         when(keycloakAdminClient.createUser(request)).thenReturn("kc-1");
-        when(keycloakTokenService.getTokenForCredentials("jane@example.com", "StrongPass1!")).thenReturn("token");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            savedUser.setCaregivers(new HashSet<>());
-            savedUser.setPatients(new HashSet<>());
-            return savedUser;
-        });
 
         userService.register(request);
 
-        verify(keycloakAdminClient).findUserIdByEmail("jane@example.com");
         verify(keycloakAdminClient).createUser(request);
         verify(userRepository).save(any(User.class));
     }

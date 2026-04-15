@@ -23,7 +23,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,15 +38,10 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateUserRequest request,
                                            @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            String email = userDetails.getUsername();
-            User updatedUser = userService.updateUser(email, request);
-            UserDto userDto = mapToDto(updatedUser);
-            return ResponseEntity.ok(Map.of("user", userDto));
-        } catch (RuntimeException exception) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", exception.getMessage()));
-        }
+        String email = userDetails.getUsername();
+        User updatedUser = userService.updateUser(email, request);
+        UserDto userDto = mapToDto(updatedUser);
+        return ResponseEntity.ok(Map.of("user", userDto));
     }
 
     @PutMapping("/change-password")
@@ -95,17 +89,13 @@ public class UserController {
 
         // Relationships
         if (user.getRole() == UserRole.PATIENT) {
-            dto.setCaregiverEmails(safeUsers(user.getCaregivers()).stream()
+            dto.setCaregiverEmails(user.getCaregivers().stream()
                     .map(User::getEmail).collect(Collectors.toSet()));
         } else if (user.getRole() == UserRole.CAREGIVER) {
-            dto.setPatientEmails(safeUsers(user.getPatients()).stream()
+            dto.setPatientEmails(user.getPatients().stream()
                     .map(User::getEmail).collect(Collectors.toSet()));
         }
         return dto;
-    }
-
-    private java.util.Set<User> safeUsers(java.util.Set<User> users) {
-        return users == null ? Collections.emptySet() : users;
     }
 
     @PostMapping("/profile/picture")

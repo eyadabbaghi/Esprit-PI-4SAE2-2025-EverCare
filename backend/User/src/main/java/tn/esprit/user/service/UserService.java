@@ -1,7 +1,6 @@
 package tn.esprit.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.user.dto.*;
@@ -11,10 +10,8 @@ import tn.esprit.user.entity.UserRole;
 import tn.esprit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,49 +20,30 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final KeycloakAdminClient keycloakAdminClient;
-    private final KeycloakTokenService keycloakTokenService;
     private final FaceService faceService;
     private final FaceLoginTokenService faceLoginTokenService;
     private final LoginEventService loginEventService;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
+        // Check if email already exists locally
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new RuntimeException("Email already exists");
         }
 
-        boolean createdInKeycloak = false;
-        String keycloakId = null;
+        // Create user in Keycloak
+        String keycloakId = keycloakAdminClient.createUser(request);
 
-        try {
-            Optional<String> existingKeycloakId = keycloakAdminClient.findUserIdByEmail(request.getEmail());
-            createdInKeycloak = existingKeycloakId.isEmpty();
-            keycloakId = existingKeycloakId.orElseGet(() -> keycloakAdminClient.createUser(request));
+        // Create local user
+        User user = User.builder()
+                .keycloakId(keycloakId)
+                .name(request.getName())
+                .email(request.getEmail())
+                .role(request.getRole())
+                .isVerified(true)
+                .build();
 
-            if (!createdInKeycloak) {
-                // Ensure a retried signup can reuse the orphaned Keycloak account with the latest password.
-                keycloakAdminClient.resetPassword(keycloakId, request.getPassword());
-            }
-
-            User savedUser = saveRegisteredUser(request, keycloakId);
-            String token = keycloakTokenService.getTokenForCredentials(request.getEmail(), request.getPassword());
-            loginEventService.recordLogin(savedUser.getUserId(), savedUser.getEmail(), LoginType.PASSWORD);
-            return buildAuthResponse(savedUser, token);
-        } catch (DataAccessException exception) {
-            cleanupKeycloakUserIfNeeded(createdInKeycloak, keycloakId);
-            throw new IllegalStateException("Failed to save the user locally", exception);
-        } catch (RuntimeException exception) {
-            cleanupKeycloakUserIfNeeded(createdInKeycloak, keycloakId);
-            throw exception;
-        }
-    }
-
-    @Transactional
-    public AuthResponse authenticate(LoginRequest request) {
-        String token = keycloakTokenService.getTokenForCredentials(request.getEmail(), request.getPassword());
-        User user = findByEmail(request.getEmail());
-        loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.PASSWORD);
-        return buildAuthResponse(user, token);
+        userRepository.save(user);
     }
 
     public User findByEmail(String email) {
@@ -77,37 +55,6 @@ public class UserService {
     public UserDto getUserDtoByEmail(String email) {
         User user = findByEmail(email);
         return mapToDto(user);
-    }
-
-    private User saveRegisteredUser(RegisterRequest request, String keycloakId) {
-        User user = User.builder()
-                .keycloakId(keycloakId)
-                .name(request.getName())
-                .email(request.getEmail())
-                .role(request.getRole())
-                .isVerified(true)
-                .build();
-
-        return userRepository.save(user);
-    }
-
-    private void cleanupKeycloakUserIfNeeded(boolean createdInKeycloak, String keycloakId) {
-        if (!createdInKeycloak || keycloakId == null) {
-            return;
-        }
-
-        try {
-            keycloakAdminClient.deleteUser(keycloakId);
-        } catch (RuntimeException ignored) {
-            // The local transaction will already roll back. Keep the original exception as the main failure.
-        }
-    }
-
-    private AuthResponse buildAuthResponse(User user, String token) {
-        return AuthResponse.builder()
-                .token(token)
-                .user(mapToDto(user))
-                .build();
     }
 
     private UserDto mapToDto(User user) {
@@ -136,20 +83,16 @@ public class UserService {
 
         // Relationships
         if (user.getRole() == UserRole.PATIENT) {
-            dto.setCaregiverEmails(safeUsers(user.getCaregivers()).stream()
+            dto.setCaregiverEmails(user.getCaregivers().stream()
                     .map(User::getEmail).collect(Collectors.toSet()));
         } else if (user.getRole() == UserRole.CAREGIVER) {
-            dto.setPatientEmails(safeUsers(user.getPatients()).stream()
+            dto.setPatientEmails(user.getPatients().stream()
                     .map(User::getEmail).collect(Collectors.toSet()));
         } else if (user.getRole() == UserRole.DOCTOR) {
             List<User> patients = userRepository.findByDoctorEmail(user.getEmail());
             dto.setPatientEmails(patients.stream().map(User::getEmail).collect(Collectors.toSet()));
         }
         return dto;
-    }
-
-    private java.util.Set<User> safeUsers(java.util.Set<User> users) {
-        return users == null ? Collections.emptySet() : users;
     }
     @Transactional
     public User updateUser(String email, UpdateUserRequest request) {

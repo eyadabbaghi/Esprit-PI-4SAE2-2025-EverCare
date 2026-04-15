@@ -28,15 +28,14 @@ export class HomeComponent implements OnInit {
   showNewUserFlow = false;
 
   readonly modules: HomeModuleCard[] = [
-   {
-  id: 'daily-me',
-  title: 'Daily Me',
-  description: 'Track your mood, medications, and daily activities with ease',
-  icon: '✨',
-  color: 'bg-[#A78BFA]',
-  gradient: 'from-[#A78BFA] to-[#7C3AED]',
-  primaryRoute: '/daily-me',  
-},
+    {
+      id: 'daily-me',
+      title: 'Daily Me',
+      description: 'Track your mood, medications, and daily activities with ease',
+      icon: '✨',
+      color: 'bg-[#A78BFA]',
+      gradient: 'from-[#A78BFA] to-[#7C3AED]',
+    },
     {
       id: 'activities',
       title: 'Activities',
@@ -98,28 +97,31 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private readonly router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+
   ) {}
 
-  ngOnInit(): void {
-    // Check if we should show the new user flow (welcome + assessment)
-    if (this.authService.isAuthenticated() && localStorage.getItem('showWelcomeFlow') === 'true') {
-      this.showNewUserFlow = true;
-    }
-
-    // If the logged-in user is an admin, redirect to the admin dashboard
-    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-      if (user && user.role === 'ADMIN') {
-        this.router.navigate(['/admin']);
-      }
-    });
+ ngOnInit(): void {
+  // Check if we should show the new user flow (welcome + assessment)
+  if (this.authService.isAuthenticated() && localStorage.getItem('showWelcomeFlow') === 'true') {
+    this.showNewUserFlow = true;
   }
 
-navigate(card: HomeModuleCard): void {
-  const route = card.primaryRoute ?? `/${card.id}`;
-  this.router.navigateByUrl(route);
+  // If the logged-in user is an admin, redirect to the admin dashboard
+  this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+    if (user && user.role === 'ADMIN') {
+      this.router.navigate(['/admin']);
+    }
+  });
+
+
 }
 
+  navigate(card: HomeModuleCard): void {
+    if (card.primaryRoute) {
+      this.router.navigateByUrl(card.primaryRoute);
+    }
+  }
 
   startJourney(): void {
     this.router.navigateByUrl('/activities');

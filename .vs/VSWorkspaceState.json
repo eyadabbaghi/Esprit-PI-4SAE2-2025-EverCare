@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\frontend",
+    "\\frontend\\src",
+    "\\frontend\\src\\app",
+    "\\frontend\\src\\app\\features",
+    "\\frontend\\src\\app\\features\\blog",
+    "\\frontend\\src\\app\\features\\blog\\models",
+    "\\frontend\\src\\app\\features\\blog\\pages",
+    "\\frontend\\src\\app\\features\\blog\\pages\\blog",
+    "\\frontend\\src\\app\\features\\blog\\pages\\blog\\services"
+  ],
+  "SelectedNode": "\\frontend\\src\\app\\features\\blog\\models\\blog.model.ts",
+  "PreviewInSolutionExplorer": false
+}

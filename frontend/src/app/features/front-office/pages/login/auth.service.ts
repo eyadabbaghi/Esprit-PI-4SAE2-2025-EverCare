@@ -1,9 +1,10 @@
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map, switchMap, tap, catchError, delay } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 export interface LoginRequest {
   email: string;
@@ -17,27 +18,40 @@ export interface RegisterRequest {
   role: string;
 }
 
-export interface User {
-  userId?: string;
-  keycloakId?: string;
-  name?: string;
-  email?: string;
-  role?: string;
-  phone?: string;
-  verified?: boolean;
-  isVerified?: boolean;
-  createdAt?: string;
-  profilePicture?: string;
+export interface KeycloakTokenResponse {
+  access_token: string;
+  expires_in: number;
+  refresh_token?: string;
+  token_type: string;
 }
 
-export interface AuthResponse {
+export interface FaceLoginResponse {
   token: string;
+  email?: string;
+  userId?: string;
   user?: User;
 }
 
-export interface FaceLoginResponse extends AuthResponse {
-  email?: string;
+export interface User {
   userId?: string;
+  keycloakId?: string;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  isVerified?: boolean;
+  createdAt?: string;
+  profilePicture?: string;
+  dateOfBirth?: string;
+  emergencyContact?: string;
+  yearsExperience?: number;
+  specialization?: string;
+  medicalLicense?: string;
+  workplaceType?: string;
+  workplaceName?: string;
+  caregiverEmails?: string[];
+  patientEmails?: string[];
+  doctorEmail?: string;
 }
 
 export interface UpdateUserRequest {
@@ -61,134 +75,94 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private evercareAuthUrl = 'http://localhost:8089/EverCare/auth';
-  private dailymeBaseUrl = 'http://localhost:8089/dailyme';
+  private apiUrl = 'http://localhost:8089/EverCare/auth';
+  private usersUrl = 'http://localhost:8089/EverCare/users';
+
+  private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
+  private clientId = 'frontend-app';
+  private clientSecret = 'SMqMpg1PpqG4UcMOJM1WgTM0zNK5AhZF';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-
   private isBrowser: boolean;
 
   constructor(
     private http: HttpClient,
     private router: Router,
+    private toastr: ToastrService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loadStoredUser();
   }
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.evercareAuthUrl}/login`, credentials).pipe(
-      switchMap((response) => this.finishAuth(response))
-    );
-  }
+  // ---------- Login with Keycloak ----------
+  login(credentials: LoginRequest): Observable<KeycloakTokenResponse> {
+    const body = new URLSearchParams();
+    body.set('grant_type', 'password');
+    body.set('client_id', this.clientId);
+    body.set('client_secret', this.clientSecret);
+    body.set('username', credentials.email);
+    body.set('password', credentials.password);
 
-  register(userData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.evercareAuthUrl}/register`, userData).pipe(
-      switchMap((response) => this.finishAuth(response))
-    );
-  }
-
-  completeFaceLogin(response: FaceLoginResponse): Observable<FaceLoginResponse> {
-    return this.finishAuth(response);
-  }
-
-  fetchCurrentUser(): Observable<User | null> {
-    const token = this.getToken();
-    if (!token) {
-      this.setCurrentUser(null);
-      return of(null);
-    }
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    return this.http.get<User>(`${this.evercareAuthUrl}/me`, { headers }).pipe(
-      tap((user) => this.setCurrentUser(user)),
-      catchError(() => {
-        const decoded = this.decodeJwt(token);
-        const fallbackUser: User = {
-          userId: decoded?.sub || decoded?.userId || decoded?.id,
-          email: decoded?.email,
-          role: decoded?.role || decoded?.authorities?.[0],
-          name: decoded?.name || decoded?.username,
-          keycloakId: decoded?.keycloakId
-        };
-        this.setCurrentUser(fallbackUser);
-        return of(fallbackUser);
+    return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
+    }).pipe(
+      tap(tokenResponse => this.handleTokenResponse(tokenResponse)),
+      catchError(error => {
+        console.error('Keycloak login error', error);
+        throw error;
       })
     );
   }
 
-  updateProfile(data: UpdateUserRequest): Observable<any> {
-    const base = this.evercareAuthUrl.replace('/auth', '');
-    return this.http.put<any>(`${base}/users/profile`, data, { headers: this.authHeaders() });
+  // ---------- Register ----------
+  register(userData: RegisterRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/register`, userData).pipe(
+      tap(() => this.toastr.success('Registration successful. Logging you in...')),
+      delay(3000),
+      switchMap(() => this.login({ email: userData.email, password: userData.password })),
+      map(() => ({ message: 'Registration and login successful' }))
+    );
   }
 
-  changePassword(data: ChangePasswordRequest): Observable<any> {
-    const base = this.evercareAuthUrl.replace('/auth', '');
-    return this.http.put<any>(`${base}/users/change-password`, data, { headers: this.authHeaders() });
+  // ---------- Fetch current user ----------
+  fetchCurrentUser(): Observable<User> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
+    return this.http.get<User>(`${this.apiUrl}/me`, { headers }).pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        if (this.isBrowser) {
+          localStorage.setItem('current_user', JSON.stringify(user));
+        }
+      })
+    );
   }
 
-  deleteAccount(): Observable<any> {
-    const base = this.evercareAuthUrl.replace('/auth', '');
-    return this.http.delete<any>(`${base}/users/profile`, { headers: this.authHeaders() });
-  }
-
-  uploadProfilePicture(file: File): Observable<{ profilePicture: string }> {
-    const base = this.evercareAuthUrl.replace('/auth', '');
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ profilePicture: string }>(`${base}/users/profile/picture`, formData, {
-      headers: this.authHeaders()
-    });
-  }
-
-  removeProfilePicture(): Observable<any> {
-    const base = this.evercareAuthUrl.replace('/auth', '');
-    return this.http.delete<any>(`${base}/users/profile/picture`, { headers: this.authHeaders() });
-  }
-
-  getDailymeBaseUrl(): string {
-    return this.dailymeBaseUrl;
-  }
-
-  logout(): void {
-    if (this.isBrowser) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('current_user');
-    }
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
-
-  getToken(): string | null {
-    if (!this.isBrowser) {
-      return null;
-    }
-    return localStorage.getItem('auth_token');
-  }
-
-  private finishAuth<T extends AuthResponse>(response: T): Observable<T> {
+  completeFaceLogin(response: FaceLoginResponse): Observable<User> {
     this.storeToken(response.token);
 
     if (response.user) {
       this.setCurrentUser(response.user);
-      return of(response);
+      return of(response.user);
     }
 
-    return this.fetchCurrentUser().pipe(map(() => response));
+    return this.fetchCurrentUser();
   }
 
-  private authHeaders(): HttpHeaders {
-    const token = this.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  // ---------- Token handling ----------
+  private handleTokenResponse(tokenResponse: KeycloakTokenResponse): void {
+    this.storeToken(tokenResponse.access_token);
+    this.fetchCurrentUser().subscribe({
+      next: (user) => {
+        this.http.post(`${this.apiUrl}/record-login`, {}).subscribe();
+      },
+      error: (err) => console.error('Failed to fetch user after login', err)
+    });
   }
 
   private storeToken(token: string): void {
@@ -197,47 +171,100 @@ export class AuthService {
     }
   }
 
-  private setCurrentUser(user: User | null): void {
-    this.currentUserSubject.next(user);
-    if (!this.isBrowser) {
-      return;
+  getToken(): string | null {
+    if (this.isBrowser) {
+      return localStorage.getItem('auth_token');
     }
+    return null;
+  }
 
-    if (user) {
-      localStorage.setItem('current_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('current_user');
+  // ---------- Logout ----------
+logout(triggerFaceRecovery: boolean = false): void {
+  const user = this.getCurrentUserValue();
+  const wasPatient = user?.role === 'PATIENT';
+
+  if (this.isBrowser) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+
+    if (wasPatient && triggerFaceRecovery && user?.keycloakId) {
+      localStorage.setItem('face_recovery_keycloakId', user.keycloakId);
+      localStorage.setItem('face_recovery_email', user.email || '');
+      localStorage.setItem('face_recovery_active', 'true');
+      localStorage.setItem('face_recovery_since', Date.now().toString());
     }
+  }
+
+  this.currentUserSubject.next(null);
+  this.router.navigate(['/login']); // always go to /login
+}
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   }
 
   private loadStoredUser(): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
-    const storedUser = localStorage.getItem('current_user');
-    if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
+    if (this.isBrowser) {
+      const storedUser = localStorage.getItem('current_user');
+      if (storedUser) {
+        this.currentUserSubject.next(JSON.parse(storedUser));
+      }
     }
   }
 
-  private decodeJwt(token: string): any | null {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return null;
-      }
+  // ---------- Profile endpoints ----------
+  updateProfile(data: UpdateUserRequest): Observable<any> {
+    return this.http.put<any>(`${this.usersUrl}/profile`, data, {
+      headers: new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`)
+    });
+  }
 
-      const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const json = decodeURIComponent(
-        atob(payload)
-          .split('')
-          .map((char) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(json);
-    } catch {
-      return null;
+  changePassword(data: ChangePasswordRequest): Observable<any> {
+    return this.http.put(`${this.usersUrl}/change-password`, data);
+  }
+
+  deleteAccount(): Observable<any> {
+    return this.http.delete(`${this.usersUrl}/profile`);
+  }
+
+  uploadProfilePicture(file: File): Observable<{ profilePicture: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ profilePicture: string }>(`${this.usersUrl}/profile/picture`, formData, {
+      headers: new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`)
+    });
+  }
+
+  removeProfilePicture(): Observable<any> {
+    return this.http.delete(`${this.usersUrl}/profile/picture`);
+  }
+
+  searchUsersByRole(term: string, role: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.usersUrl}/search`, {
+      params: { q: term, role }
+    });
+  }
+
+  getUserByEmail(email: string): Observable<User> {
+    return this.http.get<User>(`${this.usersUrl}/by-email`, {
+      params: { email }
+    });
+  }
+
+  // ---------- Google login – temporarily disabled ----------
+  googleLogin(idToken: string): Observable<any> {
+    this.toastr.warning('Google login is being migrated. Please use email/password.', 'Not available');
+    return of(null);
+  }
+
+  getCurrentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    if (this.isBrowser) {
+      localStorage.setItem('current_user', JSON.stringify(user));
     }
   }
 }

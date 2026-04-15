@@ -7,27 +7,20 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Activities" />
-        <module name="appointment-service" />
-        <module name="Eureka-service" />
-        <module name="Alerts" />
-        <module name="ApiGateway" />
-        <module name="notification-service" />
-        <module name="Dailyme-service" />
-        <module name="tracking-service" />
-      </profile>
-      <profile name="Annotation profile for microservices-parent" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-        </processorPath>
-        <module name="User" />
+        <module name="microservices-parent" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Activities" target="17" />
+      <module name="Alerts" target="17" />
+      <module name="ApiGateway" target="17" />
+      <module name="appointment-service" target="17" />
+      <module name="Dailyme-service" target="17" />
+      <module name="Eureka-service" target="1.5" />
+      <module name="notification-service" target="17" />
       <module name="Tracking-service" target="17" />
+      <module name="tracking-service" target="17" />
+      <module name="User" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
@@ -36,7 +29,7 @@
       <module name="Alerts" options="-parameters" />
       <module name="ApiGateway" options="-parameters" />
       <module name="Dailyme-service" options="-parameters" />
-      <module name="Eureka-service" options="-parameters" />
+      <module name="Eureka-service" options="" />
       <module name="User" options="-parameters" />
       <module name="appointment-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />

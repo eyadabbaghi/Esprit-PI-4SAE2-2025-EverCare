@@ -1,65 +1,25 @@
 <div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
-  <div class="max-w-5xl mx-auto space-y-6">
+  <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-[#2D1B4E] mb-2">Profile Settings</h1>
-      <p class="text-[#6B5B8C]">Manage your personal information and preferences</p>
+      <h1 class="text-4xl font-bold text-[#2D1B4E] mb-2">My Profile</h1>
+      <p class="text-lg text-[#6B5B8C]">Manage your personal information and care connections</p>
     </div>
 
-    <!-- Profile card -->
-    <div *ngIf="user as u; else noUser" class="profile-card border border-[#C4B5FD] rounded-2xl bg-white">
-      <div class="p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
-
+    <!-- Profile Header Card -->
+    <div *ngIf="user" class="border-2 border-[#C4B5FD] bg-white rounded-2xl shadow-lg p-6 md:p-8">
+      <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
         <!-- Avatar with dropdown -->
         <div class="relative">
-          <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden">
-            <ng-container *ngIf="u.profilePicture; else initials">
-              <img [src]="u.profilePicture" alt="Profile" class="w-full h-full object-cover">
+          <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
+            <ng-container *ngIf="user.profilePicture; else initials">
+              <img [src]="user.profilePicture" alt="Profile" class="w-full h-full object-cover" (error)="user.profilePicture = undefined">
             </ng-container>
             <ng-template #initials>
-              <span>{{ getInitials(u.name) }}</span>
+              <span>{{ getInitials(user.name) }}</span>
             </ng-template>
           </div>
-
-          <!-- Camera icon -->
-          <div class="absolute bottom-0 right-0">
-            <button
-              type="button"
-              class="w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
-              (click)="togglePictureMenu()"
-              [disabled]="isLoading"
-            >
-              📷
-            </button>
-
-            <!-- Dropdown -->
-            <div
-              *ngIf="showPictureMenu"
-              class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50"
-            >
-              <button
-                type="button"
-                class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center"
-                (click)="triggerFileInput()"
-              >
-                <span class="mr-2">📷</span>
-                Upload Picture
-              </button>
-
-              <button
-                *ngIf="u.profilePicture"
-                type="button"
-                class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                (click)="removePicture()"
-              >
-                <span class="mr-2">🗑️</span>
-                Remove Picture
-              </button>
-            </div>
-          </div>
-
-          <!-- Hidden file input -->
           <input
             type="file"
             id="profile-picture-input"
@@ -67,51 +27,555 @@
             class="hidden"
             (change)="onFileSelected($event)"
           />
+          <button
+            type="button"
+            class="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
+            (click)="togglePictureMenu()"
+          >
+            📷
+          </button>
+          <div *ngIf="showPictureMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
+            <button
+              class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center"
+              (click)="triggerFileInput()"
+            >
+              <span class="mr-2">📷</span> Upload Picture
+            </button>
+            <button
+              *ngIf="user.profilePicture"
+              class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center"
+              (click)="removePicture()"
+            >
+              <span class="mr-2">🗑️</span> Remove Picture
+            </button>
+          </div>
         </div>
 
-        <div class="flex-1 text-center md:text-left space-y-2">
-          <h2 class="text-2xl font-bold text-[#2D1B4E]">{{ u.name }}</h2>
-          <p class="text-[#6B5B8C]">{{ u.email }}</p>
-
-          <div class="flex flex-wrap gap-2 justify-center md:justify-start mt-3">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#7C3AED] text-xs font-medium text-white capitalize">
-              {{ u.role }}
+        <!-- User Info -->
+        <div class="flex-1 text-center md:text-left">
+          <h2 class="text-3xl font-bold text-[#2D1B4E] mb-2">{{ user.name }}</h2>
+          <p class="text-lg text-[#6B5B8C] mb-4">{{ user.email }}</p>
+          <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+            <span class="px-4 py-1 rounded-full text-white text-sm capitalize {{ getRoleBadgeColor() }}">
+              {{ user.role }}
             </span>
-            <span class="inline-flex items-center px-3 py-1 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] bg-[#F9FAFB]">
-              <span class="mr-1">🛡️</span> Verified account
+            <span class="inline-flex items-center px-4 py-1 rounded-full border-2 border-[#C4B5FD] text-[#7C3AED] text-sm">
+              <span class="mr-1">🛡️</span> Verified Account
             </span>
           </div>
         </div>
+
+        <!-- Edit Button -->
+        <button
+          class="px-6 py-2 rounded-full text-white font-medium transition-colors {{ isEditing ? 'bg-green-600 hover:bg-green-700' : 'bg-[#7C3AED] hover:bg-[#6D28D9]' }} flex items-center gap-2"
+          (click)="toggleEdit()"
+        >
+          <span *ngIf="!isEditing">✏️ Edit Profile</span>
+          <span *ngIf="isEditing">💾 Save Changes</span>
+        </button>
       </div>
     </div>
 
-    <ng-template #noUser>
-      <div class="border border-[#E5E7EB] rounded-2xl bg-white p-6 text-[#6B5B8C]">
-        No user loaded. Please login first.
-      </div>
-    </ng-template>
-
     <!-- Tabs -->
-    <div class="w-full">
-      <div class="grid grid-cols-3 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB]">
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'personal' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('personal')">Personal Info</button>
+    <div class="grid grid-cols-2 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB]">
+      <button
+        type="button"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+        [ngClass]="activeTab === 'personal' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#2D1B4E]'"
+        (click)="setTab('personal')"
+      >
+        Personal Info
+      </button>
+      <button
+        type="button"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+        [ngClass]="activeTab === 'settings' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#2D1B4E]'"
+        (click)="setTab('settings')"
+      >
+        Settings
+      </button>
+    </div>
 
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'health' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('health')">Health Info</button>
+    <!-- Main content grid -->
+    <div class="grid lg:grid-cols-3 gap-6">
 
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'settings' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('settings')">Settings</button>
+      <!-- Left Column – Personal Information (including doctor fields) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="border-2 border-[#DDD6FE] bg-white rounded-2xl p-6">
+          <h3 class="text-xl font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+            <span>👤</span> Personal Information
+          </h3>
+          <p class="text-sm text-[#6B5B8C] mb-6">Your basic profile details</p>
+
+          <form [formGroup]="personalForm" class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <!-- Name -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Full Name *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">👤</span>
+                  <input
+                    type="text"
+                    formControlName="name"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED]"
+                    [class.border-red-500]="isInvalid('name')"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div *ngIf="isInvalid('name')" class="text-red-500 text-xs">Name is required.</div>
+              </div>
+
+              <!-- Email -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Email Address *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">✉️</span>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED]"
+                    [class.border-red-500]="isInvalid('email')"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div *ngIf="isInvalid('email')" class="text-red-500 text-xs">
+                  <span *ngIf="personalForm.get('email')?.errors?.['required']">Email required.</span>
+                  <span *ngIf="personalForm.get('email')?.errors?.['email']">Invalid email.</span>
+                </div>
+              </div>
+
+              <!-- Phone with country code -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Phone Number *</label>
+                <div class="flex gap-2">
+                  <select
+                    [(ngModel)]="phoneCountryCode"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white"
+                    [disabled]="!isEditing"
+                  >
+                    <option *ngFor="let c of countries" [value]="c.code">{{ c.flag }} {{ c.code }}</option>
+                  </select>
+                  <input
+                    type="tel"
+                    formControlName="phone"
+                    class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED]"
+                    [class.border-red-500]="isInvalid('phone')"
+                    [disabled]="!isEditing"
+                    placeholder="123456789"
+                  />
+                </div>
+                <div *ngIf="isInvalid('phone')" class="text-red-500 text-xs">
+                  <span *ngIf="personalForm.get('phone')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('phone')?.errors?.['invalidPhone']">Invalid characters.</span>
+                </div>
+              </div>
+
+              <!-- Date of Birth -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Date of Birth *</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📅</span>
+                  <input
+                    type="date"
+                    formControlName="dateOfBirth"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED]"
+                    [class.border-red-500]="isInvalid('dateOfBirth')"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div *ngIf="isInvalid('dateOfBirth')" class="text-red-500 text-xs">
+                  <span *ngIf="personalForm.get('dateOfBirth')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('dateOfBirth')?.errors?.['futureDate']">Must be past.</span>
+                </div>
+              </div>
+
+              <!-- Emergency Contact -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Emergency Contact *</label>
+                <div class="flex gap-2">
+                  <select
+                    [(ngModel)]="emergencyCountryCode"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white"
+                    [disabled]="!isEditing"
+                  >
+                    <option *ngFor="let c of countries" [value]="c.code">{{ c.flag }} {{ c.code }}</option>
+                  </select>
+                  <input
+                    type="tel"
+                    formControlName="emergencyContact"
+                    class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED]"
+                    [class.border-red-500]="isInvalid('emergencyContact')"
+                    [disabled]="!isEditing"
+                    placeholder="123456789"
+                  />
+                </div>
+                <div *ngIf="isInvalid('emergencyContact')" class="text-red-500 text-xs">
+                  <span *ngIf="personalForm.get('emergencyContact')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('emergencyContact')?.errors?.['invalidPhone']">Invalid.</span>
+                </div>
+              </div>
+
+              <!-- Address (optional) -->
+              <div class="space-y-1 md:col-span-2">
+                <label class="text-sm font-medium text-[#374151]">Address</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📍</span>
+                  <input
+                    type="text"
+                    formControlName="address"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor‑specific fields (only visible when role = DOCTOR) -->
+            <div *ngIf="user?.role === 'DOCTOR'" class="mt-6 pt-4 border-t border-[#E5E7EB] space-y-4">
+              <h4 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2">
+                <span>💼</span> Professional Information
+              </h4>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Years of Experience</label>
+                  <input
+                    type="number"
+                    formControlName="yearsExperience"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Specialization</label>
+                  <input
+                    type="text"
+                    formControlName="specialization"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Medical License</label>
+                  <input
+                    type="text"
+                    formControlName="medicalLicense"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Workplace Name</label>
+                  <input
+                    type="text"
+                    formControlName="workplaceName"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Workplace Type</label>
+                  <select
+                    formControlName="workplaceType"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white"
+                    [disabled]="!isEditing"
+                  >
+                    <option value="hospital">Hospital</option>
+                    <option value="private">Private Practice</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <!-- Keep the rest of your tabs exactly as you had (personal/health/settings forms) -->
-      <!-- IMPORTANT: any [(ngModel)] inside a reactive form should use [ngModelOptions]="{standalone:true}" -->
-      <!-- You already did that for country codes. Good. -->
-      <!-- ... your existing tab content stays ... -->
+      <!-- Right Column – Care Connections -->
+      <div class="space-y-6">
 
+        <!-- PATIENT VIEW -->
+        <ng-container *ngIf="user?.role === 'PATIENT'">
+          <!-- Caregivers List -->
+          <div class="border-2 border-green-200 bg-gradient-to-br from-white to-green-50 rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <span>❤️</span> My Caregivers
+            </h3>
+            <div *ngIf="caregivers.length > 0; else noCaregivers" class="space-y-3">
+              <div *ngFor="let caregiver of caregivers; trackBy: trackByEmail" class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-sm font-semibold text-green-700 overflow-hidden">
+                  <ng-container *ngIf="caregiver.profilePicture; else caregiverInitials">
+                    <img [src]="caregiver.profilePicture" alt="" class="w-full h-full object-cover" (error)="caregiver.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #caregiverInitials>
+                    <span>{{ getInitials(caregiver.name) || 'CG' }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium text-[#2D1B4E]">{{ caregiver.name || caregiver.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ caregiver.email }}</p>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-1 rounded-full"
+                  (click)="removeConnection(caregiver)"
+                  title="Remove caregiver"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <ng-template #noCaregivers>
+              <p class="text-sm text-[#6B5B8C] mb-3">No caregivers added yet</p>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-green-300 text-green-700 rounded-lg hover:bg-green-50 flex items-center justify-center gap-2"
+              (click)="showCaregiverSearch = true"
+            >
+              <span>➕</span> Add Caregiver
+            </button>
+          </div>
+
+          <!-- Doctor Card -->
+          <div class="border-2 border-purple-200 bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <span>🩺</span> My Doctor
+            </h3>
+            <div *ngIf="assignedDoctor; else noDoctor" class="space-y-3">
+              <div class="flex items-start gap-3">
+                <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-lg font-semibold text-purple-700 overflow-hidden">
+                  <ng-container *ngIf="assignedDoctor.profilePicture; else doctorInitials">
+                    <img [src]="assignedDoctor.profilePicture" alt="" class="w-full h-full object-cover" (error)="assignedDoctor.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #doctorInitials>
+                    <span>{{ getInitials(assignedDoctor.name) }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-[#2D1B4E]">{{ assignedDoctor.name }}</p>
+                  <p class="text-sm text-[#6B5B8C] mb-2">{{ assignedDoctor.email }}</p>
+                  <span *ngIf="assignedDoctor.specialization" class="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full border border-purple-200">
+                    {{ assignedDoctor.specialization }}
+                  </span>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-1 rounded-full"
+                  (click)="removeConnection(assignedDoctor)"
+                  title="Remove doctor"
+                >
+                  ✕
+                </button>
+              </div>
+              <p *ngIf="assignedDoctor.workplaceName" class="text-sm text-[#6B5B8C] flex items-center gap-1">
+                <span>🏢</span> {{ assignedDoctor.workplaceName }}
+              </p>
+            </div>
+            <ng-template #noDoctor>
+              <div class="text-center py-4">
+                <span class="text-4xl text-purple-200 mb-2">🩺</span>
+                <p class="text-sm text-[#6B5B8C] mb-3">No doctor assigned yet</p>
+              </div>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 flex items-center justify-center gap-2"
+              (click)="showDoctorSearch = true"
+            >
+              <span>➕</span> {{ assignedDoctor ? 'Change Doctor' : 'Add Your Doctor' }}
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- CAREGIVER VIEW -->
+        <ng-container *ngIf="user?.role === 'CAREGIVER'">
+          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <span>👤</span> My Patients
+            </h3>
+            <div *ngIf="patients.length > 0; else noPatients" class="space-y-3">
+              <div *ngFor="let patient of patients; trackBy: trackByEmail" class="flex items-start gap-3">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700 overflow-hidden">
+                  <ng-container *ngIf="patient.profilePicture; else patientInitials">
+                    <img [src]="patient.profilePicture" alt="" class="w-full h-full object-cover" (error)="patient.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #patientInitials>
+                    <span>{{ getInitials(patient.name) || 'PT' }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium text-[#2D1B4E]">{{ patient.name || patient.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ patient.email }}</p>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-1 rounded-full"
+                  (click)="removeConnection(patient)"
+                  title="Remove patient"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <ng-template #noPatients>
+              <p class="text-sm text-[#6B5B8C] mb-3">No patients added yet</p>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 flex items-center justify-center gap-2"
+              (click)="showPatientSearch = true"
+            >
+              <span>➕</span> Add Patient
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- DOCTOR VIEW – Patients List -->
+        <ng-container *ngIf="user?.role === 'DOCTOR'">
+          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-2">
+              <span>👥</span> My Patients
+            </h3>
+            <p class="text-sm text-[#6B5B8C] mb-4">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} under your care</p>
+            <div class="space-y-3 max-h-80 overflow-y-auto pr-2">
+              <div
+                *ngFor="let patient of patients; trackBy: trackByEmail"
+                class="flex items-center gap-3 p-3 bg-white border border-blue-200 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700 overflow-hidden">
+                  <ng-container *ngIf="patient.profilePicture; else docPatientInitials">
+                    <img [src]="patient.profilePicture" alt="" class="w-full h-full object-cover" (error)="patient.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #docPatientInitials>
+                    <span>{{ getInitials(patient.name) || 'PT' }}</span>
+                  </ng-template>
+                </div>
+                <div>
+                  <p class="font-semibold text-[#2D1B4E] text-sm">{{ patient.name || patient.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ patient.email }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Settings Tab (Password Change + Danger Zone) -->
+    <div *ngIf="activeTab === 'settings'" class="space-y-4">
+      <!-- Password change card -->
+      <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+          <span>🔒</span> Security
+        </h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg">
+            <div>
+              <p class="font-medium text-[#2D1B4E]">Change password</p>
+              <p class="text-sm text-[#6B5B8C]">Update your account password</p>
+            </div>
+            <button
+              class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] hover:bg-[#F3E8FF]"
+              (click)="toggleChangePassword()"
+            >
+              {{ isChangingPassword ? 'Cancel' : 'Change' }}
+            </button>
+          </div>
+
+          <div *ngIf="isChangingPassword" class="p-4 bg-white border border-[#E5E7EB] rounded-lg space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-[#374151] mb-1">Current Password</label>
+              <input
+                type="password"
+                class="w-full px-3 py-2 rounded-lg border border-[#E5E7EB] text-sm"
+                [(ngModel)]="passwordData.currentPassword"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#374151] mb-1">New Password</label>
+              <input
+                type="password"
+                class="w-full px-3 py-2 rounded-lg border border-[#E5E7EB] text-sm"
+                [(ngModel)]="passwordData.newPassword"
+                placeholder="••••••••"
+              />
+              <p class="text-xs text-[#6B5B8C] mt-1">
+                Must be at least 8 chars, include uppercase, digit, and special character.
+              </p>
+            </div>
+            <button
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium py-2 rounded-lg"
+              (click)="handleChangePassword()"
+              [disabled]="isLoading"
+            >
+              {{ isLoading ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Face ID Card — placed here between Security and Danger Zone -->
+  <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6">
+    <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+      <span>👤</span> Face ID
+    </h3>
+    <div class="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg">
+      <div>
+        <p class="font-medium text-[#2D1B4E]">
+          {{ hasFaceId ? 'Face ID is configured' : 'Set up Face ID' }}
+        </p>
+        <p class="text-sm text-[#6B5B8C]">
+          {{ hasFaceId ? 'You can log in using facial recognition' : 'Enable faster login with facial recognition' }}
+        </p>
+      </div>
+      <button
+        class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] hover:bg-[#F3E8FF]"
+        (click)="goToFaceSetup()"
+      >
+        {{ hasFaceId ? 'Reconfigure' : 'Set Up' }}
+      </button>
+    </div>
+  </div>
+
+      <!-- Danger zone -->
+      <div class="border-2 border-red-200 bg-white rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-red-600 flex items-center gap-2 mb-4">
+          <span>⚠️</span> Danger Zone
+        </h3>
+        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+          <div>
+            <p class="font-medium text-red-700">Delete account</p>
+            <p class="text-sm text-red-600">Permanently delete your account and all associated data</p>
+          </div>
+          <button
+            class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700"
+            (click)="confirmDeleteAccount()"
+            [disabled]="isLoading"
+          >
+            {{ isLoading ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Doctor Search Modal -->
+<app-doctor-search-modal
+  [open]="showDoctorSearch"
+  [role]="'DOCTOR'"
+  (closed)="showDoctorSearch = false"
+  (userSelected)="onDoctorSelected($event)"
+></app-doctor-search-modal>
+
+<!-- Caregiver Search Modal (for patients adding caregivers) -->
+<app-doctor-search-modal
+  [open]="showCaregiverSearch"
+  [role]="'CAREGIVER'"
+  (closed)="showCaregiverSearch = false"
+  (userSelected)="onCaregiverSelected($event)"
+></app-doctor-search-modal>
+
+<!-- Patient Search Modal (for caregivers adding patients) -->
+<app-doctor-search-modal
+  [open]="showPatientSearch"
+  [role]="'PATIENT'"
+  (closed)="showPatientSearch = false"
+  (userSelected)="onPatientSelected($event)"
+></app-doctor-search-modal>

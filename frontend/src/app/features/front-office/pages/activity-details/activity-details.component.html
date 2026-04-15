@@ -1,70 +1,95 @@
 <div class="min-h-screen bg-[#FAF8FC] p-6" *ngIf="activity as a">
   <div class="max-w-5xl mx-auto space-y-6">
-    <!-- Back -->
-    <button
-      appButton
-      variant="outline"
-      class="gap-2 border-[#C4B5FD] text-[#7C3AED] bg-white hover:bg-[#F3E8FF]"
-      (click)="backToList()"
-    >
-      ← Back to activities
-    </button>
+
+    <!-- Back and action buttons row -->
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <button appButton variant="outline"
+              class="gap-2 border-[#C4B5FD] text-[#7C3AED] bg-white hover:bg-[#F3E8FF]"
+              (click)="backToList()">
+        ← Back to activities
+      </button>
+
+      <div class="flex gap-2 flex-wrap items-center">
+        <!-- ── PIN TO MY ROUTINE BUTTON ── -->
+        <button type="button"
+                class="pin-routine-btn flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all duration-300"
+                [ngClass]="isInRoutine
+                  ? 'bg-[#7C3AED] text-white shadow-lg shadow-purple-200'
+                  : 'bg-white text-[#7C3AED] border-2 border-[#C4B5FD] hover:bg-[#F3E8FF]'"
+                [class.pin-btn-pulse]="pinAnimating"
+                (click)="toggleRoutine()">
+          <!-- Pin icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+          </svg>
+          <span>{{ isInRoutine ? '✓ In My Routine' : 'Pin to My Routine' }}</span>
+        </button>
+
+        <!-- Language dropdown -->
+        <select *ngIf="!translatedActivity || showOriginal" [(ngModel)]="selectedLang"
+                class="px-2 py-1.5 rounded-full text-sm border border-[#E5E7EB] bg-white focus:outline-none">
+          <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.flag }} {{ lang.name }}</option>
+        </select>
+
+        <!-- Translate button -->
+        <button type="button"
+                class="px-3 py-1.5 rounded-full flex items-center gap-1 text-sm"
+                [ngClass]="translatedActivity && !showOriginal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE]'"
+                (click)="translate(selectedLang)" [disabled]="translating">
+          <svg width="18" height="18" viewBox="0 0 117.17 122.88" fill="currentColor">
+            <path fill-rule="evenodd" d="M23.46,98.8l24-7.22-4.24,7.8c8.69,7.36,17.64,9.33,27.58,5.08-9.36,14.77-23.85,16.47-36,10.47l-4.33,7.95-7-24.08ZM23,35.33h9.93V32.77a.33.33,0,0,1,.33-.33H37.8a.33.33,0,0,1,.33.33v2.56h10a.33.33,0,0,1,.33.33v4.75a.32.32,0,0,1-.33.32H46.27a21.5,21.5,0,0,1-.91,4,25,25,0,0,1-1.73,4A32,32,0,0,1,41.55,52c-.72,1-1.51,2-2.35,3a40.33,40.33,0,0,0,4.63,4.61l0,0a55.4,55.4,0,0,0,5.82,4.28.32.32,0,0,1,.1.45l-2.35,3.68a.35.35,0,0,1-.46.1,60.53,60.53,0,0,1-6.24-4.58,44.58,44.58,0,0,1-5-4.9c-1.29,1.23-2.65,2.43-4.07,3.58-1.61,1.29-3.29,2.54-5,3.73a.33.33,0,0,1-.46-.08l-2.47-3.59a.31.31,0,0,1,.08-.45c1.69-1.17,3.34-2.4,4.91-3.68,1.39-1.13,2.72-2.3,3.95-3.51a39.71,39.71,0,0,1-3.15-5.61,44.72,44.72,0,0,1-2.43-6.63.34.34,0,0,1,.23-.4l4.21-1.18a.32.32,0,0,1,.4.23,39.2,39.2,0,0,0,1.92,5.38,37.33,37.33,0,0,0,2.32,4.39c.55-.69,1.07-1.37,1.55-2.06s1.06-1.64,1.51-2.48a19.68,19.68,0,0,0,1.29-2.91,18.87,18.87,0,0,0,.69-2.69H23a.32.32,0,0,1-.33-.32V35.66a.33.33,0,0,1,.33-.33Zm49.5,4.26h32.38a12.38,12.38,0,0,1,12.33,12.34V78a12.38,12.38,0,0,1-12.33,12.34h-1l-.66,9.89a2.62,2.62,0,0,1-4.19,2L83.25,90.35H63.18A12.38,12.38,0,0,1,50.86,78.53H38.67L20.35,93A4.57,4.57,0,0,1,13,89l.8-10.55a14.92,14.92,0,0,1-9.38-4.35l-.28-.3A14.94,14.94,0,0,1,0,63.56V35.71a15,15,0,0,1,15-15H57.49a14.91,14.91,0,0,1,10.57,4.39l.28.29a15,15,0,0,1,4.12,10.28v3.88Zm31.69-14.72L79.31,28.23l5.41-7c-7.42-8.63-16-12-26.43-9.35C69.85-1.26,84.43-.67,95.52,7.17L101,0l3.11,24.87ZM91.58,70.09h-8l-1.48,5H74.89c2.4-6.37,5.18-14,7.59-20.4.87-2.3,1.86-6.12,5-6.12s4.36,3.5,5.27,5.92l7.71,20.71H93.1l-1.52-5.14Zm-1.21-4.9-2.79-8.78-2.8,8.78ZM15,25.32H57.49A10.43,10.43,0,0,1,67.88,35.71V63.56A10.42,10.42,0,0,1,57.49,74H37.09L17.53,89.37,18.69,74H15A10.41,10.41,0,0,1,4.58,63.56V35.71A10.42,10.42,0,0,1,15,25.32Z"/>
+          </svg>
+          <span>{{ translating ? '...' : (translatedActivity && !showOriginal ? 'Original' : 'Translate') }}</span>
+        </button>
+
+        <!-- Summarize button -->
+        <button type="button"
+                class="px-3 py-1.5 rounded-full bg-[#F3E8FF] text-[#7C3AED] text-sm hover:bg-[#EDE9FE]"
+                (click)="summarize()" [disabled]="summaryLoading">
+          {{ summaryLoading ? 'Summarizing...' : 'Summarize' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Pin success inline toast -->
+    <div *ngIf="showPinToast"
+         class="pin-toast bg-[#7C3AED] text-white px-5 py-3 rounded-xl flex items-center gap-3 shadow-lg">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+      <span class="font-medium">Added to My Routine! Open it from the Activities page.</span>
+    </div>
 
     <!-- Hero -->
     <section class="border-2 border-[#DDD6FE] rounded-2xl overflow-hidden bg-white">
       <div class="relative h-80 overflow-hidden">
-        <img
-          [src]="a.imageUrl"
-          [alt]="a.name"
-          class="w-full h-full object-cover"
-        />
+        <img [src]="getImageUrl(a.imageUrl)" [alt]="a.name" class="w-full h-full object-cover" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-
         <div class="absolute bottom-0 left-0 right-0 p-8 text-white space-y-3">
           <div class="flex flex-wrap gap-2">
-            <span
-              class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
-              [ngClass]="{
-                'bg-blue-100 text-blue-700 border-blue-200': a.type === 'Relaxation',
-                'bg-purple-100 text-purple-700 border-purple-200': a.type === 'Cognitive',
-                'bg-green-100 text-green-700 border-green-200': a.type === 'Physical',
-                'bg-pink-100 text-pink-700 border-pink-200': a.type === 'Social',
-                'bg-orange-100 text-orange-700 border-orange-200': a.type === 'Creative'
-              }"
-            >
+            <span class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
+                  [ngClass]="{'bg-blue-100 text-blue-700 border-blue-200': a.type === 'Relaxation','bg-purple-100 text-purple-700 border-purple-200': a.type === 'Cognitive','bg-green-100 text-green-700 border-green-200': a.type === 'Physical','bg-pink-100 text-pink-700 border-pink-200': a.type === 'Social','bg-orange-100 text-orange-700 border-orange-200': a.type === 'Creative'}">
               {{ a.type }}
             </span>
-            <span
-              class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
-              [ngClass]="{
-                'bg-green-100 text-green-700 border-green-200': a.difficulty === 'Easy',
-                'bg-yellow-100 text-yellow-700 border-yellow-200': a.difficulty === 'Moderate',
-                'bg-orange-100 text-orange-700 border-orange-200': a.difficulty === 'Challenging'
-              }"
-            >
+            <span class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
+                  [ngClass]="{'bg-green-100 text-green-700 border-green-200': a.difficulty === 'Easy','bg-yellow-100 text-yellow-700 border-yellow-200': a.difficulty === 'Moderate','bg-orange-100 text-orange-700 border-orange-200': a.difficulty === 'Challenging'}">
               {{ a.difficulty }}
             </span>
-            <span
-              *ngIf="a.doctorSuggested"
-              class="inline-flex items-center rounded-full bg-[#C4B5FD] text-[#2D1B4E] border border-[#7C3AED] px-3 py-1 text-sm"
-            >
+            <span *ngIf="a.doctorSuggested"
+                  class="inline-flex items-center rounded-full bg-[#C4B5FD] text-[#2D1B4E] border border-[#7C3AED] px-3 py-1 text-sm">
               ✨ Doctor suggested
             </span>
+            <!-- Routine badge if pinned -->
+            <span *ngIf="isInRoutine"
+                  class="inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/40 px-3 py-1 text-sm">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+              In My Routine
+            </span>
           </div>
-
           <h1 class="text-4xl md:text-5xl font-bold">
-            {{ a.name }}
+            {{ !showOriginal && translatedActivity ? translatedActivity.name : a.name }}
           </h1>
-
           <div class="flex flex-wrap items-center gap-4 text-sm">
-            <div class="flex items-center gap-2">
-              <span>⏱</span>
-              <span>{{ a.duration }} minutes</span>
-            </div>
-            <div class="flex items-center gap-2" *ngIf="a.frequency">
-              <span>📆</span>
-              <span>{{ a.frequency }}</span>
-            </div>
+            <div class="flex items-center gap-2"><span>⏱</span><span>{{ a.duration }} minutes</span></div>
+            <div class="flex items-center gap-2" *ngIf="a.frequency"><span>📆</span><span>{{ a.frequency }}</span></div>
           </div>
         </div>
       </div>
@@ -76,25 +101,17 @@
         <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-3">
           <h2 class="text-2xl text-[#2D1B4E] mb-2">About this activity</h2>
           <p class="text-lg text-[#6B5B8C] leading-relaxed">
-            {{ a.description }}
+            {{ !showOriginal && translatedActivity ? translatedActivity.description : a.description }}
           </p>
         </div>
 
         <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
           <h2 class="text-2xl text-[#2D1B4E] mb-2">Step-by-step instructions</h2>
           <ol class="space-y-3">
-            <li
-              *ngFor="let step of a.instructions; index as i"
-              class="flex gap-4 items-start"
-            >
-              <span
-                class="flex-shrink-0 w-8 h-8 rounded-full bg-[#7C3AED] text-white flex items-center justify-center font-medium"
-              >
-                {{ i + 1 }}
-              </span>
-              <span class="text-[#2D1B4E] text-base leading-relaxed">
-                {{ step }}
-              </span>
+            <li *ngFor="let step of (!showOriginal && translatedActivity ? translatedActivity.instructions : a.instructions); index as i"
+                class="flex gap-4 items-start">
+              <span class="flex-shrink-0 w-8 h-8 rounded-full bg-[#7C3AED] text-white flex items-center justify-center font-medium">{{ i + 1 }}</span>
+              <span class="text-[#2D1B4E] text-base leading-relaxed">{{ step }}</span>
             </li>
           </ol>
         </div>
@@ -102,101 +119,85 @@
         <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-3">
           <h2 class="text-2xl text-[#2D1B4E] mb-2">Benefits</h2>
           <ul class="space-y-2">
-            <li
-              *ngFor="let benefit of a.benefits"
-              class="flex items-start gap-2 text-[#2D1B4E]"
-            >
-              <span class="mt-0.5">✅</span>
-              <span>{{ benefit }}</span>
+            <li *ngFor="let benefit of (!showOriginal && translatedActivity ? translatedActivity.benefits : a.benefits)"
+                class="flex items-start gap-2 text-[#2D1B4E]">
+              <span class="mt-0.5">✅</span><span>{{ benefit }}</span>
             </li>
           </ul>
         </div>
 
-        <div
-          *ngIf="a.precautions?.length"
-          class="activity-card border-2 border-orange-200 rounded-2xl bg-orange-50 p-6 space-y-3"
-        >
-          <h2 class="text-xl text-orange-900 flex items-center gap-2">
-            ⚠️ Precautions
-          </h2>
+        <div *ngIf="a.precautions?.length"
+             class="activity-card border-2 border-orange-200 rounded-2xl bg-orange-50 p-6 space-y-3">
+          <h2 class="text-xl text-orange-900 flex items-center gap-2">⚠️ Precautions</h2>
           <ul class="space-y-2 text-orange-800">
-            <li *ngFor="let p of a.precautions">
-              • {{ p }}
-            </li>
+            <li *ngFor="let p of (!showOriginal && translatedActivity ? translatedActivity.precautions : a.precautions)">• {{ p }}</li>
           </ul>
         </div>
       </div>
 
       <!-- Sidebar -->
       <div class="space-y-6">
+        <!-- Pin to Routine sidebar card -->
+        <div class="border-2 rounded-2xl p-5 transition-all duration-300"
+             [ngClass]="isInRoutine ? 'border-[#7C3AED] bg-gradient-to-br from-[#F3E8FF] to-[#EDE9FE]' : 'border-[#DDD6FE] bg-white'">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                 [ngClass]="isInRoutine ? 'bg-[#7C3AED] text-white' : 'bg-[#F3E8FF] text-[#7C3AED]'">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-[#2D1B4E] text-sm">My Routine</h3>
+              <p class="text-xs text-[#6B5B8C]">{{ isInRoutine ? 'This activity is in your routine' : 'Add to your daily routine' }}</p>
+            </div>
+          </div>
+          <button type="button"
+                  class="w-full py-2 rounded-xl font-semibold text-sm transition-all duration-300"
+                  [ngClass]="isInRoutine ? 'bg-white text-[#7C3AED] border-2 border-[#7C3AED] hover:bg-[#7C3AED] hover:text-white' : 'bg-[#7C3AED] text-white hover:bg-[#6D28D9]'"
+                  [class.pin-btn-pulse]="pinAnimating"
+                  (click)="toggleRoutine()">
+            {{ isInRoutine ? '✓ Remove from Routine' : '📌 Pin to My Routine' }}
+          </button>
+        </div>
+
         <div class="activity-sidebar-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
           <h3 class="text-xl text-[#2D1B4E]">Rate this activity</h3>
-
           <div class="flex justify-center gap-2 mb-2">
-            <button
-              *ngFor="let star of [1,2,3,4,5]"
-              type="button"
-              class="text-2xl focus:outline-none"
-              (click)="rate(star)"
-            >
-              <span
-                [ngClass]="star <= userRating ? 'text-yellow-400' : 'text-gray-300'"
-              >
-                ★
-              </span>
+            <button *ngFor="let star of [1,2,3,4,5]" type="button" class="text-2xl focus:outline-none" (click)="rate(star)">
+              <span [ngClass]="star <= userRating ? 'text-yellow-400' : 'text-gray-300'">★</span>
             </button>
           </div>
-
           <div class="text-center text-sm text-[#6B5B8C]" *ngIf="userRating">
             You rated this {{ userRating }} star{{ userRating !== 1 ? 's' : '' }}.
           </div>
-
           <div class="border-t border-[#E5E7EB] pt-4 mt-2 text-center space-y-1">
             <div class="flex justify-center items-baseline gap-1">
-              <span class="text-3xl font-bold text-[#2D1B4E]">
-                {{ a.rating | number : '1.1-1' }}
-              </span>
+              <span class="text-3xl font-bold text-[#2D1B4E]">{{ a.rating | number : '1.1-1' }}</span>
               <span class="text-sm text-[#6B5B8C]">/ 5</span>
             </div>
-            <p class="text-xs text-[#6B5B8C]">
-              Based on {{ a.totalRatings }} rating{{
-                a.totalRatings !== 1 ? 's' : ''
-              }}
-            </p>
+            <p class="text-xs text-[#6B5B8C]">Based on {{ a.totalRatings }} rating{{ a.totalRatings !== 1 ? 's' : '' }}</p>
           </div>
         </div>
 
         <div class="activity-sidebar-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
           <h3 class="text-xl text-[#2D1B4E]">Quick information</h3>
-
           <div class="space-y-3 text-sm">
             <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
               <p class="text-xs text-[#6B5B8C]">Duration</p>
-              <p class="text-lg font-medium text-[#2D1B4E]">
-                {{ a.duration }} minutes
-              </p>
+              <p class="text-lg font-medium text-[#2D1B4E]">{{ a.duration }} minutes</p>
             </div>
             <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
               <p class="text-xs text-[#6B5B8C]">Frequency</p>
-              <p class="text-lg font-medium text-[#2D1B4E]">
-                {{ a.frequency }}
-              </p>
+              <p class="text-lg font-medium text-[#2D1B4E]">{{ a.frequency }}</p>
             </div>
             <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
               <p class="text-xs text-[#6B5B8C]">Supervision</p>
-              <p class="text-sm font-medium text-[#2D1B4E]">
-                {{ a.supervision }}
-              </p>
+              <p class="text-sm font-medium text-[#2D1B4E]">{{ a.supervision }}</p>
             </div>
             <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
               <p class="text-xs text-[#6B5B8C] mb-1">Recommended stages</p>
               <div class="flex flex-wrap gap-2">
-                <span
-                  *ngFor="let stage of a.recommendedStage"
-                  class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
-                >
-                  {{ stage }} stage
-                </span>
+                <span *ngFor="let stage of a.recommendedStage"
+                      class="inline-flex items-center rounded-full border px-3 py-1 text-xs">{{ stage }} stage</span>
               </div>
             </div>
           </div>
@@ -204,5 +205,21 @@
       </div>
     </section>
   </div>
-</div>
 
+  <!-- Summary Modal -->
+  <div *ngIf="showSummaryModal"
+       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+       (click)="closeSummaryModal()">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 shadow-2xl"
+         (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-2xl text-[#2D1B4E] font-semibold flex items-center gap-2"><span>📋</span> Activity Summary</h3>
+        <button (click)="closeSummaryModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="prose prose-lg text-[#2D1B4E]"><p>{{ summary }}</p></div>
+      <div class="mt-6 flex justify-end">
+        <button (click)="closeSummaryModal()" class="px-4 py-2 rounded-full bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

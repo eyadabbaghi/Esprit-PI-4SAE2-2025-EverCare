@@ -10,16 +10,18 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { ActivitiesAdminComponent } from './pages/activities-admin/activities-admin.component';
 import { ActivityDetailsAdminComponent } from './pages/activity-details-admin/activity-details-admin.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
+import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component'; // Import du nouveau composant
 
 const routes: Routes = [
   {
-    path: '',
+    path: 'admin',
     component: BackOfficeLayoutComponent,
-    canActivate: [AdminGuard],
+   // canActivate: [AdminGuard],
     children: [
       { path: '', component: DashboardComponent },
       { path: 'activities', component: ActivitiesAdminComponent },
       { path: 'activities/:id', component: ActivityDetailsAdminComponent },
+      { path: 'blog', component: BlogAdminComponent },
       { path: 'users', component: UsersComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'reports', component: ReportsComponent },

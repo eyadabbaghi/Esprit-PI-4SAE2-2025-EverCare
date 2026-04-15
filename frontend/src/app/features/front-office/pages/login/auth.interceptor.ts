@@ -1,10 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
-  HttpRequest
-} from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
@@ -13,34 +8,27 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const cleanedRequest = req.headers.has('skip-auth')
-      ? req.clone({ headers: req.headers.delete('skip-auth') })
-      : req;
-
-    if (this.shouldSkipAuth(cleanedRequest)) {
-      return next.handle(cleanedRequest);
+    // Skip token for public endpoints or explicitly flagged requests
+    if (
+      req.url.includes('/auth/register') ||
+      req.url.includes('/auth/face-login') ||
+      req.url.includes('/users/by-email') ||   // ← add this
+      req.headers.has('skip-auth')
+    ) {
+      const cleanReq = req.clone({
+        headers: req.headers.delete('skip-auth')
+      });
+      return next.handle(cleanReq);
     }
 
     const token = this.authService.getToken();
-    if (!token) {
-      return next.handle(cleanedRequest);
+    if (token) {
+      const cloned = req.clone({
+        headers: req.headers.set('Authorization', `Bearer ${token}`)
+      });
+      return next.handle(cloned);
     }
 
-    return next.handle(
-      cleanedRequest.clone({
-        setHeaders: { Authorization: `Bearer ${token}` }
-      })
-    );
-  }
-
-  private shouldSkipAuth(req: HttpRequest<any>): boolean {
-    const publicPaths = [
-      '/EverCare/auth/register',
-      '/EverCare/auth/login',
-      '/EverCare/auth/face-login',
-      '/EverCare/users/by-email'
-    ];
-
-    return publicPaths.some((path) => req.url.includes(path));
+    return next.handle(req);
   }
 }

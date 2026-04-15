@@ -1,258 +1,955 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-6">
-  <div class="mx-auto max-w-7xl space-y-6">
-    <section class="rounded-[2rem] border border-[#DDD6FE] bg-white p-6 shadow-sm">
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div class="flex items-start gap-4">
-          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3E8FF] text-2xl">
-            ⚠️
+<div class="dash">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-left">
+      <h1>
+        {{ isDoctor ? 'Patient Alerts & Incidents' : isCaregiver ? 'Care monitoring dashboard' : 'Alerts & Incidents' }}
+      </h1>
+      <p>
+        {{ isDoctor ? 'Clinical overview and medical decision support.' : isPatient ? 'Stay informed about your safety and health.' : 'Real-time patient monitoring and alert management.' }}
+      </p>
+    </div>
+
+    <div class="header-right">
+      <!-- SOS button (patient only) -->
+      <div *ngIf="isPatient" class="sos-wrap">
+        <button type="button" class="btn-sos" (click)="triggerSOS()">
+          <span style="font-size:16px">🚨</span> Emergency SOS
+          <span *ngIf="voiceListening" class="listening-badge">
+            <span class="pulse-dot white"></span> listening
+          </span>
+        </button>
+        <p *ngIf="voiceListening" class="sos-hint">Say "help" or "SOS" to trigger automatically</p>
+      </div>
+
+      <div class="live-indicator">
+        <span class="pulse-dot green"></span>
+        Live monitoring
+      </div>
+
+      <button *ngIf="!isDoctor" type="button" class="btn-primary" (click)="openCreateIncidentDialog()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Report incident
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ STATS ════════════════════════════════════════════════════ -->
+  <div class="stats">
+    <div class="stat-card total">
+      <div class="stat-stripe"></div>
+      <p class="stat-label">Total Alerts</p>
+      <p class="stat-num">{{ stats.total }}</p>
+      <svg class="stat-icon-bg" width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+      </svg>
+    </div>
+    <div class="stat-card active-s">
+      <div class="stat-stripe"></div>
+      <p class="stat-label">Active</p>
+      <p class="stat-num">{{ stats.active }}</p>
+      <svg class="stat-icon-bg" width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+    </div>
+    <div class="stat-card ack-s">
+      <div class="stat-stripe"></div>
+      <p class="stat-label">Acknowledged</p>
+      <p class="stat-num">{{ stats.acknowledged }}</p>
+      <svg class="stat-icon-bg" width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
+      </svg>
+    </div>
+    <div class="stat-card resolved-s">
+      <div class="stat-stripe"></div>
+      <p class="stat-label">Resolved</p>
+      <p class="stat-num">{{ stats.resolved }}</p>
+      <svg class="stat-icon-bg" width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <div class="stat-card critical-s">
+      <div class="stat-stripe"></div>
+      <p class="stat-label">Critical</p>
+      <p class="stat-num">{{ stats.critical }}</p>
+      <svg class="stat-icon-bg" width="58" height="58" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ══ FILTERS ══════════════════════════════════════════════════ -->
+  <div class="filters">
+    <div class="search-wrap">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 104.65 4.65a7 7 0 0012 12z"/>
+      </svg>
+      <input type="text" placeholder="Search incidents or patients…" [(ngModel)]="searchQuery"/>
+    </div>
+    <select class="filter-select" [(ngModel)]="filterSeverity">
+      <option value="all">All severities</option>
+      <option value="CRITICAL">Critical</option>
+      <option value="HIGH">High</option>
+      <option value="MEDIUM">Medium</option>
+      <option value="LOW">Low</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="filterType">
+      <option value="all">All types</option>
+      <option value="Medical">Medical</option>
+      <option value="Behavioral">Behavioral</option>
+      <option value="Safety">Safety</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="filterStatus">
+      <option value="all">All statuses</option>
+      <option value="SENT">Active</option>
+      <option value="ACKNOWLEDGED">Acknowledged</option>
+      <option value="RESOLVED">Resolved</option>
+    </select>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       CAREGIVER LAYOUT
+       ══════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="isCaregiver; else nonCaregiverLayout">
+    <div class="main-grid">
+
+      <!-- LEFT: Incidents list -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>
+            Active incidents
+            <span class="count-badge">{{ filteredIncidents.length }}</span>
           </div>
-          <div class="space-y-1">
-            <h1 class="text-3xl font-semibold text-[#2D1B4E]">Alerts & Incidents</h1>
-            <p class="max-w-2xl text-sm text-[#6B5B8C]">
-              Monitor real alerts and related incidents without mixing them into Daily Me.
-            </p>
+        </div>
+
+        <div class="incident-list">
+          <ng-container *ngIf="paginatedIncidents.length; else noIncidentsCaregiver">
+            <div *ngFor="let incident of paginatedIncidents"
+                 class="incident-row"
+                 [class.sev-CRITICAL]="incident.severity === 'CRITICAL'"
+                 [class.sev-HIGH]="incident.severity === 'HIGH'"
+                 [class.sev-MEDIUM]="incident.severity === 'MEDIUM'"
+                 [class.sev-LOW]="incident.severity === 'LOW'"
+                 [class.selected]="selectedIncident?.incidentId === incident.incidentId"
+                 (click)="selectIncident(incident)">
+
+              <div class="avatar-wrap">
+                <div class="avatar">
+                  <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient">
+                  <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
+                </div>
+                <ng-container *ngIf="getActivityStatus(incident.patientId) as act">
+                  <span class="activity-ring"
+                        [class.ring-active]="act.status === 'ACTIVE'"
+                        [class.ring-inactive]="act.status === 'INACTIVE'"
+                        [class.ring-risk]="act.status === 'AT_RISK'"
+                        [class.ring-recovered]="act.status === 'RECOVERED'"
+                        [class.ring-unusual]="act.status === 'UNUSUAL'">
+                  </span>
+                </ng-container>
+              </div>
+
+              <div class="inc-body">
+                <div class="inc-top">
+                  <span class="inc-title" [title]="incident.title">{{ incident.title }}</span>
+                  <span class="inc-date">{{ incident.incidentDate | date:'MMM d' }}</span>
+                </div>
+
+                <div class="inc-sub">
+                  <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  {{ incident.patientName }}
+                  <ng-container *ngIf="getActivityStatus(incident.patientId) as act">
+                    <span class="online-dot" [class.dot-green]="act.onlineNow" [class.dot-red]="!act.onlineNow"></span>
+                    <span class="badge"
+                          [class.badge-act-ACTIVE]="act.status === 'ACTIVE'"
+                          [class.badge-act-INACTIVE]="act.status === 'INACTIVE'"
+                          [class.badge-act-AT_RISK]="act.status === 'AT_RISK'">
+                      {{ act.status === 'ACTIVE' ? '✅ Active' : act.status === 'INACTIVE' ? '⚠️ Inactive' : act.status === 'AT_RISK' ? '🚨 At Risk' : act.status === 'RECOVERED' ? '👍 Recovered' : '🤔 Unusual' }}
+                    </span>
+                  </ng-container>
+                </div>
+
+                <div class="inc-badges">
+                  <span class="badge" [ngClass]="getSeverityBadgeClasses(incident.severity)">
+                    {{ getSeverityIcon(incident.severity) }} {{ incident.severity }}
+                  </span>
+                  <span class="badge badge-type">{{ incident.type }}</span>
+                  <span class="badge"
+                        [class.badge-ACKNOWLEDGED]="incident.status === 'ACKNOWLEDGED'"
+                        [class.badge-RESOLVED]="incident.status === 'RESOLVED'"
+                        [class.badge-OPEN]="incident.status === 'OPEN'">
+                    {{ incident.status }}
+                  </span>
+                </div>
+
+                <div class="inc-meta">
+                  <span>
+                    <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    {{ incident.location }}
+                  </span>
+                  <span *ngIf="getFirstAlert(incident.incidentId) as fa">
+                    <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ fa.label || 'Alert' }}
+                  </span>
+                </div>
+
+                <div *ngIf="incident.aiSuggestion" class="inc-ai">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  {{ incident.aiSuggestion }}
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #noIncidentsCaregiver>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <p class="empty-title">All clear</p>
+              <p class="empty-sub">No incidents found for your patients.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1">
+          <span>Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+          <div class="page-btns">
+            <button type="button" class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">&#8249;</button>
+            <button *ngFor="let page of pages" type="button" class="page-btn" [class.active]="page === currentPage" (click)="setPage(page)">{{ page }}</button>
+            <button type="button" class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">&#8250;</button>
           </div>
         </div>
+      </div><!-- /panel -->
 
-        <div class="rounded-2xl bg-[#F8F7FF] px-4 py-3 text-sm text-[#6B5B8C]">
-          <span class="font-semibold text-[#2D1B4E]">Viewing:</span>
-          {{ selectedPatientName }}
-        </div>
-      </div>
-    </section>
+      <!-- RIGHT column -->
+      <div class="right-col">
 
-    <section *ngIf="!isPatientView" class="rounded-[2rem] border border-[#DDD6FE] bg-white p-6 shadow-sm">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div class="space-y-2">
-          <h2 class="text-xl font-semibold text-[#2D1B4E]">Filters</h2>
-          <p class="text-sm text-[#6B5B8C]">Keep alerts and incidents focused on the patient you need.</p>
-        </div>
+        <!-- ═══ PATIENT ACTIVITY PANEL ═══ -->
+        <div *ngIf="allowedPatientIds && allowedPatientIds.size > 0" class="activity-panel">
+          <div class="act-header">
+            <div class="act-header-left">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.92)" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              <p>Patient activity</p>
+            </div>
+            <div class="act-header-right">
+              <span class="pulse-dot light"></span>
+              Live
+            </div>
+          </div>
 
-        <div class="grid gap-3 md:grid-cols-4">
-          <select
-            [(ngModel)]="selectedPatientId"
-            (ngModelChange)="onPatientChange()"
-            class="rounded-2xl border border-[#DDD6FE] bg-[#F8F7FF] px-4 py-3 text-sm text-[#2D1B4E] outline-none transition focus:border-[#7C3AED] focus:bg-white"
-          >
-            <option value="">All patients</option>
-            <option *ngFor="let patient of patients" [value]="patient.userId">
-              {{ patient.name }}
-            </option>
-          </select>
-
-          <select
-            [(ngModel)]="severityFilter"
-            class="rounded-2xl border border-[#DDD6FE] bg-[#F8F7FF] px-4 py-3 text-sm text-[#2D1B4E] outline-none transition focus:border-[#7C3AED] focus:bg-white"
-          >
-            <option value="ALL">All severities</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
-
-          <select
-            [(ngModel)]="statusFilter"
-            class="rounded-2xl border border-[#DDD6FE] bg-[#F8F7FF] px-4 py-3 text-sm text-[#2D1B4E] outline-none transition focus:border-[#7C3AED] focus:bg-white"
-          >
-            <option value="ALL">All statuses</option>
-            <option value="SENT">Sent</option>
-            <option value="ACKNOWLEDGED">Acknowledged</option>
-            <option value="RESOLVED">Resolved</option>
-          </select>
-
-          <button
-            type="button"
-            class="rounded-2xl bg-[#7C3AED] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
-            (click)="refreshData()"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div *ngIf="loadingPatients" class="mt-4 text-sm text-[#6B5B8C]">
-        Loading patients...
-      </div>
-    </section>
-
-    <section class="grid gap-4 md:grid-cols-4">
-      <div class="rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-[0.2em] text-[#7C3AED]">Alerts</p>
-        <p class="mt-3 text-3xl font-semibold text-[#2D1B4E]">{{ stats.total }}</p>
-        <p class="mt-1 text-sm text-[#6B5B8C]">Visible alerts</p>
-      </div>
-
-      <div class="rounded-2xl border border-[#FECACA] bg-[#FFF1F2] p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-[0.2em] text-[#C06C84]">Sent</p>
-        <p class="mt-3 text-3xl font-semibold text-[#8A2042]">{{ stats.sent }}</p>
-        <p class="mt-1 text-sm text-[#8A2042]">Awaiting response</p>
-      </div>
-
-      <div class="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-[0.2em] text-[#B45309]">Acknowledged</p>
-        <p class="mt-3 text-3xl font-semibold text-[#92400E]">{{ stats.acknowledged }}</p>
-        <p class="mt-1 text-sm text-[#92400E]">Being handled</p>
-      </div>
-
-      <div class="rounded-2xl border border-[#FECACA] bg-[#FFF7F7] p-5 shadow-sm">
-        <p class="text-xs uppercase tracking-[0.2em] text-[#B91C1C]">Critical</p>
-        <p class="mt-3 text-3xl font-semibold text-[#7F1D1D]">{{ stats.critical }}</p>
-        <p class="mt-1 text-sm text-[#7F1D1D]">Open critical incidents</p>
-      </div>
-    </section>
-
-    <section *ngIf="loadingData" class="rounded-[2rem] border border-[#DDD6FE] bg-white p-10 text-center shadow-sm">
-      <p class="text-[#6B5B8C]">Loading alerts and incidents...</p>
-    </section>
-
-    <ng-container *ngIf="!loadingData">
-      <section class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-[2rem] border border-[#DDD6FE] bg-white p-6 shadow-sm">
-          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 class="text-2xl font-semibold text-[#2D1B4E]">Incidents</h2>
-              <p class="text-sm text-[#6B5B8C]">Real incident records from the alerts module.</p>
+          <div class="act-list">
+            <div *ngIf="activityLoading" class="act-loading">
+              <div class="spinner"></div>
             </div>
 
-            <input
-              [(ngModel)]="searchQuery"
-              type="text"
-              placeholder="Search title, description, patient..."
-              class="w-full max-w-sm rounded-2xl border border-[#DDD6FE] bg-[#F8F7FF] px-4 py-3 text-sm text-[#2D1B4E] outline-none transition focus:border-[#7C3AED] focus:bg-white"
-            />
-          </div>
+            <ng-container *ngIf="!activityLoading">
+              <ng-container *ngFor="let patientId of getUniquePatientIds()">
+                <ng-container *ngIf="getActivityStatus(patientId) as activity">
+                  <div class="act-card"
+                       [class.st-ACTIVE]="activity.status === 'ACTIVE'"
+                       [class.st-INACTIVE]="activity.status === 'INACTIVE'"
+                       [class.st-AT_RISK]="activity.status === 'AT_RISK'"
+                       [class.st-RECOVERED]="activity.status === 'RECOVERED'"
+                       [class.st-UNUSUAL]="activity.status === 'UNUSUAL'">
 
-          <div *ngIf="!filteredIncidents.length" class="mt-6 rounded-2xl border border-dashed border-[#DDD6FE] bg-[#F8F7FF] px-4 py-10 text-center">
-            <p class="text-lg font-semibold text-[#2D1B4E]">No incidents found</p>
-            <p class="mt-2 text-sm text-[#6B5B8C]">Try another filter or refresh the data.</p>
-          </div>
+                    <div class="act-card-top">
+                      <p class="act-name">
+                        <span class="online-dot" [class.dot-green]="activity.onlineNow" [class.dot-red]="!activity.onlineNow"></span>
+                        {{ getPatientNameById(patientId) }}
+                      </p>
+                      <span class="act-badge"
+                            [class.ACTIVE]="activity.status === 'ACTIVE'"
+                            [class.INACTIVE]="activity.status === 'INACTIVE'"
+                            [class.AT_RISK]="activity.status === 'AT_RISK'"
+                            [class.RECOVERED]="activity.status === 'RECOVERED'"
+                            [class.UNUSUAL]="activity.status === 'UNUSUAL'">
+                        {{ activity.status === 'ACTIVE' ? '✅' : activity.status === 'INACTIVE' ? '⚠️' : activity.status === 'AT_RISK' ? '🚨' : activity.status === 'RECOVERED' ? '👍' : '🤔' }}
+                        {{ activity.status }}
+                      </span>
+                    </div>
 
-          <div *ngIf="filteredIncidents.length" class="mt-6 space-y-4">
-            <article
-              *ngFor="let incident of filteredIncidents; trackBy: trackIncident"
-              class="alert-row rounded-3xl border border-[#E9D5FF] bg-[#FCFBFF] p-5"
-            >
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="space-y-3">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getSeverityBadgeClasses(incident.severity)">
-                      {{ incident.severity }}
+                    <p class="act-label">{{ activity.statusLabel }}</p>
+
+                    <div class="act-last">
+                      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path stroke-linecap="round" d="M12 6v6l4 2"/>
+                      </svg>
+                      <span *ngIf="activity.lastLogin">{{ activity.lastLogin | date:'MMM d, h:mm a' }}</span>
+                      <span *ngIf="!activity.lastLogin">Never logged in</span>
+                      <span class="today-badge" [class.today-yes]="activity.loggedInToday" [class.today-no]="!activity.loggedInToday">
+                        {{ activity.loggedInToday ? '📱 Today' : '📵 Not today' }}
+                      </span>
+                    </div>
+
+                    <div *ngIf="activity.recentLogins?.length" class="login-history">
+                      <p class="login-history-label">Recent logins</p>
+                      <div *ngFor="let login of activity.recentLogins.slice(0, 3)" class="login-row">
+                        <div class="login-icon" [class.face]="login.loginType === 'FACE'" [class.pass]="login.loginType !== 'FACE'">
+                          <svg *ngIf="login.loginType === 'FACE'" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zM19.5 12a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/>
+                          </svg>
+                          <svg *ngIf="login.loginType !== 'FACE'" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                          </svg>
+                        </div>
+                        <span class="login-type">{{ login.loginType === 'FACE' ? 'Face ID' : 'Password' }}</span>
+                        <span class="login-time">{{ login.loginAt | date:'MMM d, h:mm a' }}</span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="!activity.recentLogins?.length" class="no-logins">No login history</div>
+                  </div>
+                </ng-container>
+              </ng-container>
+
+              <div *ngIf="patientActivityStatuses.size === 0" class="act-empty">
+                <p style="font-size:24px;margin-bottom:6px">📊</p>
+                No activity data yet
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- ═══ INCIDENT DETAILS PANEL ═══ -->
+        <ng-container *ngIf="selectedIncident; else caregiverSelectPrompt">
+          <div class="detail-panel">
+            <div class="detail-header">
+              <div>
+                <p class="detail-header-title">Incident details</p>
+                <p class="detail-header-sub">{{ selectedIncident.title }}</p>
+              </div>
+              <button type="button" class="close-btn" (click)="selectedIncident = null; selectedAlert = null">&#x2715;</button>
+            </div>
+
+            <div class="detail-body">
+              <!-- Patient mini card -->
+              <div class="patient-mini">
+                <div class="avatar">
+                  <img *ngIf="selectedIncident.patientAvatar" [src]="selectedIncident.patientAvatar" alt="Patient">
+                  <span *ngIf="!selectedIncident.patientAvatar">{{ getInitials(selectedIncident.patientName) }}</span>
+                </div>
+                <div class="patient-mini-info">
+                  <p class="patient-mini-name">{{ selectedIncident.patientName }}</p>
+                  <ng-container *ngIf="getActivityStatus(selectedIncident.patientId) as act">
+                    <span class="badge"
+                          [class.badge-act-ACTIVE]="act.status === 'ACTIVE'"
+                          [class.badge-act-INACTIVE]="act.status === 'INACTIVE'"
+                          [class.badge-act-AT_RISK]="act.status === 'AT_RISK'"
+                          style="margin-top:4px;display:inline-flex">
+                      {{ act.statusLabel }}
                     </span>
-                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getIncidentStatusClasses(incident.status)">
+                  </ng-container>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div>
+                <span class="section-label">Description</span>
+                <p class="section-text">{{ selectedIncident.description }}</p>
+              </div>
+
+              <!-- Badges row -->
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span class="badge" [ngClass]="getSeverityBadgeClasses(selectedIncident.severity)">{{ selectedIncident.severity }}</span>
+                <span class="badge badge-type">{{ selectedIncident.type }}</span>
+                <span class="badge"
+                      [class.badge-ACKNOWLEDGED]="selectedIncident.status === 'ACKNOWLEDGED'"
+                      [class.badge-RESOLVED]="selectedIncident.status === 'RESOLVED'"
+                      [class.badge-OPEN]="selectedIncident.status === 'OPEN'">
+                  {{ selectedIncident.status }}
+                </span>
+              </div>
+
+              <!-- Location -->
+              <div class="meta-row">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                {{ selectedIncident.location }}
+              </div>
+
+              <!-- AI suggestion -->
+              <div *ngIf="selectedIncident.aiSuggestion" class="ai-card">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <div>
+                  <p class="ai-card-label">AI insight</p>
+                  <p>{{ selectedIncident.aiSuggestion }}</p>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="action-stack">
+                <button type="button" class="action-btn ab-primary" (click)="openCreateAlertDialog(selectedIncident)">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Create alert
+                </button>
+
+                <button type="button" class="action-btn ab-check" (click)="openCheckPopup(selectedIncident)">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Check on patient
+                </button>
+
+                <div class="ab-row">
+                  <button type="button" class="action-btn ab-outline" (click)="openEditIncidentDialog(selectedIncident)">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                  </button>
+                  <button type="button" class="action-btn ab-danger" (click)="deleteIncident(selectedIncident)">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                  </button>
+                </div>
+
+                <button *ngIf="selectedIncident.status === 'OPEN'" type="button" class="action-btn ab-warn" (click)="acknowledgeIncident(selectedIncident)">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
+                  </svg>
+                  Acknowledge
+                </button>
+
+                <button *ngIf="selectedIncident.status !== 'RESOLVED'" type="button" class="action-btn ab-success" (click)="resolveIncident(selectedIncident)">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Resolve
+                </button>
+
+                <div *ngIf="selectedIncident.status === 'RESOLVED'" class="action-btn ab-resolved">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Incident resolved
+                </div>
+              </div>
+
+              <!-- Alerts list -->
+              <div *ngIf="alertsForSelectedIncident.length" class="alerts-section">
+                <p class="alerts-section-head">Alerts ({{ alertsForSelectedIncident.length }})</p>
+                <div *ngFor="let alert of paginatedAlerts" class="alert-item">
+                  <div>
+                    <p class="alert-item-name">{{ alert.label || 'Alert' }}</p>
+                    <p class="alert-item-status">{{ alert.status }}</p>
+                  </div>
+                  <div class="alert-item-btns">
+                    <button type="button" class="alert-btn" (click)="openEditAlertDialog(selectedIncident, alert)">Edit</button>
+                    <button type="button" class="alert-btn del" (click)="deleteAlert(alert)">Del</button>
+                  </div>
+                </div>
+                <div *ngIf="alertsForSelectedIncident.length > ALERTS_PER_PAGE" class="alert-pagination">
+                  <span>Page {{ alertsPage }} / {{ totalAlertPages }}</span>
+                  <div style="display:flex;gap:4px">
+                    <button type="button" class="page-btn" [disabled]="alertsPage === 1" (click)="previousAlertsPage()">‹</button>
+                    <button type="button" class="page-btn" [disabled]="alertsPage === totalAlertPages" (click)="nextAlertsPage()">›</button>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /detail-body -->
+          </div><!-- /detail-panel -->
+        </ng-container>
+
+        <ng-template #caregiverSelectPrompt>
+          <div class="select-prompt">
+            <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:var(--p200)">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+            </svg>
+            <p class="select-prompt-title">Select an incident</p>
+            <p class="select-prompt-sub">Click any incident to view details and take action</p>
+          </div>
+        </ng-template>
+
+      </div><!-- /right-col -->
+    </div><!-- /main-grid caregiver -->
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       NON-CAREGIVER LAYOUT (patient, doctor)
+       ══════════════════════════════════════════════════════════════ -->
+  <ng-template #nonCaregiverLayout>
+    <div class="main-grid">
+
+      <!-- ── DOCTOR VIEW ── -->
+      <ng-container *ngIf="isDoctor; else patientLayout">
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Your Patients</div>
+          </div>
+          <div class="incident-list">
+            <div *ngIf="doctorPatients.length === 0" class="empty-state">
+              <p class="empty-sub">No patients assigned yet.</p>
+            </div>
+            <div *ngFor="let patient of doctorPatients"
+                 class="incident-row"
+                 [class.selected]="selectedDoctorPatient?.userId === patient.userId"
+                 (click)="selectDoctorPatient(patient)">
+              <div class="avatar-wrap">
+                <div class="avatar">
+                  <img *ngIf="patient.profilePicture" [src]="patient.profilePicture" alt="">
+                  <span *ngIf="!patient.profilePicture">{{ getInitials(patient.name) }}</span>
+                </div>
+              </div>
+              <div class="inc-body">
+                <div class="inc-top">
+                  <span class="inc-title">{{ patient.name }}</span>
+                  <span class="count-badge">{{ getIncidentCountForPatient(patient.userId) }}</span>
+                </div>
+                <div class="inc-sub">Patient</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-col" *ngIf="selectedDoctorPatient">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">Incidents for {{ selectedDoctorPatient.name }}</div>
+            </div>
+            <div class="incident-list">
+              <ng-container *ngIf="incidentsForSelectedPatient.length; else noPatientIncidents">
+                <div *ngFor="let incident of incidentsForSelectedPatient"
+                     class="incident-row"
+                     [class.sev-CRITICAL]="incident.severity === 'CRITICAL'"
+                     [class.sev-HIGH]="incident.severity === 'HIGH'"
+                     [class.sev-MEDIUM]="incident.severity === 'MEDIUM'"
+                     [class.sev-LOW]="incident.severity === 'LOW'"
+                     [class.selected]="selectedIncident?.incidentId === incident.incidentId"
+                     (click)="selectIncident(incident)"
+                     (dblclick)="openIncidentDetailsDialog(incident)">
+                  <div class="avatar-wrap">
+                    <div class="avatar">
+                      <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="">
+                      <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
+                    </div>
+                  </div>
+                  <div class="inc-body">
+                    <div class="inc-top">
+                      <span class="inc-title">{{ incident.title }}</span>
+                      <span class="inc-date">{{ incident.incidentDate | date:'MMM d' }}</span>
+                    </div>
+                    <div class="inc-sub">{{ incident.patientName }}</div>
+                    <div class="inc-badges">
+                      <span class="badge" [ngClass]="getSeverityBadgeClasses(incident.severity)">{{ getSeverityIcon(incident.severity) }} {{ incident.severity }}</span>
+                      <span class="badge badge-type">{{ incident.type }}</span>
+                      <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert" class="badge" [ngClass]="getStatusBadgeClasses(firstAlert.status)">{{ firstAlert.status }}</span>
+                    </div>
+                    <div class="inc-meta">
+                      <span>
+                        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        {{ incident.location }}
+                      </span>
+                      <span>
+                        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2"/>
+                          <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+                        </svg>
+                        {{ incident.incidentDate | date:'short' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noPatientIncidents>
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                  </div>
+                  <p class="empty-title">No incidents for this patient</p>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+      </ng-container><!-- /isDoctor -->
+
+      <!-- ── PATIENT LAYOUT ── -->
+      <ng-template #patientLayout>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+              </svg>
+              Your incidents
+              <span class="count-badge">{{ filteredIncidents.length }}</span>
+            </div>
+          </div>
+
+          <div class="incident-list">
+            <ng-container *ngIf="paginatedIncidents.length; else noIncidents">
+              <div *ngFor="let incident of paginatedIncidents"
+                   class="incident-row"
+                   [class.sev-CRITICAL]="incident.severity === 'CRITICAL'"
+                   [class.sev-HIGH]="incident.severity === 'HIGH'"
+                   [class.sev-MEDIUM]="incident.severity === 'MEDIUM'"
+                   [class.sev-LOW]="incident.severity === 'LOW'"
+                   [class.selected]="selectedIncident?.incidentId === incident.incidentId"
+                   (click)="selectIncident(incident)">
+                <div class="avatar-wrap">
+                  <div class="avatar">
+                    <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient">
+                    <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
+                  </div>
+                </div>
+                <div class="inc-body">
+                  <div class="inc-top">
+                    <span class="inc-title" [title]="incident.title">{{ incident.title }}</span>
+                    <span class="inc-date">{{ incident.incidentDate | date:'MMM d' }}</span>
+                  </div>
+                  <div class="inc-sub">{{ incident.patientName }}</div>
+                  <div class="inc-badges">
+                    <span class="badge" [ngClass]="getSeverityBadgeClasses(incident.severity)">{{ getSeverityIcon(incident.severity) }} {{ incident.severity }}</span>
+                    <span class="badge badge-type">{{ incident.type }}</span>
+                    <span *ngIf="getFirstAlert(incident.incidentId) as firstAlert" class="badge" [ngClass]="getStatusBadgeClasses(firstAlert.status)">{{ firstAlert.status }}</span>
+                    <span class="badge"
+                          [class.badge-ACKNOWLEDGED]="incident.status === 'ACKNOWLEDGED'"
+                          [class.badge-RESOLVED]="incident.status === 'RESOLVED'"
+                          [class.badge-OPEN]="incident.status === 'OPEN'">
                       {{ incident.status }}
                     </span>
-                    <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#6B5B8C]">
-                      {{ incident.type }}
+                  </div>
+                  <div class="inc-meta">
+                    <span>
+                      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      {{ incident.location }}
+                    </span>
+                    <span>
+                      <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+                      </svg>
+                      {{ incident.incidentDate | date:'short' }}
                     </span>
                   </div>
-
-                  <div>
-                    <h3 class="text-lg font-semibold text-[#2D1B4E]">{{ incident.title }}</h3>
-                    <p class="mt-1 text-sm text-[#6B5B8C]">{{ incident.description }}</p>
-                  </div>
-
-                  <div class="flex flex-wrap gap-4 text-xs text-[#6B5B8C]">
-                    <span>{{ incident.patientName || incident.patientId }}</span>
-                    <span>{{ incident.location }}</span>
-                    <span>{{ incident.incidentDate | date:'dd MMM yyyy, HH:mm' }}</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-
-        <div class="rounded-[2rem] border border-[#DDD6FE] bg-white p-6 shadow-sm">
-          <div>
-            <h2 class="text-2xl font-semibold text-[#2D1B4E]">Alerts</h2>
-            <p class="text-sm text-[#6B5B8C]">Alert notifications linked to incidents and escalation flow.</p>
-          </div>
-
-          <div *ngIf="!filteredAlertItems.length" class="mt-6 rounded-2xl border border-dashed border-[#DDD6FE] bg-[#F8F7FF] px-4 py-10 text-center">
-            <p class="text-lg font-semibold text-[#2D1B4E]">No alerts found</p>
-            <p class="mt-2 text-sm text-[#6B5B8C]">There are no alerts matching the current filters.</p>
-          </div>
-
-          <div *ngIf="filteredAlertItems.length" class="mt-6 space-y-4">
-            <article
-              *ngFor="let item of filteredAlertItems; trackBy: trackAlert"
-              class="alert-row rounded-3xl border border-[#E9D5FF] bg-[#FCFBFF] p-5"
-            >
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div class="space-y-3">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="getAlertStatusClasses(item.alert.status)">
-                      {{ item.alert.status }}
-                    </span>
-                    <span
-                      *ngIf="item.incident"
-                      class="rounded-full px-3 py-1 text-xs font-semibold"
-                      [ngClass]="getSeverityBadgeClasses(item.incident.severity)"
-                    >
-                      {{ item.incident.severity }}
-                    </span>
-                    <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#6B5B8C]">
-                      {{ item.patientName }}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 class="text-lg font-semibold text-[#2D1B4E]">
-                      {{ item.alert.label || item.incident?.title || 'Alert notification' }}
-                    </h3>
-                    <p class="mt-1 text-sm text-[#6B5B8C]">
-                      {{
-                        item.incident?.description ||
-                        'This alert does not currently include an incident description.'
-                      }}
-                    </p>
-                  </div>
-
-                  <div class="flex flex-wrap gap-4 text-xs text-[#6B5B8C]">
-                    <span *ngIf="item.alert.sentAt">
-                      Sent {{ item.alert.sentAt | date:'dd MMM yyyy, HH:mm' }}
-                    </span>
-                    <span *ngIf="item.alert.acknowledgedAt">
-                      Acknowledged {{ item.alert.acknowledgedAt | date:'dd MMM yyyy, HH:mm' }}
-                    </span>
-                    <span *ngIf="item.incident?.location">
-                      {{ item.incident?.location }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <button
-                    *ngIf="item.alert.status === 'SENT'"
-                    type="button"
-                    class="rounded-2xl border border-[#DDD6FE] bg-white px-4 py-2 text-sm font-semibold text-[#7C3AED] transition hover:bg-[#F3E8FF]"
-                    (click)="acknowledgeAlert(item)"
-                  >
-                    Acknowledge
-                  </button>
-
-                  <button
-                    *ngIf="item.alert.status !== 'RESOLVED'"
-                    type="button"
-                    class="rounded-2xl bg-[#7C3AED] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#6D28D9]"
-                    (click)="resolveAlert(item)"
-                  >
-                    Resolve
-                  </button>
-
-                  <div
-                    *ngIf="item.alert.status === 'RESOLVED'"
-                    class="rounded-2xl bg-[#F0FDF4] px-4 py-2 text-sm font-semibold text-[#166534]"
-                  >
-                    Resolved
+                  <div *ngIf="incident.aiSuggestion" class="inc-ai">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <div>
+                      <p style="font-size:10px;font-weight:600;color:var(--p600);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">AI Insight</p>
+                      {{ incident.aiSuggestion }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </article>
+            </ng-container>
+
+            <ng-template #noIncidents>
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <p class="empty-title">No incidents found</p>
+                <p class="empty-sub">Adjust filters or create a new incident.</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <div *ngIf="totalPages > 1" class="pagination">
+            <span>Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong></span>
+            <div class="page-btns">
+              <button type="button" class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">‹</button>
+              <button *ngFor="let page of pages" type="button" class="page-btn" [class.active]="page === currentPage" (click)="setPage(page)">{{ page }}</button>
+              <button type="button" class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">›</button>
+            </div>
           </div>
         </div>
-      </section>
-    </ng-container>
+
+        <!-- Patient detail panel (right col) -->
+        <div class="right-col">
+          <ng-container *ngIf="selectedIncident; else patientSelectPrompt">
+            <div class="detail-panel">
+              <div class="detail-header">
+                <div>
+                  <p class="detail-header-title">Incident details</p>
+                  <p class="detail-header-sub">{{ selectedIncident.title }}</p>
+                </div>
+                <button type="button" class="close-btn" (click)="selectedIncident = null; selectedAlert = null">&#x2715;</button>
+              </div>
+
+              <div class="detail-body">
+                <div class="patient-mini">
+                  <div class="avatar">
+                    <img *ngIf="selectedIncident.patientAvatar" [src]="selectedIncident.patientAvatar" alt="Patient">
+                    <span *ngIf="!selectedIncident.patientAvatar">{{ getInitials(selectedIncident.patientName) }}</span>
+                  </div>
+                  <div class="patient-mini-info">
+                    <p class="patient-mini-name">{{ selectedIncident.patientName }}</p>
+                    <p style="font-size:11px;color:var(--g600)">{{ selectedIncident.patientId }}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="section-label">Description</span>
+                  <p class="section-text">{{ selectedIncident.description }}</p>
+                </div>
+
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <span class="badge" [ngClass]="getSeverityBadgeClasses(selectedIncident.severity)">{{ selectedIncident.severity }}</span>
+                  <span class="badge badge-type">{{ selectedIncident.type }}</span>
+                </div>
+
+                <div class="meta-row">
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  {{ selectedIncident.location }}
+                </div>
+
+                <div class="action-stack">
+                  <button type="button" class="action-btn ab-primary" (click)="openCreateAlertDialog(selectedIncident)">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create alert
+                  </button>
+                  <button type="button" class="action-btn ab-outline" (click)="openEditIncidentDialog(selectedIncident)">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit incident
+                  </button>
+                  <button type="button" class="action-btn ab-danger" (click)="deleteIncident(selectedIncident)">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete incident
+                  </button>
+                </div>
+
+                <div *ngIf="alertsForSelectedIncident.length" class="alerts-section">
+                  <p class="alerts-section-head">Alerts for this incident</p>
+                  <div *ngFor="let alert of paginatedAlerts" class="alert-item">
+                    <div>
+                      <p class="alert-item-name">{{ alert.label || 'Alert' }} – {{ alert.status }}</p>
+                      <p class="alert-item-status">Channels: {{ alert.notificationChannels?.join(', ') || '—' }}</p>
+                    </div>
+                    <div class="alert-item-btns">
+                      <button type="button" class="alert-btn" (click)="openEditAlertDialog(selectedIncident, alert)">Edit</button>
+                      <button type="button" class="alert-btn del" (click)="deleteAlert(alert)">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #patientSelectPrompt>
+            <div class="select-prompt">
+              <svg width="30" height="30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:var(--p200)">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/>
+              </svg>
+              <p class="select-prompt-title">Select an incident</p>
+              <p class="select-prompt-sub">Click any incident to view details, edit it, and manage alerts.</p>
+            </div>
+          </ng-template>
+        </div>
+
+      </ng-template><!-- /patientLayout -->
+
+    </div><!-- /main-grid non-caregiver -->
+  </ng-template><!-- /nonCaregiverLayout -->
+
+</div><!-- /dash -->
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODALS & OVERLAYS — all outside .dash so z-index stacking is clean
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- ── Caregiver Check Popup ─────────────────────────────────── -->
+<div *ngIf="checkPopupVisible"
+     class="modal-overlay"
+     (click)="closeCheckPopup()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header gradient-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span *ngIf="checkPopupStatus === 'streaming'" class="ping-dot"></span>
+        <span *ngIf="checkPopupStatus !== 'streaming'" style="font-size:18px">📷</span>
+        <div>
+          <p class="modal-title">Patient Check</p>
+          <p class="modal-sub">{{ checkPopupPatientName }}</p>
+        </div>
+      </div>
+      <button type="button" class="close-btn" (click)="closeCheckPopup()">✕</button>
+    </div>
+    <div style="padding:24px">
+      <app-caregiver-check
+        *ngIf="checkPopupVisible"
+        [caregiverId]="currentUserId"
+        [patientId]="checkPopupPatientId"
+        [patientName]="checkPopupPatientName"
+        (statusChange)="checkPopupStatus = $event">
+      </app-caregiver-check>
+    </div>
+  </div>
+</div>
+
+<!-- ── Alert alarm ──────────────────────────────────────────── -->
+<app-alert-alarm
+  (dismissed)="onAlarmDismissed($event)"
+  (emergencySent)="toastr.warning('Emergency SMS sent to caregiver')">
+</app-alert-alarm>
+
+<!-- ── SOS Popup ─────────────────────────────────────────────── -->
+<div *ngIf="sosPopupVisible"
+     class="modal-overlay"
+     (click)="sosPopupVisible = false">
+  <div class="sos-modal" (click)="$event.stopPropagation()">
+    <div class="sos-ring-wrap">
+      <span class="sos-ping"></span>
+      <div class="sos-circle">🚨</div>
+    </div>
+    <h2 class="sos-title">Help is on the way!</h2>
+    <p class="sos-sub">Hold tight — your caregiver is being contacted right now.</p>
+    <div class="sos-bar-track">
+      <div class="sos-bar-fill" [style.width.%]="sosCountdown * 10"></div>
+    </div>
+    <p class="sos-countdown">Closing in {{ sosCountdown }}s</p>
+    <button type="button" class="action-btn ab-primary" style="width:auto;padding:10px 28px" (click)="sosPopupVisible = false">Got it</button>
+  </div>
+</div>
+
+<!-- ── Patient check receiver ─────────────────────────────────── -->
+<app-patient-check
+  *ngIf="isPatient && caregiverId"
+  [patientId]="patientId || ''"
+  [caregiverId]="caregiverId || ''">
+</app-patient-check>
+
+<!-- ── EviCare popup ──────────────────────────────────────────── -->
+<div *ngIf="eviCarePopupVisible"
+     class="modal-overlay"
+     (click)="eviCarePopupVisible = false">
+  <div class="evicare-modal" (click)="$event.stopPropagation()">
+    <div class="evicare-icon">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="14" r="8" stroke="white" stroke-width="2" fill="none"/>
+        <path d="M14 14 Q16 10 20 10 Q24 10 26 14" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M17 14 Q17 18 20 19 Q23 18 23 14" stroke="white" stroke-width="1.5" fill="none"/>
+        <path d="M12 26 Q14 22 20 22 Q26 22 28 26 L28 32 Q20 35 12 32 Z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p class="evicare-label">EviCare AI</p>
+    <h2 class="evicare-title">Prevention insight</h2>
+    <span class="badge"
+          [ngClass]="{'badge-CRITICAL': eviCareRiskScore?.level === 'HIGH', 'badge-MEDIUM': eviCareRiskScore?.level === 'MEDIUM'}"
+          style="font-size:13px;padding:6px 16px">
+      {{ eviCareRiskScore?.level }} risk detected
+    </span>
+    <p class="evicare-advice">{{ eviCareRiskScore?.advice }}</p>
+    <div class="evicare-stats">
+      <div><p class="evicare-stat-num">{{ eviCareRiskScore?.recentIncidents }}</p><p>last 30 days</p></div>
+      <div><p class="evicare-stat-num red">{{ eviCareRiskScore?.criticalCount }}</p><p>critical / high</p></div>
+      <div><p class="evicare-stat-num amber">{{ eviCareRiskScore?.missedAlertsCount }}</p><p>missed alerts</p></div>
+    </div>
+    <div *ngIf="eviCareRiskScore?.patternSummary" class="evicare-pattern">
+      <p class="evicare-pattern-label">Detected patterns</p>
+      {{ eviCareRiskScore?.patternSummary }}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+      <span *ngIf="eviCareRiskScore?.dominantTimeOfDay" class="badge badge-type">{{ eviCareRiskScore.dominantTimeOfDay | titlecase }}</span>
+      <span *ngIf="eviCareRiskScore?.riskiestLocation" class="badge badge-type">{{ eviCareRiskScore.riskiestLocation | titlecase }}</span>
+      <span *ngIf="eviCareRiskScore?.dominantIncidentType" class="badge badge-type">{{ eviCareRiskScore.dominantIncidentType }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Disconnect Alert Popup ────────────────────────────────── -->
+<div *ngIf="disconnectPopup"
+     class="modal-overlay"
+     (click)="dismissDisconnectPopup()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header" style="background:var(--red600)">
+      <p class="modal-title">Patient disconnected</p>
+      <span style="color:rgba(255,255,255,0.6);font-size:11px">Dismisses to pinned notification</span>
+    </div>
+    <div style="padding:24px">
+      <div class="disconnect-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="var(--red600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <h2 style="font-size:15px;font-weight:600;color:var(--p900);margin-bottom:6px">{{ disconnectPopup.patientName }} is not active</h2>
+      <p style="font-size:13px;color:var(--g600);margin-bottom:16px;line-height:1.55">
+        Your patient has not logged in for more than 3 minutes. They may need your attention.
+      </p>
+      <div class="disconnect-since">
+        Disconnected since: {{ formatDisconnectDate(disconnectPopup.since) }}
+        ({{ getMinutesSince(disconnectPopup.since) }})
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="action-btn ab-outline" style="flex:1" (click)="dismissDisconnectPopup()">Dismiss &amp; pin</button>
+        <button type="button" class="action-btn ab-danger" style="flex:1" (click)="dismissDisconnectPopup()">View incidents</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pinned floating notifications (bottom-right) ───────────── -->
+<div class="pinned-stack">
+  <div *ngFor="let pin of getPinnedDisconnectList()" class="pinned-card">
+    <div class="pinned-top">
+      <span class="pinned-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+        Patient disconnected
+      </span>
+      <button type="button" class="pinned-close" (click)="closePinnedDisconnect(pin.patientId)">×</button>
+    </div>
+    <p class="pinned-name">{{ pin.patientName }}</p>
+    <p class="pinned-since">Since: {{ formatDisconnectDate(pin.since) }}</p>
+    <p class="pinned-ago">{{ getMinutesSince(pin.since) }}</p>
   </div>
 </div>

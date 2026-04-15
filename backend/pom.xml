@@ -4,6 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/blog-service-integration+islem
     <groupId>com.yourteam</groupId>
     <artifactId>microservices-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
@@ -12,25 +16,45 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
+<<<<<<< HEAD
         <version>3.2.5</version>
+=======
+        <version>3.2.2</version>
+>>>>>>> origin/blog-service-integration+islem
         <relativePath/>
     </parent>
 
     <properties>
         <java.version>17</java.version>
+<<<<<<< HEAD
         <spring-cloud.version>2023.0.3</spring-cloud.version>
     </properties>
 
+=======
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+    </properties>
+
+    <!-- MUST match your folder names exactly -->
+>>>>>>> origin/blog-service-integration+islem
     <modules>
         <module>appointment-service</module>
         <module>Activities</module>
         <module>Alerts</module>
         <module>User</module>
+<<<<<<< HEAD
         <module>Dailyme-service</module>
         <module>Tracking-service</module>
         <module>ApiGateway</module>
         <module>Eureka-service</module>
         <module>notification-service</module>
+=======
+        <module>ApiGateway</module>
+        <module>Eureka-service</module>
+        <module>notification-service</module>
+        <!-- Comment these out until you actually create the folders -->
+        <!-- <module>gateway-service</module> -->
+        <!-- <module>auth-service</module> -->
+>>>>>>> origin/blog-service-integration+islem
     </modules>
 
     <dependencyManagement>
@@ -45,6 +69,50 @@
         </dependencies>
     </dependencyManagement>
 
+<<<<<<< HEAD
+=======
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.32</version> <!-- Latest stable -->
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+    </dependencies>
+
+>>>>>>> origin/blog-service-integration+islem
     <build>
         <plugins>
             <plugin>

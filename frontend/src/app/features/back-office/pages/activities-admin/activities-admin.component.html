@@ -31,10 +31,11 @@
 
         <div class="space-y-4">
           <div
-            *ngFor="let activity of pagedActivities"
-            class="cursor-pointer group"
-            (click)="goToDetails(activity)"
-          >
+  *ngFor="let activity of pagedActivities"
+  class="cursor-pointer group"
+  (click)="selectActivity(activity); $event.stopPropagation()"
+  (dblclick)="goToDetails(activity); $event.stopPropagation()"
+>
             <div
               class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
               [ngClass]="
@@ -45,11 +46,7 @@
             >
               <!-- Image + badges (mirrors front office cards) -->
               <div class="relative h-44 overflow-hidden">
-                <img
-                  [src]="activity.imageUrl || '/assets/logo.png'"
-                  [alt]="activity.name"
-                  class="w-full h-full object-cover"
-                />
+                <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
 
                 <div class="absolute top-3 right-3 flex gap-2">
                   <span
@@ -138,7 +135,7 @@
           </div>
 
           <p
-            *ngIf="activities.length === 0"
+            *ngIf="activitiesWithDetails.length === 0"
             class="text-sm text-[#6B5B8C] text-center border border-dashed border-[#DDD6FE] rounded-xl py-6 bg-white/70"
           >
             No activities yet. Click <span class="font-semibold">New activity</span> to add your first
@@ -147,7 +144,7 @@
 
           <!-- Pagination -->
           <div
-            *ngIf="activities.length > pageSize"
+            *ngIf="activitiesWithDetails.length > pageSize"
             class="flex items-center justify-between pt-2 text-xs text-[#6B5B8C]"
           >
             <div>
@@ -192,324 +189,292 @@
         </div>
       </div>
 
-      <!-- Right side: CRUD form + live preview, matching front-office details -->
-      <div class="space-y-4">
-        <h2 class="text-sm font-semibold text-[#6B5B8C] uppercase tracking-wide">
-          {{ formMode === 'create' ? 'Create activity' : 'Edit activity' }}
-        </h2>
+     <!-- Right side: CRUD form + live preview, matching front-office details -->
+<div class="space-y-4">
+  <h2 class="text-sm font-semibold text-[#6B5B8C] uppercase tracking-wide">
+    {{ formMode === 'create' ? 'Create activity' : 'Edit activity' }}
+  </h2>
 
-        <div class="space-y-4">
-          <!-- Basic info card -->
-          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <h3 class="text-sm font-semibold text-[#2D1B4E]">
-                  Basic information
-                </h3>
-                <p class="text-xs text-[#6B5B8C]">
-                  These fields control the main card shown in the front office.
-                </p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Title</span>
-                <input
-                  type="text"
-                  [(ngModel)]="formModel.name"
-                  name="name"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="Morning Breathing Exercise"
-                />
-              </label>
-
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Type</span>
-                <select
-                  [(ngModel)]="formModel.type"
-                  name="type"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                >
-                  <option *ngFor="let t of activityTypes" [value]="t">
-                    {{ t }}
-                  </option>
-                </select>
-              </label>
-
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Duration (minutes)</span>
-                <input
-                  type="number"
-                  min="1"
-                  [(ngModel)]="formModel.duration"
-                  name="duration"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="20"
-                />
-              </label>
-
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Scheduled time (optional)</span>
-                <input
-                  type="text"
-                  [(ngModel)]="formModel.scheduledTime"
-                  name="scheduledTime"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="10:00 AM"
-                />
-              </label>
-
-              <label class="space-y-1 sm:col-span-2">
-                <span class="text-xs font-medium text-[#4B5563]">Image URL</span>
-                <input
-                  type="text"
-                  [(ngModel)]="formModel.imageUrl"
-                  name="imageUrl"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="https://images.unsplash.com/..."
-                />
-              </label>
-
-              <label class="space-y-1 sm:col-span-2">
-                <span class="text-xs font-medium text-[#4B5563]">Short description</span>
-                <textarea
-                  rows="3"
-                  [(ngModel)]="formModel.description"
-                  name="description"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="This is what patients will see on the card and details page."
-                ></textarea>
-              </label>
-            </div>
-          </div>
-
-          <!-- Configuration card -->
-          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
-            <h3 class="text-sm font-semibold text-[#2D1B4E]">
-              Configuration
-            </h3>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Difficulty</span>
-                <select
-                  [(ngModel)]="formModel.difficulty"
-                  name="difficulty"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                >
-                  <option *ngFor="let d of difficultyLevels" [value]="d">
-                    {{ d }}
-                  </option>
-                </select>
-              </label>
-
-              <label class="space-y-1">
-                <span class="text-xs font-medium text-[#4B5563]">Frequency</span>
-                <input
-                  type="text"
-                  [(ngModel)]="formModel.frequency"
-                  name="frequency"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="Daily, 3 times per week..."
-                />
-              </label>
-
-              <label class="space-y-1 sm:col-span-2">
-                <span class="text-xs font-medium text-[#4B5563]">Supervision</span>
-                <input
-                  type="text"
-                  [(ngModel)]="formModel.supervision"
-                  name="supervision"
-                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                  placeholder="Independent, caregiver presence recommended..."
-                />
-              </label>
-
-              <div class="space-y-2 sm:col-span-2">
-                <span class="text-xs font-medium text-[#4B5563]">Recommended Alzheimer stages</span>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    *ngFor="let stage of stages"
-                    class="px-3 py-1 rounded-full text-xs border"
-                    [ngClass]="
-                      formModel.recommendedStage.includes(stage)
-                        ? 'bg-[#7C3AED] border-[#7C3AED] text-white'
-                        : 'bg-white border-[#E5E7EB] text-[#4B5563]'
-                    "
-                    (click)="toggleStage(stage)"
-                  >
-                    {{ stage }}
-                  </button>
-                </div>
-              </div>
-
-              <label class="inline-flex items-center gap-2 text-xs text-[#4B5563] sm:col-span-2">
-                <input
-                  type="checkbox"
-                  [(ngModel)]="formModel.doctorSuggested"
-                  name="doctorSuggested"
-                  class="rounded border-[#E5E7EB] text-[#7C3AED] focus:ring-[#7C3AED]"
-                />
-                <span>Doctor suggested</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Content sections, mirroring details page -->
-          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
-            <h3 class="text-sm font-semibold text-[#2D1B4E]">
-              Steps & benefits
-            </h3>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
-              <!-- Instructions -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-[#4B5563]">Step-by-step instructions</span>
-                  <button
-                    type="button"
-                    class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
-                    (click)="addInstruction()"
-                  >
-                    + Add step
-                  </button>
-                </div>
-
-                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  <div
-                    *ngFor="let step of formModel.instructions; let i = index"
-                    class="flex items-start gap-2"
-                  >
-                    <span
-                      class="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[11px]"
-                    >
-                      {{ i + 1 }}
-                    </span>
-                    <textarea
-                      rows="2"
-                      [(ngModel)]="formModel.instructions[i]"
-                      [name]="'instruction-' + i"
-                      class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                      placeholder="Describe this step..."
-                    ></textarea>
-                    <button
-                      type="button"
-                      class="text-xs text-rose-500 px-1"
-                      (click)="removeInstruction(i)"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Benefits & precautions -->
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-[#4B5563]">Benefits</span>
-                  <button
-                    type="button"
-                    class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
-                    (click)="addBenefit()"
-                  >
-                    + Add benefit
-                  </button>
-                </div>
-                <div class="space-y-2 max-h-24 overflow-y-auto pr-1">
-                  <div
-                    *ngFor="let benefit of formModel.benefits; let i = index"
-                    class="flex items-start gap-2"
-                  >
-                    <span class="mt-1 text-sm">✅</span>
-                    <input
-                      type="text"
-                      [(ngModel)]="formModel.benefits[i]"
-                      [name]="'benefit-' + i"
-                      class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                      placeholder="Describe a benefit..."
-                    />
-                    <button
-                      type="button"
-                      class="text-xs text-rose-500 px-1"
-                      (click)="removeBenefit(i)"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-[#4B5563]">Precautions (optional)</span>
-                    <button
-                      type="button"
-                      class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
-                      (click)="addPrecaution()"
-                    >
-                      + Add precaution
-                    </button>
-                  </div>
-                  <div class="space-y-2 max-h-24 overflow-y-auto pr-1">
-                    <div
-                      *ngFor="
-                        let precaution of formModel.precautions || [];
-                        let i = index
-                      "
-                      class="flex items-start gap-2"
-                    >
-                      <span class="mt-1 text-sm">⚠️</span>
-                      <input
-                        type="text"
-                        [(ngModel)]="formModel.precautions![i]"
-                        [name]="'precaution-' + i"
-                        class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
-                        placeholder="Mention a precaution..."
-                      />
-                      <button
-                        type="button"
-                        class="text-xs text-rose-500 px-1"
-                        (click)="removePrecaution(i)"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions + small preview hint -->
-          <div class="flex items-center justify-between gap-4">
-            <div class="text-xs text-[#6B5B8C]">
-              Saving will immediately update how this activity looks in the front-office cards and
-              details page.
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
-                (click)="saveActivity()"
-              >
-                <span class="mr-2">💾</span>
-                Save activity
-              </button>
-              <button
-                type="button"
-                class="inline-flex items-center px-3 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200 hover:bg-rose-100 transition-colors"
-                (click)="deleteCurrentActivity()"
-                [disabled]="!formModel.id"
-              >
-                <span class="mr-1">🗑️</span>
-                Delete
-              </button>
-            </div>
-          </div>
+  <div class="space-y-4" [formGroup]="activityForm">
+    <!-- Basic info card -->
+    <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-semibold text-[#2D1B4E]">Basic information</h3>
+          <p class="text-xs text-[#6B5B8C]">These fields control the main card shown in the front office.</p>
         </div>
       </div>
-    </section>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        <!-- Title -->
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Title *</label>
+          <input
+            type="text"
+            formControlName="name"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="activityForm.get('name')?.invalid && activityForm.get('name')?.touched"
+            placeholder="Morning Breathing Exercise"
+          />
+          <div *ngIf="activityForm.get('name')?.invalid && activityForm.get('name')?.touched" class="text-red-500 text-xs">
+            <span *ngIf="activityForm.get('name')?.errors?.['required']">Name is required.</span>
+            <span *ngIf="activityForm.get('name')?.errors?.['minlength']">Minimum 3 characters.</span>
+            <span *ngIf="activityForm.get('name')?.errors?.['maxlength']">Maximum 100 characters.</span>
+            <span *ngIf="activityForm.get('name')?.errors?.['firstLetterUppercase']">First letter must be uppercase.</span>
+          </div>
+        </div>
+
+        <!-- Type -->
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Type *</label>
+          <select
+            formControlName="type"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="activityForm.get('type')?.invalid && activityForm.get('type')?.touched"
+          >
+            <option *ngFor="let t of activityTypes" [value]="t">{{ t }}</option>
+          </select>
+          <div *ngIf="activityForm.get('type')?.invalid && activityForm.get('type')?.touched" class="text-red-500 text-xs">
+            Type is required.
+          </div>
+        </div>
+
+        <!-- Duration with +/- buttons -->
+<div class="space-y-1">
+  <label class="text-xs font-medium text-[#4B5563]">Duration (minutes) *</label>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class="w-8 h-8 rounded-full bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE] transition-colors flex items-center justify-center"
+      (click)="decrementDuration()"
+      [disabled]="activityForm.get('duration')?.value <= 1"
+    >
+      <span class="text-lg">−</span>
+    </button>
+    <input
+      type="number"
+      min="1"
+      formControlName="duration"
+      class="w-20 text-center rounded-xl border border-[#E5E7EB] px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+      [class.border-red-500]="activityForm.get('duration')?.invalid && activityForm.get('duration')?.touched"
+    />
+    <button
+      type="button"
+      class="w-8 h-8 rounded-full bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE] transition-colors flex items-center justify-center"
+      (click)="incrementDuration()"
+      [disabled]="activityForm.get('duration')?.value >= 480"
+    >
+      <span class="text-lg">+</span>
+    </button>
+  </div>
+  <div *ngIf="activityForm.get('duration')?.invalid && activityForm.get('duration')?.touched" class="text-red-500 text-xs">
+    <span *ngIf="activityForm.get('duration')?.errors?.['required']">Duration is required.</span>
+    <span *ngIf="activityForm.get('duration')?.errors?.['min']">Minimum 1 minute.</span>
+    <span *ngIf="activityForm.get('duration')?.errors?.['max']">Maximum 480 minutes.</span>
   </div>
 </div>
 
+<!-- Scheduled time as dropdown -->
+<div class="space-y-1">
+  <label class="text-xs font-medium text-[#4B5563]">Scheduled time (optional)</label>
+  <select
+    formControlName="scheduledTime"
+    class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+  >
+    <option value="">Select time</option>
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+
+       <!-- Image upload -->
+<div class="space-y-1 sm:col-span-2">
+  <label class="text-xs font-medium text-[#4B5563]">Activity Image</label>
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      class="px-4 py-2 rounded-full bg-[#F3E8FF] text-[#7C3AED] text-sm hover:bg-[#EDE9FE] transition-colors"
+      (click)="fileInput.click()"
+    >
+      Choose file
+    </button>
+    <span class="text-sm text-[#6B5B8C]" *ngIf="!selectedFile && !activityForm.get('imageUrl')?.value">
+      No file chosen
+    </span>
+    <span class="text-sm text-[#2D1B4E]" *ngIf="selectedFile">
+      {{ selectedFile.name }}
+    </span>
+    <span class="text-sm text-[#2D1B4E]" *ngIf="!selectedFile && activityForm.get('imageUrl')?.value">
+      Current image: {{ activityForm.get('imageUrl')?.value | slice:0:30 }}...
+    </span>
+  </div>
+  <input
+    #fileInput
+    type="file"
+    accept="image/*"
+    class="hidden"
+    (change)="onFileSelected($event)"
+  />
+  <p class="text-xs text-[#6B5B8C] mt-1">Upload a new image (JPG, PNG, GIF). Max 5MB.</p>
+</div>
+
+        <!-- Description -->
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Short description *</label>
+          <textarea
+            rows="3"
+            formControlName="description"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="activityForm.get('description')?.invalid && activityForm.get('description')?.touched"
+            placeholder="This is what patients will see on the card and details page."
+          ></textarea>
+          <div *ngIf="activityForm.get('description')?.invalid && activityForm.get('description')?.touched" class="text-red-500 text-xs">
+            <span *ngIf="activityForm.get('description')?.errors?.['required']">Description is required.</span>
+            <span *ngIf="activityForm.get('description')?.errors?.['minlength']">Minimum 10 characters.</span>
+            <span *ngIf="activityForm.get('description')?.errors?.['maxlength']">Maximum 1000 characters.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration card (detailsForm) -->
+    <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4" [formGroup]="detailsForm">
+      <h3 class="text-sm font-semibold text-[#2D1B4E]">Configuration</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+        <!-- Difficulty -->
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Difficulty *</label>
+          <select
+            formControlName="difficulty"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="detailsForm.get('difficulty')?.invalid && detailsForm.get('difficulty')?.touched"
+          >
+            <option *ngFor="let d of difficultyLevels" [value]="d">{{ d }}</option>
+          </select>
+          <div *ngIf="detailsForm.get('difficulty')?.invalid && detailsForm.get('difficulty')?.touched" class="text-red-500 text-xs">
+            Difficulty is required.
+          </div>
+        </div>
+
+        <!-- Frequency -->
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Frequency *</label>
+          <input
+            type="text"
+            formControlName="frequency"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="detailsForm.get('frequency')?.invalid && detailsForm.get('frequency')?.touched"
+            placeholder="Daily, 3 times per week..."
+          />
+          <div *ngIf="detailsForm.get('frequency')?.invalid && detailsForm.get('frequency')?.touched" class="text-red-500 text-xs">
+            Frequency is required.
+          </div>
+        </div>
+
+        <!-- Supervision -->
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Supervision *</label>
+          <input
+            type="text"
+            formControlName="supervision"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+            [class.border-red-500]="detailsForm.get('supervision')?.invalid && detailsForm.get('supervision')?.touched"
+            placeholder="Independent, caregiver presence recommended..."
+          />
+          <div *ngIf="detailsForm.get('supervision')?.invalid && detailsForm.get('supervision')?.touched" class="text-red-500 text-xs">
+            Supervision is required.
+          </div>
+        </div>
+
+        <!-- Recommended stages -->
+        <div class="space-y-2 sm:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Recommended Alzheimer stages *</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              *ngFor="let stage of stages"
+              class="px-3 py-1 rounded-full text-xs border"
+              [ngClass]="
+                (detailsForm.get('recommendedStage')?.value || []).includes(stage)
+                  ? 'bg-[#7C3AED] border-[#7C3AED] text-white'
+                  : 'bg-white border-[#E5E7EB] text-[#4B5563]'
+              "
+              (click)="toggleStage(stage)"
+            >
+              {{ stage }}
+            </button>
+          </div>
+          <div *ngIf="detailsForm.get('recommendedStage')?.invalid && detailsForm.get('recommendedStage')?.touched" class="text-red-500 text-xs">
+            At least one stage must be selected.
+          </div>
+        </div>
+
+        <!-- Doctor suggested checkbox -->
+        <label class="inline-flex items-center gap-2 text-xs text-[#4B5563] sm:col-span-2">
+          <input
+            type="checkbox"
+            formControlName="doctorSuggested"
+            class="rounded border-[#E5E7EB] text-[#7C3AED] focus:ring-[#7C3AED]"
+          />
+          <span>Doctor suggested</span>
+        </label>
+      </div>
+    </div>
+
+ 
+    <!-- Actions -->
+    <div class="flex items-center justify-between gap-4">
+      <div class="text-xs text-[#6B5B8C]">
+        Saving will immediately update how this activity looks in the front-office cards and details page.
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
+          (click)="saveActivity()"
+        >
+          <span class="mr-2">💾</span>
+          Save activity
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center px-3 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200 hover:bg-rose-100 transition-colors"
+          (click)="deleteCurrentActivity()"
+          [disabled]="!selectedActivity"
+        >
+          <span class="mr-1">🗑️</span>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Image Cropper Modal -->
+<div *ngIf="showCropper" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl max-w-3xl w-full p-6">
+    <h3 class="text-2xl text-[#2D1B4E] font-semibold mb-4">Crop Image</h3>
+    <div class="relative max-h-96 overflow-auto">
+      <image-cropper
+        [imageChangedEvent]="imageChangedEvent"
+        [maintainAspectRatio]="true"
+        [aspectRatio]="16 / 9"
+        [resizeToWidth]="1024"
+        format="png"
+        (imageCropped)="imageCropped($event)"
+        (imageLoaded)="imageLoaded()"
+        (loadImageFailed)="loadImageFailed()">
+      </image-cropper>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button (click)="cancelCrop()" class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100">
+        Cancel
+      </button>
+      <button (click)="confirmCrop()" class="px-4 py-2 rounded-full bg-[#7C3AED] text-white hover:bg-[#6D28D9]">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+         

@@ -29,6 +29,16 @@ public class ApiGatewayApplication {
                         )
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("lb://ACTIVITIES-SERVICE"))
+                // ✅ No rewritePath — context-path /EverCare handles it
+                .route("alerts-service-ws", r -> r
+                        .path("/EverCare/ws-check", "/EverCare/ws-check/**")
+                        // ✅ Remove rewritePath entirely — pass URL as-is including query params
+                        .uri("lb:ws://ALERTS-SERVICE"))
+
+                // ✅ No rewritePath — same reason
+                .route("alerts-service", r -> r
+                        .path("/EverCare/incidents/**", "/EverCare/alerts/**", "/EverCare/evicare/**")
+                        .uri("lb://ALERTS-SERVICE"))
 .route("alerts-service", r -> r
                         .path("/EverCare/incidents/**", "/EverCare/alerts/**")
                         .uri("lb://alerts-service"))
@@ -67,6 +77,10 @@ public class ApiGatewayApplication {
                                          .filters(f -> f.rewritePath("/communication-service/(?<segment>.*)", "/${segment}"))
                                          .uri("lb://COMMUNICATION-SERVICE"))
 
+                .route("face-service", r -> r
+                        .path("/EverCare/face/**")
+                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
+                        .uri("http://localhost:8085"))
                 .build();
     }
 

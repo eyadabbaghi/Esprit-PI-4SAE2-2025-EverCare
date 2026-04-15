@@ -72,6 +72,13 @@ public class IncidentService {
         incidentRepository.delete(incident);
     }
 
+    public IncidentResponse acknowledgeIncident(String id) {
+        Incident incident = incidentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Incident not found: " + id));
+        incident.setStatus(IncidentStatus.ACKNOWLEDGED);
+        return mapToResponse(incidentRepository.save(incident));
+    }
+
     @Transactional
     public IncidentResponse resolveIncident(String id) {
         Incident incident = incidentRepository.findById(id)

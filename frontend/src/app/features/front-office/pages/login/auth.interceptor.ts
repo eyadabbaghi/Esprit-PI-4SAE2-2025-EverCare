@@ -8,12 +8,19 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Skip token for registration endpoint (still called to your backend)
-    if (req.url.includes('/auth/register')) {
-      return next.handle(req);
+    // Skip token for public endpoints or explicitly flagged requests
+    if (
+      req.url.includes('/auth/register') ||
+      req.url.includes('/auth/face-login') ||
+      req.url.includes('/users/by-email') ||   // ← add this
+      req.headers.has('skip-auth')
+    ) {
+      const cleanReq = req.clone({
+        headers: req.headers.delete('skip-auth')
+      });
+      return next.handle(cleanReq);
     }
 
-    // For all other requests, add the token if available
     const token = this.authService.getToken();
     const currentUser = this.authService.getCurrentUserValue();
     if (token) {
@@ -30,6 +37,7 @@ export class AuthInterceptor implements HttpInterceptor {
       const cloned = req.clone({ headers });
       return next.handle(cloned);
     }
+
     return next.handle(req);
   }
 }

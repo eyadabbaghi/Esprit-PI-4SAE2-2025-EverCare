@@ -28,10 +28,19 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { NewUserFlowComponent } from './pages/login/new-user-flow.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { AlertAlarmComponent } from '../../alert-alarm/alert-alarm.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 
 // 👇 ADD THIS IMPORT
 import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.component';
+import { HttpClientModule } from '@angular/common/http';
+import { CaregiverCheckComponent } from './pages/alerts/components/caregiver-check/caregiver-check.component';
+import { PatientCheckComponent } from './pages/alerts/components/patient-check/patient-check.component';
+import { FaceLoginComponent } from './pages/face-login/face-login.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
+import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog.component';
+import { FaceRecoveryComponent } from './pages/face-recovery/face-recovery.component';
+
 
 @NgModule({
   declarations: [
@@ -42,7 +51,6 @@ import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.
     ServicesComponent,
     PricingComponent,
     FaqComponent,
-    LoginComponent,
     RegisterComponent,
     FeatureCardComponent,
     TestimonialComponent,
@@ -60,9 +68,17 @@ import { DoctorSearchModalComponent } from './pages/profile/doctor-search-modal.
     NewUserFlowComponent,
     SetupProfileComponent,
     DoctorSearchModalComponent,
+    AlertAlarmComponent,
+    CaregiverCheckComponent,
+    PatientCheckComponent,
+    FaceSetupComponent,
+    FaceLoginComponent,
+    ConfirmDialogComponent,
+    FaceRecoveryComponent,
   ],
   imports: [
     CommonModule,
+    HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
     SharedModule,

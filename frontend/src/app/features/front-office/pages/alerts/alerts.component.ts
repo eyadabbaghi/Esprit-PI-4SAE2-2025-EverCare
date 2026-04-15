@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, NgZone, OnDestroy, OnInit } from '@angular/core'; // ← add NgZone here
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
@@ -14,6 +14,10 @@ import { AddAlertDialogComponent } from '../../../../add-alert-dialog/add-alert-
 import { Incident, Alert, Severity, IncidentType, AlertStatus } from '../../../../core/model/alerts.models';
 // At the top with other imports
 import { IncidentDetailsDialogComponent } from './incident-details-dialog.component';
+import { AlertSchedulerService } from '../../../../core/services/alert-scheduler.service';
+import { VoiceSosService } from '../../../../core/services/voice-sos.service';
+import { CheckService } from './services/check.service';
+import { ConfirmDialogComponent } from './components/confirm-dialog.component';
 
 // Extended UI models (include extra fields for display)
 interface IncidentUI extends Incident {
@@ -44,6 +48,8 @@ interface AlertUI extends Alert {
 })
 export class AlertsComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
+  voiceListening = false;
+  private voiceStarted = false;
   userRole: 'doctor' | 'caregiver' | 'patient' | 'admin' = 'caregiver';
   patientCache: Map<string, { name: string; avatar?: string; email?: string }> = new Map();
   // For caregivers: set of patient IDs they are allowed to see
@@ -51,6 +57,31 @@ export class AlertsComponent implements OnInit, OnDestroy {
 // For doctors: list of patients they are connected to
 doctorPatients: Patient[] = [];
 selectedDoctorPatient: Patient | null = null;
+sosPopupVisible = false;
+sosCountdown = 10;
+private sosCountdownTimer?: any;
+
+eviCarePopupVisible = false;
+eviCareRiskScore: any = null;
+
+// Voice-guided check properties
+currentUserId!: string;
+patientId!: string;
+caregiverId!: string;
+
+checkPopupVisible = false;
+checkPopupPatientId = '';
+checkPopupPatientName = '';
+checkPopupStatus: string = 'idle';
+
+patientActivityStatuses: Map<string, any> = new Map();
+activityLoading = false;
+
+disconnectedPatients: Map<string, { name: string; since: Date }> = new Map();
+disconnectPopup: { patientId: string; patientName: string; since: Date } | null = null;
+pinnedDisconnects: Map<string, { patientName: string; since: Date }> = new Map();
+private disconnectCheckInterval?: any;
+
 
   get isDoctor(): boolean {
     return this.userRole === 'doctor';
@@ -90,52 +121,111 @@ selectedDoctorPatient: Patient | null = null;
 
   constructor(
     @Inject(PLATFORM_ID) platformId: Object,
-    private readonly toastr: ToastrService,
+    public readonly toastr: ToastrService,
     private authService: AuthService,
     private alertsService: AlertsService,
     private userService: UserService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private alertScheduler: AlertSchedulerService,
+    private voiceSos: VoiceSosService,
+    private ngZone: NgZone ,
+    private checkService: CheckService  // ADD THIS
+
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  ngOnInit(): void {
-    if (this.isBrowser) {
-      this.timerId = setInterval(() => {
-        this.currentTime = new Date();
-      }, 60000);
-    }
-    
-
-    this.subscriptions.push(
-      this.authService.currentUser$.subscribe((user: User | null) => {
-        this.currentUser = user;
-        if (user) {
-          this.userRole = user.role.toLowerCase() as any;
-
-          if (this.isDoctor) {
-  this.loadDoctorPatients();
-}
-          // For caregivers, load allowed patients first
-          if (this.isCaregiver) {
-            this.getConnectedPatients().subscribe(patients => {
-              this.allowedPatientIds = new Set(patients.map(p => p.userId));
-              this.loadData();
-            });
-          } else {
-            this.loadData();
-          }
-        }
-      })
-    );
+ngOnInit(): void {
+  if (this.isBrowser) {
+    this.timerId = setInterval(() => {
+      this.currentTime = new Date();
+    }, 60000);
   }
+
+  this.subscriptions.push(
+    this.authService.currentUser$.subscribe((user: User | null) => {
+      this.currentUser = user;
+      if (!user) return;
+
+      this.userRole = user.role.toLowerCase() as any;
+
+      // Populate IDs for voice-guided check
+      this.currentUserId = user.userId!;
+
+      if (this.isPatient) {
+        this.patientId = user.userId!;
+        const primaryEmail = user.caregiverEmails?.[0];
+        if (primaryEmail) {
+          this.userService.getUserByEmail(primaryEmail).subscribe(cg => {
+            this.caregiverId = cg.userId;
+          });
+        }
+      } else if (this.isCaregiver) {
+        // Caregiver WebSocket connected per-patient inside the component itself
+      }
+
+      // Start voice SOS listener for patients — guarded to only run once
+      if (this.isPatient && this.isBrowser && !this.voiceStarted) {
+        this.voiceStarted = true;
+        this.subscriptions.push(
+          this.voiceSos.sosTrigger$.subscribe(() => {
+            this.triggerSOS();
+          })
+        );
+        this.voiceSos.start();
+        this.voiceListening = true;
+      }
+
+      if (this.isDoctor) {
+        this.loadDoctorPatients();
+      }
+
+      // For caregivers, load allowed patients first
+      if (this.isCaregiver) {
+        this.getConnectedPatients().subscribe(patients => {
+          this.allowedPatientIds = new Set(patients.map(p => p.userId));
+          this.loadData();
+        });
+      } else {
+        // For patients or other roles: load data first
+        this.loadData();
+        // Then load EviCare insight if patient
+        this.loadEviCareInsight();
+      }
+
+      // ← start auto-refresh for activity statuses
+      this.startActivityRefresh();
+    })
+  );
+}
+/**
+ * Load EviCare risk analysis for patient and show popup if needed
+ */
+private loadEviCareInsight(): void {
+  if (!this.isPatient || !this.currentUser || !this.currentUser.userId) return;
+
+  this.alertsService.getEviCareAnalysis(this.currentUser.userId).subscribe({
+    next: (score) => {
+      this.eviCareRiskScore = score;
+      if (score.level !== 'LOW') {
+        this.eviCarePopupVisible = true;
+      }
+    },
+    error: () => {}
+  });
+}
 
   ngOnDestroy(): void {
     if (this.timerId) clearInterval(this.timerId);
+    if (this.sosCountdownTimer) clearInterval(this.sosCountdownTimer); // ← add this
     this.subscriptions.forEach(s => s.unsubscribe());
+    this.voiceSos.stop();
+    if (this.disconnectCheckInterval) clearInterval(this.disconnectCheckInterval);
+    //this.checkService.disconnect(); // ADD THIS
+
   }
 
- loadData(): void {
+loadData(): void {
   if (!this.currentUser) return;
 
   this.alertsService.getIncidents().subscribe({
@@ -144,24 +234,38 @@ selectedDoctorPatient: Patient | null = null;
 
       // Role‑based filtering
       if (this.isPatient) {
-        incidents = incidents.filter(
-          i => i.reportedByUserId === this.currentUser!.userId ||
-                i.patientId === this.currentUser!.userId
+        incidents = incidents.filter(i =>
+          this.currentUser != null && (
+            i.reportedByUserId === this.currentUser.userId ||
+            i.patientId === this.currentUser.userId
+          )
         );
       } else if (this.isCaregiver && this.allowedPatientIds) {
         incidents = incidents.filter(
           i => this.allowedPatientIds!.has(i.patientId)
+        );
+      } else if (this.isDoctor) {
+        const doctorPatientIds = new Set(
+          this.doctorPatients.map(p => p.userId)
+        );
+        incidents = incidents.filter(
+          i => doctorPatientIds.has(i.patientId)
         );
       }
 
       this.incidents = incidents.map(i => this.enrichIncident(i));
       console.log('Mapped incidents:', this.incidents);
 
-      // Load patient details for all unique patient IDs in the filtered incidents
       const patientIds = [...new Set(incidents.map(i => i.patientId))];
       this.loadPatientDetails(patientIds);
 
       this.loadAlerts();
+
+      // load patient activity statuses after incidents are ready
+      this.loadPatientActivityStatuses();
+
+      // start disconnect monitoring for caregivers and doctors
+      this.startDisconnectCheck();
     },
     error: (err) => {
       console.error('Failed to load incidents', err);
@@ -170,18 +274,19 @@ selectedDoctorPatient: Patient | null = null;
   });
 }
 
-  loadAlerts(): void {
-    this.alertsService.getAlerts().subscribe({
-      next: (alerts: Alert[]) => {
-        console.log('Alerts loaded:', alerts);
-        this.alerts = alerts.map(alert => this.enrichAlert(alert));
-      },
-      error: (err) => {
-        console.error('Failed to load alerts', err);
-        this.toastr.warning('Alerts could not be loaded');
-      }
-    });
-  }
+ loadAlerts(): void {
+  this.alertsService.getAlerts().subscribe({
+    next: (alerts: Alert[]) => {
+      console.log('Alerts loaded:', alerts);
+      this.alerts = alerts.map(alert => this.enrichAlert(alert));
+      this.startScheduler();
+    },
+    error: (err) => {
+      console.error('Failed to load alerts', err);
+      this.toastr.warning('Alerts could not be loaded');
+    }
+  });
+}
 
   loadPatientDetails(patientIds: string[]): void {
   patientIds.forEach(id => {
@@ -366,37 +471,55 @@ selectedDoctorPatient: Patient | null = null;
   });
 }
 
-  deleteIncident(incident: IncidentUI): void {
-    if (confirm('Delete this incident and all related alerts?')) {
+ deleteIncident(incident: IncidentUI): void {
+  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    width: '350px',
+    data: { message: 'Delete this incident and all related alerts?' }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
       this.alertsService.deleteIncident(incident.incidentId).subscribe({
         next: () => {
           this.incidents = this.incidents.filter(i => i.incidentId !== incident.incidentId);
           this.alerts = this.alerts.filter(a => a.incidentId !== incident.incidentId);
+
           if (this.selectedIncident?.incidentId === incident.incidentId) {
             this.selectedIncident = null;
             this.selectedAlert = null;
           }
+
           this.toastr.success('Incident deleted');
         },
-        error: (err) => this.toastr.error('Failed to delete incident')
+        error: () => this.toastr.error('Failed to delete incident')
       });
     }
-  }
+  });
+}
 
-  deleteAlert(alert: AlertUI): void {
-    if (confirm('Delete this alert?')) {
+ deleteAlert(alert: AlertUI): void {
+  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    width: '350px',
+    data: { message: 'Delete this alert?' }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
       this.alertsService.deleteAlert(alert.alertId).subscribe({
         next: () => {
           this.alerts = this.alerts.filter(a => a.alertId !== alert.alertId);
+
           if (this.selectedAlert?.alertId === alert.alertId) {
             this.selectedAlert = null;
           }
+
           this.toastr.success('Alert deleted');
         },
-        error: (err) => this.toastr.error('Failed to delete alert')
+        error: () => this.toastr.error('Failed to delete alert')
       });
     }
-  }
+  });
+}
 
   acknowledgeAlert(alert: AlertUI): void {
     this.alertsService.acknowledgeAlert(alert.alertId).subscribe({
@@ -422,21 +545,26 @@ selectedDoctorPatient: Patient | null = null;
 
   // ---------- Filtering and pagination ----------
   get stats() {
-    const alertsForStats = this.isDoctor
-      ? this.alerts.filter(a => a.targetId === this.currentUser?.userId)
-      : this.alerts;
+  const alertsForStats = this.isDoctor
+    ? this.alerts.filter(a => a.targetId === this.currentUser?.userId)
+    : this.alerts;
 
-    return {
-      total: alertsForStats.length,
-      active: alertsForStats.filter(a => a.status === 'SENT').length,
-      acknowledged: alertsForStats.filter(a => a.status === 'ACKNOWLEDGED').length,
-      resolved: alertsForStats.filter(a => a.status === 'RESOLVED').length,
-      critical: alertsForStats.filter(a => {
-        const inc = this.incidents.find(i => i.incidentId === a.incidentId);
-        return inc?.severity === 'CRITICAL' && a.status === 'SENT';
-      }).length,
-    };
-  }
+  const incidentsForStats = this.isDoctor
+    ? this.incidents.filter(i =>
+        new Set(alertsForStats.map(a => a.incidentId)).has(i.incidentId)
+      )
+    : this.incidents;
+
+  return {
+    total: alertsForStats.length,
+    active: incidentsForStats.filter(i => i.status === 'OPEN').length,
+    acknowledged: incidentsForStats.filter(i => i.status === 'ACKNOWLEDGED').length,
+    resolved: incidentsForStats.filter(i => i.status === 'RESOLVED').length,
+    critical: incidentsForStats.filter(i =>
+      (i.severity === 'CRITICAL' || i.severity === 'HIGH') && i.status === 'OPEN'
+    ).length,
+  };
+}
 
   get filteredIncidents(): IncidentUI[] {
     let filtered = this.incidents ?? [];
@@ -644,6 +772,259 @@ openIncidentDetailsDialog(incident: IncidentUI): void {
   this.dialog.open(IncidentDetailsDialogComponent, {
     width: '500px',
     data: { incident }
+  });
+}
+
+
+private startScheduler(): void {
+  if (!this.isBrowser || !this.isPatient) return;
+
+  // Get caregiver phone: first caregiverEmail resolved to a user with phone
+  let caregiverPhone = '';
+  const caregiverEmails = this.currentUser?.caregiverEmails || [];
+
+  const patientName = this.currentUser?.name || 'Patient';
+
+  const doStart = (phone: string) => {
+    this.alertScheduler.start(
+      () => this.alerts,
+      (incidentId: string) => {
+        const inc = this.incidents.find(i => i.incidentId === incidentId);
+        return inc?.title || 'Unknown incident';
+      },
+      phone,
+      patientName
+    );
+  };
+
+  if (caregiverEmails.length > 0) {
+    this.userService.getUserByEmail(caregiverEmails[0]).subscribe({
+      next: (caregiver) => {
+        caregiverPhone = caregiver.phone || '';
+        doStart(caregiverPhone);
+      },
+      error: () => doStart('')
+    });
+  } else {
+    doStart('');
+  }
+}
+
+
+onAlarmDismissed(alertId: any): void {
+  this.alertsService.resolveAlert(alertId).subscribe({
+    next: (updated: Alert) => {
+      const idx = this.alerts.findIndex(a => a.alertId === updated.alertId);
+      if (idx !== -1) this.alerts[idx] = this.enrichAlert(updated);
+      this.toastr.success('Alert marked as complete');
+    },
+    error: () => this.toastr.error('Could not resolve alert')
+  });
+}
+
+triggerSOS(): void {
+  if (!this.currentUser) return;
+
+  // Show popup immediately — don't wait for the API call
+  this.showSosPopup();
+
+  const caregiverEmails = this.currentUser.caregiverEmails || [];
+  if (caregiverEmails.length === 0) {
+    this.toastr.error('No caregiver connected to your account');
+    return;
+  }
+
+  this.userService.getUserByEmail(caregiverEmails[0]).subscribe({
+    next: (caregiver) => {
+      if (!caregiver.phone) {
+        this.toastr.error('Caregiver has no phone number on file');
+        return;
+      }
+
+      this.alertsService.triggerSosCall({
+        caregiverPhone: caregiver.phone,
+        patientName: this.currentUser!.name,
+        patientId: this.currentUser!.userId ?? ''
+      }).subscribe({
+        next: () => {
+          this.toastr.success('🚨 SOS call triggered — caregiver is being called now');
+        },
+        error: () => {
+          this.toastr.error('Failed to trigger SOS call');
+        }
+      });
+    },
+    error: () => {
+      this.toastr.error('Could not reach caregiver info');
+    }
+  });
+}
+
+private showSosPopup(): void {
+  // Clear any existing countdown to prevent overlap
+  if (this.sosCountdownTimer) {
+    clearInterval(this.sosCountdownTimer);
+    this.sosCountdownTimer = undefined;
+  }
+
+  this.sosPopupVisible = true;
+  this.sosCountdown = 10;
+
+  // Run outside Angular zone so setInterval doesn't trigger
+  // constant change detection on every tick
+  this.ngZone.runOutsideAngular(() => {
+    this.sosCountdownTimer = setInterval(() => {
+      this.ngZone.run(() => {
+        this.sosCountdown--;
+        if (this.sosCountdown <= 0) {
+          clearInterval(this.sosCountdownTimer);
+          this.sosCountdownTimer = undefined;
+          this.sosPopupVisible = false;
+        }
+      });
+    }, 1000);
+  });
+}
+
+acknowledgeIncident(incident: IncidentUI): void {
+  this.alertsService.acknowledgeIncident(incident.incidentId).subscribe({
+    next: (updated: Incident) => {
+      const idx = this.incidents.findIndex(i => i.incidentId === updated.incidentId);
+      if (idx !== -1) this.incidents[idx] = this.enrichIncident(updated);
+      this.toastr.success('Incident acknowledged');
+    },
+    error: () => this.toastr.error('Failed to acknowledge incident')
+  });
+}
+
+resolveIncident(incident: IncidentUI): void {
+  this.alertsService.resolveIncident(incident.incidentId).subscribe({
+    next: (updated: Incident) => {
+      const idx = this.incidents.findIndex(i => i.incidentId === updated.incidentId);
+      if (idx !== -1) this.incidents[idx] = this.enrichIncident(updated);
+      this.toastr.success('Incident resolved');
+    },
+    error: () => this.toastr.error('Failed to resolve incident')
+  });
+}
+
+openCheckPopup(incident: IncidentUI): void {
+  this.checkPopupPatientId = incident.patientId;
+  this.checkPopupPatientName = incident.patientName;
+  this.checkPopupStatus = 'idle';
+  this.checkPopupVisible = true;
+}
+
+closeCheckPopup(): void {
+  this.checkPopupVisible = false;
+}
+
+
+loadPatientActivityStatuses(): void {
+  if (!this.isCaregiver && !this.isDoctor) return;
+
+  const patientIds = this.isDoctor
+    ? this.doctorPatients.map(p => p.userId)
+    : [...(this.allowedPatientIds || [])];
+
+  if (patientIds.length === 0) return;
+
+  this.activityLoading = true;
+  this.alertsService.getBatchActivityStatus(patientIds).subscribe({
+    next: (statuses) => {
+      statuses.forEach(s => this.patientActivityStatuses.set(s.userId, s));
+      this.activityLoading = false;
+    },
+    error: () => this.activityLoading = false
+  });
+}
+
+getActivityStatus(patientId: string): any {
+  return this.patientActivityStatuses.get(patientId);
+}
+
+private startActivityRefresh(): void {
+  if (!this.isBrowser) return;
+  setInterval(() => this.loadPatientActivityStatuses(), 120000);
+}
+
+getUniquePatientIds(): string[] {
+  return [...new Set(this.incidents.map(i => i.patientId))];
+}
+
+getPatientNameById(patientId: string): string {
+  const incident = this.incidents.find(i => i.patientId === patientId);
+  return incident?.patientName || 'Unknown Patient';
+}
+
+private startDisconnectCheck(): void {
+  if (!this.isBrowser || (!this.isCaregiver && !this.isDoctor)) return;
+
+  const check = () => {
+    const patientIds = this.isDoctor
+      ? this.doctorPatients.map(p => p.userId)
+      : [...(this.allowedPatientIds || [])];
+
+    if (patientIds.length === 0) return;
+
+    this.alertsService.getBatchActivityStatus(patientIds).subscribe({
+      next: (statuses) => {
+        statuses.forEach(s => {
+          this.patientActivityStatuses.set(s.userId, s);
+          const wasOnline = this.disconnectedPatients.has(s.userId) === false;
+          const isOffline = !s.onlineNow;
+          const alreadyPinned = this.pinnedDisconnects.has(s.userId);
+          const popupOpen = this.disconnectPopup?.patientId === s.userId;
+
+          if (isOffline && !alreadyPinned && !popupOpen) {
+            const since = s.lastLogin ? new Date(s.lastLogin) : new Date();
+            const name = this.getPatientNameById(s.userId);
+            this.disconnectPopup = { patientId: s.userId, patientName: name, since };
+          } else if (!isOffline) {
+            // Patient came back online — remove pinned notification
+            this.pinnedDisconnects.delete(s.userId);
+            if (this.disconnectPopup?.patientId === s.userId) {
+              this.disconnectPopup = null;
+            }
+          }
+        });
+      }
+    });
+  };
+
+  check(); // immediate first check
+  this.disconnectCheckInterval = setInterval(check, 30000); // every 30s
+}
+
+dismissDisconnectPopup(): void {
+  if (!this.disconnectPopup) return;
+  this.pinnedDisconnects.set(this.disconnectPopup.patientId, {
+    patientName: this.disconnectPopup.patientName,
+    since: this.disconnectPopup.since,
+  });
+  this.disconnectPopup = null;
+}
+
+closePinnedDisconnect(patientId: string): void {
+  this.pinnedDisconnects.delete(patientId);
+}
+
+getPinnedDisconnectList(): { patientId: string; patientName: string; since: Date }[] {
+  return [...this.pinnedDisconnects.entries()]
+    .map(([patientId, v]) => ({ patientId, ...v }));
+}
+
+getMinutesSince(date: Date): string {
+  const mins = Math.round((Date.now() - new Date(date).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins === 1) return '1 min ago';
+  return `${mins} min ago`;
+}
+
+formatDisconnectDate(date: Date): string {
+  return new Date(date).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
 }
 }

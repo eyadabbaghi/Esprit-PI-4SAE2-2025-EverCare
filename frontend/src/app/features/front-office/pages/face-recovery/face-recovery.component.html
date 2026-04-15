@@ -1,0 +1,72 @@
+<div class="min-h-screen flex flex-col items-center justify-center"
+     style="background: rgba(10,0,30,0.97);">
+
+  <!-- WAITING (camera denied or loading) -->
+  <ng-container *ngIf="state === 'waiting'">
+    <div class="text-center space-y-6 p-8">
+      <div class="text-6xl animate-bounce">🚨</div>
+      <h1 class="text-3xl font-bold text-red-400">Patient Session Ended</h1>
+      <p class="text-purple-200">Please approach the camera to log back in automatically.</p>
+      <button (click)="startCameraAndScan()"
+        class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-10 rounded-2xl text-xl">
+        📷 Start Camera
+      </button>
+      <br/>
+      <button (click)="goToPasswordLogin()" class="text-sm text-gray-400 underline mt-2">
+        Use password instead
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- SCANNING / PROCESSING -->
+  <ng-container *ngIf="state === 'scanning' || state === 'processing'">
+    <div class="text-center space-y-6 p-8 w-full max-w-md">
+
+      <div class="text-5xl animate-pulse">🚨</div>
+      <h1 class="text-2xl font-bold text-red-400">Waiting for Patient...</h1>
+      <p class="text-purple-300 text-sm">
+        {{ state === 'processing' ? 'Verifying face...' : 'Scanning — please approach the camera' }}
+      </p>
+
+      <!-- Camera feed -->
+      <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden border-4
+                  border-purple-500 shadow-[0_0_40px_rgba(124,58,237,0.8)]">
+        <video #videoEl autoplay muted playsinline
+               class="w-full h-full object-cover"
+               style="transform: scaleX(-1);">
+        </video>
+
+        <!-- Processing overlay -->
+        <div *ngIf="state === 'processing'"
+             class="absolute inset-0 bg-purple-900/60 flex items-center justify-center">
+          <div class="text-4xl animate-spin">⚙️</div>
+        </div>
+
+        <!-- Scan line -->
+        <div *ngIf="state === 'scanning'"
+             class="absolute inset-0 pointer-events-none overflow-hidden">
+          <div class="scan-line"></div>
+        </div>
+      </div>
+
+      <!-- Attempt counter -->
+      <p class="text-gray-500 text-xs">
+        Scan attempts: {{ scanAttempts }} — camera is active and waiting
+      </p>
+
+      <button (click)="goToPasswordLogin()" class="text-sm text-gray-400 underline">
+        Use password instead
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- SUCCESS -->
+  <ng-container *ngIf="state === 'success'">
+    <div class="text-center space-y-6">
+      <div class="text-6xl">✅</div>
+      <h2 class="text-3xl font-bold text-green-400">Welcome back!</h2>
+      <p class="text-purple-200">Logging you in...</p>
+    </div>
+  </ng-container>
+
+</div>

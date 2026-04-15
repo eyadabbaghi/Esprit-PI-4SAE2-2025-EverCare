@@ -1,0 +1,198 @@
+// voice-sos.service.ts — continuous mode for reliable single-word trigger
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+
+let _globalInstanceActive = false;
+
+@Injectable({ providedIn: 'root' })
+export class VoiceSosService implements OnDestroy {
+  sosTrigger$ = new Subject<void>();
+
+  private recognition: any = null;
+  private isListening = false;
+  private restartTimeout: any = null;
+  private destroyed = false;
+  private ownsGlobalLock = false;
+  private networkErrorCount = 0;
+  private triggered = false; // prevent double-firing
+
+  private readonly TRIGGER_WORDS = [
+    'help', 'sos', 'emergency', 'urgent', 'au secours', 'aidez moi'
+  ];
+
+  constructor(private ngZone: NgZone) {}
+
+  start(): void {
+    if (_globalInstanceActive) {
+      console.log('[VoiceSOS] Already active — skipping');
+      return;
+    }
+    if (this.isListening || this.destroyed) return;
+
+    _globalInstanceActive = true;
+    this.ownsGlobalLock = true;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn('[VoiceSOS] SpeechRecognition not supported');
+      _globalInstanceActive = false;
+      this.ownsGlobalLock = false;
+      return;
+    }
+
+    console.log('[VoiceSOS] Starting recognition');
+    this.initRecognition(SpeechRecognition);
+  }
+
+  private initRecognition(SpeechRecognition: any): void {
+    if (this.destroyed || !this.ownsGlobalLock) return;
+
+    if (this.recognition) {
+      try { this.recognition.abort(); } catch (e) {}
+      this.recognition = null;
+    }
+
+    const rec = new SpeechRecognition();
+
+    // ── continuous + interimResults: keeps one long session open ──────────
+    // Fewer reconnections = fewer network errors = faster trigger detection.
+    // interimResults=true fires as you speak, not just when you pause,
+    // so "help" triggers immediately rather than after a silence timeout.
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+    rec.maxAlternatives = 1;
+
+    this.ngZone.runOutsideAngular(() => {
+
+      rec.onstart = () => {
+        console.log('[VoiceSOS] 🎤 onstart — mic open');
+        this.triggered = false; // reset on each new session
+      };
+
+      rec.onaudiostart = () => {
+        console.log('[VoiceSOS] 🔊 onaudiostart — audio captured ✅');
+      };
+
+      rec.onsoundstart = () => {
+        console.log('[VoiceSOS] 📢 onsoundstart — sound detected');
+      };
+
+      rec.onspeechstart = () => {
+        console.log('[VoiceSOS] 🗣️ onspeechstart — speech detected');
+      };
+
+      rec.onspeechend = () => {
+        console.log('[VoiceSOS] 🔇 onspeechend');
+      };
+
+      rec.onresult = (event: any) => {
+        this.networkErrorCount = 0; // reset on successful result
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript.toLowerCase().trim();
+          console.log('[VoiceSOS] 📝 Heard:', transcript,
+            event.results[i].isFinal ? '(final)' : '(interim)');
+
+          // Check both interim and final — trigger as soon as word is heard
+          const triggered = this.TRIGGER_WORDS.some(w => transcript.includes(w));
+
+          if (triggered && !this.triggered) {
+            this.triggered = true; // prevent firing multiple times per utterance
+            console.log('[VoiceSOS] 🚨 TRIGGER DETECTED:', transcript);
+            this.ngZone.run(() => this.sosTrigger$.next());
+
+            // Reset trigger flag after 5s so it can fire again if needed
+            setTimeout(() => { this.triggered = false; }, 5000);
+          }
+        }
+      };
+
+      rec.onnomatch = () => {
+        console.log('[VoiceSOS] ⚠️ onnomatch');
+      };
+
+      rec.onerror = (event: any) => {
+        console.warn('[VoiceSOS] ❌ onerror:', event.error);
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          console.error('[VoiceSOS] Permission denied — stopping permanently');
+          this.isListening = false;
+          _globalInstanceActive = false;
+          this.ownsGlobalLock = false;
+          return;
+        }
+
+        if (event.error === 'network') {
+          this.networkErrorCount++;
+          console.warn(`[VoiceSOS] Network error #${this.networkErrorCount} — ` +
+            `browser cannot reach Google speech servers. Will retry.`);
+        }
+        // All other errors (no-speech, aborted, network) → onend restarts
+      };
+
+      rec.onend = () => {
+        console.log('[VoiceSOS] onend — scheduling restart');
+        if (this.isListening && !this.destroyed && this.ownsGlobalLock) {
+          // Longer delay for network errors to avoid hammering Google's servers
+          const delay = this.networkErrorCount > 0 ? 3000 : 500;
+          this.restartTimeout = setTimeout(() => {
+            if (this.isListening && !this.destroyed && this.ownsGlobalLock) {
+              try {
+                rec.start();
+                console.log('[VoiceSOS] 🔄 Restarted');
+              } catch (e: any) {
+                if (e?.name === 'InvalidStateError') {
+                  console.warn('[VoiceSOS] InvalidStateError — reinitializing');
+                  this.recognition = null;
+                  this.initRecognition(SpeechRecognition);
+                } else {
+                  console.warn('[VoiceSOS] Restart error:', e);
+                }
+              }
+            }
+          }, delay);
+        }
+      };
+
+      try {
+        rec.start();
+        this.isListening = true;
+        console.log('[VoiceSOS] 🟢 Recognition started (continuous mode)');
+      } catch (e) {
+        console.error('[VoiceSOS] Failed to start:', e);
+        _globalInstanceActive = false;
+        this.ownsGlobalLock = false;
+      }
+
+    }); // end runOutsideAngular
+
+    this.recognition = rec;
+  }
+
+  stop(): void {
+    this.isListening = false;
+    this.triggered = false;
+    if (this.restartTimeout) {
+      clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
+    }
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch (e) {}
+      this.recognition = null;
+    }
+    if (this.ownsGlobalLock) {
+      _globalInstanceActive = false;
+      this.ownsGlobalLock = false;
+    }
+    console.log('[VoiceSOS] 🔴 Listener stopped');
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.stop();
+  }
+}

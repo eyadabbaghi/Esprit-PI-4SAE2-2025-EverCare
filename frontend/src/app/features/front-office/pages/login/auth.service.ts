@@ -26,8 +26,16 @@ export interface KeycloakTokenResponse {
   token_type: string;
 }
 
+export interface FaceLoginResponse {
+  token: string;
+  email?: string;
+  userId?: string;
+  user?: User;
+}
+
 export interface User {
   userId?: string;
+  keycloakId?: string;
   name: string;
   email: string;
   role: string;
@@ -79,6 +87,7 @@ export class AuthService {
    // New gateway URLs
  private apiUrl = 'http://localhost:8089/EverCare/auth';
   private usersUrl = 'http://localhost:8089/EverCare/users';
+  private clientSecret = 'SMqMpg1PpqG4UcMOJM1WgTM0zNK5AhZF';
 
   // Keycloak configuration – use a public client (no secret) created in Keycloak -islem
   //private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
@@ -105,19 +114,17 @@ export class AuthService {
     this.loadStoredUser();
   }
 
-  // ---------- Login with Keycloak (direct grant, public client) ----------
+  // ---------- Login with Keycloak ----------
   login(credentials: LoginRequest): Observable<KeycloakTokenResponse> {
     const body = new URLSearchParams();
     body.set('grant_type', 'password');
     body.set('client_id', this.clientId);
+    body.set('client_secret', this.clientSecret);
     body.set('username', credentials.email);
     body.set('password', credentials.password);
-    // No client_secret – this is a public client
 
     return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/x-www-form-urlencoded'
-      })
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
     }).pipe(
       tap(tokenResponse => this.handleTokenResponse(tokenResponse)),
       catchError(error => {
@@ -127,17 +134,17 @@ export class AuthService {
     );
   }
 
-  // ---------- Register (backend proxy) ----------
+  // ---------- Register ----------
   register(userData: RegisterRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/register`, userData).pipe(
       tap(() => this.toastr.success('Registration successful. Logging you in...')),
-      delay(3000), // Small delay to allow Keycloak to propagate the new user
+      delay(3000),
       switchMap(() => this.login({ email: userData.email, password: userData.password })),
       map(() => ({ message: 'Registration and login successful' }))
     );
   }
 
-  // ---------- Fetch current user (uses stored token) ----------
+  // ---------- Fetch current user ----------
   fetchCurrentUser(): Observable<User> {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
     return this.http.get<User>(`${this.apiUrl}/me`, { headers }).pipe(
@@ -150,10 +157,24 @@ export class AuthService {
     );
   }
 
+  completeFaceLogin(response: FaceLoginResponse): Observable<User> {
+    this.storeToken(response.token);
+
+    if (response.user) {
+      this.setCurrentUser(response.user);
+      return of(response.user);
+    }
+
+    return this.fetchCurrentUser();
+  }
+
   // ---------- Token handling ----------
   private handleTokenResponse(tokenResponse: KeycloakTokenResponse): void {
     this.storeToken(tokenResponse.access_token);
     this.fetchCurrentUser().subscribe({
+      next: (user) => {
+        this.http.post(`${this.apiUrl}/record-login`, {}).subscribe();
+      },
       error: (err) => console.error('Failed to fetch user after login', err)
     });
   }
@@ -171,14 +192,26 @@ export class AuthService {
     return null;
   }
 
-  logout(): void {
-    if (this.isBrowser) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('current_user');
+  // ---------- Logout ----------
+logout(triggerFaceRecovery: boolean = false): void {
+  const user = this.getCurrentUserValue();
+  const wasPatient = user?.role === 'PATIENT';
+
+  if (this.isBrowser) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+
+    if (wasPatient && triggerFaceRecovery && user?.keycloakId) {
+      localStorage.setItem('face_recovery_keycloakId', user.keycloakId);
+      localStorage.setItem('face_recovery_email', user.email || '');
+      localStorage.setItem('face_recovery_active', 'true');
+      localStorage.setItem('face_recovery_since', Date.now().toString());
     }
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
   }
+
+  this.currentUserSubject.next(null);
+  this.router.navigate(['/login']); // always go to /login
+}
 
   isAuthenticated(): boolean {
     return !!this.getToken();
@@ -195,7 +228,9 @@ export class AuthService {
 
   // ---------- Profile endpoints ----------
   updateProfile(data: UpdateUserRequest): Observable<any> {
-    return this.http.put<any>(`${this.usersUrl}/profile`, data);
+    return this.http.put<any>(`${this.usersUrl}/profile`, data, {
+      headers: new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`)
+    });
   }
 
   changePassword(data: ChangePasswordRequest): Observable<any> {
@@ -209,7 +244,9 @@ export class AuthService {
   uploadProfilePicture(file: File): Observable<{ profilePicture: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ profilePicture: string }>(`${this.usersUrl}/profile/picture`, formData);
+    return this.http.post<{ profilePicture: string }>(`${this.usersUrl}/profile/picture`, formData, {
+      headers: new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`)
+    });
   }
 
   removeProfilePicture(): Observable<any> {
@@ -235,6 +272,13 @@ export class AuthService {
   }
 
   getCurrentUserValue(): User | null {
-  return this.currentUserSubject.value;
-}
+    return this.currentUserSubject.value;
+  }
+
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    if (this.isBrowser) {
+      localStorage.setItem('current_user', JSON.stringify(user));
+    }
+  }
 }

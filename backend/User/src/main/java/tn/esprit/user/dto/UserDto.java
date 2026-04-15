@@ -32,4 +32,7 @@ public class UserDto {
     private Set<String> caregiverEmails;   // for patient
     private Set<String> patientEmails;
     private String doctorEmail;// for caregiver
+
+
+    private String keycloakId;
 }

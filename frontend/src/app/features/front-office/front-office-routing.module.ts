@@ -8,6 +8,8 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { FaceLoginComponent } from './pages/face-login/face-login.component';
+import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import {AppointmentsPageComponent} from '../appointments/pages/appointments-page/appointments-page.component';
 
 const routes: Routes = [
@@ -49,9 +51,11 @@ const routes: Routes = [
       {
         path: 'cognitive-stimulation',
         loadChildren: () => import('../cognitive-stimulation/cognitive-stimulation.module').then(m => m.CognitiveStimulationModule)
-      }
+      },
 
 
+      { path: 'setup-face-id', component: FaceSetupComponent },
+      { path: 'face-login', component: FaceLoginComponent },
     ],
   },
 ];

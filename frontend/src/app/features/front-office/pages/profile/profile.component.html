@@ -510,6 +510,29 @@
         </div>
       </div>
 
+      <!-- ✅ Face ID Card — placed here between Security and Danger Zone -->
+  <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6">
+    <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+      <span>👤</span> Face ID
+    </h3>
+    <div class="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg">
+      <div>
+        <p class="font-medium text-[#2D1B4E]">
+          {{ hasFaceId ? 'Face ID is configured' : 'Set up Face ID' }}
+        </p>
+        <p class="text-sm text-[#6B5B8C]">
+          {{ hasFaceId ? 'You can log in using facial recognition' : 'Enable faster login with facial recognition' }}
+        </p>
+      </div>
+      <button
+        class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] hover:bg-[#F3E8FF]"
+        (click)="goToFaceSetup()"
+      >
+        {{ hasFaceId ? 'Reconfigure' : 'Set Up' }}
+      </button>
+    </div>
+  </div>
+
       <!-- Danger zone -->
       <div class="border-2 border-red-200 bg-white rounded-2xl p-6">
         <h3 class="text-lg font-semibold text-red-600 flex items-center gap-2 mb-4">

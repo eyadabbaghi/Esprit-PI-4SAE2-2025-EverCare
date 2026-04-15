@@ -1,4 +1,3 @@
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,6 +17,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { IncidentDetailsDialogComponent } from './features/front-office/pages/alerts/incident-details-dialog.component';
 import { AuthInterceptor } from './features/front-office/pages/login/auth.interceptor';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import { AlertAlarmComponent } from './alert-alarm/alert-alarm.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { AuthInterceptor } from './features/front-office/pages/login/auth.interc
     AddIncidentDialogComponent,
     AddAlertDialogComponent,
     IncidentDetailsDialogComponent,
+    IncidentDetailsDialogComponent, // <-- add here
   ],
   imports: [
     BrowserModule,

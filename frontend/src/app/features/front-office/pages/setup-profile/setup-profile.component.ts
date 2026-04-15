@@ -181,7 +181,7 @@ export class SetupProfileComponent implements OnInit {
         if (response.user) {
           this.authService.fetchCurrentUser().subscribe();
         }
-        this.router.navigate(['/']);
+        this.router.navigate(['/setup-face-id']);
         this.isLoading = false;
       },
       error: (err) => {

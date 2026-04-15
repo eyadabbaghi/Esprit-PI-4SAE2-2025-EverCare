@@ -20,6 +20,9 @@ public class ConsultationTypeController {
 
     @PostMapping
     public ResponseEntity<ConsultationType> createConsultationType(@RequestBody ConsultationType consultationType) {
+        System.out.println("=== Received consultation type: " + consultationType);
+        System.out.println("Name: " + consultationType.getName());
+        System.out.println("Duration: " + consultationType.getDefaultDurationMinutes());
         ConsultationType createdType = consultationTypeService.createConsultationType(consultationType);
         return new ResponseEntity<>(createdType, HttpStatus.CREATED);
     }

@@ -49,7 +49,7 @@ public interface MedicamentRepository extends JpaRepository<Medicament, String>,
                 MAX(p.datePrescription)
             )
             FROM Medicament m
-            LEFT JOIN Prescription p ON p.medicament = m AND (:doctorId IS NULL OR p.doctor.userId = :doctorId)
+            LEFT JOIN Prescription p ON p.medicament = m AND (:doctorId IS NULL OR p.doctorId = :doctorId)
             GROUP BY m.medicamentId, m.nomCommercial, m.actif
             ORDER BY COUNT(p) DESC, m.nomCommercial ASC
             """)

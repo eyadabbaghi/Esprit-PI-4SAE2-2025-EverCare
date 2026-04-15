@@ -25,8 +25,8 @@ public final class PrescriptionSpecifications {
         LocalDate today = LocalDate.now();
         LocalDate expiringLimit = today.plusDays(7);
 
-        return Specification.where(equalsNested("patient", "userId", patientId))
-                .and(equalsNested("doctor", "userId", doctorId))
+        return Specification.where(equalsField("patientId", patientId))
+                .and(equalsField("doctorId", doctorId))
                 .and(equalsNested("medicament", "medicamentId", medicamentId))
                 .and(equalsField("statut", status))
                 .and(equalsField("renouvelable", renewable))

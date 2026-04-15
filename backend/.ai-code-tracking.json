@@ -2024,12 +2024,34 @@
       "aiTool": "GitHub Copilot",
       "detectionMethod": "REALTIME_SPEED_ANALYSIS",
       "lineCount": 8
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/appointment-service/src/main/java/everCare/appointments/entities/ConsultationType.java",
+      "timestamp": 1776259474990,
+      "startOffset": 721,
+      "endOffset": 800,
+      "codeContent": "    \n    private int alzheimerDurationMinutes; // Durée pour patients Alzheimer",
+      "aiProbability": 90,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 2
+    },
+    {
+      "filePath": "C:/Users/Administrateur/Desktop/My projects/PiDev/EverCare/backend/appointment-service/src/main/java/everCare/appointments/feign/UserFeignClient.java",
+      "timestamp": 1776260140520,
+      "startOffset": 683,
+      "endOffset": 983,
+      "codeContent": "/**\n * CHANGED: Added direct URL to bypass Eureka discovery for local testing.\n * Remove url and use name only when Eureka is properly configured.\n */\n@FeignClient(\n    name \u003d \"user-service\",\n    url \u003d \"http://localhost:8096\",\n    configuration \u003d everCare.appointments.config.FeignClientConfig.class\n",
+      "aiProbability": 95,
+      "aiTool": "GitHub Copilot",
+      "detectionMethod": "REALTIME_SPEED_ANALYSIS",
+      "lineCount": 9
     }
   ],
   "toolStats": {
     "GitHub Copilot": {
-      "usageCount": 184,
-      "totalLines": 7847
+      "usageCount": 186,
+      "totalLines": 7858
     }
   }
 }

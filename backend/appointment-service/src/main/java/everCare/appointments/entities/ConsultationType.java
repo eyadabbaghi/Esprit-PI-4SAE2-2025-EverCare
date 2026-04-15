@@ -33,7 +33,8 @@ public class ConsultationType {
     // ========== DURÉES ==========
 
     private int defaultDurationMinutes; // Durée standard
-
+    
+    private int alzheimerDurationMinutes; // Durée pour patients Alzheimer
 
     // ========== CONFIGURATION ==========
 

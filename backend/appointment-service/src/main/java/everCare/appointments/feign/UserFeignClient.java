@@ -16,7 +16,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "user-service", configuration = everCare.appointments.config.FeignClientConfig.class)
+/**
+ * CHANGED: Added direct URL to bypass Eureka discovery for local testing.
+ * Remove url and use name only when Eureka is properly configured.
+ */
+@FeignClient(
+    name = "user-service",
+    url = "http://localhost:8096",
+    configuration = everCare.appointments.config.FeignClientConfig.class
+)
 public interface UserFeignClient {
 
     /**

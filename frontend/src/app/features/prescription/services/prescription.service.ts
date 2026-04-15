@@ -36,7 +36,7 @@ export interface SafetyCheckResult {
 export class PrescriptionService {
 
   private readonly API_URL = `${environment.apiUrl}/prescriptions`;
-  private readonly CLINICAL_MEASUREMENT_URL = `${environment.apiUrl}/clinical-measurements`;
+  private readonly CLINICAL_MEASUREMENT_URL = `${environment.apiUrl}/api/clinical-measurements`;
 
   constructor(private http: HttpClient) {}
 

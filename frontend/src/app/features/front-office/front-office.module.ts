@@ -1,3 +1,12 @@
+/**
+ * FrontOfficeModule - Module for front-office feature components
+ * 
+ * CHANGED: Removed LoginComponent from declarations array (line 12 import removed).
+ * LoginComponent is now a standalone component and is lazy-loaded via FrontOfficeRoutingModule.
+ * 
+ * This was necessary to fix NG8002: Can't bind to 'formGroup' since it isn't a known property of 'form'.
+ * The standalone component now directly imports ReactiveFormsModule.
+ */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -9,7 +18,7 @@ import { ContactComponent } from './pages/contact/contact.component';
 import { ServicesComponent } from './pages/services/services.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
 import { FaqComponent } from './pages/faq/faq.component';
-import { LoginComponent } from './pages/login/login.component';
+// CHANGED: Removed LoginComponent import - now standalone and lazy-loaded
 import { RegisterComponent } from './pages/register/register.component';
 import { FeatureCardComponent } from './components/feature-card/feature-card.component';
 import { TestimonialComponent } from './components/testimonial/testimonial.component';

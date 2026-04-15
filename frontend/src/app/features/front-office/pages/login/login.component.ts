@@ -1,6 +1,19 @@
+/**
+ * LoginComponent - Login and Registration page
+ * 
+ * CHANGED: Converted to standalone component to fix NG8002 formGroup error.
+ * Previously was declared in FrontOfficeModule but needed ReactiveFormsModule
+ * imported directly in the component for formGroup directive to work.
+ * 
+ * Changes made:
+ * - Added `standalone: true` to @Component decorator
+ * - Added `imports: [CommonModule, ReactiveFormsModule]` to import required modules
+ * - Updated front-office-routing.module.ts to use loadComponent instead of direct import
+ * - Removed from FrontOfficeModule declarations array
+ */
 import { Component, NgZone, OnInit, OnDestroy, Inject, PLATFORM_ID, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, FaceLoginResponse, LoginRequest, RegisterRequest } from './auth.service';
@@ -32,7 +45,9 @@ type RecoveryState = 'scanning' | 'processing' | 'success';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild('videoEl') videoRef!: ElementRef<HTMLVideoElement>;

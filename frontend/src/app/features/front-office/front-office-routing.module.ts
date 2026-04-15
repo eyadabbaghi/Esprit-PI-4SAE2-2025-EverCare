@@ -1,7 +1,17 @@
+/**
+ * FrontOfficeRoutingModule - Routes for front-office module
+ * 
+ * CHANGED: Updated login route to use loadComponent for standalone LoginComponent.
+ * Previously used direct component import which caused formGroup binding errors.
+ * 
+ * Line 16: Changed from `{ path: 'login', component: LoginComponent }`
+ *          to `{ path: 'login', loadComponent: () => import(...).then(m => m.LoginComponent) }`
+ * 
+ * Also removed LoginComponent import at the top (line 4 in original) since it's now lazy-loaded.
+ */
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
-import { LoginComponent } from './pages/login/login.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ActivityDetailsComponent } from './pages/activity-details/activity-details.component';
 import { AlertsComponent } from './pages/alerts/alerts.component';
@@ -13,51 +23,52 @@ import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import {AppointmentsPageComponent} from '../appointments/pages/appointments-page/appointments-page.component';
 
 const routes: Routes = [
-  { path: 'setup-profile', component: SetupProfileComponent },
+{ path: 'setup-profile', component: SetupProfileComponent },
+// CHANGED: Using loadComponent for standalone LoginComponent
+{ path: 'login', loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent) },
 
-  {
-    path: '',
-    component: FrontOfficeLayoutComponent,
-    children: [
-      { path: '', component: HomeComponent },
-      { path: 'login', component: LoginComponent },
-      { path: 'activities', component: ActivitiesComponent },
-      { path: 'activities/:id', component: ActivityDetailsComponent },
-      { path: 'alerts', component: AlertsComponent },
-      { path: 'profile', component: ProfileComponent },
-      {
-        path: 'appointments',
-        loadChildren: () => import('../appointments/appointments.module').then(m => m.AppointmentsModule)
-      },
-      {
-        path: 'prescriptions',
-        loadChildren: () =>
-          import('../prescription/prescription.module')
-            .then(m => m.PrescriptionModule)
-      },
-      { path: 'medical-folder', redirectTo: 'medical-record', pathMatch: 'full' },
-      {
-        path: 'medical-record',
-        loadChildren: () => import('../medical-record/medical-record.module').then(m => m.MedicalRecordModule)
-      },
-      {
-        path: 'assessment',
-        loadChildren: () => import('../medical-record/assessment.module').then(m => m.AssessmentModule)
-      },
-      {
-        path: 'doctor',
-        loadChildren: () => import('../medical-record/doctor-reports.module').then(m => m.DoctorReportsModule)
-      },
-      {
-        path: 'cognitive-stimulation',
-        loadChildren: () => import('../cognitive-stimulation/cognitive-stimulation.module').then(m => m.CognitiveStimulationModule)
-      },
+{
+  path: '',
+  component: FrontOfficeLayoutComponent,
+  children: [
+    { path: '', component: HomeComponent },
+    { path: 'activities', component: ActivitiesComponent },
+    { path: 'activities/:id', component: ActivityDetailsComponent },
+    { path: 'alerts', component: AlertsComponent },
+    { path: 'profile', component: ProfileComponent },
+    {
+      path: 'appointments',
+      loadChildren: () => import('../appointments/appointments.module').then(m => m.AppointmentsModule)
+    },
+    {
+      path: 'prescriptions',
+      loadChildren: () =>
+      import('../prescription/prescription.module')
+      .then(m => m.PrescriptionModule)
+    },
+    { path: 'medical-folder', redirectTo: 'medical-record', pathMatch: 'full' },
+    {
+      path: 'medical-record',
+      loadChildren: () => import('../medical-record/medical-record.module').then(m => m.MedicalRecordModule)
+    },
+    {
+      path: 'assessment',
+      loadChildren: () => import('../medical-record/assessment.module').then(m => m.AssessmentModule)
+    },
+    {
+      path: 'doctor',
+      loadChildren: () => import('../medical-record/doctor-reports.module').then(m => m.DoctorReportsModule)
+    },
+    {
+      path: 'cognitive-stimulation',
+      loadChildren: () => import('../cognitive-stimulation/cognitive-stimulation.module').then(m => m.CognitiveStimulationModule)
+    },
 
 
-      { path: 'setup-face-id', component: FaceSetupComponent },
-      { path: 'face-login', component: FaceLoginComponent },
-    ],
-  },
+    { path: 'setup-face-id', component: FaceSetupComponent },
+    { path: 'face-login', component: FaceLoginComponent },
+  ],
+},
 ];
 
 @NgModule({

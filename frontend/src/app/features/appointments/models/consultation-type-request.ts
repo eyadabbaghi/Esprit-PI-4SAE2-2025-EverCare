@@ -1,4 +1,4 @@
-import {EnvironmentPreset} from './consultation-type';
+export type EnvironmentPreset = 'STANDARD' | 'CALM' | 'HIGH_CONTRAST' | 'DARK';
 
 export interface CreateConsultationTypeRequest {
   name: string;

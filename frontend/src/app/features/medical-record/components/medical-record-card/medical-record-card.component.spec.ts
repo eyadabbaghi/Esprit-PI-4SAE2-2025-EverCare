@@ -20,9 +20,14 @@ describe('MedicalRecordCardComponent', () => {
       id: 'mr-test',
       patientId: 'patient-test',
       bloodGroup: 'A+',
-      alzheimerStage: 'MILD',
-      histories: [],
-      documents: [],
+      alzheimerStage: 'EARLY',
+      allergies: null,
+      chronicDiseases: null,
+      emergencyContactName: null,
+      emergencyContactPhone: null,
+      active: true,
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
     };
     fixture.detectChanges();
   });

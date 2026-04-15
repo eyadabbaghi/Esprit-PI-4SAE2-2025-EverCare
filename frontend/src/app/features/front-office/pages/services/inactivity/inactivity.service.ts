@@ -1,9 +1,12 @@
 import { Injectable, NgZone, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class InactivityService {
+  private inactivityAlertSubject = new BehaviorSubject<void | null>(null);
+  inactivityAlert$: Observable<void | null> = this.inactivityAlertSubject.asObservable();
 
   private checkInterval: any = null;
   private readonly CHECK_EVERY_MS = 5_000;
@@ -35,6 +38,14 @@ export class InactivityService {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
     }
+  }
+
+  notifyRecovered(): void {
+    this.inactivityAlertSubject.next(null);
+  }
+
+  triggerInactivityAlert(): void {
+    this.inactivityAlertSubject.next();
   }
 
   private checkIfShouldRecover(): void {

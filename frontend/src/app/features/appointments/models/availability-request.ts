@@ -1,4 +1,5 @@
-import {DayOfWeek, RecurrenceType} from './availability';
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+export type RecurrenceType = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
 export interface CreateAvailabilityRequest {
   doctorId: string;

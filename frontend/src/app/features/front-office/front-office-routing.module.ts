@@ -5,6 +5,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ActivityDetailsComponent } from './pages/activity-details/activity-details.component';
 import { AlertsComponent } from './pages/alerts/alerts.component';
+
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
@@ -26,6 +27,7 @@ const routes: Routes = [
       { path: 'profile', component: ProfileComponent },
       { path: 'setup-face-id', component: FaceSetupComponent },
       { path: 'face-login', component: FaceLoginComponent },
+      { path: 'blog', loadChildren: () => import('../blog/blog.module').then(m => m.BlogModule) },
     ],
   },
 ];

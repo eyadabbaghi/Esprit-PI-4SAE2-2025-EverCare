@@ -49,9 +49,15 @@
           Medical Folder
         </button>
 
-        <button type="button" (click)="navigate('/blog')"
-          [ngClass]="isActive('/blog') ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
-          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition">
+        <!-- Blog -->
+        <button
+          type="button"
+          (click)="navigate('/blog')"
+          [ngClass]="isActive('/blog')
+            ? 'bg-[#F3E8FF] text-[#7C3AED]'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
+          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition"
+        >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
               d="M19 21H5a2 2 0 01-2-2V7l4-4h12a2 2 0 012 2v14a2 2 0 01-2 2z"/>

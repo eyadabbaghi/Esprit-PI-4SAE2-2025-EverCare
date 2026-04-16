@@ -104,10 +104,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
 
     // ← add this
-  this.faceService.hasFaceId().subscribe({
-    next: (res) => this.hasFaceId = res.hasFaceId,
-    error: () => this.hasFaceId = false
-  });
+    this.faceService.hasFaceId().subscribe({
+      next: (res) => this.hasFaceId = res.hasFaceId,
+      error: () => this.hasFaceId = false
+    });
   }
 
   ngOnDestroy(): void {
@@ -133,7 +133,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private loadConnectedUsers(): void {
     if (!this.user) return;
 
-    const fetchUser = (email: string) => 
+    const fetchUser = (email: string) =>
       this.authService.getUserByEmail(email).pipe(
         catchError(() => of({ email, name: email.split('@')[0] } as User))
       );
@@ -381,26 +381,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
- removeConnection(user: User): void {
-  let updateData: UpdateUserRequest = {};
-  if (user.role === 'DOCTOR') {
-    // Send the same email to toggle (backend will clear if it's the same)
-    updateData.doctorEmail = user.email;
-  } else {
-    // For caregiver/patient, send the email to toggle
-    updateData.connectedEmail = user.email;
-  }
-  this.authService.updateProfile(updateData).subscribe({
-    next: () => {
-      this.toastr.info(`${user.role} removed`);
-      this.authService.fetchCurrentUser().subscribe();
-    },
-    error: (err) => {
-      console.error(err);
-      this.toastr.error('Failed to remove connection');
+  removeConnection(user: User): void {
+    let updateData: UpdateUserRequest = {};
+    if (user.role === 'DOCTOR') {
+      // Send the same email to toggle (backend will clear if it's the same)
+      updateData.doctorEmail = user.email;
+    } else {
+      // For caregiver/patient, send the email to toggle
+      updateData.connectedEmail = user.email;
     }
-  });
-}
+    this.authService.updateProfile(updateData).subscribe({
+      next: () => {
+        this.toastr.info(`${user.role} removed`);
+        this.authService.fetchCurrentUser().subscribe();
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastr.error('Failed to remove connection');
+      }
+    });
+  }
 
   // Helpers
   getInitials(name: string | undefined): string {
@@ -427,7 +427,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   goToFaceSetup(): void {
-  this.router.navigate(['/setup-face-id']);
-}
-  
+    this.router.navigate(['/setup-face-id']);
+  }
+
 }

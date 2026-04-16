@@ -1,0 +1,131 @@
+- generic [ref=e4]:
+  - navigation [ref=e6]:
+    - generic [ref=e8]:
+      - button "EverCare logo EverCare" [ref=e9] [cursor=pointer]:
+        - img "EverCare logo" [ref=e10]
+        - generic [ref=e11]: EverCare
+      - generic [ref=e12]:
+        - button "Home" [ref=e395] [cursor=pointer]
+        - button "Activities" [ref=e396] [cursor=pointer]
+        - button "Appointments" [ref=e397] [cursor=pointer]
+        - button "Prescriptions" [ref=e398] [cursor=pointer]
+        - button "Medical Record" [ref=e399] [cursor=pointer]
+        - button "Cognitive Care" [ref=e400] [cursor=pointer]
+        - button "Alerts" [ref=e401] [cursor=pointer]
+        - button "Daily Me" [ref=e402] [cursor=pointer]
+        - button "Messages" [ref=e403] [cursor=pointer]
+      - generic [ref=e22]:
+        - button [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+        - button "A Ahmed DOCTOR" [ref=e131] [cursor=pointer]:
+          - generic [ref=e133]: A
+          - generic [ref=e134]:
+            - generic [ref=e135]: Ahmed
+            - generic [ref=e136]: DOCTOR
+        - button "Log In" [ref=e28] [cursor=pointer]
+  - main [ref=e29]:
+    - generic [ref=e271]:
+      - generic [ref=e272]:
+        - generic [ref=e273]:
+          - heading "Issue Prescription" [level=1] [ref=e274]
+          - paragraph [ref=e275]: Review patient data and create a new prescription.
+        - button "← Back" [ref=e276] [cursor=pointer]
+      - generic [ref=e277]:
+        - generic [ref=e278]:
+          - generic [ref=e279]: ✓
+          - generic [ref=e280]: 1. Review
+        - generic [ref=e282]:
+          - generic [ref=e283]: "2"
+          - generic [ref=e284]: 2. Select
+        - generic [ref=e286]:
+          - generic [ref=e287]: "3"
+          - generic [ref=e288]: 3. Review & Submit
+      - generic [ref=e289]:
+        - generic [ref=e290]:
+          - generic [ref=e291]: 📊
+          - heading "Patient Clinical Data" [level=3] [ref=e292]
+          - generic [ref=e293]: (from caregiver)
+        - generic [ref=e294]:
+          - generic [ref=e295]:
+            - paragraph [ref=e296]: Weight
+            - paragraph [ref=e297]: 50 kg
+          - generic [ref=e298]:
+            - paragraph [ref=e299]: Kidney (eGFR)
+            - paragraph [ref=e300]: "45"
+          - generic [ref=e301]:
+            - paragraph [ref=e302]: Liver Problem
+            - paragraph [ref=e303]: "Yes"
+          - generic [ref=e304]:
+            - paragraph [ref=e305]: Updated
+            - paragraph [ref=e306]: 4/15/26, 6:59 PM
+        - generic [ref=e307]:
+          - generic [ref=e308]:
+            - paragraph [ref=e309]: "Current Medications:"
+            - paragraph [ref=e310]: DOLIPRANE
+          - generic [ref=e311]:
+            - paragraph [ref=e312]: "Allergies:"
+            - paragraph [ref=e313]: POLLEN
+      - generic [ref=e315]:
+        - generic [ref=e316]:
+          - generic [ref=e317]:
+            - heading "New Prescription" [level=3] [ref=e318]
+            - paragraph [ref=e319]: Fill in the details below to issue a prescription
+          - button [ref=e320] [cursor=pointer]:
+            - img [ref=e321]
+        - generic [ref=e323]:
+          - generic [ref=e324]:
+            - generic [ref=e325]: Medication *
+            - generic [ref=e327]:
+              - generic [ref=e328]:
+                - generic:
+                  - img
+                - textbox "Search by name, INN, or CIP code..." [active] [ref=e329]: DOLIPRANE
+              - generic [ref=e405] [cursor=pointer]:
+                - generic [ref=e407]: 💊
+                - generic [ref=e408]:
+                  - paragraph [ref=e409]: Doliprane
+                  - paragraph [ref=e410]: Paracétamol — 1000mg
+                - generic [ref=e411]: Comprimé
+          - generic [ref=e330]:
+            - paragraph [ref=e331]: Treatment Period *
+            - generic [ref=e332]:
+              - button "7 days" [ref=e333] [cursor=pointer]
+              - button "15 days" [ref=e334] [cursor=pointer]
+              - button "30 days" [ref=e335] [cursor=pointer]
+              - button "60 days" [ref=e336] [cursor=pointer]
+              - button "90 days" [ref=e337] [cursor=pointer]
+            - generic [ref=e338]:
+              - generic [ref=e339]:
+                - generic [ref=e340]: Start Date
+                - textbox [ref=e341]: 2026-04-15
+              - generic [ref=e342]:
+                - generic [ref=e343]: End Date
+                - textbox [ref=e344]
+          - generic [ref=e345]:
+            - generic [ref=e346]: Dosage Instructions *
+            - textbox "e.g. 1 tablet morning and evening" [ref=e347]
+          - generic [ref=e348]:
+            - generic [ref=e349]: Additional Instructions
+            - textbox "e.g. Take with food" [ref=e350]
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - paragraph [ref=e354]: Renewable Prescription
+              - paragraph [ref=e355]: Allow this prescription to be renewed
+            - checkbox [ref=e357]
+          - button "🧠 Alzheimer Daily Schedule Add simplified daily reminders for the patient" [ref=e360] [cursor=pointer]:
+            - generic [ref=e361]:
+              - paragraph [ref=e362]: 🧠 Alzheimer Daily Schedule
+              - paragraph [ref=e363]: Add simplified daily reminders for the patient
+            - img [ref=e364]
+          - button "🔒 Private Doctor Notes Only visible to the doctor" [ref=e367] [cursor=pointer]:
+            - generic [ref=e368]:
+              - paragraph [ref=e369]: 🔒 Private Doctor Notes
+              - paragraph [ref=e370]: Only visible to the doctor
+            - img [ref=e371]
+        - generic [ref=e373]:
+          - button "Cancel" [ref=e374] [cursor=pointer]
+          - button "Issue Prescription" [ref=e375] [cursor=pointer]:
+            - generic [ref=e376]: Issue Prescription
+  - button "Open EverCare assistant" [ref=e118] [cursor=pointer]:
+    - generic [ref=e119]: 💬
+    - generic [ref=e120]: AI

@@ -1,18 +1,3 @@
-/**
- * NavigationComponent - Main navigation bar for front-office
- * 
- * CHANGED: Fixed severe TypeScript errors caused by duplicate method definitions.
- * The file had multiple copies of the same methods (ngOnInit, getActivityIcon, 
- * getActivityTitle, logout) which caused the class structure to be malformed.
- * 
- * This was a merge conflict issue that resulted in:
- * - Duplicate ngOnInit() methods (lines 71-87 and 88-154 in original)
- * - Duplicate getActivityIcon() methods
- * - Duplicate getActivityTitle() methods  
- * - Duplicate logout() methods
- * 
- * Fixed by removing all duplicate methods and keeping only one correct implementation.
- */
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -27,7 +12,10 @@ import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { NotificationService, Notification as ActivityNotification } from '../../../../core/services/notification.service';
+import {
+  NotificationService,
+  Notification as ActivityNotification,
+} from '../../../../core/services/notification.service';
 import { DailyTask } from '../../../daily-me/models/daily-task.model';
 import { DailyTaskService } from '../../../daily-me/services/daily-task.service';
 import { AuthService, User } from '../../pages/login/auth.service';
@@ -81,7 +69,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     private readonly dailyTaskService: DailyTaskService,
     private readonly cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private readonly platformId: object,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.userSub = this.authService.currentUser$.subscribe((user) => {
@@ -95,22 +83,22 @@ export class NavigationComponent implements OnInit, OnDestroy {
         const patientId = this.getPatientId(user);
         if (patientId) {
           this.startTaskWatcher(patientId);
+        } else {
+          this.stopTaskWatcher();
         }
       } else {
         this.stopTaskWatcher();
       }
     });
 
-    if (this.authService.getToken()) {
-      if (!this.authService.getCurrentUserValue()) {
-        this.authService.fetchCurrentUser().subscribe({
-          error: (err) => {
-            if (err.status === 401 && !this.authService.getToken()) {
-              this.authService.logout();
-            }
+    if (this.authService.getToken() && !this.authService.getCurrentUserValue()) {
+      this.authService.fetchCurrentUser().subscribe({
+        error: (err) => {
+          if (err?.status === 401) {
+            this.authService.logout();
           }
-        });
-      }
+        },
+      });
     }
 
     if (isPlatformBrowser(this.platformId)) {
@@ -123,14 +111,20 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.userSub?.unsubscribe();
     this.pollingSub?.unsubscribe();
     this.taskWatcherSub?.unsubscribe();
+
     if (this.alertTimer) {
       clearTimeout(this.alertTimer);
+      this.alertTimer = null;
     }
   }
 
+  // ─── Computed properties ──────────────────────────────────────────────────
+
   get unreadCount(): number {
-    return this.activityNotifications.filter((n) => !n.read).length
-      + this.taskNotifications.filter((n) => !n.read).length;
+    return (
+      this.activityNotifications.filter((n) => !n.read).length +
+      this.taskNotifications.filter((n) => !n.read).length
+    );
   }
 
   get cognitiveRoute(): string {
@@ -154,14 +148,17 @@ export class NavigationComponent implements OnInit, OnDestroy {
     ];
   }
 
+  // ─── Navigation ───────────────────────────────────────────────────────────
+
   isActive(route: string): boolean {
     if (route === '/') {
       return this.router.url === '/';
     }
-
-    return this.router.url === route
-      || this.router.url.startsWith(`${route}/`)
-      || this.router.url.startsWith(`${route}?`);
+    return (
+      this.router.url === route ||
+      this.router.url.startsWith(`${route}/`) ||
+      this.router.url.startsWith(`${route}?`)
+    );
   }
 
   navigate(route: string): void {
@@ -188,6 +185,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.notificationsOpen = false;
   }
 
+  // ─── UI toggles ───────────────────────────────────────────────────────────
+
   toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
@@ -205,6 +204,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
       this.notificationsOpen = false;
     }
   }
+
+  // ─── Notification actions ─────────────────────────────────────────────────
 
   markAllAsRead(): void {
     this.activityNotifications = this.activityNotifications.map((n) => ({ ...n, read: true }));
@@ -232,47 +233,58 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.navigate('/daily-me');
   }
 
+  // ─── Task alert banner ────────────────────────────────────────────────────
+
+  closeTaskAlert(): void {
+    this.showTaskAlert = false;
+    if (this.alertTimer) {
+      clearTimeout(this.alertTimer);
+      this.alertTimer = null;
+    }
+  }
+
+  // ─── Display helpers ──────────────────────────────────────────────────────
+
   getActivityIcon(action: string): string {
     switch (action) {
-      case 'EVICARE_ALERT':
-        return '🤖';
-      case 'CREATED':
-        return '🆕';
-      case 'UPDATED':
-        return '✏️';
-      case 'DELETED':
-        return '🗑️';
-      default:
-        return '📢';
+      case 'EVICARE_ALERT': return '🤖';
+      case 'CREATED':       return '🆕';
+      case 'UPDATED':       return '✏️';
+      case 'DELETED':       return '🗑️';
+      default:              return '📢';
     }
   }
 
   getActivityTitle(action: string): string {
     switch (action) {
-      case 'EVICARE_ALERT':
-        return 'EviCare prevention alert';
-      case 'CREATED':
-        return 'New activity available';
-      case 'UPDATED':
-        return 'Activity updated';
-      case 'DELETED':
-        return 'Activity removed';
-      default:
-        return 'Activity notification';
+      case 'EVICARE_ALERT': return 'EviCare prevention alert';
+      case 'CREATED':       return 'New activity available';
+      case 'UPDATED':       return 'Activity updated';
+      case 'DELETED':       return 'Activity removed';
+      default:              return 'Activity notification';
+    }
+  }
+
+  getSeverityClasses(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): string {
+    switch (severity) {
+      case 'CRITICAL': return 'bg-[#FDE2E7] text-[#C06C84]';
+      case 'HIGH':     return 'bg-[#FCE7F3] text-[#BE185D]';
+      case 'MEDIUM':   return 'bg-[#EDE9FE] text-[#7C3AED]';
+      case 'LOW':      return 'bg-[#DCFCE7] text-[#15803D]';
+      default:         return 'bg-[#F3F4F6] text-[#6B7280]';
     }
   }
 
   getInitials(name: string | undefined): string {
-    if (!name) {
-      return 'U';
-    }
-
+    if (!name) return 'U';
     return name
       .split(' ')
       .map((part) => part[0])
       .join('')
       .toUpperCase();
   }
+
+  // ─── Auth actions ─────────────────────────────────────────────────────────
 
   logout(): void {
     this.profileOpen = false;
@@ -286,44 +298,35 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.navigate('/profile');
   }
 
-  closeTaskAlert(): void {
-    this.showTaskAlert = false;
-    if (this.alertTimer) {
-      clearTimeout(this.alertTimer);
-      this.alertTimer = null;
-    }
-  }
-
-  protected getSeverityClasses(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): string {
-    switch (severity) {
-      case 'CRITICAL':
-        return 'bg-[#FDE2E7] text-[#C06C84]';
-      case 'HIGH':
-        return 'bg-[#FCE7F3] text-[#BE185D]';
-      case 'MEDIUM':
-        return 'bg-[#EDE9FE] text-[#7C3AED]';
-      case 'LOW':
-        return 'bg-[#DCFCE7] text-[#15803D]';
-      default:
-        return 'bg-[#F3F4F6] text-[#6B7280]';
-    }
-  }
+  // ─── Click-outside handler ────────────────────────────────────────────────
 
   @HostListener('document:click', ['$event.target'])
-  onClickOutside(target: HTMLElement): void {
-    const dropdown = document.getElementById('profile-dropdown');
-    const button = document.getElementById('profile-button');
-    const alertsPanel = document.getElementById('notifications-dropdown');
-    const alertsButton = document.getElementById('notifications-button');
+  onClickOutside(target: EventTarget | null): void {
+    if (!(target instanceof HTMLElement)) return;
 
-    if (dropdown && button && !dropdown.contains(target) && !button.contains(target)) {
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const profileButton   = document.getElementById('profile-button');
+    const alertsPanel     = document.getElementById('notifications-dropdown');
+    const alertsButton    = document.getElementById('notifications-button');
+
+    if (
+      profileDropdown && profileButton &&
+      !profileDropdown.contains(target) &&
+      !profileButton.contains(target)
+    ) {
       this.profileOpen = false;
     }
 
-    if (alertsPanel && alertsButton && !alertsPanel.contains(target) && !alertsButton.contains(target)) {
+    if (
+      alertsPanel && alertsButton &&
+      !alertsPanel.contains(target) &&
+      !alertsButton.contains(target)
+    ) {
       this.notificationsOpen = false;
     }
   }
+
+  // ─── Activity notifications ───────────────────────────────────────────────
 
   private startActivityPolling(): void {
     this.fetchActivityNotifications();
@@ -345,7 +348,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private mergeActivityNotifications(notifications: ActivityNotification[]): void {
-    const filtered = notifications.filter((n) => !this.clearedIds.has(n.id));
+    const filtered    = notifications.filter((n) => !this.clearedIds.has(n.id));
     const existingMap = new Map(this.activityNotifications.map((n) => [n.id, n.read]));
 
     const merged = filtered.map((n) => ({
@@ -362,58 +365,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadClearedIds(): void {
-    try {
-      const stored = localStorage.getItem(this.clearedKey);
-      if (!stored) {
-        return;
-      }
-
-      this.clearedIds = new Set(JSON.parse(stored) as string[]);
-    } catch {
-      this.clearedIds = new Set<string>();
-    }
-  }
-
-  private saveClearedIds(): void {
-    try {
-      localStorage.setItem(this.clearedKey, JSON.stringify([...this.clearedIds]));
-    } catch {
-      console.error('Failed to persist cleared notification IDs');
-    }
-  }
-
-  private shakeBell(): void {
-    this.bellShaking = false;
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      this.bellShaking = true;
-      this.cdr.detectChanges();
-
-      setTimeout(() => {
-        this.bellShaking = false;
-        this.cdr.detectChanges();
-      }, 800);
-    }, 10);
-  }
-
-  private getPatientId(user: User): string | null {
-    const candidate = (user as User & {
-      id?: string;
-      patientId?: string;
-      username?: string;
-      _id?: string;
-    }).id
-      ?? user.userId
-      ?? (user as User & { patientId?: string }).patientId
-      ?? (user as User & { _id?: string })._id
-      ?? (user as User & { username?: string }).username
-      ?? user.email
-      ?? null;
-
-    return candidate ? String(candidate).trim() : null;
-  }
+  // ─── Task watcher ─────────────────────────────────────────────────────────
 
   private startTaskWatcher(patientId: string): void {
     this.stopTaskWatcher();
@@ -437,24 +389,20 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private checkTasksDue(tasks: DailyTask[]): void {
-    const now = Date.now();
-    const windowMs = 60000;
+    const now       = Date.now();
+    const windowMs  = 60000;
 
     tasks.forEach((task) => {
       const dueMs = this.getTaskDueMs(task);
-      if (!dueMs || Math.abs(dueMs - now) > windowMs) {
-        return;
-      }
+      if (!dueMs || Math.abs(dueMs - now) > windowMs) return;
 
-      const dayKey = this.todayKey();
+      const dayKey    = this.todayKey();
       const uniqueKey = `task_notified_${dayKey}_${task.id}_${task.scheduledTime}`;
-      if (localStorage.getItem(uniqueKey) === '1') {
-        return;
-      }
+      if (localStorage.getItem(uniqueKey) === '1') return;
 
       localStorage.setItem(uniqueKey, '1');
 
-      const title = (task.title || 'Task').trim();
+      const title   = (task.title || 'Task').trim();
       const message = `Time to do: ${title}`;
 
       this.showInstantTaskAlert(title, message);
@@ -483,26 +431,33 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private buildTodayMsFromHHmm(hhmm: string): number | null {
-    if (!hhmm) {
-      return null;
-    }
-
+    if (!hhmm) return null;
     const [hours, minutes] = hhmm.split(':').map(Number);
-    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-      return null;
-    }
-
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     return date.getTime();
   }
 
   private todayKey(): string {
-    const date = new Date();
-    const year = date.getFullYear();
+    const date  = new Date();
+    const year  = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const day   = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private openTaskAlert(title: string, message: string): void {
+    this.taskAlertTitle   = title;
+    this.taskAlertMessage = message;
+    this.showTaskAlert    = true;
+
+    if (this.alertTimer) clearTimeout(this.alertTimer);
+
+    this.alertTimer = setTimeout(() => {
+      this.showTaskAlert = false;
+      this.alertTimer    = null;
+    }, 6000);
   }
 
   private showInstantTaskAlert(title: string, body: string): void {
@@ -519,18 +474,55 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
-  private openTaskAlert(title: string, message: string): void {
-    this.taskAlertTitle = title;
-    this.taskAlertMessage = message;
-    this.showTaskAlert = true;
+  // ─── Persistence ──────────────────────────────────────────────────────────
 
-    if (this.alertTimer) {
-      clearTimeout(this.alertTimer);
+  private loadClearedIds(): void {
+    try {
+      const stored = localStorage.getItem(this.clearedKey);
+      if (!stored) return;
+      this.clearedIds = new Set(JSON.parse(stored) as string[]);
+    } catch {
+      this.clearedIds = new Set<string>();
     }
+  }
 
-    this.alertTimer = setTimeout(() => {
-      this.showTaskAlert = false;
-      this.alertTimer = null;
-    }, 6000);
+  private saveClearedIds(): void {
+    try {
+      localStorage.setItem(this.clearedKey, JSON.stringify([...this.clearedIds]));
+    } catch {
+      console.error('Failed to persist cleared notification IDs');
+    }
+  }
+
+  // ─── Bell animation ───────────────────────────────────────────────────────
+
+  private shakeBell(): void {
+    this.bellShaking = false;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.bellShaking = true;
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.bellShaking = false;
+        this.cdr.detectChanges();
+      }, 800);
+    }, 10);
+  }
+
+  // ─── Patient ID resolution ────────────────────────────────────────────────
+
+  private getPatientId(user: User): string | null {
+    const candidate =
+      (user as User & { id?: string }).id ??
+      user.userId ??
+      (user as User & { patientId?: string }).patientId ??
+      (user as User & { _id?: string })._id ??
+      (user as User & { username?: string }).username ??
+      user.email ??
+      null;
+
+    return candidate ? String(candidate).trim() : null;
   }
 }

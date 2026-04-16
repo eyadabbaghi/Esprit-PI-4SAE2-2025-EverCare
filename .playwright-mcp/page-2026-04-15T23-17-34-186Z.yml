@@ -1,0 +1,52 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e175]:
+    - generic [ref=e176]:
+      - generic [ref=e177]:
+        - img "EverCare logo" [ref=e178]
+        - heading "EverCare" [level=1] [ref=e179]
+      - heading "Caring for your loved ones, every day" [level=2] [ref=e180]
+      - paragraph [ref=e181]: A comprehensive elderly care platform designed to support patients, caregivers, and healthcare professionals with warmth and compassion.
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - img [ref=e185]
+          - generic [ref=e187]:
+            - heading "Daily Care Support" [level=3] [ref=e188]
+            - paragraph [ref=e189]: Track moods, medications, and daily activities
+        - generic [ref=e190]:
+          - img [ref=e192]
+          - generic [ref=e194]:
+            - heading "Safety Alerts" [level=3] [ref=e195]
+            - paragraph [ref=e196]: Real-time incident tracking and emergency notifications
+        - generic [ref=e197]:
+          - img [ref=e199]
+          - generic [ref=e201]:
+            - heading "Connected Care" [level=3] [ref=e202]
+            - paragraph [ref=e203]: Coordinate appointments and medical records seamlessly
+    - generic [ref=e205]:
+      - generic [ref=e206]:
+        - heading "Welcome" [level=2] [ref=e207]
+        - paragraph [ref=e208]: Sign in to your account or create a new one
+      - generic [ref=e210]:
+        - button "Sign In" [ref=e211] [cursor=pointer]
+        - button "Sign Up" [ref=e212] [cursor=pointer]
+      - generic [ref=e218]: Or continue with
+      - generic [ref=e220]:
+        - generic [ref=e221]:
+          - text: Email
+          - generic [ref=e222]:
+            - img [ref=e223]
+            - textbox "your.email@example.com" [ref=e226]: testplaywright@test.com
+        - generic [ref=e227]:
+          - text: Password
+          - generic [ref=e228]:
+            - img [ref=e229]
+            - textbox "••••••••" [ref=e232]: Test@1234
+        - button "Sign In" [ref=e233] [cursor=pointer]
+        - generic [ref=e238]: or
+        - button "Continue with Face ID" [ref=e239] [cursor=pointer]:
+          - img [ref=e240]
+          - generic [ref=e243]: Continue with Face ID
+  - generic [ref=e246]:
+    - button "Close" [ref=e247] [cursor=pointer]: ×
+    - generic "Error" [ref=e248]
+    - alert "Login failed. Please check your credentials." [ref=e249]

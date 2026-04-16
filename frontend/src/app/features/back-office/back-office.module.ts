@@ -20,7 +20,8 @@ import { MedicamentsAdminComponent } from './pages/medicaments-admin/medicaments
 import { MedicamentEditorPlaceholderComponent } from './pages/medicament-editor-placeholder/medicament-editor-placeholder.component';
 import { MedicamentsAnalyticsComponent } from './pages/medicaments-analytics/medicaments-analytics.component';
 import { MedicamentDetailsComponent } from './pages/medicament-details/medicament-details.component';
-
+import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component';
+import { LucideAngularModule, FileText, Plus, Trash2, Edit, Eye } from 'lucide-angular';
 // Import the image cropper standalone component
 import { ImageCropperComponent } from 'ngx-image-cropper';
 
@@ -42,14 +43,16 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
     MedicamentsAdminComponent,
     MedicamentEditorPlaceholderComponent,
     MedicamentsAnalyticsComponent,
-    MedicamentDetailsComponent
+    MedicamentDetailsComponent,
+    BlogAdminComponent   // <-- ajouté
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     BackOfficeRoutingModule,
-    ImageCropperComponent // standalone component (Angular >=14+)
+    ImageCropperComponent, // standalone component (Angular >=14+)
+    LucideAngularModule.pick({ FileText, Plus, Trash2, Edit, Eye })
   ]
 })
 export class BackOfficeModule { }

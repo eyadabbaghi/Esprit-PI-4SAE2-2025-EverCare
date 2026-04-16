@@ -69,7 +69,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     private readonly dailyTaskService: DailyTaskService,
     private readonly cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private readonly platformId: object,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.userSub = this.authService.currentUser$.subscribe((user) => {
@@ -140,6 +140,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'cognitive-stimulation', label: 'Cognitive Care', route: this.cognitiveRoute },
       { id: 'alerts', label: 'Alerts', route: '/alerts' },
       { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
+      { id: 'blog', label: 'Blog', route: '/blog' },  // ← NOUVEAU : lien vers le blog
       { id: 'communication', label: 'Messages', route: '/communication' },
     ];
   }
@@ -165,6 +166,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
       '/profile',
       '/communication',
       '/daily-me',
+      '/blog',           // ← AJOUT : la route blog est protégée (nécessite connexion)
     ];
 
     if (protectedRoutes.includes(route) && !this.user) {
@@ -527,4 +529,4 @@ export class NavigationComponent implements OnInit, OnDestroy {
       this.alertTimer = null;
     }, 6000);
   }
-}
+} 

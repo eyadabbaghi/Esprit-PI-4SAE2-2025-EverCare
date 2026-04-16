@@ -81,7 +81,15 @@ public class ApiGatewayApplication {
                         .path("/EverCare/face/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
                         .uri("http://localhost:8085"))
+                
+
+              // Blog service
+                .route("blog-service", r -> r
+                        .path("/EverCare/blog-service/**")
+                        .filters(f -> f.rewritePath("/EverCare/blog-service/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://blog-service"))
                 .build();
+               
     }
 
 

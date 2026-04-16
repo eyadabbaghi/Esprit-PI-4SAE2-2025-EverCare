@@ -10,7 +10,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
 import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
-import {AppointmentsPageComponent} from '../appointments/pages/appointments-page/appointments-page.component';
+import { AppointmentsPageComponent } from '../appointments/pages/appointments-page/appointments-page.component';
 
 const routes: Routes = [
   { path: 'setup-profile', component: SetupProfileComponent },
@@ -52,8 +52,10 @@ const routes: Routes = [
         path: 'cognitive-stimulation',
         loadChildren: () => import('../cognitive-stimulation/cognitive-stimulation.module').then(m => m.CognitiveStimulationModule)
       },
-
-
+      {
+        path: 'blog',
+        loadChildren: () => import('../blog/blog.module').then(m => m.BlogModule)
+      },
       { path: 'setup-face-id', component: FaceSetupComponent },
       { path: 'face-login', component: FaceLoginComponent },
     ],
@@ -64,4 +66,5 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class FrontOfficeRoutingModule {}
+export class FrontOfficeRoutingModule {
+} 

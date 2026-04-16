@@ -3,12 +3,46 @@
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">Issue Prescription</h1>
-        <p class="mt-1 text-[#6B5B8C]">Prescription context is preloaded from the selected patient and appointment.</p>
+        <p class="mt-1 text-[#6B5B8C]">Review patient data and create a new prescription.</p>
       </div>
 
       <button type="button" (click)="goBack()" class="rounded-lg border border-[#C4B5FD] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
-        Back
+        ← Back
       </button>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="flex items-center justify-center gap-2 md:gap-4">
+      <div class="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+        <span class="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>
+        <span>1. Review</span>
+      </div>
+      <div class="w-8 h-0.5 bg-gray-300"></div>
+      <div class="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+        <span class="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">2</span>
+        <span>2. Select</span>
+      </div>
+      <div class="w-8 h-0.5 bg-gray-300"></div>
+      <div class="flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-sm">
+        <span class="w-5 h-5 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">3</span>
+        <span>3. Review & Submit</span>
+      </div>
+    </div>
+
+    <!-- Patient Active Medications Summary -->
+    <div *ngIf="patientActiveMedications.length > 0" class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-lg">💊</span>
+        <h3 class="font-semibold text-[#2D1B4E]">Current Active Medications</h3>
+        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{{ patientActiveMedications.length }}</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <div *ngFor="let rx of patientActiveMedications" class="bg-white px-3 py-2 rounded-lg border border-blue-100 text-sm">
+          <p class="font-medium text-[#2D1B4E]">{{ rx.medicament?.nomCommercial || rx.medicament?.denominationCommuneInternationale }}</p>
+          <p class="text-xs text-gray-500">{{ rx.posologie }} • Until {{ rx.dateFin | date:'shortDate' }}</p>
+        </div>
+      </div>
+      <p class="text-xs text-blue-600 mt-2">⚠️ New prescriptions will be checked against these medications.</p>
     </div>
 
     <!-- Clinical Measurement Display -->
@@ -49,132 +83,103 @@
     </div>
 
     <!-- Safety Warning Banner -->
-    <div *ngIf="safetyWarning && safetyWarning.level === 'WARNING'" 
+<!-- Safety Warning - Alert only -->
+    <div *ngIf="safetyWarning && (safetyWarning.level === 'WARNING' || safetyWarning.level === 'MILD')"
          class="rounded-lg p-4 mb-4 border border-yellow-300 bg-yellow-50">
       <div class="flex items-start gap-3">
         <span class="text-2xl">⚠️</span>
         <div class="flex-1">
-          <span class="font-bold text-sm uppercase text-yellow-700">WARNING</span>
+          <span class="font-bold text-sm uppercase text-yellow-700">ALERTE</span>
           <p class="text-sm text-yellow-700">{{ safetyWarning.message }}</p>
-          <p *ngIf="safetyWarning.suggestedDose" class="text-sm text-gray-600 mt-1">
-            Suggested: {{ safetyWarning.suggestedDose }}
-          </p>
-          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
-            <p class="text-xs font-medium text-gray-600">Interactions:</p>
-            <ul class="text-xs text-yellow-700 list-disc list-inside">
-              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
+          <div *ngIf="safetyWarning.warnings?.length" class="mt-2">
+            <ul class="text-xs text-yellow-600 list-disc list-inside">
+              <li *ngFor="let w of safetyWarning.warnings">{{ w }}</li>
             </ul>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Drug Interaction Warning - Mild (Yellow) -->
-    <div *ngIf="safetyWarning && safetyWarning.level === 'MILD'" 
-         class="rounded-lg p-4 mb-4 border border-yellow-200 bg-yellow-50">
-      <div class="flex items-start gap-3">
-        <span class="text-2xl">🟡</span>
-        <div class="flex-1">
-          <span class="font-bold text-sm uppercase text-yellow-700">MILD INTERACTION</span>
-          <p class="text-sm text-yellow-700">{{ safetyWarning.message }}</p>
-          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
-            <ul class="text-xs text-yellow-700 list-disc list-inside">
-              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <p class="text-xs text-gray-500 mt-2">Le médecin est conscient de ces alertes.</p>
     </div>
 
     <!-- Drug Interaction Warning - Moderate (Orange) -->
-    <div *ngIf="safetyWarning && safetyWarning.level === 'MODERATE'" 
+<!-- Moderate Warning - Alert only -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'MODERATE'"
          class="rounded-lg p-4 mb-4 border border-orange-300 bg-orange-50">
       <div class="flex items-start gap-3">
-        <span class="text-2xl">🟠</span>
+        <span class="text-2xl">⚠️</span>
         <div class="flex-1">
-          <span class="font-bold text-sm uppercase text-orange-700">MODERATE INTERACTION</span>
+          <span class="font-bold text-sm uppercase text-orange-700">ALERTE</span>
           <p class="text-sm text-orange-700">{{ safetyWarning.message }}</p>
-          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
-            <ul class="text-xs text-orange-700 list-disc list-inside">
-              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
+          <div *ngIf="safetyWarning.warnings?.length" class="mt-2">
+            <ul class="text-xs text-orange-600 list-disc list-inside">
+              <li *ngFor="let w of safetyWarning.warnings">{{ w }}</li>
             </ul>
           </div>
         </div>
       </div>
+      <p class="text-xs text-gray-500 mt-2">Le médecin est conscient de ces alertes.</p>
     </div>
 
-    <!-- Drug Interaction Warning - Severe (Red) -->
-    <div *ngIf="safetyWarning && safetyWarning.level === 'SEVERE'" 
-         class="rounded-lg p-4 mb-4 border border-red-400 bg-red-100">
-      <div class="flex items-start gap-3">
-        <span class="text-2xl">🔴</span>
-        <div class="flex-1">
-          <span class="font-bold text-sm uppercase text-red-700">SEVERE INTERACTION</span>
-          <p class="text-sm text-red-700">{{ safetyWarning.message }}</p>
-          <div *ngIf="safetyWarning.interactions?.length" class="mt-2">
-            <ul class="text-xs text-red-700 list-disc list-inside">
-              <li *ngFor="let i of safetyWarning.interactions">{{ i }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Critical Warning Banner -->
-    <div *ngIf="safetyWarning && safetyWarning.level === 'CRITICAL'" 
+    <!-- Severe Warning - Alert only -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'SEVERE'"
          class="rounded-lg p-4 mb-4 border border-red-300 bg-red-50">
       <div class="flex items-start gap-3">
-        <span class="text-2xl">🚫</span>
+        <span class="text-2xl">⚠️</span>
         <div class="flex-1">
-          <span class="font-bold text-sm uppercase text-red-700">CRITICAL</span>
+          <span class="font-bold text-sm uppercase text-red-700">ALERTE</span>
           <p class="text-sm text-red-700">{{ safetyWarning.message }}</p>
-          <div *ngIf="safetyWarning.contraindications?.length" class="mt-2">
-            <p class="text-xs font-medium text-gray-600">Contraindications:</p>
-            <ul class="text-xs text-red-700 list-disc list-inside">
-              <li *ngFor="let c of safetyWarning.contraindications">{{ c }}</li>
+          <div *ngIf="safetyWarning.warnings?.length" class="mt-2">
+            <ul class="text-xs text-red-600 list-disc list-inside">
+              <li *ngFor="let w of safetyWarning.warnings">{{ w }}</li>
             </ul>
           </div>
         </div>
       </div>
+      <p class="text-xs text-gray-500 mt-2">Le médecin est conscient de ces alertes.</p>
+    </div>
 
-      <!-- Override Justification Input for CRITICAL -->
-      <div class="mt-4 pt-4 border-t border-red-200">
-        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">
-          Override Justification <span class="text-red-500">*</span>
-        </label>
-        <textarea [(ngModel)]="overrideJustification" rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                  placeholder="Provide medical justification for overriding this safety warning..."></textarea>
-        <p class="text-xs text-gray-500 mt-1">This override will be logged for audit purposes.</p>
+    <!-- Critical Warning Banner - Alert only, no blocking -->
+    <div *ngIf="safetyWarning && safetyWarning.level === 'CRITICAL'"
+         class="rounded-lg p-4 mb-4 border border-red-300 bg-red-50">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div class="flex-1">
+          <span class="font-bold text-sm uppercase text-red-700">ALERTE</span>
+          <p class="text-sm text-red-700">{{ safetyWarning.message }}</p>
+          <div *ngIf="safetyWarning.warnings?.length" class="mt-2">
+            <ul class="text-xs text-red-600 list-disc list-inside">
+              <li *ngFor="let w of safetyWarning.warnings">{{ w }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Le médecin est conscient de ces alertes.</p>
+    </div>
+
+    <!-- Error Message Display (below warnings) -->
+    <div *ngIf="errorMessage && !safetyWarning" class="rounded-lg border border-red-300 bg-red-50 px-4 py-3">
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-red-600">{{ errorMessage }}</p>
+        <button type="button" (click)="resetForm()" class="ml-4 px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200">
+          Try Again
+        </button>
       </div>
     </div>
 
-    <div *ngIf="errorMessage && !safetyWarning" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-      {{ errorMessage }}
-    </div>
-
-    <div class="grid gap-4 md:grid-cols-2">
-      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-        <p class="text-sm text-[#6B5B8C]">Patient ID</p>
-        <p class="mt-2 break-all font-medium text-[#2D1B4E]">{{ patientId || 'Missing patient context' }}</p>
-      </div>
-
-      <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-        <p class="text-sm text-[#6B5B8C]">Appointment ID</p>
-        <p class="mt-2 break-all font-medium text-[#2D1B4E]">{{ appointmentId || 'Standalone prescription' }}</p>
-      </div>
-    </div>
-
+    <!-- No patient context error -->
     <div *ngIf="!patientId" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800">
       A patient context is required to issue a prescription. Start this flow from an appointment or a patient-specific action.
     </div>
 
+    <!-- Prescription Form -->
     <app-prescription-form
       *ngIf="currentUser?.userId && patientId"
       [patientId]="patientId"
       [doctorId]="currentUser?.userId || ''"
       [appointmentId]="appointmentId"
+      [overrideJustification]="overrideJustification"
       (onSubmit)="submit($event)"
+      (onCheckSafety)="onCheckSafety($event)"
       (onClose)="goBack()">
     </app-prescription-form>
   </div>

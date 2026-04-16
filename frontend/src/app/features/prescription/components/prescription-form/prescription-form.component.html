@@ -11,7 +11,7 @@
       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
-    </button>
+    </button>//
   </div>
 
   <div class="p-5 space-y-6">
@@ -235,16 +235,29 @@
       Cancel
     </button>
 
-    <button (click)="submit()"
-            [disabled]="!isFormValid() || loading"
-            class="px-6 py-2 text-sm font-medium text-white bg-[#7C3AED] rounded-lg
-                   hover:bg-[#6D28D9] transition-colors disabled:opacity-50
-                   disabled:cursor-not-allowed flex items-center space-x-2">
-      <div *ngIf="loading"
-           class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
-      </div>
-      <span>{{ loading ? 'Saving...' : 'Issue Prescription' }}</span>
-    </button>
+    <div class="flex items-center space-x-3">
+      <button (click)="checkSafety()"
+              [disabled]="checking || loading"
+              class="px-4 py-2 text-sm font-medium text-[#7C3AED] border border-[#7C3AED] rounded-lg
+                     hover:bg-[#F3E8FF] transition-colors disabled:opacity-50
+                     disabled:cursor-not-allowed flex items-center space-x-2">
+        <div *ngIf="checking"
+             class="w-4 h-4 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin">
+        </div>
+        <span>{{ checking ? 'Checking...' : 'Check Safety' }}</span>
+      </button>
+
+      <button (click)="submit()"
+              [disabled]="loading"
+              class="px-6 py-2 text-sm font-medium text-white bg-[#7C3AED] rounded-lg
+                     hover:bg-[#6D28D9] transition-colors disabled:opacity-50
+                     disabled:cursor-not-allowed flex items-center space-x-2">
+        <div *ngIf="loading"
+             class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
+        </div>
+        <span>{{ loading ? 'Saving...' : 'Issue Prescription' }}</span>
+      </button>
+    </div>
   </div>
 
 </div>

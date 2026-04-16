@@ -11,12 +11,15 @@ export class PrescriptionFormComponent implements OnInit {
   @Input() patientId!: string;
   @Input() doctorId!: string;
   @Input() appointmentId?: string;
+  @Input() overrideJustification: string = '';
 
   @Output() onSubmit = new EventEmitter<PrescriptionRequest>();
+  @Output() onCheckSafety = new EventEmitter<PrescriptionRequest>();
   @Output() onClose = new EventEmitter<void>();
 
   selectedMedicament: Medicament | null = null;
   loading: boolean = false;
+  checking: boolean = false;
   errorMessage: string = '';
 
   form: PrescriptionRequest = {
@@ -34,7 +37,8 @@ export class PrescriptionFormComponent implements OnInit {
     priseMidi: '',
     priseSoir: '',
     resumeSimple: '',
-    notesMedecin: ''
+    notesMedecin: '',
+    overrideJustification: ''
   };
 
   // Duration presets for quick selection
@@ -53,7 +57,6 @@ export class PrescriptionFormComponent implements OnInit {
     this.form.patientId = this.patientId;
     this.form.doctorId = this.doctorId;
     this.form.appointmentId = this.appointmentId || '';
-
     // Default start date to today
     const today = new Date();
     this.form.dateDebut = this.formatDate(today);
@@ -109,7 +112,21 @@ export class PrescriptionFormComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
+
+    this.form.overrideJustification = this.overrideJustification;
     this.onSubmit.emit(this.form);
+  }
+
+  checkSafety(): void {
+    if (!this.isFormValid()) {
+      this.errorMessage = 'Please fill in all required fields before checking safety.';
+      return;
+    }
+
+    this.checking = true;
+    this.errorMessage = '';
+    this.form.overrideJustification = this.overrideJustification;
+    this.onCheckSafety.emit(this.form);
   }
 
   private formatDate(date: Date): string {

@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 public class PrescriptionSafetyServiceImpl implements PrescriptionSafetyService {
 
     private final DrugInteractionChecker drugInteractionChecker;
+    private final everCare.appointments.repositories.PrescriptionRepository prescriptionRepository;
 
     @Override
     public SafetyCheckResult checkSafety(PrescriptionRequestDTO prescription, ClinicalMeasurement measurement) {
@@ -427,5 +428,65 @@ public class PrescriptionSafetyServiceImpl implements PrescriptionSafetyService 
                 .level("INFO")
                 .message("No interactions with current prescriptions.")
                 .build();
+    }
+
+    @Override
+    public SafetyCheckResult checkTherapeuticDuplicates(PrescriptionRequestDTO prescription,
+                                                    String patientId,
+                                                    Medicament newMedicament) {
+        if (patientId == null || newMedicament == null) {
+            return SafetyCheckResult.builder()
+                    .isSafe(true)
+                    .level("INFO")
+                    .message("No therapeutic duplicates to check.")
+                    .build();
+        }
+
+        String newDci = newMedicament.getDenominationCommuneInternationale();
+        if (newDci == null || newDci.isBlank()) {
+            return SafetyCheckResult.builder()
+                    .isSafe(true)
+                    .level("INFO")
+                    .message("No therapeutic duplicates to check.")
+                    .build();
+        }
+
+        List<everCare.appointments.entities.Prescription> activeRx = prescriptionRepository.findActiveByPatientId(patientId);
+        List<String> duplicates = new ArrayList<>();
+
+        for (var existingRx : activeRx) {
+            if (existingRx.getMedicament() == null) continue;
+            if (!isDateOverlap(existingRx.getDateDebut(), existingRx.getDateFin(),
+                          prescription.getDateDebut(), prescription.getDateFin())) continue;
+
+            String existingDci = existingRx.getMedicament().getDenominationCommuneInternationale();
+            if (existingDci != null && existingDci.equalsIgnoreCase(newDci)) {
+                duplicates.add(existingRx.getMedicament().getNomCommercial() + " (" + existingDci + ")");
+            }
+        }
+
+        if (!duplicates.isEmpty()) {
+            return SafetyCheckResult.builder()
+                    .isSafe(false)
+                    .level("MODERATE")
+                    .message("Therapeutic duplicate: Patient already has " + 
+                            String.join(", ", duplicates) + " with same active ingredient.")
+                    .interactions(duplicates)
+                    .build();
+        }
+
+        return SafetyCheckResult.builder()
+                .isSafe(true)
+                .level("INFO")
+                .message("No therapeutic duplicates found.")
+                .build();
+    }
+
+    private boolean isDateOverlap(java.time.LocalDate start1, java.time.LocalDate end1,
+                            java.time.LocalDate start2, java.time.LocalDate end2) {
+        if (start1 == null || end1 == null || start2 == null || end2 == null) {
+            return true;
+        }
+        return !end1.isBefore(start2) && !start1.isAfter(end2);
     }
 }

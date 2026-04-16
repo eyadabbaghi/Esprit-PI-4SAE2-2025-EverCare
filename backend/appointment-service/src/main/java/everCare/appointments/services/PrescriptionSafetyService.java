@@ -21,4 +21,8 @@ public interface PrescriptionSafetyService {
     SafetyCheckResult checkDrugInteractionsWithPrescriptions(PrescriptionRequestDTO prescription, 
                                                          String patientId,
                                                          Medicament newMedicament);
+
+    SafetyCheckResult checkTherapeuticDuplicates(PrescriptionRequestDTO prescription,
+                                               String patientId,
+                                               Medicament newMedicament);
 }

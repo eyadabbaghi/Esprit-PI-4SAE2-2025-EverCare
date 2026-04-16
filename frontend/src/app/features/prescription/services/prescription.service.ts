@@ -28,6 +28,18 @@ export interface SafetyCheckResult {
   suggestedDose?: string;
   interactions?: string[];
   contraindications?: string[];
+  warnings?: string[];
+}
+
+export interface SafetyCheckResponse {
+  isValid: boolean;
+  level: 'SAFE' | 'WARNING' | 'CRITICAL';
+  message: string;
+  warnings?: string[];
+  requiresJustification: boolean;
+  suggestedDose?: string;
+  interactions?: string[];
+  contraindications?: string[];
 }
 
 @Injectable({
@@ -54,6 +66,12 @@ export class PrescriptionService {
 
   createPrescription(request: PrescriptionRequest): Observable<Prescription> {
     return this.http.post<Prescription>(this.API_URL, request);
+  }
+
+  // ========== CHECK SAFETY ==========
+
+  checkPrescriptionSafety(request: PrescriptionRequest): Observable<SafetyCheckResponse> {
+    return this.http.post<SafetyCheckResponse>(`${this.API_URL}/check-safety`, request);
   }
 
   // ========== READ ==========
@@ -222,7 +240,7 @@ export class PrescriptionService {
       },
       error: (error) => {
         console.error('PDF download error:', error);
-        
+
         // Handle different error types
         if (error.status === 500) {
           throw new Error('PDF generation is currently unavailable. Please try again later or contact support.');
@@ -241,9 +259,9 @@ export class PrescriptionService {
     return this.http.post<void>(`${this.API_URL}/${prescriptionId}/send-pdf`, {}).pipe(
       catchError((error) => {
         console.error('Email send error:', error);
-        
+
         let errorMessage = 'Failed to send email. Please try again.';
-        
+
         if (error.status === 500) {
           errorMessage = 'Email service is currently unavailable. Please try again later.';
         } else if (error.status === 404) {
@@ -251,7 +269,7 @@ export class PrescriptionService {
         } else if (error.status === 403) {
           errorMessage = 'You do not have permission to send this prescription.';
         }
-        
+
         return throwError(() => new Error(errorMessage));
       })
     );

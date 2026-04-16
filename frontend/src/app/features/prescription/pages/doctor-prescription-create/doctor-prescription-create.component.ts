@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { PrescriptionRequest } from '../../models/prescription.model';
-import { PrescriptionService, ClinicalMeasurementResponse, SafetyCheckResult } from '../../services/prescription.service';
+import { PrescriptionService, ClinicalMeasurementResponse, SafetyCheckResult, SafetyCheckResponse } from '../../services/prescription.service';
 
 @Component({
   selector: 'app-doctor-prescription-create',
@@ -17,11 +17,18 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
   appointmentId = '';
   loading = false;
   errorMessage = '';
-  
+
   clinicalMeasurement: ClinicalMeasurementResponse | null = null;
   safetyWarning: SafetyCheckResult | null = null;
   overrideJustification = '';
   showCriticalWarning = false;
+  patientActiveMedications: any[] = [];
+
+  // Check Safety state
+  checkLoading = false;
+  checkPassed = false;
+  checkDone = false;
+  lastCheckedRequest: PrescriptionRequest | null = null;
 
   constructor(
     private authService: AuthService,
@@ -51,6 +58,7 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
 
       this.currentUser = user;
       this.loadClinicalMeasurement();
+      this.loadPatientActiveMedications();
     });
   }
 
@@ -61,7 +69,6 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
           this.clinicalMeasurement = data;
         },
         error: () => {
-          // No clinical measurement found, try latest for patient
           if (this.patientId) {
             this.prescriptionService.getLatestClinicalMeasurement(this.patientId).subscribe({
               next: (data) => this.clinicalMeasurement = data,
@@ -76,6 +83,32 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
         error: () => {}
       });
     }
+  }
+
+  loadPatientActiveMedications(): void {
+    if (this.patientId) {
+      this.prescriptionService.getActivePrescriptionsByPatient(this.patientId).subscribe({
+        next: (data) => {
+          this.patientActiveMedications = data;
+        },
+        error: () => {
+          this.patientActiveMedications = [];
+        }
+      });
+    }
+  }
+
+  clearMedicationAndGoBack(): void {
+    this.safetyWarning = null;
+    this.overrideJustification = '';
+    this.showCriticalWarning = false;
+  }
+
+  resetForm(): void {
+    this.errorMessage = '';
+    this.safetyWarning = null;
+    this.overrideJustification = '';
+    this.showCriticalWarning = false;
   }
 
   submit(request: PrescriptionRequest): void {
@@ -104,10 +137,11 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
   }
 
   createPrescriptionWithSafetyCheck(request: PrescriptionRequest): void {
-    if (this.safetyWarning && this.safetyWarning.level === 'CRITICAL' && !this.overrideJustification.trim()) {
+    // Require safety check first if clinical measurement exists (to ensure doctor reviewed the data)
+    if (this.clinicalMeasurement && !this.checkDone) {
       this.loading = false;
-      this.showCriticalWarning = true;
-      this.errorMessage = 'CRITICAL safety issue. Override justification is required.';
+      this.errorMessage = 'Please click "Check Safety" first to review alerts.';
+      this.toastr.warning('Please check safety first to review alerts.');
       return;
     }
 
@@ -152,5 +186,51 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
     }
 
     this.router.navigate(['/prescriptions/doctor/manage']);
+  }
+
+  // Handle Check Safety event from form
+  onCheckSafety(request: PrescriptionRequest): void {
+    this.checkLoading = true;
+    this.checkPassed = false;
+    this.checkDone = false;
+    this.safetyWarning = null;
+    this.showCriticalWarning = false;
+    this.errorMessage = '';
+    this.lastCheckedRequest = request;
+
+    this.prescriptionService.checkPrescriptionSafety(request).subscribe({
+      next: (result) => {
+        this.checkLoading = false;
+        this.checkDone = true;
+        this.lastCheckedRequest = request;
+
+        // Always allow submission - just show warnings as alerts
+        this.checkPassed = true;
+        
+        if (result.level === 'SAFE') {
+          this.safetyWarning = null;
+          this.toastr.success('Safety check passed.');
+        } else {
+          // Show warnings but don't block
+          this.safetyWarning = {
+            isSafe: false,
+            level: result.level === 'CRITICAL' ? 'CRITICAL' : 'WARNING',
+            message: result.message,
+            warnings: result.warnings
+          };
+          if (result.level === 'WARNING') {
+            this.toastr.warning('Warnings detected. Doctor is aware.', 'Safety Alert');
+          } else if (result.level === 'CRITICAL') {
+            this.toastr.error('Critical alerts - doctor is aware.', 'Safety Alert');
+          }
+        }
+      },
+      error: (err) => {
+        this.checkLoading = false;
+        this.checkDone = false;
+        this.errorMessage = 'Safety check failed. Please try again.';
+        this.toastr.error('Safety check failed. Please try again.');
+      }
+    });
   }
 }

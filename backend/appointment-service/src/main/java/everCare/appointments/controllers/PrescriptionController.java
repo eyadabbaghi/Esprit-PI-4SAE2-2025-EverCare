@@ -12,6 +12,7 @@ import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
 import everCare.appointments.dtos.PrescriptionRequestDTO;
 import everCare.appointments.dtos.PrescriptionResponseDTO;
 import everCare.appointments.dtos.SafetyCheckResult;
+import everCare.appointments.dtos.SafetyCheckResponseDTO;
 import everCare.appointments.dtos.StatusCountDTO;
 import everCare.appointments.dtos.TopMedicamentDTO;
 import everCare.appointments.dtos.PatientSimpleDTO;
@@ -25,6 +26,7 @@ import everCare.appointments.services.PrescriptionPdfService;
 import everCare.appointments.services.PrescriptionAccessControlService;
 import everCare.appointments.services.PrescriptionService;
 import everCare.appointments.services.PrescriptionSafetyService;
+import everCare.appointments.repositories.PrescriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -60,6 +62,7 @@ public class PrescriptionController {
     private final ClinicalMeasurementService clinicalMeasurementService;
     private final PrescriptionSafetyService prescriptionSafetyService;
     private final MedicamentService medicamentService;
+    private final PrescriptionRepository prescriptionRepository;
 
     // ========== CREATE ==========
 
@@ -87,16 +90,8 @@ public class PrescriptionController {
                 var safetyResult = prescriptionSafetyService.checkSafetyWithDTO(
                         request, measurement, medicament);
 
-                if (!safetyResult.isSafe() && "CRITICAL".equals(safetyResult.getLevel()) 
-                        && (request.getOverrideJustification() == null || request.getOverrideJustification().isBlank())) {
-                    return ResponseEntity.badRequest().body(java.util.Map.of(
-                            "safetyWarning", safetyResult,
-                            "error", "CRITICAL safety issue. Override justification required."
-                    ));
-                }
-
                 if (!safetyResult.isSafe()) {
-                    log.warn("Safety check warning for prescription: {}", safetyResult.getMessage());
+                    log.warn("Safety check warning: {}", safetyResult.getMessage());
                 }
 
                 var interactionResult = prescriptionSafetyService.checkDrugInteractionsWithPrescriptions(
@@ -104,6 +99,22 @@ public class PrescriptionController {
 
                 if (!interactionResult.isSafe()) {
                     log.warn("Drug interaction check: {}", interactionResult.getMessage());
+                }
+
+                boolean hasOverlap = prescriptionRepository.existsOverlappingPrescription(
+                        request.getPatientId(),
+                        medicament,
+                        request.getDateDebut(),
+                        request.getDateFin(),
+                        null);
+                if (hasOverlap) {
+                    log.warn("Overlap check: This medication (or same active ingredient) is already prescribed for overlapping dates.");
+                }
+
+                var therapeuticResult = prescriptionSafetyService.checkTherapeuticDuplicates(
+                        request, request.getPatientId(), medicament);
+                if (!therapeuticResult.isSafe()) {
+                    log.warn("Therapeutic duplicate: {}", therapeuticResult.getMessage());
                 }
             }
         }
@@ -127,6 +138,132 @@ public class PrescriptionController {
                         request.getNotesMedecin()
                 )
         );
+        return ResponseEntity.ok(response);
+    }
+
+    // ========== CHECK SAFETY ==========
+
+    /**
+     * Check prescription safety without creating the prescription.
+     * Allows doctor to verify safety before submitting.
+     */
+    @PostMapping("/check-safety")
+    public ResponseEntity<?> checkPrescriptionSafety(@RequestBody PrescriptionRequestDTO request) {
+        // Validate required fields first
+        if (request.getPatientId() == null || request.getPatientId().isBlank()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "isValid", false,
+                    "level", "CRITICAL",
+                    "message", "Patient ID is required.",
+                    "requiresJustification", false
+            ));
+        }
+
+        if (request.getMedicamentId() == null || request.getMedicamentId().isBlank()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "isValid", false,
+                    "level", "CRITICAL",
+                    "message", "Medication is required.",
+                    "requiresJustification", false
+            ));
+        }
+
+        if (request.getDateDebut() == null || request.getDateFin() == null) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "isValid", false,
+                    "level", "CRITICAL",
+                    "message", "Start and end dates are required.",
+                    "requiresJustification", false
+            ));
+        }
+
+        if (request.getPosologie() == null || request.getPosologie().isBlank()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of(
+                    "isValid", false,
+                    "level", "CRITICAL",
+                    "message", "Dosage instructions are required.",
+                    "requiresJustification", false
+            ));
+        }
+
+        var warnings = new java.util.ArrayList<String>();
+        String level = "SAFE";
+        boolean requiresJustification = false;
+        String message = "All checks passed.";
+
+        ClinicalMeasurementResponseDTO measurement = null;
+        if (request.getAppointmentId() != null) {
+            measurement = clinicalMeasurementService.getByAppointmentId(request.getAppointmentId());
+        }
+        if (measurement == null && request.getPatientId() != null) {
+            measurement = clinicalMeasurementService.getLatestForPatient(request.getPatientId());
+        }
+
+        // Run safety checks if we have clinical measurement + medication
+        if (measurement != null && request.getMedicamentId() != null) {
+            var medicamentOpt = medicamentService.getMedicamentById(request.getMedicamentId());
+            if (medicamentOpt.isPresent()) {
+                var medicament = medicamentOpt.get();
+
+                // 1. Weight-based dosage check
+                var safetyResult = prescriptionSafetyService.checkSafetyWithDTO(request, measurement, medicament);
+                if (!safetyResult.isSafe()) {
+                    warnings.add(safetyResult.getMessage());
+                    if (safetyResult.getLevel().equals("CRITICAL")) {
+                        level = "CRITICAL";
+                        requiresJustification = true;
+                    } else if (!level.equals("CRITICAL") && safetyResult.getLevel().equals("WARNING")) {
+                        level = "WARNING";
+                    }
+                }
+
+                // 2. Drug interactions check
+                var interactionResult = prescriptionSafetyService.checkDrugInteractionsWithPrescriptions(
+                        request, request.getPatientId(), medicament);
+                if (!interactionResult.isSafe()) {
+                    warnings.add(interactionResult.getMessage());
+                    if (interactionResult.getLevel().equals("CRITICAL")) {
+                        level = "CRITICAL";
+                        requiresJustification = true;
+                    } else if (level.equals("SAFE")) {
+                        level = "WARNING";
+                    }
+                }
+
+                // 3. Overlap check
+                boolean hasOverlap = prescriptionRepository.existsOverlappingPrescription(
+                        request.getPatientId(), medicament, request.getDateDebut(), request.getDateFin(), null);
+                if (hasOverlap) {
+                    String overlapMsg = "This medication (or same active ingredient) is already prescribed for overlapping dates.";
+                    warnings.add(overlapMsg);
+                    level = "CRITICAL";
+                    requiresJustification = true;
+                }
+
+                // 4. Therapeutic duplicate check
+                var therapeuticResult = prescriptionSafetyService.checkTherapeuticDuplicates(
+                        request, request.getPatientId(), medicament);
+                if (!therapeuticResult.isSafe()) {
+                    warnings.add(therapeuticResult.getMessage());
+                    if (level.equals("SAFE")) {
+                        level = "WARNING";
+                    }
+                }
+            }
+        }
+
+        if (!warnings.isEmpty()) {
+            message = String.join("; ", warnings);
+        }
+
+        var response = SafetyCheckResponseDTO.builder()
+                .isValid(true)
+                .level(level)
+                .message(message)
+                .warnings(warnings)
+                .requiresJustification(requiresJustification)
+                .build();
+
         return ResponseEntity.ok(response);
     }
 
@@ -906,4 +1043,5 @@ public class PrescriptionController {
         long days = java.time.temporal.ChronoUnit.DAYS.between(dateDebut, dateFin);
         return days + " days";
     }
+
 }

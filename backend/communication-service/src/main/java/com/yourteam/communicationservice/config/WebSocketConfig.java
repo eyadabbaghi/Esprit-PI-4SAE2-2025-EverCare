@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final JwtDecoder jwtDecoder; // Injecté automatiquement grâce à ta config OAuth2
+    private final JwtDecoder jwtDecoder;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -43,21 +43,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
-                // Si c'est une tentative de connexion
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
-
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String token = authHeader.substring(7);
-
-                        // Validation du token avec Keycloak
                         Jwt jwt = jwtDecoder.decode(token);
-
-                        // Création de l'objet d'authentification pour Spring Security
                         JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
-
-                        // On attache l'utilisateur à la session WebSocket
                         accessor.setUser(authentication);
                     }
                 }

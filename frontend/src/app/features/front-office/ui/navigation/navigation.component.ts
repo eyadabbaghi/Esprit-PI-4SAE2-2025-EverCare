@@ -145,6 +145,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'alerts', label: 'Alerts', route: '/alerts' },
       { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
       { id: 'communication', label: 'Messages', route: '/communication' },
+      { id: 'blog', label: 'Blog', route: '/blog' },
     ];
   }
 
@@ -172,6 +173,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
       '/profile',
       '/communication',
       '/daily-me',
+      '/blog',  
     ];
 
     if (protectedRoutes.includes(route) && !this.user) {

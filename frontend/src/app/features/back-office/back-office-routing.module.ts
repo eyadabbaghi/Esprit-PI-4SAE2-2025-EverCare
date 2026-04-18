@@ -14,6 +14,7 @@ import { MedicamentEditorPlaceholderComponent } from './pages/medicament-editor-
 import { MedicamentsAnalyticsComponent } from './pages/medicaments-analytics/medicaments-analytics.component';
 import { MedicamentDetailsComponent } from './pages/medicament-details/medicament-details.component';
 import { AdminGuard } from '../../core/guards/admin.guard';
+import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component'; // Import du nouveau composant
 
 const routes: Routes = [
   {
@@ -29,6 +30,7 @@ const routes: Routes = [
       { path: 'medicaments/new', component: MedicamentEditorPlaceholderComponent },
       { path: 'medicaments/:id', component: MedicamentDetailsComponent },
       { path: 'medicaments/:id/edit', component: MedicamentEditorPlaceholderComponent },
+      { path: 'blog', component: BlogAdminComponent },
       { path: 'users', component: UsersComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'reports', component: ReportsComponent },

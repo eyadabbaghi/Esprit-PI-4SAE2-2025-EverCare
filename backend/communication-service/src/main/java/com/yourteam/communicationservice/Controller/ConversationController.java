@@ -1,7 +1,7 @@
 package com.yourteam.communicationservice.Controller;
 
 import com.yourteam.communicationservice.entity.Conversation;
-import com.yourteam.communicationservice.service.conversationservice;
+import com.yourteam.communicationservice.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -14,19 +14,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ConversationController {
 
-    private final conversationservice conversationService;
+    private final ConversationService conversationService;
 
     @PostMapping
-    public ResponseEntity<Conversation> createConversation(@RequestBody Conversation conversation, JwtAuthenticationToken token) {
-        // Optionnel : Forcer l'un des participants à être l'utilisateur connecté
-        // conversation.setUser1Id(token.getName());
+    public ResponseEntity<Conversation> createConversation(@RequestBody Conversation conversation,
+                                                           JwtAuthenticationToken token) {
+        String email = token.getToken().getClaimAsString("email");
+        if (email != null) email = email.trim().toLowerCase();
+        conversation.setUser1Id(email);
+        if (conversation.getUser2Id() != null) {
+            conversation.setUser2Id(conversation.getUser2Id().trim().toLowerCase());
+        }
         return ResponseEntity.ok(conversationService.createConversation(conversation));
     }
 
-    // Récupérer les conversations de l'utilisateur CONNECTÉ (plus sécurisé)
     @GetMapping("/my")
     public ResponseEntity<List<Conversation>> getMyConversations(JwtAuthenticationToken token) {
-        return ResponseEntity.ok(conversationService.getConversationsByUserId(token.getName()));
+        String email = token.getToken().getClaimAsString("email");
+        if (email != null) email = email.trim().toLowerCase();
+        return ResponseEntity.ok(conversationService.getConversationsByUserId(email));
     }
 
     @GetMapping("/{id}")

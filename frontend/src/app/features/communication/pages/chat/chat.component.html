@@ -17,7 +17,7 @@
             <option value="" disabled selected>
               {{ currentUser?.role === 'PATIENT' ? 'Contacter un spécialiste...' : 'Contacter un patient...' }}
             </option>
-            <option *ngFor="let user of availableUsersForNewChat" [value]="user.userId">
+            <option *ngFor="let user of availableUsersForNewChat" [value]="user.email">
               {{ user.name }} ({{ user.role }})
             </option>
           </select>
@@ -46,7 +46,7 @@
              class="m-2 p-4 bg-white rounded-2xl border border-purple-100 cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all group">
           <div class="flex justify-between items-center mb-2">
             <span class="text-xs font-bold text-purple-600">
-              {{ msg.senderId === currentUser?.userId ? 'Moi' : 'Interlocuteur' }}
+              {{ msg.senderId === currentUser?.email ? 'Moi' : 'Interlocuteur' }}
             </span>
             <span class="text-[10px] text-gray-400">{{ msg.sentAt | date:'dd/MM HH:mm' }}</span>
           </div>
@@ -134,9 +134,9 @@
              style="background-color: #fdfdff; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px;">
 
           <div *ngFor="let msg of selectedConversation.messages"
-               [class]="msg.senderId === currentUser?.userId ? 'flex justify-end group items-end gap-2' : 'flex justify-start items-end gap-2'">
+               [class]="msg.senderId === currentUser?.email ? 'flex justify-end group items-end gap-2' : 'flex justify-start items-end gap-2'">
 
-            <div *ngIf="msg.senderId === currentUser?.userId && editingMessageId !== msg.id && msg.content" class="relative">
+            <div *ngIf="msg.senderId === currentUser?.email && editingMessageId !== msg.id && msg.content" class="relative">
               <button class="p-1.5 hover:bg-gray-200 rounded-lg text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
                       (click)="activeMenuId = (activeMenuId === msg.id ? null : msg.id); $event.stopPropagation()">
                 ⋮
@@ -147,7 +147,7 @@
               </div>
             </div>
 
-            <div [class]="msg.senderId === currentUser?.userId ? 'bg-purple-600 text-white rounded-3xl rounded-br-none shadow-lg' : 'bg-white border-2 border-purple-50 text-gray-800 rounded-3xl rounded-bl-none shadow-sm'"
+            <div [class]="msg.senderId === currentUser?.email ? 'bg-purple-600 text-white rounded-3xl rounded-br-none shadow-lg' : 'bg-white border-2 border-purple-50 text-gray-800 rounded-3xl rounded-bl-none shadow-sm'"
                  class="max-w-[75%] p-4 relative transition-transform hover:scale-[1.01] group/bubble">
 
               <button (click)="translateMessage(msg)"

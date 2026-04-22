@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven-3'
+        jdk 'JDK-17'
+    }
+
     environment {
         DOCKER_IMAGE = 'badrftw/evercare-appointment'
         DOCKER_TAG = 'latest'
@@ -11,7 +16,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out source code from GitHub...'
                 git branch: env.BRANCH_NAME,
                     url: 'https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git',
                     credentialsId: 'github-evercare'
@@ -20,7 +24,6 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building appointment-service with Maven...'
                 dir(env.APP_DIR) {
                     sh 'mvn clean compile -DskipTests'
                 }
@@ -29,16 +32,24 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running unit tests...'
                 dir(env.APP_DIR) {
                     sh 'mvn test'
                 }
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                dir(env.APP_DIR) {
+                    withSonarQubeEnv('sonarqube-evercare') {
+                        sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+
         stage('Package') {
             steps {
-                echo 'Packaging application as JAR...'
                 dir(env.APP_DIR) {
                     sh 'mvn package -DskipTests'
                 }
@@ -47,7 +58,6 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                echo 'Building Docker image using existing Dockerfile...'
                 dir(env.APP_DIR) {
                     script {
                         sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .'
@@ -58,7 +68,6 @@ pipeline {
 
         stage('Docker Push') {
             steps {
-                echo 'Pushing Docker image to Docker Hub...'
                 script {
                     docker.withRegistry('', 'dockerhub-evercare') {
                         docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
@@ -70,10 +79,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Appointment Service build success! Image pushed to Docker Hub.'
+            echo '✅ Build success!'
         }
         failure {
-            echo '❌ Appointment Service build failed! Check logs for details.'
+            echo '❌ Build failed!'
         }
     }
 }

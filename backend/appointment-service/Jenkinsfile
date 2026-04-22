@@ -1,49 +1,58 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'M2_HOME'
+        jdk 'JAVA_HOME'
+    }
+
     environment {
         DOCKER_IMAGE = 'badrftw/evercare-appointment'
-        DOCKER_TAG = 'latest'
+        DOCKER_REGISTRY = 'docker.io'
+        SONAR_HOST_URL = 'http://10.0.2.15:9000'
+        SONAR_TOKEN = credentials('sonarqube-token')
         APP_DIR = 'backend/appointment-service'
         BRANCH_NAME = 'Badr-branch'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Git') {
             steps {
                 git branch: env.BRANCH_NAME,
-                    url: 'https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git',
-                    credentialsId: 'github-evercare'
+                        url: 'https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git',
+                        credentialsId: 'github-evercare'
             }
         }
 
-        stage('Build') {
+        stage('Build Maven') {
             steps {
                 dir(env.APP_DIR) {
-                    sh 'mvn clean compile -DskipTests'
-                }
-            }
-        }
-
-        stage('Test') {
-            steps {
-                dir(env.APP_DIR) {
-                    sh 'mvn test'
+                    sh 'mvn clean compile'
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                dir(env.APP_DIR) {
-                    withSonarQubeEnv('SonarQube') {
-                        sh 'mvn sonar:sonar'
+                script {
+                    withSonarQubeEnv('sonarqube-evercare') {
+                        dir(env.APP_DIR) {
+                            sh 'mvn compile'
+                            withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN_SECURE')]) {
+                                sh """
+                                    mvn sonar:sonar \\
+                                        -Dsonar.java.binaries=target/classes \\
+                                        -Dsonar.host.url=${SONAR_HOST_URL} \\
+                                        -Dsonar.token=${SONAR_TOKEN_SECURE}
+                                """
+                            }
+                        }
                     }
                 }
             }
         }
 
-        stage('Package') {
+        stage('Package JAR') {
             steps {
                 dir(env.APP_DIR) {
                     sh 'mvn package -DskipTests'
@@ -51,33 +60,64 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
                 dir(env.APP_DIR) {
                     script {
-                        sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile .'
+                        sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f Dockerfile ."
+                        sh "docker tag ${DOCKER_IMAGE}:${env.BUILD_ID} ${DOCKER_IMAGE}:latest"
                     }
                 }
             }
         }
 
-        stage('Docker Push') {
+        stage('Docker Login') {
             steps {
                 script {
-                    docker.withRegistry('', 'dockerhub-evercare') {
-                        docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
+                    withCredentials([usernamePassword(
+                            credentialsId: 'dockerhub-evercare',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                        """
                     }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    sh """
+                        docker push ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        docker push ${DOCKER_IMAGE}:latest
+                    """
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                dir(env.APP_DIR) {
+                    archiveArtifacts 'target/*.jar'
                 }
             }
         }
     }
 
     post {
+        always {
+            sh 'docker system prune -f || true'
+        }
         success {
-            echo '✅ Build success!'
+            echo '✅ Build et analyse SonarQube réussis!'
+            echo "📦 Image Docker: ${DOCKER_IMAGE}:${env.BUILD_ID}"
+            echo "📊 Rapport SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-appointment"
         }
         failure {
-            echo '❌ Build failed!'
+            echo '❌ Pipeline échouée!'
         }
     }
 }

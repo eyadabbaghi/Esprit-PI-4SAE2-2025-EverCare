@@ -1,1 +1,301 @@
-<p>dashboard works!</p>
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="max-w-[1200px] mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-[#2D1B4E] mb-1">
+          Admin Dashboard
+        </h1>
+        <p class="text-sm text-[#6B5B8C]">
+          Centralized platform oversight and management
+        </p>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
+      >
+        <span class="w-2 h-2 rounded-full bg-white mr-2 animate-pulse"></span>
+        Administrator
+      </button>
+    </header>
+
+    <!-- Tabs -->
+    <nav
+      class="bg-white/70 rounded-2xl px-3 py-2 flex flex-wrap gap-2 text-sm shadow-sm"
+    >
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'overview'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('overview')"
+      >
+        <span class="mr-2">▢</span>
+        Overview
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'incidents'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('incidents')"
+      >
+        <span class="mr-2">⚠️</span>
+        Incidents
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'alerts'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('alerts')"
+      >
+        <span class="mr-2">🔔</span>
+        Alerts
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'users'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('users')"
+      >
+        <span class="mr-2">👥</span>
+        Users
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'analytics'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('analytics')"
+      >
+        <span class="mr-2">📊</span>
+        Analytics
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'ai'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('ai')"
+      >
+        <span class="mr-2">🧠</span>
+        AI Insights
+      </button>
+      <button
+        type="button"
+        class="flex items-center px-3 py-2 rounded-xl font-medium transition-all"
+        [ngClass]="
+          activeTab === 'settings'
+            ? 'bg-[#7C3AED] text-white shadow'
+            : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+        "
+        (click)="setTab('settings')"
+      >
+        <span class="mr-2">⚙️</span>
+        Settings
+      </button>
+    </nav>
+
+    <!-- Overview tab -->
+    <section *ngIf="activeTab === 'overview'" class="space-y-6">
+      <!-- KPI cards -->
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm"
+      >
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Total Patients</p>
+          <p class="text-3xl font-bold text-[#2D1B4E]">
+            {{ stats.totalPatients }}
+          </p>
+          <p class="mt-1 text-xs text-[#22c55e]">+12 this month</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Total Caregivers</p>
+          <p class="text-3xl font-bold text-[#2D1B4E]">
+            {{ stats.totalCaregivers }}
+          </p>
+          <p class="mt-1 text-xs text-[#22c55e]">+5 this month</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Total Doctors</p>
+          <p class="text-3xl font-bold text-[#2D1B4E]">
+            {{ stats.totalDoctors }}
+          </p>
+          <p class="mt-1 text-xs text-[#22c55e]">+2 this month</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Active Users</p>
+          <p class="text-3xl font-bold text-[#2D1B4E]">
+            {{ stats.activeUsers }}
+          </p>
+          <p class="mt-1 text-xs text-[#22c55e]">+8% this week</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Total Incidents</p>
+          <p class="text-3xl font-bold text-[#2D1B4E]">
+            {{ stats.totalIncidents | number }}
+          </p>
+          <p class="mt-1 text-xs text-[#6B5B8C]">All time</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Resolved</p>
+          <p class="text-3xl font-bold text-[#22c55e]">
+            {{ stats.resolvedIncidents | number }}
+          </p>
+          <p class="mt-1 text-xs text-[#6B5B8C]">88% resolution rate</p>
+        </div>
+        <div
+          class="rounded-2xl bg-white hover:shadow-lg border border-[#E5D9FF] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Unresolved</p>
+          <p class="text-3xl font-bold text-[#F59E0B]">
+            {{ stats.unresolvedIncidents }}
+          </p>
+          <p class="mt-1 text-xs text-[#6B5B8C]">Pending action</p>
+        </div>
+        <div
+          class="rounded-2xl bg-[#FDF2F7] hover:shadow-lg border border-[#F9C2D2] p-4 transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Critical Alerts</p>
+          <p class="text-3xl font-bold text-[#C06C84]">
+            {{ stats.criticalAlerts }}
+          </p>
+          <span
+            class="inline-flex mt-2 px-3 py-1 rounded-full bg-[#C06C84] text-white text-[11px] font-medium"
+          >
+            Requires immediate attention
+          </span>
+        </div>
+      </div>
+
+      <!-- Charts placeholders -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div
+          class="rounded-2xl bg-white border border-[#E5D9FF] p-5 hover:shadow-lg transition-shadow"
+        >
+          <h2 class="text-sm font-semibold text-[#2D1B4E] mb-1">
+            Weekly Activity Overview
+          </h2>
+          <p class="text-xs text-[#6B5B8C] mb-4">
+            Incidents, alerts, and active users over the past week
+          </p>
+          <div
+            class="h-64 rounded-xl bg-gradient-to-b from-[#F3E8FF] to-white border border-dashed border-[#E5D9FF]"
+          ></div>
+        </div>
+        <div
+          class="rounded-2xl bg-white border border-[#E5D9FF] p-5 hover:shadow-lg transition-shadow"
+        >
+          <h2 class="text-sm font-semibold text-[#2D1B4E] mb-1">
+            Incident Severity Distribution
+          </h2>
+          <p class="text-xs text-[#6B5B8C] mb-4">
+            Breakdown of incidents by severity level
+          </p>
+          <div
+            class="h-64 rounded-xl bg-gradient-to-b from-[#F3E8FF] to-white border border-dashed border-[#E5D9FF]"
+          ></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Incidents tab summary header to match React structure -->
+    <section *ngIf="activeTab === 'incidents'" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <div
+          class="rounded-2xl bg-white border border-[#E5D9FF] p-4 hover:shadow-lg transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Total Incidents</p>
+          <p class="text-2xl font-bold text-[#2D1B4E]">
+            {{ incidentSummary.total }}
+          </p>
+        </div>
+        <div
+          class="rounded-2xl bg-white border border-[#E5D9FF] p-4 hover:shadow-lg transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Active</p>
+          <p class="text-2xl font-bold text-[#C06C84]">
+            {{ incidentSummary.active }}
+          </p>
+        </div>
+        <div
+          class="rounded-2xl bg-white border border-[#E5D9FF] p-4 hover:shadow-lg transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Resolved</p>
+          <p class="text-2xl font-bold text-[#22c55e]">
+            {{ incidentSummary.resolved }}
+          </p>
+        </div>
+        <div
+          class="rounded-2xl bg-white border border-[#F9C2D2] bg-[#FDF2F7] p-4 hover:shadow-lg transition-shadow"
+        >
+          <p class="text-xs text-[#6B5B8C] mb-1">Critical</p>
+          <p class="text-2xl font-bold text-[#C06C84]">
+            {{ incidentSummary.critical }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Placeholder for full incident management UI -->
+      <div
+        class="rounded-2xl bg-white border border-[#E5D9FF] p-5 hover:shadow-lg transition-shadow"
+      >
+        <h2 class="text-sm font-semibold text-[#2D1B4E] mb-1">
+          Incident Management
+        </h2>
+        <p class="text-xs text-[#6B5B8C] mb-4">
+          Monitor, filter, and manage all platform incidents.
+        </p>
+        <div
+          class="h-72 rounded-xl bg-gradient-to-b from-[#F3E8FF] to-white border border-dashed border-[#E5D9FF]"
+        ></div>
+      </div>
+    </section>
+
+    <!-- Other tabs simple placeholders -->
+    <section
+      *ngIf="activeTab !== 'overview' && activeTab !== 'incidents'"
+      class="rounded-2xl bg-white border border-[#E5D9FF] p-8 text-center text-sm text-[#6B5B8C]"
+    >
+      <p class="mb-2 font-medium text-[#2D1B4E]">
+        {{ activeTab | titlecase }} section
+      </p>
+      <p>
+        This area mirrors the React admin dashboard layout. You can extend it
+        with full functionality as needed.
+      </p>
+    </section>
+  </div>
+</div>

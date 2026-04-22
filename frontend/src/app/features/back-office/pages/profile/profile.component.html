@@ -1,1 +1,368 @@
-<p>profile works!</p>
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-6">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="mb-4">
+      <h1 class="text-3xl font-bold text-[#2D1B4E] mb-1">
+        Admin profile
+      </h1>
+      <p class="text-sm text-[#6B5B8C]">
+        Manage your administrator identity and account settings
+      </p>
+    </div>
+
+    <!-- Profile card (mirrors normal profile styling, without medical info) -->
+    <div class="border border-[#C4B5FD] rounded-2xl bg-white profile-card">
+      <div class="p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div class="relative">
+  <div class="w-28 h-28 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden">
+    <ng-container *ngIf="user?.profilePicture; else initials">
+      <img [src]="user?.profilePicture" alt="Profile" class="w-full h-full object-cover">
+    </ng-container>
+    <ng-template #initials>
+      <span>{{ getInitials(user?.name) }}</span>
+    </ng-template>
+  </div>
+
+  <!-- Camera icon with dropdown -->
+  <div class="absolute bottom-0 right-0">
+    <button
+      type="button"
+      class="w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
+      (click)="togglePictureMenu()"
+      [disabled]="isLoading"
+    >
+      📷
+    </button>
+
+    <!-- Dropdown menu -->
+    <div *ngIf="showPictureMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
+      <button
+        type="button"
+        class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center"
+        (click)="triggerFileInput()"
+      >
+        <span class="mr-2">📷</span>
+        Upload Picture
+      </button>
+      <button
+        *ngIf="user?.profilePicture"
+        type="button"
+        class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center"
+        (click)="removePicture()"
+      >
+        <span class="mr-2">🗑️</span>
+        Remove Picture
+      </button>
+    </div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input
+    type="file"
+    id="profile-picture-input"
+    accept="image/*"
+    class="hidden"
+    (change)="onFileSelected($event)"
+  />
+</div>
+
+        <div class="flex-1 text-center md:text-left space-y-2">
+          <h2 class="text-2xl font-bold text-[#2D1B4E]">
+            {{ profileData.name }}
+          </h2>
+          <p class="text-[#6B5B8C]">
+            {{ profileData.email }}
+          </p>
+          <div class="flex flex-wrap gap-2 justify-center md:justify-start mt-3">
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-full bg-[#7C3AED] text-xs font-medium text-white capitalize"
+            >
+              {{ profileData.role }}
+            </span>
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] bg-[#F9FAFB]"
+            >
+              <span class="mr-1">🛡️</span>
+              Admin account
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs (only personal + settings for admin) -->
+    <div class="w-full">
+      <div
+        class="inline-flex bg-white rounded-full p-1 border border-[#E5E7EB] mb-5"
+      >
+        <button
+          type="button"
+          class="px-4 py-2 rounded-full text-sm font-medium"
+          [ngClass]="
+            activeTab === 'personal'
+              ? 'bg-[#7C3AED] text-white shadow-sm'
+              : 'text-[#6B5B8C] hover:text-[#4B5563]'
+          "
+          (click)="setTab('personal')"
+        >
+          Personal info
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-full text-sm font-medium"
+          [ngClass]="
+            activeTab === 'settings'
+              ? 'bg-[#7C3AED] text-white shadow-sm'
+              : 'text-[#6B5B8C] hover:text-[#4B5563]'
+          "
+          (click)="setTab('settings')"
+        >
+          Account settings
+        </button>
+      </div>
+
+      <!-- Personal info (admin-focused, no medical sections) -->
+      <div
+        *ngIf="activeTab === 'personal'"
+        class="border border-[#C4B5FD] rounded-2xl bg-white profile-section-card"
+      >
+        <div class="border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-semibold text-[#2D1B4E]">
+              Admin information
+            </h3>
+            <p class="text-sm text-[#6B5B8C]">
+              Keep your contact and organization details up to date
+            </p>
+          </div>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-full bg-[#7C3AED] text-sm text-white font-medium hover:bg-[#6D28D9]"
+            (click)="toggleEdit()"
+          >
+            {{ isEditing ? 'Save changes' : 'Edit profile' }}
+          </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="name">
+                Full name
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">👤</span>
+                <input
+                  id="name"
+                  type="text"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.name"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="email">
+                Email address
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">✉️</span>
+                <input
+                  id="email"
+                  type="email"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.email"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="phone">
+                Phone number
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">📞</span>
+                <input
+                  id="phone"
+                  type="tel"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.phone"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="role">
+                Admin role
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🎛️</span>
+                <input
+                  id="role"
+                  type="text"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.role"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="org">
+                Organization
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🏢</span>
+                <input
+                  id="org"
+                  type="text"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.organization"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#374151]" for="timezone">
+                Timezone
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🌍</span>
+                <input
+                  id="timezone"
+                  type="text"
+                  class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [disabled]="!isEditing"
+                  [(ngModel)]="profileData.timezone"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[#374151]" for="language">
+              Preferred language
+            </label>
+            <div class="relative max-w-xs">
+              <span class="absolute left-3 top-2.5 text-[#6B5B8C]">💬</span>
+              <input
+                id="language"
+                type="text"
+                class="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                [disabled]="!isEditing"
+                [(ngModel)]="profileData.language"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account settings (notifications + security, admin flavour) -->
+      <div
+        *ngIf="activeTab === 'settings'"
+        class="space-y-4"
+      >
+        <div class="border border-[#C4B5FD] rounded-2xl bg-white profile-section-card">
+          <div class="border-b border-[#E5E7EB] px-6 py-4">
+            <h3 class="text-base font-semibold text-[#2D1B4E] flex items-center space-x-2">
+              <span>🔔</span>
+              <span>Notification preferences</span>
+            </h3>
+            <p class="text-sm text-[#6B5B8C]">
+              Control how you receive platform and incident alerts
+            </p>
+          </div>
+          <div class="p-6 space-y-4 text-sm">
+            <div
+              class="profile-setting-item flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg"
+            >
+              <div>
+                <h4 class="font-medium text-[#2D1B4E]">Email notifications</h4>
+                <p class="text-xs text-[#6B5B8C]">
+                  Incident summaries, user invitations, and system updates
+                </p>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E]"
+              >
+                {{ profileData.notificationsEmail ? 'Enabled' : 'Disabled' }}
+              </button>
+            </div>
+
+            <div
+              class="profile-setting-item flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg"
+            >
+              <div>
+                <h4 class="font-medium text-[#2D1B4E]">In-app alerts</h4>
+                <p class="text-xs text-[#6B5B8C]">
+                  Real-time notifications inside the admin dashboard
+                </p>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E]"
+              >
+                {{ profileData.notificationsSystem ? 'Enabled' : 'Disabled' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-[#C4B5FD] rounded-2xl bg-white profile-section-card">
+          <div class="border-b border-[#E5E7EB] px-6 py-4">
+            <h3 class="text-base font-semibold text-[#2D1B4E] flex items-center space-x-2">
+              <span>🔒</span>
+              <span>Security</span>
+            </h3>
+            <p class="text-sm text-[#6B5B8C]">
+              Strengthen the security of your admin account
+            </p>
+          </div>
+          <div class="p-6 space-y-4 text-sm">
+            <div
+              class="profile-setting-item flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg"
+            >
+              <div>
+                <h4 class="font-medium text-[#2D1B4E]">Change password</h4>
+                <p class="text-xs text-[#6B5B8C]">
+                  Use a strong, unique password for your admin account
+                </p>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E]"
+              >
+                Change
+              </button>
+            </div>
+
+            <div
+              class="profile-setting-item flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg"
+            >
+              <div>
+                <h4 class="font-medium text-[#2D1B4E]">Two-factor authentication</h4>
+                <p class="text-xs text-[#6B5B8C]">
+                  Add an extra verification step when signing in
+                </p>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E]"
+              >
+                Enable
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

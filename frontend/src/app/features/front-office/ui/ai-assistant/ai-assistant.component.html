@@ -1,0 +1,102 @@
+<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-3">
+  <!-- Assistant panel -->
+  <div
+    *ngIf="isOpen"
+    class="w-80 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] overflow-hidden"
+  >
+    <div class="px-4 py-3 bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] text-white flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+          <span class="text-lg">🤖</span>
+        </div>
+        <div>
+          <p class="text-sm font-semibold">EverCare Assistant</p>
+          <p class="text-[11px] text-white/80">
+            Here to guide you through the app
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="text-xs text-white/80 hover:text-white"
+        (click)="toggleAssistant()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="px-4 py-3 space-y-3 text-sm text-[#4B5563] max-h-80 overflow-y-auto">
+      <div class="bg-[#F3E8FF] rounded-xl px-3 py-2">
+        <p class="text-xs text-[#7C3AED] font-medium mb-1">
+          Welcome to EverCare
+        </p>
+        <p class="text-xs text-[#4B5563]">
+          I can help you explore features, suggest daily activities, or guide you
+          through the Alzheimer's support tools.
+        </p>
+      </div>
+
+      <div class="space-y-2">
+        <p class="text-xs font-semibold text-[#6B5B8C]">
+          Quick actions
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-[#F3E8FF] text-[#7C3AED] text-xs font-medium hover:bg-[#E9D5FF]"
+            (click)="openAssessment()"
+          >
+            Alzheimer's assessment
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-[#F9FAFB] text-[#4B5563] text-xs hover:bg-[#E5E7EB]"
+            (click)="showWelcome = true"
+          >
+            Show welcome tour
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <p class="text-xs font-semibold text-[#6B5B8C]">
+          Suggested next steps
+        </p>
+        <ul class="space-y-1.5 text-xs list-disc list-inside">
+          <li>Review today's recommended activities</li>
+          <li>Check recent safety alerts</li>
+          <li>Update health information in your profile</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating assistant button -->
+  <button
+    type="button"
+    class="relative inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#A78BFA] shadow-xl text-white hover:shadow-2xl focus:outline-none"
+    (click)="toggleAssistant()"
+    aria-label="Open EverCare assistant"
+  >
+    <span class="text-2xl">💬</span>
+    <span
+      class="absolute -top-1 -right-1 px-2 py-0.5 rounded-full bg-[#F97373] text-[10px] font-semibold"
+    >
+      AI
+    </span>
+  </button>
+
+  <!-- Welcome tour popup -->
+  <app-welcome-popup
+    *ngIf="showWelcome"
+    (completed)="handleWelcomeCompleted()"
+    (skipped)="handleWelcomeSkipped()"
+  ></app-welcome-popup>
+
+  <!-- Alzheimer's assessment modal -->
+  <app-alzheimers-assessment
+    *ngIf="showAssessment"
+    (closed)="closeAssessment()"
+  ></app-alzheimers-assessment>
+</div>
+

@@ -1,0 +1,117 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-[#2D1B4E] mb-2">Profile Settings</h1>
+      <p class="text-[#6B5B8C]">Manage your personal information and preferences</p>
+    </div>
+
+    <!-- Profile card -->
+    <div *ngIf="user as u; else noUser" class="profile-card border border-[#C4B5FD] rounded-2xl bg-white">
+      <div class="p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
+
+        <!-- Avatar with dropdown -->
+        <div class="relative">
+          <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden">
+            <ng-container *ngIf="u.profilePicture; else initials">
+              <img [src]="u.profilePicture" alt="Profile" class="w-full h-full object-cover">
+            </ng-container>
+            <ng-template #initials>
+              <span>{{ getInitials(u.name) }}</span>
+            </ng-template>
+          </div>
+
+          <!-- Camera icon -->
+          <div class="absolute bottom-0 right-0">
+            <button
+              type="button"
+              class="w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
+              (click)="togglePictureMenu()"
+              [disabled]="isLoading"
+            >
+              📷
+            </button>
+
+            <!-- Dropdown -->
+            <div
+              *ngIf="showPictureMenu"
+              class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50"
+            >
+              <button
+                type="button"
+                class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center"
+                (click)="triggerFileInput()"
+              >
+                <span class="mr-2">📷</span>
+                Upload Picture
+              </button>
+
+              <button
+                *ngIf="u.profilePicture"
+                type="button"
+                class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                (click)="removePicture()"
+              >
+                <span class="mr-2">🗑️</span>
+                Remove Picture
+              </button>
+            </div>
+          </div>
+
+          <!-- Hidden file input -->
+          <input
+            type="file"
+            id="profile-picture-input"
+            accept="image/*"
+            class="hidden"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+
+        <div class="flex-1 text-center md:text-left space-y-2">
+          <h2 class="text-2xl font-bold text-[#2D1B4E]">{{ u.name }}</h2>
+          <p class="text-[#6B5B8C]">{{ u.email }}</p>
+
+          <div class="flex flex-wrap gap-2 justify-center md:justify-start mt-3">
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#7C3AED] text-xs font-medium text-white capitalize">
+              {{ u.role }}
+            </span>
+            <span class="inline-flex items-center px-3 py-1 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] bg-[#F9FAFB]">
+              <span class="mr-1">🛡️</span> Verified account
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noUser>
+      <div class="border border-[#E5E7EB] rounded-2xl bg-white p-6 text-[#6B5B8C]">
+        No user loaded. Please login first.
+      </div>
+    </ng-template>
+
+    <!-- Tabs -->
+    <div class="w-full">
+      <div class="grid grid-cols-3 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB]">
+        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
+          [ngClass]="activeTab === 'personal' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
+          (click)="setTab('personal')">Personal Info</button>
+
+        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
+          [ngClass]="activeTab === 'health' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
+          (click)="setTab('health')">Health Info</button>
+
+        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
+          [ngClass]="activeTab === 'settings' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
+          (click)="setTab('settings')">Settings</button>
+      </div>
+
+      <!-- Keep the rest of your tabs exactly as you had (personal/health/settings forms) -->
+      <!-- IMPORTANT: any [(ngModel)] inside a reactive form should use [ngModelOptions]="{standalone:true}" -->
+      <!-- You already did that for country codes. Good. -->
+      <!-- ... your existing tab content stays ... -->
+
+    </div>
+  </div>
+</div>

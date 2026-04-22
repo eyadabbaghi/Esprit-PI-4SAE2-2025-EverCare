@@ -1,0 +1,618 @@
+<div class="daily-me-container p-6 bg-[#F8F7FF] min-h-screen">
+
+  <!-- ✅ Welcome mood popup -->
+  <div *ngIf="showWelcomePopup"
+       class="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-xl border border-gray-200">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-extrabold text-[#2D1B4E]">
+            Hello {{ welcomeName }} 👋
+          </h2>
+          <p class="text-[#6B5B8C] mt-1">How are you feeling today?</p>
+        </div>
+
+        <button type="button"
+                (click)="dismissWelcomePopup()"
+                class="text-[#6B5B8C] hover:text-[#2D1B4E] text-xl leading-none"
+                aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-5 bg-[#F3E8FF] rounded-2xl p-4 text-[#2D1B4E]">
+        A quick mood check helps track your wellbeing 🌿
+      </div>
+
+      <div class="mt-6 flex gap-3 justify-end">
+        <button type="button"
+                (click)="dismissWelcomePopup()"
+                class="px-5 py-2.5 rounded-full bg-gray-200 font-semibold">
+          Later
+        </button>
+
+        <button type="button"
+                (click)="goToMoodCheckIn()"
+                class="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white font-bold hover:opacity-90">
+          Check-in
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="mb-6 text-center">
+    <h1 class="text-3xl font-bold text-[#2D1B4E]">How are you feeling today?</h1>
+    <p class="text-[#6B5B8C]">Track your daily wellness and activities</p>
+  </header>
+
+  <!-- TABS -->
+  <div class="flex bg-[#F3E8FF] p-1 rounded-2xl mb-8 max-w-2xl mx-auto">
+    <button type="button"
+            (click)="setTab('mood')"
+            [ngClass]="activeTab==='mood'
+              ? 'flex-1 py-2.5 rounded-xl bg-white shadow font-semibold text-[#7C3AED]'
+              : 'flex-1 py-2.5 text-[#6B5B8C] font-medium hover:text-[#7C3AED]'">
+      Mood
+    </button>
+
+    <button type="button"
+            (click)="setTab('tasks')"
+            [ngClass]="activeTab==='tasks'
+              ? 'flex-1 py-2.5 rounded-xl bg-white shadow font-semibold text-[#7C3AED]'
+              : 'flex-1 py-2.5 text-[#6B5B8C] font-medium hover:text-[#7C3AED]'">
+      Tasks
+    </button>
+
+    <button type="button"
+            (click)="setTab('journal')"
+            [ngClass]="activeTab==='journal'
+              ? 'flex-1 py-2.5 rounded-xl bg-white shadow font-semibold text-[#7C3AED]'
+              : 'flex-1 py-2.5 text-[#6B5B8C] font-medium hover:text-[#7C3AED]'">
+      Journal
+    </button>
+  </div>
+
+  <!-- MAIN CARD -->
+  <div class="bg-white rounded-[2rem] p-8 shadow border border-[#E5E7EB]">
+
+    <!-- ================= MOOD TAB ================= -->
+    <div *ngIf="activeTab === 'mood'" id="mood-checkin">
+
+      <!-- ================= PATIENT VIEW ================= -->
+      <div *ngIf="(user?.role || '').toLowerCase() === 'patient'">
+
+        <!-- ✅ FACE EMOTION -->
+        <div class="mb-8 bg-[#F8F7FF] border border-[#E9D5FF] rounded-3xl p-6">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="text-xl">📷</div>
+            <div>
+              <h3 class="text-xl font-bold text-[#2D1B4E]">Face Emotion Detection</h3>
+              <p class="text-sm text-[#6B5B8C]">Real-time, runs locally in your browser.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <div class="relative rounded-2xl overflow-hidden border bg-black">
+              <video #emotionVideo autoplay muted playsinline class="w-full h-auto"></video>
+              <canvas #emotionOverlay class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+
+            <div class="bg-white rounded-2xl border p-5">
+              <div class="text-sm text-[#6B5B8C] mb-2">Detected</div>
+
+              <div class="text-3xl font-extrabold text-[#7C3AED]">
+                {{ detectedLabel || '—' }}
+              </div>
+
+              <div class="text-sm text-[#6B5B8C]" *ngIf="detectedConfidence !== null">
+                confidence: {{ (detectedConfidence * 100) | number:'1.0-0' }}%
+              </div>
+
+              <div class="flex flex-wrap gap-3 mt-5">
+                <button type="button"
+                        (click)="startEmotionDetection()"
+                        [disabled]="emotionRunning"
+                        class="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white font-bold hover:opacity-90">
+                  Start
+                </button>
+
+                <button type="button"
+                        (click)="stopEmotionDetection()"
+                        [disabled]="!emotionRunning"
+                        class="px-5 py-2.5 rounded-full bg-gray-200 font-semibold">
+                  Stop
+                </button>
+
+                <button type="button"
+                        (click)="useDetectedMood()"
+                        [disabled]="!detectedMoodKey"
+                        class="px-5 py-2.5 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-bold hover:opacity-90">
+                  Use mood
+                </button>
+              </div>
+
+              <div class="mt-4 text-xs text-[#6B5B8C]">
+                Note: Emotion detection is indicative and not a medical diagnosis.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✅ MOOD WHEEL -->
+        <h2 class="text-lg font-semibold text-center text-[#2D1B4E] mb-8">
+          Select your mood
+        </h2>
+
+        <div class="flex justify-center mb-6">
+          <div class="mood-wheel" [style.--count]="moods.length">
+            <div class="wheel-center">
+              <div class="center-spark text-3xl">
+                {{ selectedMood ? selectedMood.emoji : '🙂' }}
+              </div>
+              <div class="center-text">
+                {{ selectedMood ? selectedMood.label : 'Select' }}
+              </div>
+            </div>
+
+            <button *ngFor="let m of moods; let i = index"
+                    type="button"
+                    class="mood-node"
+                    [style.--i]="i"
+                    [ngClass]="currentEntry.dailyEmotion === m.key ? 'active' : ''"
+                    (click)="selectMood(m.key)">
+              <span class="node-emoji">{{ m.emoji }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- NOTES -->
+        <textarea [(ngModel)]="currentEntry.notes"
+                  class="w-full border rounded-2xl p-4 mb-6"
+                  rows="3"
+                  maxlength="300"
+                  placeholder="What made you feel this way?">
+        </textarea>
+
+        <!-- ACTIONS -->
+        <div class="flex justify-end gap-3 mb-10">
+          <button *ngIf="isEditing"
+                  type="button"
+                  (click)="resetForm()"
+                  class="px-6 py-2 rounded-full bg-gray-200">
+            Cancel
+          </button>
+
+          <button type="button"
+                  (click)="saveEntry()"
+                  class="px-6 py-2 rounded-full bg-[#7C3AED] text-white font-bold">
+            {{ isEditing ? 'Update' : 'Save' }}
+          </button>
+        </div>
+
+        <!-- ================= WEEKLY ANALYSIS (PATIENT) ================= -->
+        <div class="bg-[#F8F7FF] border border-[#E9D5FF] rounded-3xl p-6 mb-10">
+          <div class="flex items-start gap-3 mb-6">
+            <div class="text-xl">📅</div>
+            <div>
+              <h3 class="text-xl font-bold text-[#2D1B4E]">Weekly Mood Analysis</h3>
+              <p class="text-sm text-[#6B5B8C]">Understanding your emotional patterns over the past 7 days</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-5 border shadow-sm">
+              <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                📈 <span class="font-semibold text-[#2D1B4E]">Trend</span>
+              </div>
+              <div class="text-3xl font-extrabold text-[#7C3AED] mt-2">{{ weeklyTrendText }}</div>
+              <div class="text-sm text-[#6B5B8C] mt-1">{{ weeklyTrendHint }}</div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border shadow-sm">
+              <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                ❤️ <span class="font-semibold text-[#2D1B4E]">Average Score</span>
+              </div>
+              <div class="text-3xl font-extrabold text-[#EC4899] mt-2">{{ weeklyAverage }}/5</div>
+              <div class="text-sm text-[#6B5B8C] mt-1">Your emotional balance this week</div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border shadow-sm">
+              <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                ✨ <span class="font-semibold text-[#2D1B4E]">Most Common</span>
+              </div>
+              <div class="text-3xl font-extrabold text-[#3B82F6] mt-2">
+                {{ weeklyMostCommonEmoji }} {{ weeklyMostCommonLabel }}
+              </div>
+              <div class="text-sm text-[#6B5B8C] mt-1">This week’s primary emotion</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border shadow-sm p-5 mb-6">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-lg font-bold text-[#2D1B4E]">Daily Mood Scores</h4>
+              <span class="text-xs bg-[#F3E8FF] text-[#7C3AED] px-3 py-1 rounded-full font-semibold">
+                Last 7 Days
+              </span>
+            </div>
+
+            <div class="h-[280px]">
+              <canvas *ngIf="chartData"
+                      baseChart
+                      [data]="chartData"
+                      [options]="chartOptions"
+                      [type]="'bar'">
+              </canvas>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border shadow-sm p-5">
+            <h4 class="text-lg font-bold text-[#2D1B4E] mb-4">Mood Distribution</h4>
+
+            <div *ngIf="weeklyDistribution.length === 0" class="text-sm text-[#6B5B8C]">
+              No data yet — save at least one mood entry.
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" *ngIf="weeklyDistribution.length > 0">
+              <div *ngFor="let d of weeklyDistribution"
+                   class="rounded-2xl border bg-[#F9FAFB] p-4 text-center">
+                <div class="text-2xl mb-2">{{ d.emoji }}</div>
+                <div class="font-bold text-[#2D1B4E]">{{ d.label }}</div>
+                <div class="text-sm text-[#6B5B8C]">{{ d.count }} day{{ d.count > 1 ? 's' : '' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <h3 class="text-xl font-bold text-[#2D1B4E] mb-4">Mood History</h3>
+
+        <!-- FILTERS -->
+        <div class="flex flex-wrap gap-3 items-center mb-5 bg-white p-4 rounded-2xl border border-[#E5E7EB]">
+          <input type="text"
+                 [(ngModel)]="searchText"
+                 (input)="applyFilters()"
+                 placeholder="Search by note or mood..."
+                 class="px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 outline-none" />
+
+          <select [(ngModel)]="selectedMoodFilter"
+                  (change)="applyFilters()"
+                  class="px-4 py-2 rounded-xl border border-gray-200">
+            <option value="">All moods</option>
+            <option *ngFor="let m of moods" [value]="m.key">{{ m.emoji }} {{ m.label }}</option>
+          </select>
+
+          <input type="date"
+                 [(ngModel)]="selectedDateFilter"
+                 (change)="applyFilters()"
+                 class="px-4 py-2 rounded-xl border border-gray-200" />
+
+          <button type="button"
+                  (click)="resetFilters()"
+                  class="px-4 py-2 rounded-xl bg-[#7C3AED] text-white font-semibold hover:opacity-90">
+            Reset
+          </button>
+        </div>
+
+        <div *ngIf="filteredEntries.length === 0" class="text-gray-400">No entries found.</div>
+
+        <div *ngFor="let entry of filteredEntries; trackBy: trackByEntryId"
+             class="flex justify-between items-center p-4 bg-[#F9FAFB] rounded-xl mb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="text-lg">{{ getEmotionIcon(entry.dailyEmotion) }}</div>
+
+              <span *ngIf="entry.entryDateTime"
+                    class="text-xs px-2 py-1 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-semibold">
+                {{ entry.entryDateTime | date:'shortTime' }}
+              </span>
+            </div>
+
+            <div class="text-sm text-gray-600">
+              <ng-container *ngIf="entry.entryDateTime; else onlyDatePatient">
+                {{ entry.entryDateTime | date:'medium' }}
+              </ng-container>
+              <ng-template #onlyDatePatient>
+                {{ entry.entryDate | date:'mediumDate' }}
+              </ng-template>
+            </div>
+
+            <div class="text-sm text-gray-500" *ngIf="entry.notes">{{ entry.notes }}</div>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="button" (click)="editEntry(entry)" class="text-purple-600">Edit</button>
+
+            <button type="button"
+                    *ngIf="entry.id != null"
+                    (click)="openDeleteModal(entry.id)"
+                    class="text-red-500">
+              Delete
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= DOCTOR VIEW ================= -->
+      <div *ngIf="(user?.role || '').toLowerCase() !== 'patient'">
+        <h3 class="text-xl font-bold mb-4">Patient Mood History</h3>
+
+        <select [(ngModel)]="selectedPatientId"
+                (ngModelChange)="onSelectPatient()"
+                class="w-full border rounded-2xl p-3 mb-4">
+          <option [ngValue]="''">Select patient</option>
+          <option *ngFor="let p of patients" [ngValue]="p.userId">
+            {{ p.name }} ({{ p.email || 'no-email' }})
+          </option>
+        </select>
+
+        <div *ngIf="!selectedPatientId" class="text-gray-400">
+          Select a patient.
+        </div>
+
+        <ng-container *ngIf="selectedPatientId">
+
+          <!-- ================= WEEKLY ANALYSIS (DOCTOR) ================= -->
+          <div class="bg-[#F8F7FF] border border-[#E9D5FF] rounded-3xl p-6 mb-10">
+            <div class="flex items-start gap-3 mb-6">
+              <div class="text-xl">📅</div>
+              <div>
+                <h3 class="text-xl font-bold text-[#2D1B4E]">Weekly Mood Analysis</h3>
+                <p class="text-sm text-[#6B5B8C]">Understanding emotional patterns over the past 7 days</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="bg-white rounded-2xl p-5 border shadow-sm">
+                <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                  📈 <span class="font-semibold text-[#2D1B4E]">Trend</span>
+                </div>
+                <div class="text-3xl font-extrabold text-[#7C3AED] mt-2">{{ weeklyTrendText }}</div>
+                <div class="text-sm text-[#6B5B8C] mt-1">{{ weeklyTrendHint }}</div>
+              </div>
+
+              <div class="bg-white rounded-2xl p-5 border shadow-sm">
+                <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                  ❤️ <span class="font-semibold text-[#2D1B4E]">Average Score</span>
+                </div>
+                <div class="text-3xl font-extrabold text-[#EC4899] mt-2">{{ weeklyAverage }}/5</div>
+                <div class="text-sm text-[#6B5B8C] mt-1">Emotional balance this week</div>
+              </div>
+
+              <div class="bg-white rounded-2xl p-5 border shadow-sm">
+                <div class="text-sm text-[#6B5B8C] flex items-center gap-2">
+                  ✨ <span class="font-semibold text-[#2D1B4E]">Most Common</span>
+                </div>
+                <div class="text-3xl font-extrabold text-[#3B82F6] mt-2">
+                  {{ weeklyMostCommonEmoji }} {{ weeklyMostCommonLabel }}
+                </div>
+                <div class="text-sm text-[#6B5B8C] mt-1">Primary emotion this week</div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border shadow-sm p-5 mb-6">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-lg font-bold text-[#2D1B4E]">Daily Mood Scores</h4>
+                <span class="text-xs bg-[#F3E8FF] text-[#7C3AED] px-3 py-1 rounded-full font-semibold">
+                  Last 7 Days
+                </span>
+              </div>
+
+              <div class="h-[280px]">
+                <canvas *ngIf="chartData"
+                        baseChart
+                        [data]="chartData"
+                        [options]="chartOptions"
+                        [type]="'bar'">
+                </canvas>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border shadow-sm p-5">
+              <h4 class="text-lg font-bold text-[#2D1B4E] mb-4">Mood Distribution</h4>
+
+              <div *ngIf="weeklyDistribution.length === 0" class="text-sm text-[#6B5B8C]">
+                No data yet — patient needs at least one mood entry.
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4" *ngIf="weeklyDistribution.length > 0">
+                <div *ngFor="let d of weeklyDistribution"
+                     class="rounded-2xl border bg-[#F9FAFB] p-4 text-center">
+                  <div class="text-2xl mb-2">{{ d.emoji }}</div>
+                  <div class="font-bold text-[#2D1B4E]">{{ d.label }}</div>
+                  <div class="text-sm text-[#6B5B8C]">{{ d.count }} day{{ d.count > 1 ? 's' : '' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <h3 class="text-xl font-bold text-[#2D1B4E] mb-4">Mood History</h3>
+
+          <!-- FILTERS -->
+          <div class="flex flex-wrap gap-3 items-center mb-5 bg-white p-4 rounded-2xl border border-[#E5E7EB]">
+            <input type="text"
+                   [(ngModel)]="searchText"
+                   (input)="applyFilters()"
+                   placeholder="Search by note or mood..."
+                   class="px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 outline-none" />
+
+            <select [(ngModel)]="selectedMoodFilter"
+                    (change)="applyFilters()"
+                    class="px-4 py-2 rounded-xl border border-gray-200">
+              <option value="">All moods</option>
+              <option *ngFor="let m of moods" [value]="m.key">{{ m.emoji }} {{ m.label }}</option>
+            </select>
+
+            <input type="date"
+                   [(ngModel)]="selectedDateFilter"
+                   (change)="applyFilters()"
+                   class="px-4 py-2 rounded-xl border border-gray-200" />
+
+            <button type="button"
+                    (click)="resetFilters()"
+                    class="px-4 py-2 rounded-xl bg-[#7C3AED] text-white font-semibold hover:opacity-90">
+              Reset
+            </button>
+          </div>
+
+          <div *ngIf="filteredEntries.length === 0" class="text-gray-400">
+            No entries found.
+          </div>
+
+          <div *ngFor="let entry of filteredEntries; trackBy: trackByEntryId"
+               class="p-4 bg-[#F9FAFB] rounded-xl mb-3">
+            <div class="flex items-center gap-2">
+              {{ getEmotionIcon(entry.dailyEmotion) }}
+
+              <span *ngIf="entry.entryDateTime"
+                    class="text-xs px-2 py-1 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-semibold">
+                {{ entry.entryDateTime | date:'shortTime' }}
+              </span>
+
+              <span class="text-sm text-gray-600">
+                <ng-container *ngIf="entry.entryDateTime; else onlyDateDoctor">
+                  {{ entry.entryDateTime | date:'medium' }}
+                </ng-container>
+                <ng-template #onlyDateDoctor>
+                  {{ entry.entryDate | date:'mediumDate' }}
+                </ng-template>
+              </span>
+            </div>
+
+            <div class="text-sm text-gray-500" *ngIf="entry.notes">{{ entry.notes }}</div>
+          </div>
+
+        </ng-container>
+      </div>
+
+    </div>
+
+    <!-- ================= TASKS TAB ================= -->
+    <div *ngIf="activeTab === 'tasks'">
+      <ng-container *ngIf="(user?.role || '').toLowerCase() === 'patient'">
+        <app-daily-task-list></app-daily-task-list>
+      </ng-container>
+
+      <ng-container *ngIf="(user?.role || '').toLowerCase() !== 'patient'">
+        <div *ngIf="!selectedPatientId" class="text-gray-400 text-center py-6">
+          Select a patient in the Mood tab first.
+        </div>
+
+        <div *ngIf="selectedPatientId">
+          <h3 class="text-xl font-bold text-[#2D1B4E] mb-4">Patient Tasks</h3>
+          <app-daily-task-list [patientIdInput]="selectedPatientId"></app-daily-task-list>
+        </div>
+      </ng-container>
+    </div>
+
+   <div *ngIf="activeTab === 'journal'">
+
+  <!-- PATIENT -->
+  <ng-container *ngIf="(user?.role || '').toLowerCase() === 'patient'; else doctorJournal">
+    <app-journal
+      [patientIdInput]="(user?.userId || user?.id || user?.patientId || '')"
+      [readOnly]="false">
+    </app-journal>
+  </ng-container>
+
+  <!-- DOCTOR -->
+  <ng-template #doctorJournal>
+
+    <div class="bg-white rounded-3xl border p-6">
+
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-xl font-extrabold text-[#2D1B4E]">📒 Patient Journal </h3>
+          <p class="text-sm text-[#6B5B8C]">Private notes written by the patient • View only</p>
+        </div>
+
+        <span class="px-3 py-1 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-semibold text-xs">
+          READ ONLY
+        </span>
+      </div>
+
+      <div *ngIf="!selectedPatientId" class="text-gray-400 mt-6">
+        Select a patient in the Mood tab first.
+      </div>
+
+      <app-journal
+        *ngIf="selectedPatientId"
+        [patientIdInput]="selectedPatientId"
+        [readOnly]="true">
+      </app-journal>
+
+    </div>
+
+  </ng-template>
+
+</div>
+
+  <!-- ✅ DELETE MODAL -->
+  <div *ngIf="showDeleteModal"
+       class="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-xl border border-gray-200">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-extrabold text-[#2D1B4E]">Delete this entry?</h2>
+          <p class="text-[#6B5B8C] mt-1">This action cannot be undone.</p>
+        </div>
+
+        <button type="button"
+                (click)="cancelDelete()"
+                class="text-[#6B5B8C] hover:text-[#2D1B4E] text-xl leading-none"
+                aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-6 flex gap-3 justify-end">
+        <button type="button"
+                (click)="cancelDelete()"
+                class="px-5 py-2.5 rounded-full bg-gray-200 font-semibold">
+          Cancel
+        </button>
+
+        <button type="button"
+                (click)="confirmDelete()"
+                class="px-5 py-2.5 rounded-full bg-red-600 text-white font-bold hover:opacity-90">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ APP MESSAGE MODAL -->
+  <div *ngIf="uiModal.open"
+       class="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center px-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-xl border border-gray-200">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-extrabold text-[#2D1B4E]">
+            {{ uiModal.title }}
+          </h2>
+          <p class="text-[#6B5B8C] mt-1">
+            {{ uiModal.message }}
+          </p>
+        </div>
+
+        <button type="button"
+                (click)="closeUIModal()"
+                class="text-[#6B5B8C] hover:text-[#2D1B4E] text-xl leading-none"
+                aria-label="Close">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button type="button"
+                (click)="closeUIModal()"
+                class="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white font-bold hover:opacity-90">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

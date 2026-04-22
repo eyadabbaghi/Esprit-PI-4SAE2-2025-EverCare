@@ -1,0 +1,33 @@
+/* Styling is primarily handled with Tailwind utility classes in the template. */
+
+/* Hover effect for main profile card */
+.profile-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(45, 27, 78, 0.15);
+}
+
+/* Hover for section cards (Personal / Health / Settings groups) */
+.profile-section-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.profile-section-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12);
+}
+
+/* Hover for individual setting rows */
+.profile-setting-item {
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.profile-setting-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(148, 163, 184, 0.35);
+}

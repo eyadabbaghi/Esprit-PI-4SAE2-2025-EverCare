@@ -1,0 +1,104 @@
+<div class="journal-box">
+
+  
+
+  <!-- ✅ PATIENT ONLY: composer -->
+  <ng-container *ngIf="!readOnly">
+
+    <textarea
+      [(ngModel)]="journalText"
+      class="w-full border border-gray-200 rounded-2xl p-4 focus:ring-[#7C3AED] focus:border-[#7C3AED]"
+      rows="5"
+      placeholder="How was your day? What are you grateful for?">
+    </textarea>
+
+    <div class="mt-4 flex flex-wrap gap-3 items-center">
+
+      <button type="button"
+              (click)="startRecording()"
+              [disabled]="isRecording"
+              class="bg-[#F3E8FF] text-[#7C3AED] px-5 py-3 rounded-full font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
+        🎙️ Start Record
+      </button>
+
+      <button type="button"
+              (click)="stopRecording()"
+              [disabled]="!isRecording"
+              class="bg-gray-100 text-[#2D1B4E] px-5 py-3 rounded-full font-semibold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+        ⏹ Stop
+      </button>
+
+      <button *ngIf="hasRecordedAudio"
+              type="button"
+              (click)="saveRecordedAudio()"
+              [disabled]="uploading"
+              class="bg-[#7C3AED] text-white px-6 py-3 rounded-full font-bold hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed">
+        💾 Save Voice
+      </button>
+
+      <button type="button"
+              (click)="saveTextOnly()"
+              [disabled]="uploading"
+              class="ml-auto bg-[#2D1B4E] text-white px-6 py-3 rounded-full font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
+        Save Text
+      </button>
+
+    </div>
+
+    <div *ngIf="isRecording" class="mt-2 text-[#2D1B4E] font-semibold">
+      Recording... {{ formatTime(recordingSeconds) }}
+    </div>
+
+    <div *ngIf="recordedPreviewUrl" class="mt-3">
+      <div class="text-xs text-[#6B5B8C] mb-1">Preview (before upload):</div>
+      <audio controls [src]="recordedPreviewUrl" class="w-full"></audio>
+    </div>
+
+  </ng-container>
+
+  <!-- errors -->
+  <div *ngIf="errorMsg" class="text-red-500 mt-2">{{ errorMsg }}</div>
+
+  <!-- entries -->
+  <div class="mt-10">
+    <div class="flex items-center justify-between mb-4">
+      <h4 class="text-lg font-bold text-[#2D1B4E]">Previous Entries</h4>
+
+      <button type="button"
+              (click)="refresh()"
+              class="bg-[#F3E8FF] text-[#7C3AED] px-4 py-2 rounded-full font-semibold hover:opacity-90">
+        Refresh
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="text-[#6B5B8C]">Loading...</div>
+
+    <div *ngIf="!loading && entries.length === 0" class="text-[#6B5B8C]">
+      No journal entries yet.
+    </div>
+
+    <div *ngFor="let e of entries"
+         class="p-4 bg-[#F9FAFB] rounded-2xl border border-gray-100 mb-3">
+
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-[#6B5B8C]">
+          {{ e.createdAt | date:'dd MMM yyyy • HH:mm' }}
+        </span>
+
+        <!-- ✅ delete only for patient -->
+        <button *ngIf="!readOnly"
+                type="button"
+                (click)="deleteEntry(e.id)"
+                class="text-[#C06C84] hover:bg-red-50 px-3 py-1 rounded-lg">
+          Delete
+        </button>
+      </div>
+
+      <p *ngIf="e.text" class="text-[#2D1B4E] whitespace-pre-wrap mb-3">{{ e.text }}</p>
+
+      <audio *ngIf="e.audioPath" controls [src]="audioUrl(e)!" class="w-full"></audio>
+
+    </div>
+  </div>
+
+</div>

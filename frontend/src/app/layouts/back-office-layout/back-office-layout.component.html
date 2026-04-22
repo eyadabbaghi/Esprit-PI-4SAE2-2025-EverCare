@@ -1,1 +1,149 @@
-<p>back-office-layout works!</p>
+<div class="min-h-screen flex bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] text-[#2D1B4E]">
+  <aside
+    class="w-72 bg-white/90 backdrop-blur border-r border-[#E5D9FF] hidden md:flex flex-col shadow-sm"
+  >
+    <!-- Brand + profile -->
+    <div
+      class="h-20 flex items-center justify-between px-5 border-b border-[#E5D9FF] bg-white/80"
+    >
+      <div class="flex items-center gap-3">
+        <img
+  src="/logo.png"
+  alt="EverCare logo"
+  class="h-9 w-9 rounded-xl object-contain "
+  onerror="this.onerror=null; this.src='data:image/svg+xml,...';"
+/>
+        <div class="flex flex-col leading-tight">
+          <span class="text-xs font-semibold text-[#6B5B8C] tracking-[0.12em] uppercase">
+            EverCare
+          </span>
+          <span class="text-lg font-bold text-[#2D1B4E]">Admin</span>
+        </div>
+      </div>
+
+      <button
+  type="button"
+  class="relative w-10 h-10 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#7C3AED] shadow-sm border border-[#E5D9FF] overflow-hidden"
+  aria-label="Admin profile"
+  routerLink="/admin/profile"
+>
+  <ng-container *ngIf="user?.profilePicture; else navInitials">
+    <img [src]="user?.profilePicture" alt="Profile" class="w-full h-full object-cover">
+  </ng-container>
+  <ng-template #navInitials>
+    <span class="text-sm font-semibold">{{ getInitials(user?.name) }}</span>
+  </ng-template>
+</button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+      <a
+        routerLink="/admin"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+         <svg class="w-4 h-4 text-[#C06C84]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+          d="M17 16l4-4m0 0l-4-4m4 4H7"/>
+      </svg>
+        <span class="font-medium">Dashboard</span>
+      </a>
+
+      <a
+        routerLink="/admin/activities"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          🧠
+        </span>
+        <span class="font-medium">Activities</span>
+      </a>
+
+      <a
+        routerLink="/admin/users"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          👥
+        </span>
+        <span class="font-medium">Users</span>
+      </a>
+
+      <a
+        routerLink="/admin/analytics"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          📊
+        </span>
+        <span class="font-medium">Analytics</span>
+      </a>
+
+      <a
+        routerLink="/admin/reports"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          📄
+        </span>
+        <span class="font-medium">Reports</span>
+      </a>
+
+      <a
+        routerLink="/admin/settings"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          ⚙️
+        </span>
+        <span class="font-medium">Settings</span>
+      </a>
+
+      <a
+        routerLink="/admin/profile"
+        routerLinkActive="bg-[#7C3AED] text-white shadow-sm"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#2D1B4E] transition-colors"
+      >
+        <span
+          class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] text-base"
+        >
+          🙍
+        </span>
+        <span class="font-medium">Profile</span>
+      </a>
+    </nav>
+
+    <!-- Logout -->
+    <div class="border-t border-[#E5D9FF] px-4 py-4 bg-white/80">
+      <button
+        type="button"
+        (click)="onLogout()"
+        class="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
+      >
+        <span class="text-base">⎋</span>
+        <span>Log out</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -30,15 +30,6 @@ import { SelectItemComponent } from './components/select-item/select-item.compon
 import { SelectSeparatorComponent } from './components/select-separator/select-separator.component';
 import { SelectScrollUpButtonComponent } from './components/select-scroll-up-button/select-scroll-up-button.component';
 import { SelectScrollDownButtonComponent } from './components/select-scroll-down-button/select-scroll-down-button.component';
-import { DialogComponent } from './components/dialog/dialog.component';
-import { DialogTriggerComponent } from './components/dialog-trigger/dialog-trigger.component';
-import { DialogCloseComponent } from './components/dialog-close/dialog-close.component';
-import { DialogContentComponent } from './components/dialog-content/dialog-content.component';
-import { DialogHeaderComponent } from './components/dialog-header/dialog-header.component';
-import { DialogFooterComponent } from './components/dialog-footer/dialog-footer.component';
-import { DialogTitleComponent } from './components/dialog-title/dialog-title.component';
-import { DialogDescriptionComponent } from './components/dialog-description/dialog-description.component';
-import { DialogOverlayComponent } from './components/dialog-overlay/dialog-overlay.component';
 
 
 
@@ -74,15 +65,6 @@ import { DialogOverlayComponent } from './components/dialog-overlay/dialog-overl
     SelectSeparatorComponent,
     SelectScrollUpButtonComponent,
     SelectScrollDownButtonComponent,
-    DialogComponent,
-    DialogTriggerComponent,
-    DialogCloseComponent,
-    DialogContentComponent,
-    DialogHeaderComponent,
-    DialogFooterComponent,
-    DialogTitleComponent,
-    DialogDescriptionComponent,
-    DialogOverlayComponent,
 
 
   ],
@@ -120,15 +102,6 @@ import { DialogOverlayComponent } from './components/dialog-overlay/dialog-overl
     SelectSeparatorComponent,
     SelectScrollUpButtonComponent,
     SelectScrollDownButtonComponent,
-    DialogComponent,
-    DialogTriggerComponent,
-    DialogCloseComponent,
-    DialogContentComponent,
-    DialogHeaderComponent,
-    DialogFooterComponent,
-    DialogTitleComponent,
-    DialogDescriptionComponent,
-    DialogOverlayComponent,
 
 
   ]

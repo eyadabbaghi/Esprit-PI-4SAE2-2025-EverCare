@@ -1,0 +1,85 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+  <div class="max-w-lg w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+    <div class="px-6 py-5 bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] text-white">
+      <p class="text-sm font-semibold tracking-wide uppercase mb-1">
+        Welcome to EverCare
+      </p>
+      <h2 class="text-2xl font-bold">
+        Let’s take a quick tour
+      </h2>
+      <p class="text-sm text-white/80 mt-2">
+        We’ll highlight the key areas of your dashboard so you can make the most of
+        Daily Me, Activities, alerts, and more.
+      </p>
+    </div>
+
+    <div class="px-6 py-5 space-y-4 text-sm text-[#4B5563]">
+      <div class="flex items-start space-x-3">
+        <div class="w-8 h-8 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#7C3AED]">
+          1
+        </div>
+        <div>
+          <h3 class="font-semibold text-[#2D1B4E]">Navigation bar</h3>
+          <p>
+            Access Home, Daily Me, Activities, Appointments, Medical Folder, Alerts,
+            and Messages from the top navigation at any time.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-start space-x-3">
+        <div class="w-8 h-8 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#7C3AED]">
+          2
+        </div>
+        <div>
+          <h3 class="font-semibold text-[#2D1B4E]">AI assistant</h3>
+          <p>
+            Use the floating button in the bottom-right corner for guided help,
+            suggestions, and quick access to assessments.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-start space-x-3">
+        <div class="w-8 h-8 rounded-full bg-[#F3E8FF] flex items-center justify-center text-[#7C3AED]">
+          3
+        </div>
+        <div>
+          <h3 class="font-semibold text-[#2D1B4E]">Health & safety</h3>
+          <p>
+            Track activities, monitor safety alerts, and keep medical information
+            organized so every caregiver stays on the same page.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 bg-[#F9FAFB] flex items-center justify-between">
+      <button
+        type="button"
+        class="text-sm text-[#6B5B8C] hover:text-[#4B5563]"
+        (click)="skipTour()"
+      >
+        Skip for now
+      </button>
+
+      <div class="flex items-center space-x-3">
+        <button
+          type="button"
+          class="px-4 py-2 rounded-full border border-[#C4B5FD] text-sm text-[#7C3AED] hover:bg-[#F3E8FF]"
+          (click)="skipTour()"
+        >
+          Remind me later
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-full bg-[#7C3AED] text-sm text-white font-medium hover:bg-[#6D28D9]"
+          (click)="finishTour()"
+        >
+          Start using EverCare
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

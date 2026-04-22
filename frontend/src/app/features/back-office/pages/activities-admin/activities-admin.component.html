@@ -1,0 +1,515 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E] mb-1">
+          Activities management
+        </h1>
+        <p class="text-sm text-[#6B5B8C]">
+          Create, edit, and curate the activities exactly as patients see them in the front office.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
+        (click)="startCreate()"
+      >
+        <span class="mr-2 text-lg">＋</span>
+        New activity
+      </button>
+    </header>
+
+    <!-- Content -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+      <!-- Left side: list styled like front office cards -->
+      <div class="space-y-4">
+        <h2 class="text-sm font-semibold text-[#6B5B8C] uppercase tracking-wide">
+          Library
+        </h2>
+
+        <div class="space-y-4">
+          <div
+            *ngFor="let activity of pagedActivities"
+            class="cursor-pointer group"
+            (click)="goToDetails(activity)"
+          >
+            <div
+              class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
+              [ngClass]="
+                selectedActivity?.id === activity.id
+                  ? 'border-[#7C3AED] bg-white shadow-xl'
+                  : 'border-[#DDD6FE] bg-white group-hover:shadow-xl'
+              "
+            >
+              <!-- Image + badges (mirrors front office cards) -->
+              <div class="relative h-44 overflow-hidden">
+                <img
+                  [src]="activity.imageUrl || '/assets/logo.png'"
+                  [alt]="activity.name"
+                  class="w-full h-full object-cover"
+                />
+
+                <div class="absolute top-3 right-3 flex gap-2">
+                  <span
+                    *ngIf="activity.doctorSuggested"
+                    class="inline-flex items-center rounded-full bg-[#C4B5FD] text-[#2D1B4E] px-2 py-1 text-xs font-medium border border-[#7C3AED]"
+                  >
+                    ✨ Doctor
+                  </span>
+                  <span
+                    class="inline-flex items-center rounded-full bg-white/90 text-[#2D1B4E] px-2 py-1 text-xs font-medium"
+                  >
+                    ★ {{ activity.rating | number : '1.1-1' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-[#2D1B4E] mb-1">
+                      {{ activity.name || 'Untitled activity' }}
+                    </h3>
+                    <p class="text-xs text-[#6B5B8C] line-clamp-2">
+                      {{ activity.description || 'No description yet.' }}
+                    </p>
+                  </div>
+
+                  <div class="space-y-1 text-right">
+                    <div
+                      class="inline-flex items-center rounded-full border px-3 py-1 text-[11px]"
+                      [ngClass]="{
+                        'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation',
+                        'bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive',
+                        'bg-green-100 text-green-700 border-green-200': activity.type === 'Physical',
+                        'bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social',
+                        'bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'
+                      }"
+                    >
+                      {{ activity.type }}
+                    </div>
+                    <div
+                      class="inline-flex items-center rounded-full border px-3 py-1 text-[11px]"
+                      [ngClass]="{
+                        'bg-green-100 text-green-700 border-green-200': activity.difficulty === 'Easy',
+                        'bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate',
+                        'bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'
+                      }"
+                    >
+                      {{ activity.difficulty }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-[#6B5B8C]">
+                  <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1">
+                      <span>⏱</span>
+                      <span>{{ activity.duration }} min</span>
+                    </div>
+                    <div class="flex items-center gap-1" *ngIf="activity.scheduledTime">
+                      <span>🕒</span>
+                      <span>{{ activity.scheduledTime }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      class="px-2 py-1 rounded-full text-[11px] border border-[#E5D9FF] text-[#7C3AED] bg-[#F3E8FF] hover:bg-[#EDE9FE]"
+                      (click)="selectActivity(activity); $event.stopPropagation()"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      class="px-2 py-1 rounded-full text-[11px] border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100"
+                      (click)="deleteActivity(activity); $event.stopPropagation()"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p
+            *ngIf="activities.length === 0"
+            class="text-sm text-[#6B5B8C] text-center border border-dashed border-[#DDD6FE] rounded-xl py-6 bg-white/70"
+          >
+            No activities yet. Click <span class="font-semibold">New activity</span> to add your first
+            one.
+          </p>
+
+          <!-- Pagination -->
+          <div
+            *ngIf="activities.length > pageSize"
+            class="flex items-center justify-between pt-2 text-xs text-[#6B5B8C]"
+          >
+            <div>
+              Page
+              <span class="font-semibold text-[#2D1B4E]">{{ currentPage }}</span>
+              of
+              <span class="font-semibold text-[#2D1B4E]">{{ totalPages }}</span>
+            </div>
+
+            <div class="inline-flex items-center gap-1 bg-white/80 rounded-full px-1 py-0.5 border border-[#E5D9FF]">
+              <button
+                type="button"
+                class="px-2 py-1 rounded-full hover:bg-[#F3E8FF] disabled:opacity-50"
+                (click)="prevPage()"
+                [disabled]="currentPage === 1"
+              >
+                ‹
+              </button>
+              <button
+                *ngFor="let page of pages"
+                type="button"
+                class="min-w-[2rem] px-2 py-1 rounded-full text-xs"
+                [ngClass]="
+                  page === currentPage
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#6B5B8C] hover:bg-[#F3E8FF]'
+                "
+                (click)="setPage(page)"
+              >
+                {{ page }}
+              </button>
+              <button
+                type="button"
+                class="px-2 py-1 rounded-full hover:bg-[#F3E8FF] disabled:opacity-50"
+                (click)="nextPage()"
+                [disabled]="currentPage === totalPages"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side: CRUD form + live preview, matching front-office details -->
+      <div class="space-y-4">
+        <h2 class="text-sm font-semibold text-[#6B5B8C] uppercase tracking-wide">
+          {{ formMode === 'create' ? 'Create activity' : 'Edit activity' }}
+        </h2>
+
+        <div class="space-y-4">
+          <!-- Basic info card -->
+          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <h3 class="text-sm font-semibold text-[#2D1B4E]">
+                  Basic information
+                </h3>
+                <p class="text-xs text-[#6B5B8C]">
+                  These fields control the main card shown in the front office.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Title</span>
+                <input
+                  type="text"
+                  [(ngModel)]="formModel.name"
+                  name="name"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="Morning Breathing Exercise"
+                />
+              </label>
+
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Type</span>
+                <select
+                  [(ngModel)]="formModel.type"
+                  name="type"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                >
+                  <option *ngFor="let t of activityTypes" [value]="t">
+                    {{ t }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Duration (minutes)</span>
+                <input
+                  type="number"
+                  min="1"
+                  [(ngModel)]="formModel.duration"
+                  name="duration"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="20"
+                />
+              </label>
+
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Scheduled time (optional)</span>
+                <input
+                  type="text"
+                  [(ngModel)]="formModel.scheduledTime"
+                  name="scheduledTime"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="10:00 AM"
+                />
+              </label>
+
+              <label class="space-y-1 sm:col-span-2">
+                <span class="text-xs font-medium text-[#4B5563]">Image URL</span>
+                <input
+                  type="text"
+                  [(ngModel)]="formModel.imageUrl"
+                  name="imageUrl"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </label>
+
+              <label class="space-y-1 sm:col-span-2">
+                <span class="text-xs font-medium text-[#4B5563]">Short description</span>
+                <textarea
+                  rows="3"
+                  [(ngModel)]="formModel.description"
+                  name="description"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="This is what patients will see on the card and details page."
+                ></textarea>
+              </label>
+            </div>
+          </div>
+
+          <!-- Configuration card -->
+          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+            <h3 class="text-sm font-semibold text-[#2D1B4E]">
+              Configuration
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Difficulty</span>
+                <select
+                  [(ngModel)]="formModel.difficulty"
+                  name="difficulty"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                >
+                  <option *ngFor="let d of difficultyLevels" [value]="d">
+                    {{ d }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="space-y-1">
+                <span class="text-xs font-medium text-[#4B5563]">Frequency</span>
+                <input
+                  type="text"
+                  [(ngModel)]="formModel.frequency"
+                  name="frequency"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="Daily, 3 times per week..."
+                />
+              </label>
+
+              <label class="space-y-1 sm:col-span-2">
+                <span class="text-xs font-medium text-[#4B5563]">Supervision</span>
+                <input
+                  type="text"
+                  [(ngModel)]="formModel.supervision"
+                  name="supervision"
+                  class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                  placeholder="Independent, caregiver presence recommended..."
+                />
+              </label>
+
+              <div class="space-y-2 sm:col-span-2">
+                <span class="text-xs font-medium text-[#4B5563]">Recommended Alzheimer stages</span>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    *ngFor="let stage of stages"
+                    class="px-3 py-1 rounded-full text-xs border"
+                    [ngClass]="
+                      formModel.recommendedStage.includes(stage)
+                        ? 'bg-[#7C3AED] border-[#7C3AED] text-white'
+                        : 'bg-white border-[#E5E7EB] text-[#4B5563]'
+                    "
+                    (click)="toggleStage(stage)"
+                  >
+                    {{ stage }}
+                  </button>
+                </div>
+              </div>
+
+              <label class="inline-flex items-center gap-2 text-xs text-[#4B5563] sm:col-span-2">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="formModel.doctorSuggested"
+                  name="doctorSuggested"
+                  class="rounded border-[#E5E7EB] text-[#7C3AED] focus:ring-[#7C3AED]"
+                />
+                <span>Doctor suggested</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Content sections, mirroring details page -->
+          <div class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+            <h3 class="text-sm font-semibold text-[#2D1B4E]">
+              Steps & benefits
+            </h3>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
+              <!-- Instructions -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-[#4B5563]">Step-by-step instructions</span>
+                  <button
+                    type="button"
+                    class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
+                    (click)="addInstruction()"
+                  >
+                    + Add step
+                  </button>
+                </div>
+
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  <div
+                    *ngFor="let step of formModel.instructions; let i = index"
+                    class="flex items-start gap-2"
+                  >
+                    <span
+                      class="flex-shrink-0 w-6 h-6 rounded-full bg-[#7C3AED] text-white flex items-center justify-center text-[11px]"
+                    >
+                      {{ i + 1 }}
+                    </span>
+                    <textarea
+                      rows="2"
+                      [(ngModel)]="formModel.instructions[i]"
+                      [name]="'instruction-' + i"
+                      class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                      placeholder="Describe this step..."
+                    ></textarea>
+                    <button
+                      type="button"
+                      class="text-xs text-rose-500 px-1"
+                      (click)="removeInstruction(i)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Benefits & precautions -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-[#4B5563]">Benefits</span>
+                  <button
+                    type="button"
+                    class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
+                    (click)="addBenefit()"
+                  >
+                    + Add benefit
+                  </button>
+                </div>
+                <div class="space-y-2 max-h-24 overflow-y-auto pr-1">
+                  <div
+                    *ngFor="let benefit of formModel.benefits; let i = index"
+                    class="flex items-start gap-2"
+                  >
+                    <span class="mt-1 text-sm">✅</span>
+                    <input
+                      type="text"
+                      [(ngModel)]="formModel.benefits[i]"
+                      [name]="'benefit-' + i"
+                      class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                      placeholder="Describe a benefit..."
+                    />
+                    <button
+                      type="button"
+                      class="text-xs text-rose-500 px-1"
+                      (click)="removeBenefit(i)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-[#4B5563]">Precautions (optional)</span>
+                    <button
+                      type="button"
+                      class="text-xs text-[#7C3AED] hover:text-[#6D28D9]"
+                      (click)="addPrecaution()"
+                    >
+                      + Add precaution
+                    </button>
+                  </div>
+                  <div class="space-y-2 max-h-24 overflow-y-auto pr-1">
+                    <div
+                      *ngFor="
+                        let precaution of formModel.precautions || [];
+                        let i = index
+                      "
+                      class="flex items-start gap-2"
+                    >
+                      <span class="mt-1 text-sm">⚠️</span>
+                      <input
+                        type="text"
+                        [(ngModel)]="formModel.precautions![i]"
+                        [name]="'precaution-' + i"
+                        class="flex-1 rounded-xl border border-[#E5E7EB] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#C4B5FD]"
+                        placeholder="Mention a precaution..."
+                      />
+                      <button
+                        type="button"
+                        class="text-xs text-rose-500 px-1"
+                        (click)="removePrecaution(i)"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions + small preview hint -->
+          <div class="flex items-center justify-between gap-4">
+            <div class="text-xs text-[#6B5B8C]">
+              Saving will immediately update how this activity looks in the front-office cards and
+              details page.
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
+                (click)="saveActivity()"
+              >
+                <span class="mr-2">💾</span>
+                Save activity
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center px-3 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200 hover:bg-rose-100 transition-colors"
+                (click)="deleteCurrentActivity()"
+                [disabled]="!formModel.id"
+              >
+                <span class="mr-1">🗑️</span>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

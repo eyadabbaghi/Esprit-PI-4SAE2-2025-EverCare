@@ -1,1 +1,119 @@
-<p>footer works!</p>
+<footer class="bg-gradient-to-br from-[#7C3AED] via-[#9333EA] to-[#A855F7] text-white mt-20 relative">
+
+  <div class="max-w-7xl mx-auto px-6 py-12">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="bg-white/10 backdrop-blur-sm p-2 rounded-lg">
+            <lucide-icon name="brain" class="w-8 h-8"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold">EverCare</h3>
+            <p class="text-sm text-[#E9D5FF]">Alzheimer's Care Platform</p>
+          </div>
+        </div>
+
+        <p class="text-[#E9D5FF] text-sm leading-relaxed mb-4">
+          Comprehensive care solutions for Alzheimer's patients and their caregivers.
+          Supporting families with compassion and cutting-edge technology.
+        </p>
+
+        <div class="flex items-center gap-2 text-sm">
+          <lucide-icon name="heart" class="w-4 h-4 text-pink-300"></lucide-icon>
+          <span class="text-[#E9D5FF]">Caring for those who matter most</span>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+        <ul class="space-y-2">
+          <li *ngFor="let link of quickLinks">
+            <a [href]="link.href"
+               class="text-[#E9D5FF] hover:text-white transition-colors text-sm">
+              {{ link.name }}
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Features -->
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Features</h4>
+        <div class="space-y-2">
+          <div *ngFor="let feature of features"
+               class="flex items-center gap-2 text-sm text-[#E9D5FF] hover:text-white transition-colors">
+            <lucide-icon [name]="feature.icon" class="w-4 h-4"></lucide-icon>
+            {{ feature.name }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="text-lg font-semibold mb-4">Contact Us</h4>
+
+        <div class="space-y-4">
+
+          <div class="flex items-center gap-3">
+            <lucide-icon name="mail" class="w-4 h-4"></lucide-icon>
+            <a href="mailto:support@evercare.com"
+               class="text-sm hover:text-white">
+              support@evercare.com
+            </a>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <lucide-icon name="phone" class="w-4 h-4"></lucide-icon>
+            <a href="tel:1-800-EVERCARE"
+               class="text-sm hover:text-white">
+              1-800-EVERCARE
+            </a>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <lucide-icon name="map-pin" class="w-4 h-4"></lucide-icon>
+            <span class="text-sm">
+              123 Care Street, New York, NY
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom -->
+    <div class="border-t border-white/20 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+
+      <!-- Social -->
+      <div class="flex gap-3">
+        <a *ngFor="let social of socialLinks"
+           [href]="social.href"
+           class="bg-white/10 p-2 rounded-lg hover:bg-white/20 transition">
+          <lucide-icon [name]="social.icon" class="w-5 h-5"></lucide-icon>
+        </a>
+      </div>
+
+      <!-- Legal -->
+      <div class="text-sm text-[#E9D5FF] flex gap-4 flex-wrap">
+        <a href="#" class="hover:text-white">Privacy Policy</a>
+        <a href="#" class="hover:text-white">Terms of Service</a>
+        <a href="#" class="hover:text-white">Cookie Policy</a>
+        <a href="#" class="hover:text-white">Accessibility</a>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="text-center mt-8 pt-6 border-t border-white/20">
+      <p class="text-sm text-[#E9D5FF]">
+        © {{ currentYear }} EverCare. All rights reserved.
+      </p>
+    </div>
+
+  </div>
+
+</footer>

@@ -1,15 +1,15 @@
-<!-- login.component.html -->
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
   <div class="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
 
     <!-- Left Side - Branding -->
     <div class="hidden md:flex flex-col justify-center space-y-6 p-8">
       <div class="flex items-center space-x-3">
-        <div class="bg-[#7C3AED] rounded-full p-3">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="none">
-            <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.54 1.33 10.8 4 14l8 8 8-8c2.67-3.2 2.54-7.46-.58-9.42z"/>
-          </svg>
-        </div>
+          <img
+  src="/logo.png"
+  alt="EverCare logo"
+  class="h-15 w-20 rounded-xl object-contain "
+  onerror="this.onerror=null; this.src='data:image/svg+xml,...';"
+/>
         <h1 class="text-4xl font-bold text-[#2D1B4E]">EverCare</h1>
       </div>
 
@@ -190,7 +190,7 @@
                   type="text"
                   placeholder="John Doe"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                >
+                />
               </div>
             </div>
 
@@ -206,10 +206,11 @@
                   type="email"
                   placeholder="your.email@example.com"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                >
+                />
               </div>
             </div>
 
+            <!-- Enhanced password field with strength meter -->
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Password</label>
               <div class="relative">
@@ -222,7 +223,42 @@
                   type="password"
                   placeholder="••••••••"
                   class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
-                >
+                  [class.border-red-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+                />
+              </div>
+
+              <!-- Password strength meter -->
+              <div *ngIf="registerForm.get('password')?.value" class="mt-2">
+                <div class="flex justify-between mb-1 text-xs">
+                  <span>Strength: {{ getPasswordStrength().message }}</span>
+                  <span>{{ getPasswordStrength().level }}/4</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="h-2 rounded-full transition-all duration-300 {{ getStrengthColor() }}"
+                    [style.width.%]="getStrengthPercentage()"
+                  ></div>
+                </div>
+                <!-- Requirements checklist (calling component methods) -->
+                <ul class="text-xs mt-2 space-y-1 text-[#6B5B8C]">
+                  <li [class.text-green-600]="hasMinLength()">
+                    ✓ At least 8 characters
+                  </li>
+                  <li [class.text-green-600]="hasUpperCase()">
+                    ✓ Contains uppercase letter
+                  </li>
+                  <li [class.text-green-600]="hasDigit()">
+                    ✓ Contains digit
+                  </li>
+                  <li [class.text-green-600]="hasSpecialChar()">
+                    ✓ Contains special character (!&#64;#$%^&*)
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Error message (HTML entities for @) -->
+              <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-xs">
+                Password must be at least 8 characters, include an uppercase letter, a digit, and a special character (!&#64;#$%^&*)
               </div>
             </div>
 

@@ -10,25 +10,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Build project
-      run: |
-        cd backend
-        mvn clean install -DskipTests
+      - name: Build project
+        run: |
+          cd backend
+          mvn clean install -Dmaven.test.skip=true
 
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v2
-      with:
-        projectBaseDir: backend
-        args: >
-          -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare
-          -Dsonar.organization=eyadabbaghi
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          projectBaseDir: backend
+          args: >
+            -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare
+            -Dsonar.organization=eyadabbaghi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -6,6 +6,7 @@ pipeline {
         DOCKER_REGISTRY = 'docker.io'
         SONAR_HOST_URL = 'http://10.0.2.15:9000'
         APP_DIR = 'backend/appointment-service'
+        BACKEND_DIR = 'backend'
         BRANCH_NAME = 'Badr-branch'
     }
 
@@ -20,25 +21,25 @@ pipeline {
 
         stage('Build Maven') {
             steps {
-                dir(env.APP_DIR) {
-                    sh 'mvn clean compile -DskipTests'
+                dir(env.BACKEND_DIR) {
+                    sh 'mvn clean compile -DskipTests -pl appointment-service -am'
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                dir(env.APP_DIR) {
+                dir(env.BACKEND_DIR) {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
-                            mvn sonar:sonar \
+                            mvn sonar:sonar -pl appointment-service -am \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
                                 -Dsonar.projectKey=evercare-appointment \
                                 -Dsonar.projectName="EverCare - Appointment Service" \
-                                -Dsonar.java.binaries=target/classes \
-                                -Dsonar.sources=src/main/java \
-                                -Dsonar.tests=
+                                -Dsonar.java.binaries=appointment-service/target/classes \
+                                -Dsonar.sources=appointment-service/src/main/java \
+                                -Dsonar.tests=appointment-service/src/test/java
                         '''
                     }
                 }
@@ -47,8 +48,8 @@ pipeline {
 
         stage('Package JAR') {
             steps {
-                dir(env.APP_DIR) {
-                    sh 'mvn package -DskipTests'
+                dir(env.BACKEND_DIR) {
+                    sh 'mvn package -DskipTests -pl appointment-service -am'
                 }
             }
         }

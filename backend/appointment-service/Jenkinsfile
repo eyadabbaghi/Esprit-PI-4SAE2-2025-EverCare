@@ -101,7 +101,7 @@ pipeline {
         }
     }
 
-post {
+    post {
         always {
             sh 'docker system prune -f || true'
         }
@@ -129,15 +129,6 @@ post {
                 """,
                 subject: "❌ Build Failed - EverCare Appointment Service #${env.BUILD_ID}",
                 to: 'Bader.Klila@gmail.com, baderklila@gmail.com'
-        }
-    }
-        success {
-            echo '✅ Build et analyse SonarQube réussis!'
-            echo "📦 Image Docker: ${DOCKER_IMAGE}:${env.BUILD_ID}"
-            echo "📊 Rapport SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-appointment"
-        }
-        failure {
-            echo '❌ Pipeline échouée!'
         }
     }
 }

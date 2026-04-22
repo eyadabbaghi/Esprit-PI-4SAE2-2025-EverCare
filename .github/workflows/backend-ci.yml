@@ -18,19 +18,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Verify project structure
-      run: echo "Project detected successfully"
-
-    - name: List files
-      run: ls -R
-
-    #  Build backend 
     - name: Build project
-      run: |
-        cd backend
-        mvn clean install -DskipTests
+      run: mvn clean install -DskipTests
 
-    # SonarCloud analysis (FIXED)
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       with:

@@ -22,7 +22,7 @@ pipeline {
         stage('Build Maven') {
             steps {
                 dir(env.BACKEND_DIR) {
-                    sh 'mvn clean compile -DskipTests -pl appointment-service -am'
+                    sh 'mvn clean compile -DskipTests -pl appointment-service -N'
                 }
             }
         }
@@ -32,7 +32,7 @@ pipeline {
                 dir(env.BACKEND_DIR) {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
-                            mvn sonar:sonar -pl appointment-service -am \
+                            mvn sonar:sonar -pl appointment-service -N \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
                                 -Dsonar.projectKey=evercare-appointment \
@@ -49,7 +49,7 @@ pipeline {
         stage('Package JAR') {
             steps {
                 dir(env.BACKEND_DIR) {
-                    sh 'mvn package -DskipTests -pl appointment-service -am'
+                    sh 'mvn package -DskipTests -pl appointment-service -N'
                 }
             }
         }

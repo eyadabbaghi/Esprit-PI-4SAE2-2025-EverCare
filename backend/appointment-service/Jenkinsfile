@@ -30,16 +30,15 @@ pipeline {
             steps {
                 dir(env.APP_DIR) {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                        sh """
-                            mvn sonar:sonar \\
-                                -Dsonar.host.url=${SONAR_HOST_URL} \\
-                                -Dsonar.login=${SONAR_TOKEN} \\
-                                -Dsonar.projectKey=evercare-appointment \\
-                                -Dsonar.projectName="EverCare - Appointment Service" \\
-                                -Dsonar.java.binaries=target/classes \\
-                                -Dsonar.sources=src/main/java \\
-                                -Dsonar.tests=
-                        """
+                        sh '''
+                            mvn sonar:sonar \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.projectKey=evercare-appointment \
+                                -Dsonar.projectName="EverCare - Appointment Service" \
+                                -Dsonar.java.binaries=target/classes \
+                                -Dsonar.sources=src/main/java
+                        '''
                     }
                 }
             }

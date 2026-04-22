@@ -5,7 +5,6 @@ pipeline {
         DOCKER_IMAGE = 'badrftw/evercare-appointment'
         DOCKER_REGISTRY = 'docker.io'
         SONAR_HOST_URL = 'http://10.0.2.15:9000'
-        SONAR_TOKEN = credentials('sonarqube-token')
         APP_DIR = 'backend/appointment-service'
         BRANCH_NAME = 'Badr-branch'
     }
@@ -22,26 +21,25 @@ pipeline {
         stage('Build Maven') {
             steps {
                 dir(env.APP_DIR) {
-                    sh 'mvn clean compile'
+                    sh 'mvn clean compile -DskipTests'
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    withSonarQubeEnv('sonarqube-evercare') {
-                        dir(env.APP_DIR) {
-                            sh 'mvn compile'
-                            withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN_SECURE')]) {
-                                sh """
-                                    mvn sonar:sonar \\
-                                        -Dsonar.java.binaries=target/classes \\
-                                        -Dsonar.host.url=${SONAR_HOST_URL} \\
-                                        -Dsonar.token=${SONAR_TOKEN_SECURE}
-                                """
-                            }
-                        }
+                dir(env.APP_DIR) {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                            mvn sonar:sonar \\
+                                -Dsonar.host.url=${SONAR_HOST_URL} \\
+                                -Dsonar.login=${SONAR_TOKEN} \\
+                                -Dsonar.projectKey=evercare-appointment \\
+                                -Dsonar.projectName="EverCare - Appointment Service" \\
+                                -Dsonar.java.binaries=target/classes \\
+                                -Dsonar.sources=src/main/java \\
+                                -Dsonar.tests=
+                        """
                     }
                 }
             }

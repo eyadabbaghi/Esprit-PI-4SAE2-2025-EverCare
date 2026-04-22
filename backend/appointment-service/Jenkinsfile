@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3'
-        jdk 'JDK-17'
-    }
-
     environment {
         DOCKER_IMAGE = 'badrftw/evercare-appointment'
         DOCKER_TAG = 'latest'

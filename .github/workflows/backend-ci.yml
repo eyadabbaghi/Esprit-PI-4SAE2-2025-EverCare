@@ -19,7 +19,9 @@ jobs:
         distribution: 'temurin'
 
     - name: Build project
-      run: mvn clean install -DskipTests
+      run: |
+        cd backend
+        mvn clean install -DskipTests
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2

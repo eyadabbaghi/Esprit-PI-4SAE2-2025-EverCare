@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'M2_HOME'
-        jdk 'JAVA_HOME'
-    }
-
     environment {
         DOCKER_IMAGE = 'badrftw/evercare-appointment'
         DOCKER_REGISTRY = 'docker.io'

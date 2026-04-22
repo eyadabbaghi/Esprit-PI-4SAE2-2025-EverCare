@@ -1,0 +1,23 @@
+/* Hover effects for alert stats cards */
+.alert-stat-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.alert-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12);
+}
+
+/* Hover effects for each alert row */
+.alert-row {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.alert-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(45, 27, 78, 0.15);
+}
+
+/* Slight emphasis on action buttons on hover via existing button styles */

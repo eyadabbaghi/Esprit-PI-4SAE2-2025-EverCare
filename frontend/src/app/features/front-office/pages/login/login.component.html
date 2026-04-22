@@ -1,0 +1,310 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+  <div class="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+
+    <!-- Left Side - Branding -->
+    <div class="hidden md:flex flex-col justify-center space-y-6 p-8">
+      <div class="flex items-center space-x-3">
+          <img
+  src="/logo.png"
+  alt="EverCare logo"
+  class="h-15 w-20 rounded-xl object-contain "
+  onerror="this.onerror=null; this.src='data:image/svg+xml,...';"
+/>
+        <h1 class="text-4xl font-bold text-[#2D1B4E]">EverCare</h1>
+      </div>
+
+      <h2 class="text-3xl font-semibold text-[#2D1B4E]">
+        Caring for your loved ones, every day
+      </h2>
+
+      <p class="text-lg text-[#6B5B8C]">
+        A comprehensive elderly care platform designed to support patients, caregivers,
+        and healthcare professionals with warmth and compassion.
+      </p>
+
+      <div class="space-y-4 pt-4">
+        <!-- Feature 1 -->
+        <div class="flex items-start space-x-3">
+          <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
+              <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.54 1.33 10.8 4 14l8 8 8-8c2.67-3.2 2.54-7.46-.58-9.42z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-[#2D1B4E]">Daily Care Support</h3>
+            <p class="text-sm text-[#6B5B8C]">Track moods, medications, and daily activities</p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="flex items-start space-x-3">
+          <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
+              <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.54 1.33 10.8 4 14l8 8 8-8c2.67-3.2 2.54-7.46-.58-9.42z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-[#2D1B4E]">Safety Alerts</h3>
+            <p class="text-sm text-[#6B5B8C]">Real-time incident tracking and emergency notifications</p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="flex items-start space-x-3">
+          <div class="bg-[#C4B5FD] rounded-full p-2 mt-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#7C3AED" stroke="none">
+              <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.54 1.33 10.8 4 14l8 8 8-8c2.67-3.2 2.54-7.46-.58-9.42z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-[#2D1B4E]">Connected Care</h3>
+            <p class="text-sm text-[#6B5B8C]">Coordinate appointments and medical records seamlessly</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Auth Forms -->
+    <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6 pt-0">
+      <div class="space-y-6">
+        <!-- Mobile Logo -->
+        <div class="flex md:hidden items-center justify-center space-x-2">
+          <div class="bg-[#7C3AED] rounded-full p-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="none">
+              <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.54 1.33 10.8 4 14l8 8 8-8c2.67-3.2 2.54-7.46-.58-9.42z"/>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-[#2D1B4E]">EverCare</h1>
+        </div>
+
+        <div class="text-center">
+          <h2 class="text-2xl font-semibold text-[#2D1B4E]">Welcome</h2>
+          <p class="text-sm text-[#6B5B8C] mt-1">Sign in to your account or create a new one</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="w-full">
+          <div class="grid grid-cols-2 gap-1 bg-[#F1F5F9] p-1 rounded-xl">
+            <button
+              class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              [class]="activeTab === 'login' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'"
+              (click)="onTabChange('login')">
+              Sign In
+            </button>
+            <button
+              class="px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              [class]="activeTab === 'register' ? 'bg-white text-[#0F172A] shadow-sm' : 'text-[#64748B] hover:text-[#0F172A]'"
+              (click)="onTabChange('register')">
+              Sign Up
+            </button>
+          </div>
+        </div>
+
+        <!-- Login Form -->
+        <div *ngIf="activeTab === 'login'">
+          <form [formGroup]="loginForm"  (ngSubmit)="handleLogin()" class="space-y-4" >
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Email</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-3 h-4 w-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                <input
+                  formControlName="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                  [class.border-red-500]="lf['email'].invalid && lf['email'].touched"
+                >
+              </div>
+              <div *ngIf="lf['email'].invalid && lf['email'].touched" class="text-red-500 text-xs">
+                Please enter a valid email
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Password</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-3 h-4 w-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  formControlName="password"
+                  type="password"
+                  placeholder="••••••••"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                  [class.border-red-500]="lf['password'].invalid && lf['password'].touched"
+                >
+              </div>
+              <div *ngIf="lf['password'].invalid && lf['password'].touched" class="text-red-500 text-xs">
+                Password is required
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ isLoading ? 'Signing in...' : 'Sign In' }}
+            </button>
+          </form>
+
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t border-[#C4B5FD]"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-white px-2 text-[#6B5B8C]">Or continue with</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="handleGoogleLogin()"
+            [disabled]="isLoading"
+            class="w-full border border-[#C4B5FD] hover:bg-[#F3E8FF] text-[#1E293B] font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign in with Google
+          </button>
+        </div>
+
+        <!-- Register Form -->
+        <div *ngIf="activeTab === 'register'">
+          <form [formGroup]="registerForm" (ngSubmit)="handleRegister()" class="space-y-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Full Name</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-3 h-4 w-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input
+                  formControlName="name"
+                  type="text"
+                  placeholder="John Doe"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Email</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-3 h-4 w-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+                <input
+                  formControlName="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <!-- Enhanced password field with strength meter -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Password</label>
+              <div class="relative">
+                <svg class="absolute left-3 top-3 h-4 w-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  formControlName="password"
+                  type="password"
+                  placeholder="••••••••"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent"
+                  [class.border-red-500]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+                />
+              </div>
+
+              <!-- Password strength meter -->
+              <div *ngIf="registerForm.get('password')?.value" class="mt-2">
+                <div class="flex justify-between mb-1 text-xs">
+                  <span>Strength: {{ getPasswordStrength().message }}</span>
+                  <span>{{ getPasswordStrength().level }}/4</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    class="h-2 rounded-full transition-all duration-300 {{ getStrengthColor() }}"
+                    [style.width.%]="getStrengthPercentage()"
+                  ></div>
+                </div>
+                <!-- Requirements checklist (calling component methods) -->
+                <ul class="text-xs mt-2 space-y-1 text-[#6B5B8C]">
+                  <li [class.text-green-600]="hasMinLength()">
+                    ✓ At least 8 characters
+                  </li>
+                  <li [class.text-green-600]="hasUpperCase()">
+                    ✓ Contains uppercase letter
+                  </li>
+                  <li [class.text-green-600]="hasDigit()">
+                    ✓ Contains digit
+                  </li>
+                  <li [class.text-green-600]="hasSpecialChar()">
+                    ✓ Contains special character (!&#64;#$%^&*)
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Error message (HTML entities for @) -->
+              <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500 text-xs">
+                Password must be at least 8 characters, include an uppercase letter, a digit, and a special character (!&#64;#$%^&*)
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">I am a...</label>
+              <select
+                formControlName="role"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+                <option *ngFor="let role of userRoles" [value]="role.value">
+                  {{ role.label }}
+                </option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50">
+              {{ isLoading ? 'Creating account...' : 'Create Account' }}
+            </button>
+          </form>
+
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t border-[#C4B5FD]"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-white px-2 text-[#6B5B8C]">Or continue with</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="handleGoogleLogin()"
+            [disabled]="isLoading"
+            class="w-full border border-[#C4B5FD] hover:bg-[#F3E8FF] text-[#1E293B] font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign up with Google
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+<div class="min-h-screen bg-[#FAF8FC] p-6">
+  <div class="max-w-7xl mx-auto space-y-10">
+    <!-- Header -->
+    <section class="text-center space-y-3">
+      <div class="flex items-center justify-center gap-3 mb-2">
+        <div class="w-12 h-12 rounded-2xl bg-[#EDE9FE] flex items-center justify-center">
+          <span class="text-2xl">🧠</span>
+        </div>
+      </div>
+      <h1 class="text-4xl font-semibold text-[#2D1B4E]">
+        Recommended Activities
+      </h1>
+      <p class="text-lg text-[#6B5B8C] max-w-2xl mx-auto">
+        Activities adapted to your current condition and daily routine.
+      </p>
+    </section>
+
+    <!-- Gentle banner when nothing completed -->
+    <section *ngIf="getCompletionRate() === 0 && todayActivities.length > 0"
+             class="bg-[#F3E8FF] border border-[#C4B5FD] rounded-xl p-4 flex items-center gap-3">
+      <span class="text-[#7C3AED] text-xl">🔔</span>
+      <p class="text-[#2D1B4E] flex-1">
+        You haven't completed any activities today. Let's start with something simple!
+      </p>
+    </section>
+
+    <!-- Today's activities -->
+    <section>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-3xl text-[#2D1B4E] flex items-center gap-2">
+          <span class="text-2xl">📅</span>
+          Today's Activities
+        </h2>
+
+        <span class="inline-flex items-center rounded-full bg-[#7C3AED] text-white px-4 py-2 text-lg">
+          {{ getCompletedTodayCount() }} / {{ todayActivities.length }}&nbsp;Completed
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          *ngFor="let activity of todayActivities"
+          class="cursor-pointer"
+          (click)="viewDetails(activity)"
+        >
+          <div
+            class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
+            [ngClass]="activity.completed
+              ? 'bg-green-50 border-green-200'
+              : 'bg-white border-[#DDD6FE] hover:shadow-2xl'"
+          >
+            <!-- Image -->
+            <div class="relative h-52 overflow-hidden">
+              <img
+                [src]="activity.imageUrl"
+                [alt]="activity.name"
+                class="w-full h-full object-cover"
+              />
+
+              <div class="absolute top-3 right-3 flex gap-2">
+                <span
+                  *ngIf="activity.favorite"
+                  class="inline-flex items-center rounded-full bg-yellow-400 text-yellow-900 px-2 py-1 text-xs font-medium"
+                >
+                  ★ Favorite
+                </span>
+                <span
+                  *ngIf="activity.doctorSuggested"
+                  class="inline-flex items-center rounded-full bg-[#C4B5FD] text-[#2D1B4E] px-2 py-1 text-xs font-medium border border-[#7C3AED]"
+                >
+                  ✨ Doctor
+                </span>
+              </div>
+
+              <div
+                *ngIf="activity.completed"
+                class="absolute inset-0 bg-green-600/20 flex items-center justify-center"
+              >
+                <div class="bg-white rounded-full px-4 py-2 text-green-700 font-semibold">
+                  Completed
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-5 space-y-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <h3 class="text-2xl text-[#2D1B4E] mb-2">
+                    {{ activity.name }}
+                  </h3>
+                  <p class="text-sm text-[#6B5B8C] line-clamp-3">
+                    {{ activity.description }}
+                  </p>
+                </div>
+
+                <div class="text-right space-y-2">
+                  <div class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
+                       [ngClass]="{
+                         'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation',
+                         'bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive',
+                         'bg-green-100 text-green-700 border-green-200': activity.type === 'Physical',
+                         'bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social',
+                         'bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'
+                       }">
+                    {{ activity.type }}
+                  </div>
+                  <div class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
+                       [ngClass]="{
+                         'bg-green-100 text-green-700 border-green-200': activity.difficulty === 'Easy',
+                         'bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate',
+                         'bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'
+                       }">
+                    {{ activity.difficulty }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm text-[#6B5B8C]">
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center gap-1">
+                    <span class="text-base">⏱</span>
+                    <span>{{ activity.duration }} min</span>
+                  </div>
+                  <div class="flex items-center gap-1" *ngIf="activity.scheduledTime">
+                    <span class="text-base">🕒</span>
+                    <span>{{ activity.scheduledTime }}</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <span class="text-yellow-400 text-lg">★</span>
+                  <span class="text-base font-medium text-[#2D1B4E]">
+                    {{ activity.rating | number : '1.1-1' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <button
+                  appButton
+                  class="w-full"
+                  [ngClass]="activity.completed ? 'bg-green-600 hover:bg-green-700' : 'bg-[#7C3AED] hover:bg-[#6D28D9]'"
+                  (click)="completeActivity(activity, $event)"
+                  [disabled]="activity.completed"
+                >
+                  <ng-container *ngIf="activity.completed; else startLabel">
+                    ✅ Completed
+                  </ng-container>
+                  <ng-template #startLabel>
+                    View details &amp; start →
+                  </ng-template>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommended activities -->
+    <section *ngIf="recommendedActivities.length">
+      <h2 class="text-3xl text-[#2D1B4E] mb-6 flex items-center gap-2">
+        <span class="text-2xl">✨</span>
+        Personalized Recommendations
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          *ngFor="let activity of recommendedActivities"
+          class="cursor-pointer"
+          (click)="viewDetails(activity)"
+        >
+          <div
+            class="border-2 border-[#DDD6FE] bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300"
+          >
+            <div class="relative h-52 overflow-hidden">
+              <img
+                [src]="activity.imageUrl"
+                [alt]="activity.name"
+                class="w-full h-full object-cover"
+              />
+
+              <div class="absolute top-3 left-3">
+                <span
+                  class="inline-flex items-center rounded-full bg-[#F3E8FF] text-[#7C3AED] border border-[#C4B5FD] text-sm px-4 py-1.5"
+                >
+                  Recommended for you
+                </span>
+              </div>
+
+              <div class="absolute top-3 right-3">
+                <div class="flex items-center gap-1 bg-white/95 px-3 py-1.5 rounded-full">
+                  <span class="text-yellow-400 text-sm">★</span>
+                  <span class="text-sm font-medium text-[#2D1B4E]">
+                    {{ activity.rating | number : '1.1-1' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-5 space-y-3">
+              <h3 class="text-2xl text-[#2D1B4E]">
+                {{ activity.name }}
+              </h3>
+              <p class="text-sm text-[#6B5B8C] line-clamp-3">
+                {{ activity.description }}
+              </p>
+
+              <div class="flex items-center gap-4 text-sm text-[#6B5B8C]">
+                <div class="flex items-center gap-1">
+                  <span>⏱</span>
+                  <span>{{ activity.duration }} min</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span>📆</span>
+                  <span>{{ activity.frequency }}</span>
+                </div>
+              </div>
+
+              <button
+                appButton
+                class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white mt-2"
+              >
+                Learn more →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

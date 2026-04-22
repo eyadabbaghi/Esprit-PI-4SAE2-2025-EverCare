@@ -1,0 +1,55 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+/* You can add global styles to this file, and also import other style files */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-fadeInUp { animation: fadeInUp 0.8s ease forwards; }
+.animate-fadeInRight { animation: fadeInRight 1s ease forwards; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+/* You can add global styles to this file, and also import other style files */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-fadeInUp { animation: fadeInUp 0.8s ease forwards; }
+.animate-fadeInRight { animation: fadeInRight 1s ease forwards; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+
+
+
+

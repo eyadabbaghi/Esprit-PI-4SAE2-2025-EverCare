@@ -1,0 +1,9 @@
+:host {
+  position: relative;
+  pointer-events: none;
+}
+
+:host > div {
+  pointer-events: auto;
+}
+

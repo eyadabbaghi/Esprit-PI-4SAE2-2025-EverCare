@@ -1,0 +1,208 @@
+<div class="min-h-screen bg-[#FAF8FC] p-6" *ngIf="activity as a">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <!-- Back -->
+    <button
+      appButton
+      variant="outline"
+      class="gap-2 border-[#C4B5FD] text-[#7C3AED] bg-white hover:bg-[#F3E8FF]"
+      (click)="backToList()"
+    >
+      ← Back to activities
+    </button>
+
+    <!-- Hero -->
+    <section class="border-2 border-[#DDD6FE] rounded-2xl overflow-hidden bg-white">
+      <div class="relative h-80 overflow-hidden">
+        <img
+          [src]="a.imageUrl"
+          [alt]="a.name"
+          class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+
+        <div class="absolute bottom-0 left-0 right-0 p-8 text-white space-y-3">
+          <div class="flex flex-wrap gap-2">
+            <span
+              class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
+              [ngClass]="{
+                'bg-blue-100 text-blue-700 border-blue-200': a.type === 'Relaxation',
+                'bg-purple-100 text-purple-700 border-purple-200': a.type === 'Cognitive',
+                'bg-green-100 text-green-700 border-green-200': a.type === 'Physical',
+                'bg-pink-100 text-pink-700 border-pink-200': a.type === 'Social',
+                'bg-orange-100 text-orange-700 border-orange-200': a.type === 'Creative'
+              }"
+            >
+              {{ a.type }}
+            </span>
+            <span
+              class="inline-flex items-center rounded-full border px-3 py-1 text-sm"
+              [ngClass]="{
+                'bg-green-100 text-green-700 border-green-200': a.difficulty === 'Easy',
+                'bg-yellow-100 text-yellow-700 border-yellow-200': a.difficulty === 'Moderate',
+                'bg-orange-100 text-orange-700 border-orange-200': a.difficulty === 'Challenging'
+              }"
+            >
+              {{ a.difficulty }}
+            </span>
+            <span
+              *ngIf="a.doctorSuggested"
+              class="inline-flex items-center rounded-full bg-[#C4B5FD] text-[#2D1B4E] border border-[#7C3AED] px-3 py-1 text-sm"
+            >
+              ✨ Doctor suggested
+            </span>
+          </div>
+
+          <h1 class="text-4xl md:text-5xl font-bold">
+            {{ a.name }}
+          </h1>
+
+          <div class="flex flex-wrap items-center gap-4 text-sm">
+            <div class="flex items-center gap-2">
+              <span>⏱</span>
+              <span>{{ a.duration }} minutes</span>
+            </div>
+            <div class="flex items-center gap-2" *ngIf="a.frequency">
+              <span>📆</span>
+              <span>{{ a.frequency }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-3 gap-6">
+      <!-- Main content -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-3">
+          <h2 class="text-2xl text-[#2D1B4E] mb-2">About this activity</h2>
+          <p class="text-lg text-[#6B5B8C] leading-relaxed">
+            {{ a.description }}
+          </p>
+        </div>
+
+        <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
+          <h2 class="text-2xl text-[#2D1B4E] mb-2">Step-by-step instructions</h2>
+          <ol class="space-y-3">
+            <li
+              *ngFor="let step of a.instructions; index as i"
+              class="flex gap-4 items-start"
+            >
+              <span
+                class="flex-shrink-0 w-8 h-8 rounded-full bg-[#7C3AED] text-white flex items-center justify-center font-medium"
+              >
+                {{ i + 1 }}
+              </span>
+              <span class="text-[#2D1B4E] text-base leading-relaxed">
+                {{ step }}
+              </span>
+            </li>
+          </ol>
+        </div>
+
+        <div class="activity-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-3">
+          <h2 class="text-2xl text-[#2D1B4E] mb-2">Benefits</h2>
+          <ul class="space-y-2">
+            <li
+              *ngFor="let benefit of a.benefits"
+              class="flex items-start gap-2 text-[#2D1B4E]"
+            >
+              <span class="mt-0.5">✅</span>
+              <span>{{ benefit }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div
+          *ngIf="a.precautions?.length"
+          class="activity-card border-2 border-orange-200 rounded-2xl bg-orange-50 p-6 space-y-3"
+        >
+          <h2 class="text-xl text-orange-900 flex items-center gap-2">
+            ⚠️ Precautions
+          </h2>
+          <ul class="space-y-2 text-orange-800">
+            <li *ngFor="let p of a.precautions">
+              • {{ p }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <div class="activity-sidebar-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
+          <h3 class="text-xl text-[#2D1B4E]">Rate this activity</h3>
+
+          <div class="flex justify-center gap-2 mb-2">
+            <button
+              *ngFor="let star of [1,2,3,4,5]"
+              type="button"
+              class="text-2xl focus:outline-none"
+              (click)="rate(star)"
+            >
+              <span
+                [ngClass]="star <= userRating ? 'text-yellow-400' : 'text-gray-300'"
+              >
+                ★
+              </span>
+            </button>
+          </div>
+
+          <div class="text-center text-sm text-[#6B5B8C]" *ngIf="userRating">
+            You rated this {{ userRating }} star{{ userRating !== 1 ? 's' : '' }}.
+          </div>
+
+          <div class="border-t border-[#E5E7EB] pt-4 mt-2 text-center space-y-1">
+            <div class="flex justify-center items-baseline gap-1">
+              <span class="text-3xl font-bold text-[#2D1B4E]">
+                {{ a.rating | number : '1.1-1' }}
+              </span>
+              <span class="text-sm text-[#6B5B8C]">/ 5</span>
+            </div>
+            <p class="text-xs text-[#6B5B8C]">
+              Based on {{ a.totalRatings }} rating{{
+                a.totalRatings !== 1 ? 's' : ''
+              }}
+            </p>
+          </div>
+        </div>
+
+        <div class="activity-sidebar-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
+          <h3 class="text-xl text-[#2D1B4E]">Quick information</h3>
+
+          <div class="space-y-3 text-sm">
+            <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
+              <p class="text-xs text-[#6B5B8C]">Duration</p>
+              <p class="text-lg font-medium text-[#2D1B4E]">
+                {{ a.duration }} minutes
+              </p>
+            </div>
+            <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
+              <p class="text-xs text-[#6B5B8C]">Frequency</p>
+              <p class="text-lg font-medium text-[#2D1B4E]">
+                {{ a.frequency }}
+              </p>
+            </div>
+            <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
+              <p class="text-xs text-[#6B5B8C]">Supervision</p>
+              <p class="text-sm font-medium text-[#2D1B4E]">
+                {{ a.supervision }}
+              </p>
+            </div>
+            <div class="activity-quick-card bg-[#F3E8FF] rounded-lg p-3">
+              <p class="text-xs text-[#6B5B8C] mb-1">Recommended stages</p>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  *ngFor="let stage of a.recommendedStage"
+                  class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
+                >
+                  {{ stage }} stage
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

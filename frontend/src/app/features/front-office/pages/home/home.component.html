@@ -1,0 +1,210 @@
+<app-new-user-flow
+  *ngIf="showNewUserFlow"
+  (finished)="onNewUserFlowFinished()"
+></app-new-user-flow>
+
+<div class="bg-[#FDFBFF] overflow-hidden">
+
+  <!-- ================= HERO ================= -->
+  <section class="relative h-[90vh] flex items-center">
+    <img
+      src="https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=2000&q=80"
+      class="absolute inset-0 w-full h-full object-cover"
+    />
+    <div class="absolute inset-0 bg-gradient-to-r from-[#2D1B4E]/90 via-[#2D1B4E]/70 to-transparent"></div>
+
+    <div class="relative max-w-6xl mx-auto px-6 text-white">
+      <h1 class="text-5xl lg:text-6xl font-bold leading-tight mb-6">
+        Alzheimer’s Care Shouldn’t Be
+        <span class="text-[#C4B5FD]">Reactive.</span>
+      </h1>
+
+      <p class="text-lg max-w-2xl opacity-90 mb-8">
+        Alzheimer’s is unpredictable. Falls, confusion, missed medication —
+        these moments don’t follow a schedule.
+        Care shouldn’t depend on phone calls and notebooks.
+      </p>
+
+      <button
+        appButton
+        class="bg-[#7C3AED] hover:bg-[#6D28D9] shadow-lg transition-all duration-300 transform hover:scale-105"
+        (click)="startJourney()"
+      >
+        Discover EverCare
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= THE PROBLEM ================= -->
+  <section class="py-28 px-6 max-w-7xl mx-auto">
+    <div class="grid lg:grid-cols-2 gap-20 items-center">
+      <div>
+        <h2 class="text-4xl font-bold text-[#2D1B4E] mb-6">
+          The Reality of Alzheimer’s Care
+        </h2>
+        <p class="text-[#6B5B8C] text-lg mb-6">
+          Caregivers must remain alert at all times.
+          Doctors often receive information too late.
+          Families feel overwhelmed and disconnected.
+        </p>
+        <p class="text-[#6B5B8C] text-lg">
+          Today, care is fragmented across phone calls,
+          handwritten notes, and memory.
+          There is no centralized, real-time system connecting
+          patients, caregivers, and doctors.
+        </p>
+      </div>
+
+      <div class="relative">
+        <img
+          src="https://images.unsplash.com/photo-1576765608866-5b51046452be?auto=format&fit=crop&w=1200&q=80"
+          class="rounded-3xl shadow-2xl transition-transform duration-300 hover:scale-105"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= THE SOLUTION ================= -->
+  <section class="py-28 bg-gradient-to-br from-[#F3E8FF] to-white">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <h2 class="text-4xl font-bold text-[#2D1B4E] mb-8">
+        That’s Why We Built EverCare
+      </h2>
+      <p class="text-lg text-[#6B5B8C] max-w-3xl mx-auto mb-16">
+        EverCare is not just an app.
+        It’s a complete care ecosystem where patients,
+        caregivers, and doctors are connected in real time.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-12">
+
+        <div class="bg-white p-10 rounded-3xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:bg-[#F9F5FF]">
+          <svg class="w-10 h-10 text-[#7C3AED] mx-auto mb-6"
+               fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 12h4l3 8 4-16 3 8h4"/>
+          </svg>
+          <h3 class="font-semibold text-xl mb-4 text-[#2D1B4E]">
+            Real-Time Alerts
+          </h3>
+          <p class="text-[#6B5B8C]">
+            Instant risk detection using AI to prevent incidents before they escalate.
+          </p>
+        </div>
+
+        <div class="bg-white p-10 rounded-3xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:bg-[#F9F5FF]">
+          <svg class="w-10 h-10 text-[#7C3AED] mx-auto mb-6"
+               fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 2l8 4v6c0 6-4 10-8 12-4-2-8-6-8-12V6l8-4z"/>
+          </svg>
+          <h3 class="font-semibold text-xl mb-4 text-[#2D1B4E]">
+            Integrated SOS
+          </h3>
+          <p class="text-[#6B5B8C]">
+            Immediate emergency response at the press of a button.
+          </p>
+        </div>
+
+        <div class="bg-white p-10 rounded-3xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:bg-[#F9F5FF]">
+          <svg class="w-10 h-10 text-[#7C3AED] mx-auto mb-6"
+               fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M8 10h8M8 14h6M21 12c0 4-4 8-9 8-1.5 0-3-.3-4.3-.8L3 20l1.8-4.3A8.9 8.9 0 013 12c0-4 4-8 9-8s9 4 9 8z"/>
+          </svg>
+          <h3 class="font-semibold text-xl mb-4 text-[#2D1B4E]">
+            Shared Care Management
+          </h3>
+          <p class="text-[#6B5B8C]">
+            Family, caregivers, and doctors collaborate seamlessly.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+<!-- ================= MODULES ================= -->
+<section class="py-20 px-6 max-w-7xl mx-auto">
+  <h2 class="text-4xl font-bold text-[#2D1B4E] mb-10 text-center">
+    Explore EverCare Modules
+  </h2>
+
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      *ngFor="let card of modules"
+      class="cursor-pointer bg-white rounded-3xl shadow-xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+      [routerLink]="card.primaryRoute ?? ('/' + card.id)"
+    >
+      <div
+        class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl text-white mb-4 bg-gradient-to-br"
+        [ngClass]="card.gradient"
+      >
+        {{ card.icon }}
+      </div>
+
+      <h3 class="text-xl font-semibold text-[#2D1B4E] mb-2">
+        {{ card.title }}
+      </h3>
+      <p class="text-[#6B5B8C]">
+        {{ card.description }}
+      </p>
+    </div>
+  </div>
+</section>
+
+  <!-- ================= DIFFERENTIATION ================= -->
+  <section class="py-28 px-6 max-w-7xl mx-auto">
+    <div class="grid lg:grid-cols-2 gap-20 items-center">
+      <div class="relative">
+        <img
+          src="https://images.unsplash.com/photo-1758686254056-6cd980b9aaee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmYW1pbHklMjBjYXJlJTIwdG9nZXRoZXIlMjBlbGRlcmx5fGVufDF8fHx8MTc2OTk3ODA3MXww&ixlib=rb-4.1.0&q=80&w=1080"
+          class="rounded-3xl shadow-2xl transition-transform duration-300 hover:scale-105"
+        />
+      </div>
+
+      <div>
+        <h2 class="text-4xl font-bold text-[#2D1B4E] mb-6">
+          What Makes EverCare Different?
+        </h2>
+
+        <ul class="space-y-4 text-[#6B5B8C] text-lg">
+          <li>• AI-based real-time risk analysis</li>
+          <li>• Structured incident logs for doctors</li>
+          <li>• Multi-caregiver collaboration</li>
+          <li>• Proactive alerts instead of passive tracking</li>
+        </ul>
+
+        <p class="mt-6 text-[#6B5B8C]">
+          Unlike ALZConnected, MindMate, or PatientsLikeMe,
+          EverCare doesn’t just track — it prevents and connects.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONCLUSION ================= -->
+  <section class="py-28 bg-gradient-to-br from-[#7C3AED] to-[#A78BFA] text-white text-center">
+    <h2 class="text-4xl font-bold mb-6">
+      Moving From Reactive to Proactive Care
+    </h2>
+
+    <p class="text-lg max-w-3xl mx-auto mb-10 opacity-90">
+      EverCare helps prevent incidents before they happen,
+      keeps caregivers informed in real time,
+      and provides doctors with meaningful daily insights.
+      It’s not just monitoring — it’s a partner in care.
+    </p>
+
+    <button
+      appButton
+      class="bg-white text-[#7C3AED] hover:bg-[#F3E8FF] shadow-lg transition-all duration-300 transform hover:scale-105"
+      (click)="startJourney()"
+    >
+      Join the Future of Alzheimer’s Care
+    </button>
+  </section>
+
+</div>

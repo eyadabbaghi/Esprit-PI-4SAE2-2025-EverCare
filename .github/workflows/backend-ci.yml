@@ -18,13 +18,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # ✅ COMPILE ONLY (no tests)
-      - name: Compile project
+      - name: Build project
         run: |
           cd backend
-          mvn clean compile
+          mvn clean install -Dmaven.test.skip=true
 
-      # ✅ SONAR AFTER COMPILE
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
@@ -32,6 +30,5 @@ jobs:
           args: >
             -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare
             -Dsonar.organization=eyadabbaghi
-            -Dsonar.java.binaries=target/classes
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

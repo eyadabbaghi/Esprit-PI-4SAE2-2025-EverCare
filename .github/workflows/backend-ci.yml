@@ -24,9 +24,19 @@ jobs:
     - name: List files
       run: ls -R
 
+    #  Build backend 
+    - name: Build project
+      run: |
+        cd backend
+        mvn clean install -DskipTests
+
+    # SonarCloud analysis (FIXED)
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@v2
       with:
         projectBaseDir: backend
+        args: >
+          -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare
+          -Dsonar.organization=eyadabbaghi
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

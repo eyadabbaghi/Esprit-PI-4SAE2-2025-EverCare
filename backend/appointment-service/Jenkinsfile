@@ -101,10 +101,36 @@ pipeline {
         }
     }
 
-    post {
+post {
         always {
             sh 'docker system prune -f || true'
         }
+        success {
+            echo '✅ Build et analyse SonarQube réussis!'
+            echo "📦 Image Docker: ${DOCKER_IMAGE}:${env.BUILD_ID}"
+            echo "📊 Rapport SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-appointment"
+            emailext body: """
+                <h2>✅ Build Successful - EverCare Appointment Service</h2>
+                <p><b>Build #${env.BUILD_ID}</b></p>
+                <p><b>Branch:</b> ${env.BRANCH_NAME}</p>
+                <p><b>Docker Image:</b> ${DOCKER_IMAGE}:${env.BUILD_ID}</p>
+                <p><b>SonarQube Report:</b> ${SONAR_HOST_URL}/dashboard?id=evercare-appointment</p>
+                """,
+                subject: "✅ Build Success - EverCare Appointment Service #${env.BUILD_ID}",
+                to: 'Bader.Klila@gmail.com, baderklila@gmail.com'
+        }
+        failure {
+            echo '❌ Pipeline échouée!'
+            emailext body: """
+                <h2>❌ Build Failed - EverCare Appointment Service</h2>
+                <p><b>Build #${env.BUILD_ID}</b></p>
+                <p><b>Branch:</b> ${env.BRANCH_NAME}</p>
+                <p><b>Check logs for details.</b></p>
+                """,
+                subject: "❌ Build Failed - EverCare Appointment Service #${env.BUILD_ID}",
+                to: 'Bader.Klila@gmail.com, baderklila@gmail.com'
+        }
+    }
         success {
             echo '✅ Build et analyse SonarQube réussis!'
             echo "📦 Image Docker: ${DOCKER_IMAGE}:${env.BUILD_ID}"

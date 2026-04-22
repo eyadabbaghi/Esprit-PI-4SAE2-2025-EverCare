@@ -18,17 +18,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build project
+      - name: Build + Sonar Analysis
         run: |
           cd backend
-          mvn clean install -Dmaven.test.skip=true
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          projectBaseDir: backend
-          args: >
-            -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare
-            -Dsonar.organization=eyadabbaghi
+          mvn clean verify sonar:sonar \
+            -Dsonar.projectKey=eyadabbaghi_Esprit-PI-4SAE2-2025-EverCare \
+            -Dsonar.organization=eyadabbaghi \
+            -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

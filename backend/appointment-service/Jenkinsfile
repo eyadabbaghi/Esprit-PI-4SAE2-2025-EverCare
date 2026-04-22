@@ -36,7 +36,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir(env.APP_DIR) {
-                    withSonarQubeEnv('sonarqube-evercare') {
+                    withSonarQubeEnv('SonarQube') {
                         sh 'mvn sonar:sonar'
                     }
                 }

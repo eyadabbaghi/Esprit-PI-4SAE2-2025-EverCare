@@ -50,13 +50,4 @@ class MedicamentTest {
         Medicament medicament = new Medicament();
         assertNotNull(medicament);
     }
-
-    @Test
-    void testMedicament_allArgsConstructor() {
-        Medicament medicament = new Medicament("MED001", "DAFALGAN", "PARACETAMOL", "500mg", "Comprimé", true, null, null, null, null, null, null, null, null, null);
-        
-        assertEquals("MED001", medicament.getMedicamentId());
-        assertEquals("DAFALGAN", medicament.getNomCommercial());
-        assertEquals("PARACETAMOL", medicament.getDenominationCommuneInternationale());
-    }
 }

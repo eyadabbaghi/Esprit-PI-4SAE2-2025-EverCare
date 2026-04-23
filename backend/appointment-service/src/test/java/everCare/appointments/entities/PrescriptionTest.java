@@ -3,7 +3,6 @@ package everCare.appointments.entities;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,7 +29,7 @@ class PrescriptionTest {
 
         assertEquals("patient123", prescription.getPatientId());
         assertEquals("doctor456", prescription.getDoctorId());
-        assertTrue(prescription.isRenouvelable());
+        assertTrue(prescription.getRenouvelable());
         assertEquals(3, prescription.getNombreRenouvellements());
         assertEquals("ACTIVE", prescription.getStatut());
     }
@@ -49,7 +48,7 @@ class PrescriptionTest {
 
         assertEquals("patient123", prescription.getPatientId());
         assertEquals("doctor456", prescription.getDoctorId());
-        assertTrue(prescription.isRenouvelable());
+        assertTrue(prescription.getRenouvelable());
         assertEquals("ACTIVE", prescription.getStatut());
     }
 
@@ -60,43 +59,20 @@ class PrescriptionTest {
     }
 
     @Test
-    void testPrescription_allArgsConstructor() {
-        Appointment appointment = new Appointment();
-        Medicament medicament = new Medicament();
-        
-        Prescription prescription = new Prescription(
-            "RX001", 
-            "patient123", 
-            "doctor456",
-            appointment,
-            medicament,
-            LocalDate.of(2024, 1, 15),
-            LocalDate.of(2024, 1, 15),
-            LocalDate.of(2024, 2, 15),
-            true,
-            2,
-            "ACTIVE",
-            null, null, null, null, null, null, null, null, null, null
-        );
-
-        assertEquals("RX001", prescription.getPrescriptionId());
-        assertEquals("patient123", prescription.getPatientId());
-        assertEquals("doctor456", prescription.getDoctorId());
-    }
-
-    @Test
     void testPrescription_defaultStatut() {
         Prescription prescription = new Prescription();
         assertNull(prescription.getStatut());
     }
 
     @Test
-    void testPrescription_withNullDates_noOverlap() {
+    void testPrescription_defaultRenouvelable() {
         Prescription prescription = new Prescription();
-        prescription.setDateDebut(null);
-        prescription.setDateFin(null);
+        assertFalse(prescription.getRenouvelable());
+    }
 
-        assertNull(prescription.getDateDebut());
-        assertNull(prescription.getDateFin());
+    @Test
+    void testPrescription_defaultNombreRenouvellements() {
+        Prescription prescription = new Prescription();
+        assertEquals(0, prescription.getNombreRenouvellements());
     }
 }

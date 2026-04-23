@@ -23,13 +23,13 @@ class AvailabilityTest {
         availability.setDayOfWeek(DayOfWeek.MONDAY);
         availability.setStartTime(LocalTime.of(9, 0));
         availability.setEndTime(LocalTime.of(17, 0));
-        availability.setBlocked(false);
+        availability.setBlocked(true);
 
         assertEquals("doctor123", availability.getDoctorId());
         assertEquals(DayOfWeek.MONDAY, availability.getDayOfWeek());
         assertEquals(LocalTime.of(9, 0), availability.getStartTime());
         assertEquals(LocalTime.of(17, 0), availability.getEndTime());
-        assertFalse(availability.isBlocked());
+        assertTrue(availability.isBlocked());
     }
 
     @Test
@@ -39,7 +39,7 @@ class AvailabilityTest {
             .dayOfWeek(DayOfWeek.FRIDAY)
             .startTime(LocalTime.of(10, 0))
             .endTime(LocalTime.of(16, 0))
-            .blocked(false)
+            .isBlocked(false)
             .build();
 
         assertEquals("doctor123", availability.getDoctorId());

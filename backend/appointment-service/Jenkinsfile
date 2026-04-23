@@ -53,7 +53,8 @@ pipeline {
                                 -Dsonar.java.binaries=target/classes \
                                 -Dsonar.sources=src/main/java \
                                 -Dsonar.tests=src/test/java \
-                                -Dsonar.modules=
+                                -Dsonar.modules= \
+                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                         '''
                     }
                 }
@@ -110,6 +111,13 @@ pipeline {
             steps {
                 dir(env.APP_DIR) {
                     archiveArtifacts 'target/*.jar'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'target/site/jacoco',
+                        reportFile: 'index.html'
+                    ], matrix: [:]
                 }
             }
         }

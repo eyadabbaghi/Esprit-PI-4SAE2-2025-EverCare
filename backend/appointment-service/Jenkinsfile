@@ -112,6 +112,17 @@ pipeline {
                     archiveArtifacts 'target/*.jar'
                 }
             }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'target/site/jacoco',
+                        reportFiles: 'index.html'
+                    ])
+                }
+            }
         }
     }
 

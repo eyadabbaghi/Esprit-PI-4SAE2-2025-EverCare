@@ -34,7 +34,14 @@ pipeline {
             }
             post {
                 always {
-                    junit 'target/surefire-reports/*.xml'
+                    script {
+                        def testReports = findFiles(glob: 'target/surefire-reports/*.xml')
+                        if (testReports.length > 0) {
+                            junit 'target/surefire-reports/*.xml'
+                        } else {
+                            echo 'No test reports found'
+                        }
+                    }
                 }
             }
         }

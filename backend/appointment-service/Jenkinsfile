@@ -110,6 +110,13 @@ pipeline {
             steps {
                 dir(env.APP_DIR) {
                     archiveArtifacts 'target/*.jar'
+                    publishHTML target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'target/site/jacoco',
+                        reportFile: 'index.html'
+                    ], title: 'JaCoCo Coverage Report'
                 }
             }
         }

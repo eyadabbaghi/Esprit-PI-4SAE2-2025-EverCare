@@ -1,0 +1,9 @@
+.activity-card {
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.activity-card:hover {
+  box-shadow: 0 12px 30px rgba(45, 27, 78, 0.12);
+  transform: translateY(-2px);
+}
+

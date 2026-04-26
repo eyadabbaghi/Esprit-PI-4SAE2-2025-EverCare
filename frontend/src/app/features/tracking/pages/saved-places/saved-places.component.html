@@ -1,0 +1,172 @@
+<div class="min-h-screen bg-[#F7F5FF] p-6">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-[#2D1B4E]">Saved Places</h2>
+        <p class="text-[#6B5B8C]">Add, update, or delete safe places for the patient.</p>
+      </div>
+
+      <button
+        (click)="openAdd()"
+        class="bg-[#7C3AED] text-white px-5 py-3 rounded-2xl font-semibold shadow hover:opacity-95"
+      >
+        + Add Place
+      </button>
+    </div>
+
+    <!-- List -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div
+        *ngFor="let p of places"
+        class="bg-white rounded-3xl p-5 shadow-sm border border-[#E9E3FF]"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-[#2D1B4E]">{{ p.label }}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-[#F3E8FF] text-[#7C3AED] font-semibold">
+                {{ p.lat | number:'1.0-6' }}, {{ p.lng | number:'1.0-6' }}
+              </span>
+            </div>
+            <p class="text-[#6B5B8C] mt-1">{{ p.addressText }}</p>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              (click)="openEdit(p)"
+              class="px-3 py-2 rounded-xl bg-[#F3E8FF] text-[#7C3AED] font-semibold"
+            >
+              Edit
+            </button>
+
+            <button
+              (click)="remove(p.id)"
+              class="px-3 py-2 rounded-xl bg-[#FEE2E2] text-[#B91C1C] font-semibold"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="places.length === 0"
+      class="bg-white rounded-3xl p-8 border border-[#E9E3FF] text-center mt-4">
+      <div class="text-[#2D1B4E] font-bold text-lg">No places yet</div>
+      <div class="text-[#6B5B8C] mt-1">Add “Home”, “Hospital”, etc.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="isModalOpen" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
+  <div class="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-[#E9E3FF] overflow-hidden">
+
+    <div class="p-5 border-b border-[#EFEAFF] flex items-center justify-between">
+      <div>
+        <h3 class="text-xl font-extrabold text-[#2D1B4E]">
+          {{ isEditing ? 'Edit Place' : 'Add Place' }}
+        </h3>
+        <p class="text-[#6B5B8C] text-sm">
+          Search, click the map, drag the marker, or use GPS to pick a position.
+        </p>
+      </div>
+
+      <button (click)="closeModal()" class="text-[#6B5B8C] hover:text-[#2D1B4E] font-bold">✕</button>
+    </div>
+
+    <form [formGroup]="form" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- Left -->
+      <div>
+        <label class="text-sm font-semibold text-[#2D1B4E]">Label</label>
+        <input
+          type="text"
+          formControlName="label"
+          class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3"
+          placeholder="Home / Hospital / ..."
+        />
+
+        <div class="mt-4">
+          <label class="text-sm font-semibold text-[#2D1B4E]">Search address</label>
+
+          <div class="flex gap-2 mt-1">
+            <input
+              #searchBox
+              type="text"
+              class="flex-1 border border-[#E9E3FF] rounded-2xl p-3"
+              placeholder="Type an address..."
+            />
+            <button
+              type="button"
+              (click)="searchAddress(searchBox.value)"
+              class="bg-[#7C3AED] text-white px-4 rounded-2xl font-semibold hover:opacity-90"
+            >
+              Search
+            </button>
+          </div>
+
+          <div class="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              (click)="useMyLocation()"
+              [disabled]="isLocating"
+              class="bg-[#F3E8FF] text-[#7C3AED] px-4 py-2 rounded-2xl font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              📍 {{ isLocating ? 'Locating...' : 'Use my location' }}
+            </button>
+
+            <span *ngIf="locateError" class="text-xs text-red-600">
+              {{ locateError }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="text-sm font-semibold text-[#2D1B4E]">Address Text</label>
+          <textarea
+            formControlName="addressText"
+            rows="3"
+            class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3"
+            placeholder="Auto-filled after click/drag/GPS..."
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div>
+            <label class="text-sm font-semibold text-[#2D1B4E]">Lat</label>
+            <input type="number" step="0.000001" formControlName="lat"
+              class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3" />
+          </div>
+
+          <div>
+            <label class="text-sm font-semibold text-[#2D1B4E]">Lng</label>
+            <input type="number" step="0.000001" formControlName="lng"
+              class="w-full mt-1 border border-[#E9E3FF] rounded-2xl p-3" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Map -->
+      <div class="rounded-3xl overflow-hidden border border-[#E9E3FF]">
+        <div #mapContainer style="height: 420px; width: 100%;"></div>
+      </div>
+    </form>
+
+    <div class="p-5 border-t border-[#EFEAFF] flex items-center justify-end gap-3">
+      <button (click)="closeModal()" type="button"
+        class="px-5 py-3 rounded-2xl bg-[#F3E8FF] text-[#7C3AED] font-semibold">
+        Cancel
+      </button>
+
+      <button (click)="save()" type="button" [disabled]="form.invalid"
+        class="px-5 py-3 rounded-2xl bg-[#7C3AED] text-white font-semibold disabled:opacity-40">
+        {{ isEditing ? 'Save changes' : 'Create place' }}
+      </button>
+    </div>
+
+  </div>
+</div>

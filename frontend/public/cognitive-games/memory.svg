@@ -1,0 +1,26 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="memoryBg" x1="96" y1="62" x2="700" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7EEFF"/>
+      <stop offset="1" stop-color="#F2F8FF"/>
+    </linearGradient>
+    <linearGradient id="memoryCard" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#4E8DFF"/>
+      <stop offset="1" stop-color="#7AB5FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="40" fill="url(#memoryBg)"/>
+  <circle cx="654" cy="118" r="70" fill="#B9DBFF" opacity="0.55"/>
+  <circle cx="152" cy="420" r="88" fill="#DCEEFF" opacity="0.85"/>
+  <rect x="152" y="110" width="150" height="190" rx="24" fill="white"/>
+  <rect x="326" y="146" width="150" height="190" rx="24" fill="white"/>
+  <rect x="500" y="110" width="150" height="190" rx="24" fill="white"/>
+  <rect x="174" y="132" width="106" height="146" rx="18" fill="url(#memoryCard)"/>
+  <rect x="348" y="168" width="106" height="146" rx="18" fill="#B8D8FF"/>
+  <rect x="522" y="132" width="106" height="146" rx="18" fill="url(#memoryCard)"/>
+  <path d="M227 182C240 162 272 172 272 199C272 222 247 234 227 252C207 234 182 222 182 199C182 172 214 162 227 182Z" fill="white"/>
+  <path d="M401 198C414 178 446 188 446 215C446 238 421 250 401 268C381 250 356 238 356 215C356 188 388 178 401 198Z" fill="white" opacity="0.86"/>
+  <path d="M575 182C588 162 620 172 620 199C620 222 595 234 575 252C555 234 530 222 530 199C530 172 562 162 575 182Z" fill="white"/>
+  <rect x="210" y="350" width="380" height="26" rx="13" fill="#D3E9FF"/>
+  <rect x="242" y="392" width="316" height="18" rx="9" fill="#C2DFFF"/>
+</svg>

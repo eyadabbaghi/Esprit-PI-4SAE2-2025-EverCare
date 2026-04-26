@@ -1,0 +1,240 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <header class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E] mb-1">Rapports d'évaluation</h1>
+        <p class="text-sm text-[#6B5B8C]">
+          Consultez les scores, stades Alzheimer et alertes des patients.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center px-4 py-2 rounded-full border text-sm font-medium transition-colors"
+        [ngClass]="alertsOnly ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-rose-600 border-rose-300 hover:bg-rose-50'"
+        (click)="toggleAlertsOnly()"
+      >
+        {{ alertsOnly ? 'Afficher tous les rapports' : 'Afficher uniquement les alertes' }}
+      </button>
+    </header>
+
+    <section class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
+        <label class="space-y-1">
+          <span class="text-xs font-medium text-[#4B5563]">État</span>
+          <select
+            [(ngModel)]="activeFilter"
+            [disabled]="alertsOnly"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
+          >
+            <option value="active">Actif</option>
+            <option value="archived">Archivé</option>
+            <option value="all">Tous</option>
+          </select>
+        </label>
+
+        <label class="space-y-1">
+          <span class="text-xs font-medium text-[#4B5563]">Stade</span>
+          <select
+            [(ngModel)]="stageFilter"
+            [disabled]="alertsOnly"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
+          >
+            <option value="">Tous</option>
+            <option value="EARLY">EARLY</option>
+            <option value="MIDDLE">MIDDLE</option>
+            <option value="LATE">LATE</option>
+          </select>
+        </label>
+
+        <label class="space-y-1 lg:col-span-2">
+          <span class="text-xs font-medium text-[#4B5563]">Nom du patient</span>
+          <input
+            [(ngModel)]="query"
+            [disabled]="alertsOnly"
+            placeholder="Rechercher par nom"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
+          />
+        </label>
+
+        <label class="space-y-1">
+          <span class="text-xs font-medium text-[#4B5563]">Du</span>
+          <input
+            type="date"
+            [(ngModel)]="fromDate"
+            [disabled]="alertsOnly"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
+          />
+        </label>
+
+        <label class="space-y-1">
+          <span class="text-xs font-medium text-[#4B5563]">Au</span>
+          <input
+            type="date"
+            [(ngModel)]="toDate"
+            [disabled]="alertsOnly"
+            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
+          />
+        </label>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          (click)="applyFilters()"
+          [disabled]="alertsOnly"
+          class="px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Filtrer
+        </button>
+        <button
+          type="button"
+          (click)="resetFilters()"
+          class="px-4 py-2 rounded-full border border-[#E5E7EB] text-sm text-[#374151] hover:bg-[#F9FAFB]"
+        >
+          Réinitialiser
+        </button>
+      </div>
+    </section>
+
+    <div *ngIf="errorMessage" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="actionMessage" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+      {{ actionMessage }}
+    </div>
+    <div *ngIf="loading" class="rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#6B5B8C]">
+      Chargement des rapports...
+    </div>
+
+    <section class="rounded-2xl bg-white border border-[#E5D9FF] p-5 space-y-4">
+      <div class="overflow-x-auto rounded-xl border border-[#E5E7EB]">
+        <table class="min-w-full text-sm">
+          <thead class="bg-[#F3E8FF] text-[#4B5563]">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium">Patient</th>
+              <th class="px-4 py-2 text-left font-medium">Date</th>
+              <th class="px-4 py-2 text-left font-medium">Score</th>
+              <th class="px-4 py-2 text-left font-medium">Stade</th>
+              <th class="px-4 py-2 text-left font-medium">Statut</th>
+              <th class="px-4 py-2 text-left font-medium">Alerte</th>
+              <th class="px-4 py-2 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let report of reports" class="border-t border-[#E5E7EB] hover:bg-[#F9FAFB]">
+              <td class="px-4 py-2 align-middle">
+                <div class="flex flex-col">
+                  <span class="font-medium text-[#111827]">{{ report.patientName || report.patientId }}</span>
+                  <span class="text-xs text-[#6B5B8C]">{{ report.patientId }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-2 align-middle text-[#374151]">{{ report.createdAt | date: 'dd/MM/yyyy, HH:mm' }}</td>
+              <td class="px-4 py-2 align-middle font-semibold text-[#2D1B4E]">{{ report.score }}</td>
+              <td class="px-4 py-2 align-middle">{{ report.computedStage }}</td>
+              <td class="px-4 py-2 align-middle">
+                <span
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border"
+                  [ngClass]="report.active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'"
+                >
+                  {{ report.active ? 'Actif' : 'Archivé' }}
+                </span>
+              </td>
+              <td class="px-4 py-2 align-middle">
+                <span
+                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border"
+                  [ngClass]="report.needsAttention ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-600 border-slate-200'"
+                >
+                  {{ report.needsAttention ? 'Oui' : 'Non' }}
+                </span>
+                <div class="mt-1 text-[11px] text-[#6B5B8C]" *ngIf="getAlertStatus(report) === 'OPEN'">Ouverte</div>
+                <div class="mt-1 text-[11px] text-[#6B5B8C]" *ngIf="getAlertStatus(report) === 'ACK'">Accusée</div>
+              </td>
+              <td class="px-4 py-2 align-middle text-right">
+                <button
+                  *ngIf="report.active"
+                  type="button"
+                  class="text-xs text-[#7C3AED] hover:text-[#6D28D9] mr-3"
+                  (click)="openReport(report.id)"
+                >
+                  Voir
+                </button>
+                <button
+                  *ngIf="report.active"
+                  type="button"
+                  class="text-xs text-[#374151] hover:text-[#111827] mr-3"
+                  (click)="openPatientDossier(report.patientId)"
+                >
+                  Dossier
+                </button>
+                <button
+                  *ngIf="report.active"
+                  type="button"
+                  class="text-xs text-rose-600 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="deletingReportId === report.id"
+                  (click)="deleteReport(report)"
+                >
+                  {{ deletingReportId === report.id ? 'Suppression...' : 'Supprimer' }}
+                </button>
+                <button
+                  *ngIf="report.active && canAcknowledgeAlert(report)"
+                  type="button"
+                  class="text-xs text-amber-700 hover:text-amber-800 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="acknowledgingReportId === report.id || resolvingReportId === report.id"
+                  (click)="acknowledgeAlert(report)"
+                >
+                  {{ acknowledgingReportId === report.id ? 'Accusé...' : 'Accuser' }}
+                </button>
+                <button
+                  *ngIf="report.active && canResolveAlert(report)"
+                  type="button"
+                  class="text-xs text-emerald-700 hover:text-emerald-800 mr-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="resolvingReportId === report.id || acknowledgingReportId === report.id"
+                  (click)="resolveAlert(report)"
+                >
+                  {{ resolvingReportId === report.id ? 'Résolution...' : 'Résoudre' }}
+                </button>
+                <button
+                  *ngIf="!report.active"
+                  type="button"
+                  class="text-xs text-emerald-700 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="restoringReportId === report.id"
+                  (click)="restoreReport(report)"
+                >
+                  {{ restoringReportId === report.id ? 'Réactivation...' : 'Réactiver' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && reports.length === 0">
+              <td colspan="7" class="px-4 py-6 text-center text-xs text-[#6B5B8C]">
+                Aucun rapport trouvé.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <p class="text-xs text-[#6B5B8C]">Total: {{ totalElements }}</p>
+        <div class="flex items-center gap-2 text-xs text-[#6B5B8C]">
+          <button
+            type="button"
+            (click)="previousPage()"
+            [disabled]="page === 0"
+            class="px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Précédent
+          </button>
+          <span>Page {{ page + 1 }} / {{ totalPages || 1 }}</span>
+          <button
+            type="button"
+            (click)="nextPage()"
+            [disabled]="page + 1 >= totalPages"
+            class="px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

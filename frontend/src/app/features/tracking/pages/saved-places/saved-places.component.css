@@ -1,0 +1,14 @@
+/* Optional: make Leaflet canvas smoother */
+:host {
+  display: block;
+}
+
+/* Ensure map container always has a real height */
+#map {
+  height: 420px;
+}
+
+/* Optional: reduce text selection weirdness on map */
+.leaflet-container {
+  font: inherit;
+}

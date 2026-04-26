@@ -1,0 +1,707 @@
+<!-- alzheimers-assessment.component.html -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(15,10,30,0.75); backdrop-filter: blur(8px);">
+  <div class="assessment-modal" style="
+    background: #FDFAF6;
+    border-radius: 28px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 94vh;
+    overflow-y: auto;
+    box-shadow: 0 32px 80px rgba(44,24,80,0.22), 0 0 0 1px rgba(180,150,220,0.18);
+    font-family: 'Georgia', 'Times New Roman', serif;
+  ">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- RESULTS SCREEN                                            -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="assessmentResult; else questionnaire">
+      <div style="padding: 36px 40px;">
+
+        <!-- Header -->
+        <div style="text-align:center; margin-bottom: 28px;">
+          <!-- Icon: checkmark or hospital -->
+          <div style="display:flex; justify-content:center; margin-bottom:16px;">
+            <ng-container *ngIf="assessmentResult.diagnosis.predicted === 1; else healthyIcon">
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <circle cx="36" cy="36" r="36" fill="#FEE2E2"/>
+                <path d="M36 18v10m0 0h-6a2 2 0 00-2 2v4a2 2 0 002 2h6v6a2 2 0 002 2h4a2 2 0 002-2v-6h6a2 2 0 002-2v-4a2 2 0 00-2-2h-6V18" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- cross -->
+                <rect x="30" y="20" width="12" height="32" rx="3" fill="#DC2626"/>
+                <rect x="20" y="30" width="32" height="12" rx="3" fill="#DC2626"/>
+              </svg>
+            </ng-container>
+            <ng-template #healthyIcon>
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                <circle cx="36" cy="36" r="36" fill="#DCFCE7"/>
+                <path d="M22 37l10 10 18-20" stroke="#16A34A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </ng-template>
+          </div>
+          <h2 style="font-size:28px; font-weight:700; color:#1C0F33; margin:0 0 8px;">Assessment Complete</h2>
+          <p style="font-size:18px; color:#5B4A7A; margin:0;">{{ assessmentResult.diagnosis.label }}</p>
+        </div>
+
+        <!-- Cluster badge -->
+        <div style="display:flex; justify-content:center; margin-bottom:24px;">
+          <span style="
+            display:inline-flex; align-items:center; gap:8px;
+            padding:10px 20px; border-radius:50px;
+            border:2px solid #C4B5FD; background:#F5F0FF;
+            color:#6D28D9; font-size:15px; font-weight:600;
+          ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="#6D28D9" stroke-width="2"/>
+              <path d="M21 21l-4-4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Patient Group: {{ assessmentResult.cluster.label }}
+          </span>
+        </div>
+
+        <!-- Diagnosis card -->
+        <div style="
+          border-radius:20px; padding:24px; margin-bottom:20px;
+          border:2px solid {{ assessmentResult.diagnosis.predicted === 1 ? '#FECACA' : '#BBF7D0' }};
+          background:{{ assessmentResult.diagnosis.predicted === 1 ? '#FFF5F5' : '#F0FFF4' }};
+        " [style.border-color]="assessmentResult.diagnosis.predicted === 1 ? '#FECACA' : '#BBF7D0'"
+           [style.background]="assessmentResult.diagnosis.predicted === 1 ? '#FFF5F5' : '#F0FFF4'">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <p style="font-size:20px; font-weight:700; margin:0 0 6px;"
+                 [style.color]="assessmentResult.diagnosis.predicted === 1 ? '#B91C1C' : '#15803D'">
+                {{ assessmentResult.diagnosis.label }}
+              </p>
+              <p style="font-size:15px; color:#6B7280; margin:0;">
+                Confidence: {{ (assessmentResult.diagnosis.probability * 100).toFixed(1) }}%
+              </p>
+            </div>
+            <!-- warn / check icon -->
+            <ng-container *ngIf="assessmentResult.diagnosis.predicted === 1; else diagOk">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="opacity:0.25">
+                <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </ng-container>
+            <ng-template #diagOk>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="opacity:0.25">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- Severity (sick path) -->
+        <ng-container *ngIf="assessmentResult.severity">
+          <div style="border-radius:20px; padding:24px; margin-bottom:20px; border:2px solid #FDE68A; background:#FFFBEB;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h4 style="font-size:17px; font-weight:700; color:#92400E; margin:0;">Disease Stage</h4>
+            </div>
+            <p style="font-size:20px; font-weight:700; color:#78350F; margin:0 0 6px;">{{ assessmentResult.severity.stage }}</p>
+            <p style="font-size:15px; color:#92400E; margin:0;">
+              Estimated MMSE Score: <strong>{{ assessmentResult.severity.mmseEstimate }}/30</strong>
+              &nbsp;·&nbsp; Range: {{ assessmentResult.severity.mmseRange }}
+            </p>
+          </div>
+        </ng-container>
+
+        <!-- Risk (healthy path) -->
+        <ng-container *ngIf="assessmentResult.riskAssessment">
+          <div style="border-radius:20px; padding:24px; margin-bottom:20px;"
+               [style.border]="'2px solid ' + (assessmentResult.riskAssessment.level === 'Low' ? '#BBF7D0' : assessmentResult.riskAssessment.level === 'Moderate' ? '#FDE68A' : '#FECACA')"
+               [style.background]="assessmentResult.riskAssessment.level === 'Low' ? '#F0FFF4' : assessmentResult.riskAssessment.level === 'Moderate' ? '#FFFBEB' : '#FFF5F5'">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#92400E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h4 style="font-size:17px; font-weight:700; color:#1C0F33; margin:0;">Future Risk Assessment</h4>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
+              <span style="font-size:40px; font-weight:800; color:#1C0F33; line-height:1;">{{ assessmentResult.riskAssessment.score }}</span>
+              <div style="flex:1;">
+                <div style="width:100%; background:#E5E7EB; border-radius:99px; height:14px; overflow:hidden;">
+                  <div [style.width.%]="assessmentResult.riskAssessment.score"
+                       [style.background]="assessmentResult.riskAssessment.level === 'Low' ? '#22C55E' : assessmentResult.riskAssessment.level === 'Moderate' ? '#EAB308' : '#EF4444'"
+                       style="height:100%; border-radius:99px; transition:width 1s ease;">
+                  </div>
+                </div>
+                <p style="font-size:14px; margin:6px 0 0; color:#374151;">
+                  Risk Level: <strong>{{ assessmentResult.riskAssessment.level }}</strong>
+                </p>
+              </div>
+            </div>
+            <div *ngIf="assessmentResult.riskAssessment.riskFactors.length > 0">
+              <p style="font-size:14px; font-weight:700; color:#374151; margin:0 0 8px;">Identified Factors:</p>
+              <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px;">
+                <li *ngFor="let f of assessmentResult.riskAssessment.riskFactors"
+                    style="display:flex; align-items:flex-start; gap:8px; font-size:15px;"
+                    [style.color]="f.includes('protective') ? '#15803D' : '#374151'">
+                  <ng-container *ngIf="f.includes('protective'); else riskDot">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:2px;">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </ng-container>
+                  <ng-template #riskDot>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:2px;">
+                      <circle cx="12" cy="12" r="4" fill="#9CA3AF"/>
+                    </svg>
+                  </ng-template>
+                  {{ f }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Recommendations -->
+        <div style="border-radius:20px; border:2px solid #C4B5FD; background:#F9F5FF; padding:28px; margin-bottom:28px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h4 style="font-size:20px; font-weight:700; color:#2D1B4E; margin:0;">{{ assessmentResult.recommendations.title }}</h4>
+          </div>
+
+          <p *ngIf="assessmentResult.recommendations.description"
+             style="font-size:16px; color:#5B4A7A; margin:0 0 20px; line-height:1.6;">
+            {{ assessmentResult.recommendations.description }}
+          </p>
+
+          <!-- Medications -->
+          <ng-container *ngIf="assessmentResult.recommendations.medications">
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p style="font-size:16px; font-weight:700; color:#2D1B4E; margin:0;">Medications</p>
+              </div>
+              <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px;">
+                <li *ngFor="let m of assessmentResult.recommendations.medications"
+                    style="display:flex; gap:10px; font-size:16px; color:#4B3B6E; line-height:1.5;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:4px;">
+                    <circle cx="12" cy="12" r="4" fill="#A78BFA"/>
+                  </svg>
+                  {{ m }}
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+
+          <!-- Lifestyle -->
+          <ng-container *ngIf="assessmentResult.recommendations.lifestyle">
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p style="font-size:16px; font-weight:700; color:#2D1B4E; margin:0;">Lifestyle Recommendations</p>
+              </div>
+              <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px;">
+                <li *ngFor="let l of assessmentResult.recommendations.lifestyle"
+                    style="display:flex; gap:10px; font-size:16px; color:#4B3B6E; line-height:1.5;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:4px;">
+                    <circle cx="12" cy="12" r="4" fill="#A78BFA"/>
+                  </svg>
+                  {{ l }}
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container *ngIf="assessmentResult.recommendations.actions">
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p style="font-size:16px; font-weight:700; color:#2D1B4E; margin:0;">Recommended Actions</p>
+              </div>
+              <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px;">
+                <li *ngFor="let a of assessmentResult.recommendations.actions"
+                    style="display:flex; gap:10px; font-size:16px; color:#4B3B6E; line-height:1.5;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:4px;">
+                    <circle cx="12" cy="12" r="4" fill="#A78BFA"/>
+                  </svg>
+                  {{ a }}
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+
+          <!-- Monitoring -->
+          <ng-container *ngIf="assessmentResult.recommendations.monitoring">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p style="font-size:16px; font-weight:700; color:#2D1B4E; margin:0;">Follow-Up Schedule</p>
+              </div>
+              <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px;">
+                <li *ngFor="let m of assessmentResult.recommendations.monitoring"
+                    style="display:flex; gap:10px; font-size:16px; color:#4B3B6E; line-height:1.5;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0; margin-top:4px;">
+                    <circle cx="12" cy="12" r="4" fill="#A78BFA"/>
+                  </svg>
+                  {{ m }}
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- CTA -->
+        <button (click)="pinToProfile()" style="
+          width:100%; padding:18px; border-radius:16px;
+          background:#4C1D95; border:none; cursor:pointer;
+          color:#fff; font-size:19px; font-weight:700;
+          font-family:'Georgia','Times New Roman',serif;
+          display:flex; align-items:center; justify-content:center; gap:12px;
+          transition:background 0.2s;
+          box-shadow:0 4px 20px rgba(76,29,149,0.35);
+        " onmouseover="this.style.background='#3B0764'" onmouseout="this.style.background='#4C1D95'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Save Results to My Profile
+        </button>
+        <p style="text-align:center; font-size:14px; color:#7C6B95; margin-top:10px;">
+          Your results will be saved and shared with your care team
+        </p>
+
+      </div>
+    </ng-container>
+
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- QUESTIONNAIRE STEPS                                       -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <ng-template #questionnaire>
+      <div [formGroup]="form">
+
+        <!-- Top bar -->
+        <div style="padding:28px 36px 20px; border-bottom:2px solid #EDE9F6;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M9.663 17h4.673M12 3a6 6 0 00-6 6c0 1.657.672 3.157 1.757 4.243C8.545 14.03 9 15 9 16h6c0-1 .455-1.97 1.243-2.757A6 6 0 0012 3z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h2 style="font-size:22px; font-weight:700; color:#1C0F33; margin:0;">Brain Health Assessment</h2>
+            </div>
+            <button (click)="skip()" style="
+              background:none; border:1px solid #D1C4E9; border-radius:10px;
+              padding:8px 16px; font-size:15px; color:#5B4A7A;
+              cursor:pointer; font-family:'Georgia','Times New Roman',serif;
+            ">Skip</button>
+          </div>
+
+          <!-- Step indicators -->
+          <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <div *ngFor="let s of steps; let i = index"
+                 [style.background]="i < currentStep ? '#6D28D9' : i === currentStep ? '#A78BFA' : '#E5E7EB'"
+                 style="flex:1; height:6px; border-radius:99px; transition:background 0.3s;">
+            </div>
+          </div>
+
+          <!-- Step label -->
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <!-- Step icons -->
+              <ng-container [ngSwitch]="currentStep">
+                <svg *ngSwitchCase="0" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="1" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="2" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="3" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M9.663 17h4.673M12 3a6 6 0 00-6 6c0 1.657.672 3.157 1.757 4.243C8.545 14.03 9 15 9 16h6c0-1 .455-1.97 1.243-2.757A6 6 0 0012 3z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg *ngSwitchCase="4" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </ng-container>
+              <span style="font-size:16px; font-weight:600; color:#2D1B4E;">{{ steps[currentStep].title }}</span>
+            </div>
+            <span style="font-size:15px; color:#7C6B95;">{{ currentStep + 1 }} of {{ totalSteps }}</span>
+          </div>
+        </div>
+
+        <!-- Step content -->
+        <div style="padding:28px 36px; min-height:320px;">
+
+          <!-- ── STEP 0: Personal Info ── -->
+          <ng-container *ngIf="currentStep === 0">
+            <h3 style="font-size:20px; font-weight:700; color:#1C0F33; margin:0 0 24px;">Personal Information</h3>
+            <div style="display:flex; flex-direction:column; gap:22px;">
+
+              <div>
+                <label style="font-size:17px; font-weight:600; color:#374151; display:block; margin-bottom:8px;">
+                  Your Age
+                </label>
+                <input type="number" formControlName="age" style="
+                  width:100%; padding:14px 16px; font-size:18px;
+                  border:2px solid #D1C4E9; border-radius:12px;
+                  font-family:'Georgia','Times New Roman',serif;
+                  color:#1C0F33; background:#FDFAF6;
+                  box-sizing:border-box;
+                " placeholder="Enter your age"/>
+              </div>
+
+              <div>
+                <label style="font-size:17px; font-weight:600; color:#374151; display:block; margin-bottom:10px;">Gender</label>
+                <div style="display:flex; gap:12px;">
+                  <button type="button" (click)="form.get('gender')?.setValue(0)" style="
+                    flex:1; padding:16px; border-radius:12px; font-size:17px; font-weight:600;
+                    cursor:pointer; font-family:'Georgia','Times New Roman',serif; transition:all 0.2s;
+                  "
+                  [style.border]="form.get('gender')?.value === 0 ? '2px solid #6D28D9' : '2px solid #E5E7EB'"
+                  [style.background]="form.get('gender')?.value === 0 ? '#EDE9FE' : '#F9F9F9'"
+                  [style.color]="form.get('gender')?.value === 0 ? '#4C1D95' : '#6B7280'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="display:inline; vertical-align:middle; margin-right:8px;">
+                      <path d="M12 2a6 6 0 100 12A6 6 0 0012 2zM12 14v8m-4-4h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Male
+                  </button>
+                  <button type="button" (click)="form.get('gender')?.setValue(1)" style="
+                    flex:1; padding:16px; border-radius:12px; font-size:17px; font-weight:600;
+                    cursor:pointer; font-family:'Georgia','Times New Roman',serif; transition:all 0.2s;
+                  "
+                  [style.border]="form.get('gender')?.value === 1 ? '2px solid #6D28D9' : '2px solid #E5E7EB'"
+                  [style.background]="form.get('gender')?.value === 1 ? '#EDE9FE' : '#F9F9F9'"
+                  [style.color]="form.get('gender')?.value === 1 ? '#4C1D95' : '#6B7280'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="display:inline; vertical-align:middle; margin-right:8px;">
+                      <circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                      <path d="M12 14v8m-3-3h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Female
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style="font-size:17px; font-weight:600; color:#374151; display:block; margin-bottom:8px;">
+                  BMI (Body Mass Index)
+                </label>
+                <input type="number" step="0.1" formControlName="bmi" style="
+                  width:100%; padding:14px 16px; font-size:18px;
+                  border:2px solid #D1C4E9; border-radius:12px;
+                  font-family:'Georgia','Times New Roman',serif;
+                  color:#1C0F33; background:#FDFAF6;
+                  box-sizing:border-box;
+                " placeholder="e.g. 25.0"/>
+                <p style="font-size:14px; color:#7C6B95; margin:6px 0 0;">Healthy range: 18.5 – 24.9</p>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- ── STEP 1: Lifestyle ── -->
+          <ng-container *ngIf="currentStep === 1">
+            <h3 style="font-size:20px; font-weight:700; color:#1C0F33; margin:0 0 24px;">Your Daily Habits</h3>
+            <div style="display:flex; flex-direction:column; gap:22px;">
+
+              <!-- Smoking toggle -->
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 12h2a1 1 0 010 2h-2v-2zM18 12V8a1 1 0 011-1h1" stroke="#6D28D9" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M4 16h14v4H4z" rx="1" stroke="#6D28D9" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M10 16v4M4 16v4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <div>
+                    <p style="font-size:17px; font-weight:600; color:#1C0F33; margin:0;">Do you smoke?</p>
+                    <p style="font-size:14px; color:#7C6B95; margin:4px 0 0;">Regular tobacco use</p>
+                  </div>
+                </div>
+                <button type="button" (click)="toggleBinary('smoking')" style="
+                  width:60px; height:32px; border-radius:99px; border:none;
+                  position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0;
+                "
+                [style.background]="getBinaryValue('smoking') ? '#6D28D9' : '#D1D5DB'">
+                  <span style="
+                    position:absolute; top:4px; width:24px; height:24px;
+                    border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                    transition:left 0.25s;
+                  " [style.left]="getBinaryValue('smoking') ? '32px' : '4px'"></span>
+                </button>
+              </div>
+
+              <!-- Physical Activity -->
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <label style="font-size:17px; font-weight:600; color:#1C0F33;">
+                    Physical Activity: <strong style="color:#4C1D95;">{{ getSliderValue('physicalActivity') }}/10</strong>
+                  </label>
+                </div>
+                <input type="range" min="0" max="10" step="0.5" formControlName="physicalActivity"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>Rarely move</span><span>Very active daily</span>
+                </div>
+              </div>
+
+              <!-- Diet Quality -->
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <label style="font-size:17px; font-weight:600; color:#1C0F33;">
+                    Diet Quality: <strong style="color:#4C1D95;">{{ getSliderValue('dietQuality') }}/10</strong>
+                  </label>
+                </div>
+                <input type="range" min="0" max="10" step="0.5" formControlName="dietQuality"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>Unhealthy</span><span>Excellent diet</span>
+                </div>
+              </div>
+
+              <!-- Sleep -->
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <label style="font-size:17px; font-weight:600; color:#1C0F33;">
+                    Sleep Quality: <strong style="color:#4C1D95;">{{ getSliderValue('sleepQuality') }}/10</strong>
+                  </label>
+                </div>
+                <input type="range" min="0" max="10" step="0.5" formControlName="sleepQuality"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>Very poor</span><span>Excellent</span>
+                </div>
+              </div>
+
+              <!-- Alcohol -->
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 3h6l1 9H8L9 3zM8 12l1 9h6l1-9" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <label style="font-size:17px; font-weight:600; color:#1C0F33;">
+                    Alcohol: <strong style="color:#4C1D95;">{{ getSliderValue('alcoholConsumption') }} drinks/week</strong>
+                  </label>
+                </div>
+                <input type="range" min="0" max="20" step="1" formControlName="alcoholConsumption"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>None</span><span>20+ per week</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- ── STEP 2: Medical History ── -->
+          <ng-container *ngIf="currentStep === 2">
+            <h3 style="font-size:20px; font-weight:700; color:#1C0F33; margin:0 0 8px;">Medical History</h3>
+            <p style="font-size:15px; color:#7C6B95; margin:0 0 22px;">Tap to indicate conditions you have been diagnosed with:</p>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <ng-container *ngFor="let item of [
+                {key:'familyHistoryAlzheimers', label:'Family History of Alzheimer\'s', desc:'Parent or sibling diagnosed'},
+                {key:'cardiovascularDisease', label:'Heart or Cardiovascular Disease', desc:'Heart disease, stroke history'},
+                {key:'diabetes', label:'Diabetes', desc:'Type 1 or Type 2'},
+                {key:'depression', label:'Depression', desc:'Diagnosed or treated'},
+                {key:'headInjury', label:'Head Injury', desc:'Traumatic brain injury'},
+                {key:'hypertension', label:'High Blood Pressure', desc:'Hypertension diagnosis'}
+              ]">
+                <div style="
+                  display:flex; justify-content:space-between; align-items:center;
+                  padding:16px 20px; border-radius:14px; transition:background 0.2s;
+                "
+                [style.background]="getBinaryValue(item.key) ? '#EDE9FE' : '#F5F5F5'"
+                [style.border]="getBinaryValue(item.key) ? '2px solid #A78BFA' : '2px solid #E5E7EB'">
+                  <div>
+                    <p style="font-size:17px; font-weight:600; color:#1C0F33; margin:0;">{{ item.label }}</p>
+                    <p style="font-size:14px; color:#7C6B95; margin:4px 0 0;">{{ item.desc }}</p>
+                  </div>
+                  <button type="button" (click)="toggleBinary(item.key)" style="
+                    width:60px; height:32px; border-radius:99px; border:none;
+                    position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0;
+                  "
+                  [style.background]="getBinaryValue(item.key) ? '#6D28D9' : '#D1D5DB'">
+                    <span style="
+                      position:absolute; top:4px; width:24px; height:24px;
+                      border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                      transition:left 0.25s;
+                    " [style.left]="getBinaryValue(item.key) ? '32px' : '4px'"></span>
+                  </button>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+
+          <!-- ── STEP 3: Cognitive Assessment ── -->
+          <ng-container *ngIf="currentStep === 3">
+            <h3 style="font-size:20px; font-weight:700; color:#1C0F33; margin:0 0 24px;">Cognitive Assessment</h3>
+            <div style="display:flex; flex-direction:column; gap:20px;">
+
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <label style="font-size:17px; font-weight:600; color:#1C0F33; display:block; margin-bottom:6px;">
+                  Daily Task Independence: <strong style="color:#4C1D95;">{{ getSliderValue('functionalAssessment') }}/10</strong>
+                </label>
+                <p style="font-size:14px; color:#7C6B95; margin:0 0 12px;">How well can you perform daily tasks on your own?</p>
+                <input type="range" min="0" max="10" step="0.5" formControlName="functionalAssessment"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>Need full help</span><span>Fully independent</span>
+                </div>
+              </div>
+
+              <div style="padding:18px 20px; background:#F5F0FF; border-radius:14px; border:2px solid #EDE9FE;">
+                <label style="font-size:17px; font-weight:600; color:#1C0F33; display:block; margin-bottom:6px;">
+                  Daily Living Activities (ADL): <strong style="color:#4C1D95;">{{ getSliderValue('adl') }}/10</strong>
+                </label>
+                <p style="font-size:14px; color:#7C6B95; margin:0 0 12px;">Bathing, dressing, eating, moving around</p>
+                <input type="range" min="0" max="10" step="0.5" formControlName="adl"
+                       style="width:100%; accent-color:#6D28D9; height:8px; cursor:pointer;"/>
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#7C6B95; margin-top:6px;">
+                  <span>Fully dependent</span><span>Fully independent</span>
+                </div>
+              </div>
+
+              <div *ngFor="let item of [
+                {key:'memoryComplaints', label:'Memory Complaints', desc:'Do you frequently forget recent events or conversations?'},
+                {key:'behavioralProblems', label:'Mood or Behaviour Changes', desc:'Noticeable agitation, aggression, or mood swings?'}
+              ]" style="
+                display:flex; justify-content:space-between; align-items:center;
+                padding:18px 20px; border-radius:14px; transition:background 0.2s;
+              "
+              [style.background]="getBinaryValue(item.key) ? '#EDE9FE' : '#F5F5F5'"
+              [style.border]="getBinaryValue(item.key) ? '2px solid #A78BFA' : '2px solid #E5E7EB'">
+                <div>
+                  <p style="font-size:17px; font-weight:600; color:#1C0F33; margin:0;">{{ item.label }}</p>
+                  <p style="font-size:14px; color:#7C6B95; margin:4px 0 0;">{{ item.desc }}</p>
+                </div>
+                <button type="button" (click)="toggleBinary(item.key)" style="
+                  width:60px; height:32px; border-radius:99px; border:none;
+                  position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0;
+                "
+                [style.background]="getBinaryValue(item.key) ? '#6D28D9' : '#D1D5DB'">
+                  <span style="
+                    position:absolute; top:4px; width:24px; height:24px;
+                    border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                    transition:left 0.25s;
+                  " [style.left]="getBinaryValue(item.key) ? '32px' : '4px'"></span>
+                </button>
+              </div>
+
+            </div>
+          </ng-container>
+
+          <!-- ── STEP 4: Symptoms ── -->
+          <ng-container *ngIf="currentStep === 4">
+            <h3 style="font-size:20px; font-weight:700; color:#1C0F33; margin:0 0 8px;">Symptom Check</h3>
+            <p style="font-size:15px; color:#7C6B95; margin:0 0 22px;">Have you experienced any of these in the past 6 months?</p>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <ng-container *ngFor="let item of [
+                {key:'confusion', label:'Confusion', desc:'Trouble thinking clearly or following a conversation'},
+                {key:'disorientation', label:'Getting Lost', desc:'Confused about time or place in familiar surroundings'},
+                {key:'personalityChanges', label:'Personality Changes', desc:'Others have noticed changes in your mood or personality'},
+                {key:'difficultyCompletingTasks', label:'Difficulty with Familiar Tasks', desc:'Trouble with tasks you used to do easily'},
+                {key:'forgetfulness', label:'Forgetfulness', desc:'Forgetting important information or upcoming appointments'}
+              ]">
+                <div style="
+                  display:flex; justify-content:space-between; align-items:center;
+                  padding:16px 20px; border-radius:14px; transition:background 0.2s;
+                "
+                [style.background]="getBinaryValue(item.key) ? '#EDE9FE' : '#F5F5F5'"
+                [style.border]="getBinaryValue(item.key) ? '2px solid #A78BFA' : '2px solid #E5E7EB'">
+                  <div>
+                    <p style="font-size:17px; font-weight:600; color:#1C0F33; margin:0;">{{ item.label }}</p>
+                    <p style="font-size:14px; color:#7C6B95; margin:4px 0 0;">{{ item.desc }}</p>
+                  </div>
+                  <button type="button" (click)="toggleBinary(item.key)" style="
+                    width:60px; height:32px; border-radius:99px; border:none;
+                    position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0;
+                  "
+                  [style.background]="getBinaryValue(item.key) ? '#6D28D9' : '#D1D5DB'">
+                    <span style="
+                      position:absolute; top:4px; width:24px; height:24px;
+                      border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                      transition:left 0.25s;
+                    " [style.left]="getBinaryValue(item.key) ? '32px' : '4px'"></span>
+                  </button>
+                </div>
+              </ng-container>
+            </div>
+          </ng-container>
+
+        </div><!-- end step content -->
+
+        <!-- Navigation -->
+        <div style="padding:0 36px 32px; display:flex; gap:12px;">
+          <button *ngIf="currentStep > 0" (click)="prevStep()" style="
+            padding:16px 24px; border-radius:14px;
+            border:2px solid #C4B5FD; background:#fff;
+            color:#4C1D95; font-size:17px; font-weight:600;
+            cursor:pointer; font-family:'Georgia','Times New Roman',serif;
+            display:flex; align-items:center; gap:8px;
+            transition:background 0.2s;
+          " onmouseover="this.style.background='#F5F0FF'" onmouseout="this.style.background='#fff'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5m7-7l-7 7 7 7" stroke="#4C1D95" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back
+          </button>
+
+          <button (click)="nextStep()" [disabled]="isLoading" style="
+            flex:1; padding:18px; border-radius:14px;
+            background:#4C1D95; border:none; cursor:pointer;
+            color:#fff; font-size:19px; font-weight:700;
+            font-family:'Georgia','Times New Roman',serif;
+            display:flex; align-items:center; justify-content:center; gap:10px;
+            transition:background 0.2s;
+            box-shadow:0 4px 16px rgba(76,29,149,0.3);
+            opacity: 1;
+          "
+          [style.opacity]="isLoading ? '0.6' : '1'"
+          onmouseover="this.style.background='#3B0764'" onmouseout="this.style.background='#4C1D95'">
+
+            <ng-container *ngIf="!isLoading">
+              <ng-container *ngIf="currentStep === totalSteps - 1; else nextLabel">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M9.663 17h4.673M12 3a6 6 0 00-6 6c0 1.657.672 3.157 1.757 4.243C8.545 14.03 9 15 9 16h6c0-1 .455-1.97 1.243-2.757A6 6 0 0012 3z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Analyse My Results
+              </ng-container>
+              <ng-template #nextLabel>
+                Continue
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14m-7-7l7 7-7 7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </ng-template>
+            </ng-container>
+
+            <ng-container *ngIf="isLoading">
+              <svg class="animate-spin" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="4"/>
+                <path d="M4 12a8 8 0 018-8" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              Analysing your answers...
+            </ng-container>
+          </button>
+        </div>
+
+        <!-- Reassurance note -->
+        <p style="text-align:center; font-size:14px; color:#9CA3AF; padding:0 36px 24px; line-height:1.6;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline; vertical-align:middle; margin-right:4px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Your answers are private and will only be shared with your care team
+        </p>
+
+      </div>
+    </ng-template>
+
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-6">
+    <h2 class="text-lg font-semibold text-[#2D1B4E] mb-4">Today's Schedule</h2>
+
+    <!-- Timeline View -->
+    <div class="space-y-4">
+      <ng-container *ngFor="let apt of appointments; let i = index">
+        <app-timeline-appointment-card
+          [appointment]="apt"
+          [isLast]="i === appointments.length - 1"
+          [cognitiveInfo]=""
+          (onClick)="onCardClick.emit($event)"
+          (onStart)="onStart.emit($event)"
+          (onJoin)="onJoin.emit($event)"
+          (onViewProfile)="onViewProfile.emit($event)">
+        </app-timeline-appointment-card>
+      </ng-container>
+
+      <!-- Empty State -->
+      <div *ngIf="appointments.length === 0" class="text-center py-12">
+        <svg class="w-16 h-16 text-[#C4B5FD] mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+        </svg>
+        <p class="text-[#6B5B8C]">No appointments scheduled for today</p>
+      </div>
+    </div>
+  </div>
+</div>

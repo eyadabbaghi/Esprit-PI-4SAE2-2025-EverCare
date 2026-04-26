@@ -1,0 +1,125 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="mx-auto max-w-7xl space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Prescription Analytics</h1>
+        <p class="mt-1 text-[#6B5B8C]">Track your prescribing activity, treatment status and top medicaments.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button (click)="openManage()" class="rounded-lg border border-[#C4B5FD] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+          Manage
+        </button>
+        <button (click)="openPrescribe()" class="rounded-lg bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white">
+          New Prescription
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="rounded-xl border border-[#C4B5FD] bg-white p-8 text-center text-sm text-[#6B5B8C] shadow-sm">
+      Loading analytics...
+    </div>
+
+    <ng-container *ngIf="!loading && summary">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+          <p class="text-sm text-[#6B5B8C]">Total</p>
+          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.total }}</p>
+        </div>
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+          <p class="text-sm text-[#6B5B8C]">Active</p>
+          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.active }}</p>
+        </div>
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+          <p class="text-sm text-[#6B5B8C]">Expiring Soon</p>
+          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.expiringSoon }}</p>
+        </div>
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+          <p class="text-sm text-[#6B5B8C]">Expired</p>
+          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.expired }}</p>
+        </div>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+          <div class="mb-4">
+            <h2 class="text-lg font-semibold text-[#2D1B4E]">Status Breakdown</h2>
+            <p class="text-sm text-[#6B5B8C]">Current distribution across your prescription lifecycle.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div *ngFor="let item of statusBreakdown; trackBy: trackByStatus">
+              <div class="mb-1 flex items-center justify-between text-sm">
+                <span class="font-medium text-[#2D1B4E]">{{ item.status }}</span>
+                <span class="text-[#6B5B8C]">{{ item.count }}</span>
+              </div>
+              <div class="h-3 rounded-full bg-[#F3E8FF]">
+                <div class="h-3 rounded-full bg-[#7C3AED]" [style.width.%]="getStatusWidth(item.count)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-3 md:grid-cols-3">
+            <div class="rounded-lg bg-[#F8FAFC] p-3">
+              <p class="text-xs text-[#6B5B8C]">Renewed</p>
+              <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.renewed }}</p>
+            </div>
+            <div class="rounded-lg bg-[#F8FAFC] p-3">
+              <p class="text-xs text-[#6B5B8C]">Interrupted</p>
+              <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.interrupted }}</p>
+            </div>
+            <div class="rounded-lg bg-[#F8FAFC] p-3">
+              <p class="text-xs text-[#6B5B8C]">Completed</p>
+              <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.completed }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+            <div class="mb-4">
+              <h2 class="text-lg font-semibold text-[#2D1B4E]">Top Medicaments</h2>
+              <p class="text-sm text-[#6B5B8C]">Most prescribed medicaments in your current scope.</p>
+            </div>
+
+            <div *ngIf="topMedicaments.length === 0" class="text-sm text-[#6B5B8C]">No medicament analytics yet.</div>
+
+            <div class="space-y-3" *ngIf="topMedicaments.length > 0">
+              <div *ngFor="let item of topMedicaments; let i = index; trackBy: trackByMedicament" class="flex items-center justify-between rounded-lg bg-[#FAF5FF] px-3 py-3">
+                <div class="min-w-0">
+                  <div class="text-xs font-semibold uppercase tracking-wide text-[#7C3AED]">#{{ i + 1 }}</div>
+                  <div class="truncate font-medium text-[#2D1B4E]">{{ item.nomCommercial }}</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <div class="text-lg font-semibold text-[#2D1B4E]">{{ item.prescriptionCount }}</div>
+                  <div class="text-xs text-[#6B5B8C]">prescriptions</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+            <div class="mb-4">
+              <h2 class="text-lg font-semibold text-[#2D1B4E]">Expiring Soon</h2>
+              <p class="text-sm text-[#6B5B8C]">Treatments that need attention in the next 7 days.</p>
+            </div>
+
+            <div *ngIf="expiringPrescriptions.length === 0" class="text-sm text-[#6B5B8C]">No prescriptions expiring soon.</div>
+
+            <div class="space-y-3" *ngIf="expiringPrescriptions.length > 0">
+              <div *ngFor="let item of expiringPrescriptions; trackBy: trackByPrescription" class="rounded-lg border border-[#F3E8FF] p-3">
+                <div class="font-medium text-[#2D1B4E]">{{ item.patient.name }}</div>
+                <div class="text-sm text-[#6B5B8C]">{{ item.medicament.nomCommercial }}</div>
+                <div class="mt-1 text-xs text-[#7C3AED]">Ends {{ item.dateFin | date:'mediumDate' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

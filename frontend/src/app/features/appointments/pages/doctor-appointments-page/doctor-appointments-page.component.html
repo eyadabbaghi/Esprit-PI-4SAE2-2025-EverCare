@@ -1,0 +1,108 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto flex flex-col gap-5">
+
+    <!-- Header Component -->
+    <app-doctor-header [doctor]="currentDoctor"></app-doctor-header>
+
+    <!-- Tabs Component -->
+    <app-doctor-tabs [activeTab]="activeTab" (tabChange)="onTabChange($event)"></app-doctor-tabs>
+
+    <!-- ========== TAB 1: DASHBOARD ========== -->
+    <div *ngIf="activeTab === 'dashboard'" class="space-y-5">
+      <!-- Stats Cards Component -->
+      <app-stats-cards [stats]="doctorStats"></app-stats-cards>
+
+      <!-- Today's Schedule Component -->
+      <app-today-schedule
+        [appointments]="todayAppointments"
+        (onCardClick)="viewAppointmentDetails($event)"
+        (onStart)="startConsultation($event)"
+        (onJoin)="joinVideoCall($event)"
+        (onViewProfile)="viewPatientProfile($event)">
+      </app-today-schedule>
+
+      <!-- Upcoming Appointments Component -->
+      <app-upcoming-appointments
+        [appointments]="upcomingAppointments"
+        (onCardClick)="viewAppointmentDetails($event)"
+        (onDateSelected)="onDateSelected($event)">
+      </app-upcoming-appointments>
+
+      <!-- Recent Patients Table Component -->
+      <app-recent-patients-table
+        [patients]="recentPatients"
+        (onViewHistory)="viewPatientHistory($event)">
+      </app-recent-patients-table>
+    </div>
+
+    <!-- ========== TAB 2: AVAILABILITY ========== -->
+    <div *ngIf="activeTab === 'availability'" class="space-y-5">
+      <app-availability-manager
+        [availabilities]="availabilities"
+        [stats]="availabilityStats"
+        [appointments]="appointments"
+        [doctorId]="currentDoctor.userId || ''"
+        (addAvailability)="addAvailability($event)"
+        (editAvailability)="editAvailability($event)"
+        (deleteAvailability)="deleteAvailability($event)"
+      >
+      </app-availability-manager>
+    </div>
+
+    <!-- ========== TAB 3: CONSULTATION TYPES ========== -->
+    <div *ngIf="activeTab === 'consultation-types'" class="space-y-5">
+      <app-consultation-type-manager
+        [types]="consultationTypesList"
+        (addType)="addConsultationType($event)"
+        >
+      </app-consultation-type-manager>
+    </div>
+
+
+
+
+    <!-- Appointment Details Modal (existing) -->
+    <app-appointment-details-modal
+      *ngIf="selectedAppointment"
+      [appointment]="selectedAppointment"
+      [patientBirthDate]="selectedPatientBirthDate"
+      [patientAge]="selectedPatientAge"
+      [patientAlzheimerStage]="selectedPatientStage"
+      [emergencyContact]="selectedPatientEmergency"
+      [previousVisits]="selectedPatientVisits"
+      (onClose)="closeDetailsDialog()"
+      (onStart)="startConsultation($event)"
+      (onPrescribe)="openPrescription()"
+      (onEditNotes)="enableNotesEditing()"
+      (onNotesChange)="updateNotes($event)">
+    </app-appointment-details-modal>
+
+
+    <!-- Loading Overlay (existing) -->
+    <div *ngIf="loading" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-4 flex items-center gap-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#7C3AED]"></div>
+        <span class="text-gray-700">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error Message Toast (existing) -->
+    <div *ngIf="errorMessage" class="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">⚠️</span>
+        <span>{{ errorMessage }}</span>
+        <button (click)="clearMessages()" class="ml-4 text-red-700 hover:text-red-900">✕</button>
+      </div>
+    </div>
+
+    <!-- Success Message Toast (existing) -->
+    <div *ngIf="successMessage" class="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">✓</span>
+        <span>{{ successMessage }}</span>
+        <button (click)="clearMessages()" class="ml-4 text-green-700 hover:text-green-900">✕</button>
+      </div>
+    </div>
+
+  </div>
+</div>

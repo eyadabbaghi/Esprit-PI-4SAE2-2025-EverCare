@@ -1,0 +1,35 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-[#2D1B4E]">{{ title }}</h3>
+      <span class="text-sm text-[#6B5B8C]" *ngIf="appointments.length > 0">
+            {{ appointments.length }} au total
+          </span>
+    </div>
+
+    <!-- List -->
+    <div class="space-y-3 flex flex-col" [class.max-h-[500px]="scrollable" [class.overflow-y-auto]="scrollable" [class.pr-2]="scrollable">
+      <ng-container *ngFor="let apt of appointments" >
+        <app-appointment-card
+          [appointment]="apt"
+          [showActionButton]="showActionButtons"
+          (onClick)="onCardClick.emit($event)"
+          (onAction)="onAction.emit($event)">
+        </app-appointment-card>
+      </ng-container>
+
+      <!-- Empty State -->
+      <div *ngIf="appointments.length === 0" class="text-center py-12">
+        <svg class="w-12 h-12 text-[#C4B5FD] mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+        </svg>
+        <p class="text-[#6B5B8C]">{{ emptyMessage }}</p>
+        <button *ngIf="showAddButton" class="mt-2 text-[#7C3AED] text-sm hover:underline" (click)="onAddClick.emit()">
+          {{ addButtonText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

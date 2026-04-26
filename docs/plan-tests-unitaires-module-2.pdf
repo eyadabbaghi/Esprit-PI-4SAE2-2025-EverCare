@@ -1,0 +1,183 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1729 >>
+stream
+BT
+/F1 16 Tf
+50 780 Td
+20 TL
+(Plan de tests unitaires - Module 2) Tj
+/F1 11 Tf
+0 -28 Td
+14 TL
+T*
+(Projet: EverCare) Tj
+T*
+(Module: cognitive-stimulation-service) Tj
+T*
+(Objectif: verifier la logique metier du module sans lancer toute l application.) Tj
+T*
+T*
+(Couches ciblees:) Tj
+T*
+(- CognitiveGameService) Tj
+T*
+(- GameSessionService) Tj
+T*
+(- Front cognitive service et composants critiques) Tj
+T*
+T*
+(Cas backend proposes:) Tj
+T*
+(1. jeux compatibles avec le stade EARLY) Tj
+T*
+(2. difficulte max 3 pour MIDDLE) Tj
+T*
+(3. difficulte max 2 pour LATE) Tj
+T*
+(4. creation session sur dossier actif) Tj
+T*
+(5. refus session sur dossier archive) Tj
+T*
+(6. hausse difficulte si moyenne >= 80) Tj
+T*
+(7. baisse difficulte si moyenne <= 40) Tj
+T*
+(8. declin si moyenne 7j < moyenne 30j - 15) Tj
+T*
+(9. suppression session existante) Tj
+T*
+(10. erreur 404 si session inexistante) Tj
+T*
+T*
+(Assertions principales:) Tj
+T*
+(- score et recommandation calcules correctement) Tj
+T*
+(- type de jeu coherent avec les performances) Tj
+T*
+(- erreurs metier remontees avec message clair) Tj
+T*
+(- aucune session creee pour un dossier inactif) Tj
+T*
+T*
+(Commandes de demonstration:) Tj
+T*
+(- Backend: mvn test) Tj
+T*
+(- Frontend: npm test -- --watch=false --code-coverage) Tj
+T*
+T*
+(Metiers avances du module:) Tj
+T*
+T*
+(1. Personnalisation selon le stade Alzheimer) Tj
+T*
+(- le systeme lit le stade depuis le medical record) Tj
+T*
+(- EARLY accepte des jeux plus difficiles) Tj
+T*
+(- MIDDLE limite la difficulte) Tj
+T*
+(- LATE propose seulement des jeux simples) Tj
+T*
+(- donc ce n est pas un catalogue generique, c est un moteur adapte au patient) Tj
+T*
+T*
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1888 >>
+stream
+BT
+/F1 16 Tf
+50 780 Td
+20 TL
+(2. Recommandation automatique des jeux) Tj
+/F1 11 Tf
+0 -28 Td
+14 TL
+(- le module ne montre pas tous les jeux au hasard) Tj
+T*
+(- il recommande des jeux selon le stade, les performances precedentes et la difficulte adaptee) Tj
+T*
+T*
+(3. Adaptation intelligente de la difficulte) Tj
+T*
+(- si le patient reussit bien plusieurs sessions, la difficulte recommandee augmente) Tj
+T*
+(- si le patient a de faibles scores, la difficulte diminue) Tj
+T*
+(- donc le module s ajuste automatiquement) Tj
+T*
+T*
+(4. Detection du declin cognitif) Tj
+T*
+(- le backend compare la moyenne des 7 derniers jours avec la moyenne des 30 derniers jours) Tj
+T*
+(- si la baisse depasse un seuil, le systeme detecte un declin) Tj
+T*
+(- cela apporte une vraie logique metier clinique) Tj
+T*
+T*
+(5. Blocage metier si dossier archive) Tj
+T*
+(- si medicalRecord.active = false, on refuse la creation d une nouvelle session) Tj
+T*
+(- donc le module respecte les regles du dossier medical) Tj
+T*
+T*
+(6. Tracabilite therapeutique) Tj
+T*
+(- chaque session jouee est enregistree avec score, difficulte, frustration, plaisir et aide recue) Tj
+T*
+(- le doctor peut suivre l evolution reelle du patient) Tj
+T*
+T*
+(7. Lien fort avec le dossier medical) Tj
+T*
+(- chaque GameSession est liee a medicalRecordId) Tj
+T*
+(- ce n est pas un mini-jeu isole, c est un outil therapeutique integre au suivi medical) Tj
+T*
+T*
+(Phrase simple pour demain:) Tj
+T*
+(Le metier avance de ce module repose sur la personnalisation des jeux selon le stade Alzheimer,) Tj
+T*
+(l adaptation automatique de la difficulte selon les performances, la detection d un declin cognitif,) Tj
+T*
+(et l integration directe avec le dossier medical du patient.) Tj
+T*
+T*
+(Note: document de plan de tests et synthese metier, pas rapport d execution ni taux reel.) Tj
+T*
+ET
+
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n `n0000000058 00000 n `n0000000121 00000 n `n0000000191 00000 n `n0000000317 00000 n `n0000002098 00000 n `n0000002224 00000 n `ntrailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4164
+%%EOF

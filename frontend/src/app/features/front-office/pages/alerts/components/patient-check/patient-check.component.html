@@ -1,0 +1,48 @@
+<div class="fixed right-6 top-1/3 w-72 flex flex-col gap-3" *ngIf="state !== 'idle'">
+
+  <!-- Incoming -->
+  <div *ngIf="state === 'incoming'"
+       class="rounded-xl border border-[#E9D5FF] bg-white shadow-md p-4 flex flex-col items-center gap-2">
+
+    <div class="text-2xl animate-pulse">📷</div>
+
+    <h3 class="text-sm font-semibold text-[#2D1B4E] text-center">
+      Caregiver is checking on you
+    </h3>
+
+    <p class="text-xs text-gray-500 text-center">
+      Camera will start soon...
+    </p>
+
+    <button (click)="cancel()"
+      class="mt-2 px-3 py-1.5 text-xs rounded-full border border-[#C06C84] text-[#C06C84]
+             hover:bg-red-50 active:scale-95 transition">
+      Cancel
+    </button>
+  </div>
+
+  <!-- Streaming -->
+  <div *ngIf="state === 'streaming'"
+       class="rounded-xl overflow-hidden bg-[#1a0533] shadow-lg relative">
+
+    <video #localVideo autoplay playsinline muted class="w-full h-40 object-cover"></video>
+
+    <!-- LIVE badge -->
+    <div class="absolute top-2 left-2 flex items-center gap-1 bg-black/40 text-white text-[10px] px-2 py-0.5 rounded-full">
+      <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+      LIVE
+    </div>
+
+    <!-- bottom info -->
+    <div class="p-2 bg-white text-xs text-[#2D1B4E] flex items-center justify-between">
+      <span>📡 Camera ON</span>
+
+      <button (click)="cancel()"
+        class="text-[#C06C84] text-xs hover:underline">
+        Stop
+      </button>
+    </div>
+
+  </div>
+
+</div>

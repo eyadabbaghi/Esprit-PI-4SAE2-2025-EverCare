@@ -1,0 +1,308 @@
+/* =========================
+   MOOD WHEEL + RINGS
+   ========================= */
+
+.mood-wheel{
+  position: relative;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* outer ring */
+.mood-wheel::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(124,58,237,0.18);
+}
+
+/* inner ring (nice premium detail) */
+.mood-wheel::after{
+  content:"";
+  position:absolute;
+  inset: 26px;
+  border-radius: 50%;
+  border: 2px dashed rgba(124,58,237,0.12);
+}
+
+.wheel-center{
+  position: absolute;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  border: 2px solid rgba(233,213,255,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction: column;
+  z-index: 2;
+  box-shadow: 0 14px 40px rgba(124,58,237,.14);
+  backdrop-filter: blur(6px);
+}
+
+.center-spark{ font-size: 18px; line-height: 1; }
+.center-text{
+  margin-top: 6px;
+  font-weight: 700;
+  color: #2D1B4E;
+}
+
+/* =========================
+   EMOJIS ON PERFECT CIRCLE
+   ========================= */
+
+.mood-node{
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.95);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 26px;
+  cursor:pointer;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+  box-shadow: 0 10px 25px rgba(17,24,39,.06);
+
+  transform:
+    rotate(calc(360deg / var(--count) * var(--i)))
+    translate(122px)
+    rotate(calc(-360deg / var(--count) * var(--i)));
+}
+
+.mood-node:hover{
+  transform:
+    rotate(calc(360deg / var(--count) * var(--i)))
+    translate(132px)
+    rotate(calc(-360deg / var(--count) * var(--i)))
+    scale(1.08);
+  box-shadow: 0 16px 34px rgba(124,58,237,.16);
+}
+
+.mood-node.active{
+  background: #7C3AED;
+  box-shadow: 0 18px 40px rgba(124,58,237,.28);
+  transform:
+    rotate(calc(360deg / var(--count) * var(--i)))
+    translate(132px)
+    rotate(calc(-360deg / var(--count) * var(--i)))
+    scale(1.12);
+}
+
+/* emoji in active stays visible */
+.mood-node.active .node-emoji{
+  filter: saturate(1.05);
+}
+
+/* =========================
+   PREMIUM ORB BUDDY (teacher-friendly)
+   ========================= */
+
+.mood-orb{
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top: 6px;
+  box-shadow: 0 20px 60px rgba(17,24,39,.10);
+  overflow: hidden;
+  transform: translateY(0);
+}
+
+/* pop */
+.mood-orb.pop{
+  animation: orb-pop .28s ease;
+}
+@keyframes orb-pop{
+  0%{ transform: scale(.92); }
+  60%{ transform: scale(1.05); }
+  100%{ transform: scale(1); }
+}
+
+/* glass shine */
+.mood-orb::before{
+  content:"";
+  position:absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 25%,
+    rgba(255,255,255,.55),
+    rgba(255,255,255,0) 60%);
+  transform: translate(-35px,-40px);
+}
+
+/* glow ring */
+.orb-glow{
+  position:absolute;
+  inset: -18px;
+  border-radius: 999px;
+  background: radial-gradient(circle,
+    rgba(124,58,237,.20),
+    rgba(124,58,237,0) 60%);
+  filter: blur(6px);
+  opacity: .9;
+}
+
+/* face */
+.orb-face{
+  position: relative;
+  width: 70px;
+  height: 52px;
+  z-index: 2;
+}
+
+.orb-eye{
+  position:absolute;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(17,24,39,.85);
+}
+.orb-eye.left{ left: 14px; }
+.orb-eye.right{ right: 14px; }
+
+.orb-mouth{
+  position:absolute;
+  left: 0;
+  right: 0;
+  top: 32px;
+  margin:auto;
+  width: 18px;
+  height: 10px;
+  border-bottom: 3px solid rgba(17,24,39,.85);
+  border-radius: 0 0 18px 18px;
+}
+
+/* =========================
+   ORB COLORS BY MOOD
+   ========================= */
+
+.mood-orb[data-mood="Happy"]{
+  background: linear-gradient(145deg, #F472B6, #EC4899);
+}
+.mood-orb[data-mood="Excited"]{
+  background: linear-gradient(145deg, #FB7185, #F43F5E);
+}
+.mood-orb[data-mood="Calm"]{
+  background: linear-gradient(145deg, #34D399, #10B981);
+}
+.mood-orb[data-mood="Neutral"]{
+  background: linear-gradient(145deg, #8B5CF6, #6D28D9);
+}
+.mood-orb[data-mood="Anxious"]{
+  background: linear-gradient(145deg, #FBBF24, #F59E0B);
+}
+.mood-orb[data-mood="Sad"]{
+  background: linear-gradient(145deg, #60A5FA, #3B82F6);
+}
+.mood-orb[data-mood="Angry"]{
+  background: linear-gradient(145deg, #F87171, #EF4444);
+}
+.mood-orb[data-mood="Tired"]{
+  background: linear-gradient(145deg, #A78BFA, #6366F1);
+}
+
+/* =========================
+   EXPRESSIONS (simple & nice)
+   ========================= */
+
+.mood-orb[data-mood="Neutral"] .orb-mouth{
+  width: 16px;
+  height: 0;
+  border-radius: 0;
+}
+
+.mood-orb[data-mood="Angry"] .orb-mouth{
+  width: 14px;
+  height: 0;
+  border-radius: 0;
+  border-bottom-width: 4px;
+}
+
+.mood-orb[data-mood="Sad"] .orb-mouth{
+  width: 18px;
+  height: 10px;
+  border-bottom: 0;
+  border-top: 3px solid rgba(17,24,39,.85);
+  border-radius: 18px 18px 0 0;
+  top: 34px;
+}
+
+.mood-orb[data-mood="Anxious"] .orb-mouth{
+  width: 10px;
+  height: 10px;
+  border: 3px solid rgba(17,24,39,.85);
+  border-radius: 50%;
+  top: 31px;
+}
+.reflection-card {
+  max-width: 680px;
+  margin: 3rem auto 0 auto; /* space + center */
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: rgb(249, 239, 253);
+  border: 1px solid #E9D5FF;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.06);
+}
+
+.reflection-card:hover {
+  transform: translateY(-2px);
+}
+
+.reflection-header {
+  font-weight: 600;
+  color: #2D1B4E;
+  margin-bottom: 10px;
+}
+
+.reflection-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  resize: none;
+  outline: none;
+  font-size: 14px;
+  color: #4B5563;
+}
+
+.reflection-footer {
+  text-align: right;
+  font-size: 12px;
+  color: #ae88f0;
+  margin-top: 6px;
+}
+.mood-chart-card{
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  margin-top: 24px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom: 12px;
+}
+
+.hint{
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.chart-wrap{
+  height: 260px; /* important */
+}

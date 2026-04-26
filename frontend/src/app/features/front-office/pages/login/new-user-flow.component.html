@@ -1,0 +1,21 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="relative max-w-2xl w-full">
+    <button
+      class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white shadow-lg text-[#6B5B8C] hover:text-[#7C3AED] flex items-center justify-center"
+      (click)="onFlowSkipped()"
+    >
+      ✕
+    </button>
+
+    <app-welcome-popup
+      *ngIf="step === 'welcome'"
+      (completed)="onWelcomeCompleted()"
+      (skipped)="onFlowSkipped()"
+    ></app-welcome-popup>
+
+    <app-alzheimers-assessment
+      *ngIf="step === 'assessment'"
+      (closed)="onAssessmentCompleted()"
+    ></app-alzheimers-assessment>
+  </div>
+</div>

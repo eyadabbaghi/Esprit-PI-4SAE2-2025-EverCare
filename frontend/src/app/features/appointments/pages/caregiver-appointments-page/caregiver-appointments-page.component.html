@@ -1,0 +1,58 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
+        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-[#2D1B4E]">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
+      {{ successMessage }}
+    </div>
+
+
+
+    <!-- Upcoming Appointments List Component -->
+    <app-appointments-list
+      *ngIf="patient"
+      title="Upcoming Appointments"
+      subtitle="Appointments that need your attention"
+      emptyMessage="No upcoming appointments"
+      [appointments]="getUpcomingAppointments()"
+      [canConfirmFn]="canConfirm.bind(this)"
+      [canJoinCallFn]="canJoinCall.bind(this)"
+      (onCardClick)="viewAppointmentDetails($event)"
+      (onConfirm)="confirmAppointment($event)"
+      (onJoinCall)="joinVideoCall($event)">
+    </app-appointments-list>
+
+    <!-- Past Appointments List Component -->
+    <app-appointments-list
+      *ngIf="patient && getPastAppointments().length > 0"
+      title="Past Appointments"
+      subtitle="Appointment history"
+      emptyMessage="No past appointments"
+      [appointments]="getPastAppointments()"
+      (onCardClick)="viewAppointmentDetails($event)">
+    </app-appointments-list>
+
+    <!-- Appointment Details Modal Component -->
+    <app-appointment-details-modal
+      *ngIf="showDetailsModal"
+      [appointment]="selectedAppointment"
+
+      (onClose)="closeDetailsModal()"
+      >
+    </app-appointment-details-modal>
+
+  </div>
+</div>

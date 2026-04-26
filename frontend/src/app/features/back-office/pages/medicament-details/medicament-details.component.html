@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="mx-auto max-w-6xl space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Medicament Details</h1>
+        <p class="mt-1 text-sm text-[#6B5B8C]">Detailed catalog record and prescription usage overview.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" (click)="goBack()" class="rounded-full border border-[#DDD6FE] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+          Back to catalog
+        </button>
+        <button type="button" (click)="goToEdit()" class="rounded-full bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white shadow-sm">
+          Edit medicament
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="rounded-xl border border-[#DDD6FE] bg-white p-8 text-center text-sm text-[#6B5B8C] shadow-sm">
+      Loading medicament details...
+    </div>
+
+    <ng-container *ngIf="!loading && medicament">
+      <div class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+        <section class="rounded-2xl border border-[#DDD6FE] bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-5 md:flex-row md:items-start">
+            <div class="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#FAF5FF]">
+              <img *ngIf="medicament.photoUrl; else placeholderImage" [src]="medicament.photoUrl" [alt]="medicament.nomCommercial" class="h-full w-full object-cover">
+              <ng-template #placeholderImage>
+                <div class="flex h-full w-full items-center justify-center text-4xl">💊</div>
+              </ng-template>
+            </div>
+
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-2xl font-bold text-[#2D1B4E]">{{ medicament.nomCommercial }}</h2>
+                <span class="rounded-full px-2 py-1 text-xs font-medium" [ngClass]="medicament.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'">
+                  {{ medicament.actif ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <p class="mt-1 text-sm text-[#6B5B8C]">{{ medicament.denominationCommuneInternationale }}</p>
+
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">CIP</p><p class="mt-1 font-medium text-[#2D1B4E]">{{ medicament.codeCIP || 'N/A' }}</p></div>
+                <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Dosage</p><p class="mt-1 font-medium text-[#2D1B4E]">{{ medicament.dosage || 'N/A' }}</p></div>
+                <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Forme</p><p class="mt-1 font-medium text-[#2D1B4E]">{{ medicament.forme || 'N/A' }}</p></div>
+                <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Laboratoire</p><p class="mt-1 font-medium text-[#2D1B4E]">{{ medicament.laboratoire || 'N/A' }}</p></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid gap-4">
+            <div class="rounded-xl border border-[#F3E8FF] p-4">
+              <h3 class="text-sm font-semibold text-[#2D1B4E]">Indications</h3>
+              <p class="mt-2 text-sm text-[#6B5B8C]">{{ medicament.indications || 'No indications provided.' }}</p>
+            </div>
+            <div class="rounded-xl border border-[#F3E8FF] p-4">
+              <h3 class="text-sm font-semibold text-[#2D1B4E]">Contra-indications</h3>
+              <p class="mt-2 text-sm text-[#6B5B8C]">{{ medicament.contreIndications || 'No contra-indications provided.' }}</p>
+            </div>
+            <div class="rounded-xl border border-[#F3E8FF] p-4">
+              <h3 class="text-sm font-semibold text-[#2D1B4E]">Side effects</h3>
+              <p class="mt-2 text-sm text-[#6B5B8C]">{{ medicament.effetsSecondaires || 'No side effects provided.' }}</p>
+            </div>
+            <div class="rounded-xl border border-[#F3E8FF] p-4">
+              <h3 class="text-sm font-semibold text-[#2D1B4E]">Simplified notice</h3>
+              <p class="mt-2 text-sm text-[#6B5B8C]">{{ medicament.noticeSimplifiee || 'No simplified notice provided.' }}</p>
+            </div>
+          </div>
+        </section>
+
+        <aside class="space-y-4">
+          <section class="rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-sm">
+            <h3 class="text-lg font-semibold text-[#2D1B4E]">Usage Summary</h3>
+            <div class="mt-4 space-y-3">
+              <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Total prescriptions</p><p class="mt-1 text-2xl font-bold text-[#2D1B4E]">{{ usage?.totalPrescriptions ?? 0 }}</p></div>
+              <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Active prescriptions</p><p class="mt-1 text-2xl font-bold text-[#2D1B4E]">{{ usage?.activePrescriptions ?? 0 }}</p></div>
+              <div class="rounded-xl bg-[#F8FAFC] p-3"><p class="text-xs text-[#6B5B8C]">Last prescribed</p><p class="mt-1 font-medium text-[#2D1B4E]">{{ usage?.lastPrescribedDate ? (usage?.lastPrescribedDate | date:'mediumDate') : 'No usage yet' }}</p></div>
+            </div>
+          </section>
+
+          <section class="rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-sm">
+            <h3 class="text-lg font-semibold text-[#2D1B4E]">Catalog Metadata</h3>
+            <div class="mt-4 space-y-2 text-sm text-[#6B5B8C]">
+              <p>Created: <span class="font-medium text-[#2D1B4E]">{{ medicament.createdAt | date:'medium' }}</span></p>
+              <p>Updated: <span class="font-medium text-[#2D1B4E]">{{ medicament.updatedAt ? (medicament.updatedAt | date:'medium') : 'Not updated yet' }}</span></p>
+              <p>Record ID: <span class="font-medium text-[#2D1B4E] break-all">{{ medicament.medicamentId }}</span></p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </ng-container>
+  </div>
+</div>

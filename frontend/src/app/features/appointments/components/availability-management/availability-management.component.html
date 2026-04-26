@@ -1,0 +1,193 @@
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
+  <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-[#6B5B8C]">Weekly Hours</p>
+        <p class="text-2xl font-bold text-[#2D1B4E]">{{ stats.weeklyHours }}h</p>
+      </div>
+      <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-[#6B5B8C]">Available Slots</p>
+        <p class="text-2xl font-bold text-[#2D1B4E]">{{ stats.availableSlots }}</p>
+      </div>
+      <div class="w-10 h-10 bg-[#E6F0FA] rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 text-[#2D1B4E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-[#6B5B8C]">Booked This Week</p>
+        <p class="text-2xl font-bold text-[#2D1B4E]">{{ stats.bookedThisWeek }}</p>
+      </div>
+      <div class="w-10 h-10 bg-[#F1F5F9] rounded-full flex items-center justify-center">
+        <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Availability Form -->
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden mb-5">
+  <div class="p-6 border-b border-[#C4B5FD] bg-[#F9FAFB]">
+    <h3 class="font-semibold text-[#2D1B4E]">Add New Availability</h3>
+  </div>
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <!-- Day Selection -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Day</label>
+        <select [(ngModel)]="newAvailability.dayCode"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          <option value="MONDAY">Monday</option>
+          <option value="TUESDAY">Tuesday</option>
+          <option value="WEDNESDAY">Wednesday</option>
+          <option value="THURSDAY">Thursday</option>
+          <option value="FRIDAY">Friday</option>
+          <option value="SATURDAY">Saturday</option>
+          <option value="SUNDAY">Sunday</option>
+        </select>
+      </div>
+
+      <!-- Start Time -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Start Time</label>
+        <input type="time" [(ngModel)]="newAvailability.startTime"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- End Time -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">End Time</label>
+        <input type="time" [(ngModel)]="newAvailability.endTime"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- Slot Duration -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Slot Duration</label>
+        <select [(ngModel)]="newAvailability.slotDuration"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          <option value="15">15 minutes</option>
+          <option value="20">20 minutes</option>
+          <option value="30">30 minutes</option>
+          <option value="45">45 minutes</option>
+          <option value="60">60 minutes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- Valid From -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Valid From</label>
+        <input type="date" [(ngModel)]="newAvailability.validFromDate"
+               [min]="today"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- Valid To -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Valid To</label>
+        <input type="date" [(ngModel)]="newAvailability.validToDate"
+               [min]="newAvailability.validFrom || today"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- Recurrence -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Recurrence</label>
+        <select [(ngModel)]="newAvailability.recurrence"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          <option value="WEEKLY">Every week</option>
+          <option value="BIWEEKLY">Every 2 weeks</option>
+          <option value="MONTHLY">Every month</option>
+          <option value="ONCE">One time only</option>
+        </select>
+      </div>
+
+      <!-- Alzheimer Friendly -->
+      <div class="flex items-center space-x-3 pt-7">
+        <input type="checkbox" id="alzheimerFriendly" [(ngModel)]="newAvailability.alzheimerFriendly"
+               class="w-4 h-4 text-[#7C3AED] border-gray-300 rounded focus:ring-[#7C3AED]">
+        <label for="alzheimerFriendly" class="text-sm font-medium text-[#2D1B4E]">
+          Alzheimer friendly (+25% longer slots)
+        </label>
+      </div>
+    </div>
+
+    <button class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-6 py-2 rounded-md transition-colors"
+            (click)="onAddAvailability()">
+      Add to Schedule
+    </button>
+  </div>
+</div>
+
+<!-- Current Availability List -->
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden mb-5">
+  <div class="p-6 border-b border-[#C4B5FD] bg-[#F9FAFB] flex justify-between items-center">
+    <h3 class="font-semibold text-[#2D1B4E]">Current Availability</h3>
+    <span class="text-sm text-[#6B5B8C]">{{ availabilities.length }} slots</span>
+  </div>
+  <div class="divide-y divide-[#E5E7EB]">
+    <div *ngFor="let slot of availabilities" class="p-4 hover:bg-[#F9FAFB] transition-colors">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <div class="flex items-center space-x-3">
+            <span class="font-medium text-[#2D1B4E]">{{ getDayName(slot.dayOfWeek) }}</span>
+            <span class="text-sm text-[#6B5B8C]">{{ slot.startTime }} - {{ slot.endTime }}</span>
+            <span class="text-xs bg-[#F3E8FF] px-2 py-0.5 rounded-full">
+                  {{ slot.slotDuration }} min slots
+                </span>
+            <span *ngIf="slot.alzheimerFriendly"
+                  class="text-xs bg-[#E6F0FA] px-2 py-0.5 rounded-full">
+                  🧠 Alzheimer
+                </span>
+          </div>
+          <div class="flex items-center space-x-2 mt-1 text-xs text-[#6B5B8C]">
+            <span>Valid: {{ slot.validFrom | date:'dd/MM/yyyy' }} - {{ slot.validTo | date:'dd/MM/yyyy' }}</span>
+            <span>•</span>
+            <span>{{ slot.recurrence }}</span>
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button class="p-2 hover:bg-[#F3E8FF] rounded-md transition-colors"
+                  (click)="onEditAvailability(slot)">
+            <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+          </button>
+          <button class="p-2 hover:bg-[#FEF2F2] rounded-md transition-colors"
+                  (click)="onDeleteAvailability(slot.availabilityId)">
+            <svg class="w-4 h-4 text-[#C06C84]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="availabilities.length === 0" class="p-8 text-center text-[#6B5B8C]">
+      No availability set yet. Add your first slot above.
+    </div>
+  </div>
+</div>
+
+

@@ -1,0 +1,21 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logicBg" x1="120" y1="64" x2="688" y2="460" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DDF8F2"/>
+      <stop offset="1" stop-color="#F4FFFD"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="40" fill="url(#logicBg)"/>
+  <circle cx="138" cy="396" r="86" fill="#C9EFE6"/>
+  <circle cx="654" cy="126" r="78" fill="#DDF8F2"/>
+  <rect x="128" y="120" width="544" height="252" rx="28" fill="white"/>
+  <path d="M196 214H612" stroke="#14B8A6" stroke-width="16" stroke-linecap="round"/>
+  <path d="M196 278H612" stroke="#99F6E4" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="242" cy="214" r="38" fill="#0F766E"/>
+  <rect x="360" y="176" width="76" height="76" rx="18" fill="#14B8A6"/>
+  <path d="M542 176L584 252H500L542 176Z" fill="#5EEAD4"/>
+  <circle cx="242" cy="278" r="26" fill="#5EEAD4"/>
+  <rect x="360" y="252" width="52" height="52" rx="14" fill="#0F766E"/>
+  <path d="M542 246L572 300H512L542 246Z" fill="#14B8A6"/>
+  <rect x="194" y="402" width="412" height="18" rx="9" fill="#BDEDE4"/>
+</svg>

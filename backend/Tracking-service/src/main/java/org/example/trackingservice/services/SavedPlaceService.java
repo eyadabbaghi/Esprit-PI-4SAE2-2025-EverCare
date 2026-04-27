@@ -24,7 +24,10 @@ public class SavedPlaceService {
             throw new RuntimeException("patientId is required");
         }
 
-        patientValidationService.validatePatientExists(place.getPatientId());
+        var validation = patientValidationService.validatePatientExists(place.getPatientId());
+        if (validation != null && validation.getUserId() == null) {
+            throw new RuntimeException("Invalid patient: " + place.getPatientId());
+        }
 
         if (place.getRadius() == null) {
             place.setRadius(350.0);
@@ -34,7 +37,9 @@ public class SavedPlaceService {
     }
 
     public List<SavedPlace> getByPatient(String patientId) {
-        patientValidationService.validatePatientExists(patientId);
+        if (patientId == null || patientId.isEmpty()) {
+            return repo.findAll();
+        }
         return repo.findByPatientId(patientId);
     }
 

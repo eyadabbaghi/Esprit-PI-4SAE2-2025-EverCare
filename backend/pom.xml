@@ -25,7 +25,7 @@
         <sonar.projectKey>evercare-parent</sonar.projectKey>
         <sonar.projectName>EverCare - Parent</sonar.projectName>
         <sonar.java.source>17</sonar.java.source>
-        <sonar.modules>Eureka-service,ApiGateway,notification-service,Dailyme-service,Activities,Alerts,configServer,evercare-ai-service,communication-service,blog-service,appointment-service,User,medical-record-service,cognitive-stimulation-service</sonar.modules>
+        <sonar.modules>Eureka-service,ApiGateway,notification-service,Dailyme-service,Activities,Alerts,configServer,evercare-ai-service,communication-service,blog-service,appointment-service,User,medical-record-service,cognitive-stimulation-service,Tracking-service</sonar.modules>
     </properties>
 
     <!-- MUST match your folder names exactly -->
@@ -44,6 +44,7 @@
         <module>User</module>
         <module>medical-record-service</module>
         <module>cognitive-stimulation-service</module>
+        <module>Tracking-service</module>
     </modules>
 
     <dependencyManagement>

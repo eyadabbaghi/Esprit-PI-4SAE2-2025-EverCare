@@ -148,8 +148,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
       { id: 'communication', label: 'Messages', route: '/communication' },
       { id: 'blog', label: 'Blog', route: '/blog' },
-      // Tracking added from dailyme-tracking branch
-      { id: 'tracking', label: 'Tracking', route: '/tracking' },
+      // Dynamic tracking route based on user role
+      { id: 'tracking', label: 'Tracking', route: this.getTrackingRoute() },
     ];
   }
 

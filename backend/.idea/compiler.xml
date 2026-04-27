@@ -7,20 +7,20 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Activities" />
         <module name="spring-boot-starter-parent" />
+        <module name="Activities" />
         <module name="appointment-service" />
         <module name="communication-service" />
         <module name="ApiGateway" />
-        <module name="Dailyme-service" />
         <module name="notification-service" />
+        <module name="Dailyme-service" />
         <module name="cognitive-stimulation-service" />
         <module name="medical-record-service" />
         <module name="configServer" />
         <module name="Eureka-service" />
         <module name="evercare-ai-service" />
-        <module name="Alerts" />
         <module name="Tracking-service" />
+        <module name="Alerts" />
       </profile>
       <profile name="Annotation profile for blog-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />

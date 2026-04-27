@@ -37,7 +37,7 @@ public class ApiGatewayApplication {
                         .uri("lb://ALERTS-SERVICE"))
                 // User service
                 .route("user-service", r -> r
-                        .path("/EverCare/auth/**", "/EverCare/users/**", "/EverCare/test/**")
+                        .path("/EverCare/auth/**", "/EverCare/users/**", "/EverCare/test/**", "/EverCare/internal/**")
                         .uri("lb://User-service"))
                 // Appointment service
                 .route("appointment-service", r -> r
@@ -52,27 +52,22 @@ public class ApiGatewayApplication {
                 .route("notification-service", r -> r
                         .path("/EverCare/api/notifications/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://notification-service"))
+                        .uri("http://localhost:8097"))
                 // Medical record service
                 .route("medical-record-service", r -> r
                         .path("/api/medical-records/**")
                         .uri("lb://MEDICAL-RECORD-SERVICE"))
                 // Dailyme service
                 .route("dailyme-service", r -> r
-                        .path("/api/daily-entries/**", "/api/dailyme-alerts/**",
-                                "/api/daily-tasks/**", "/api/journal/**", "/api/insights")
-                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://DAILYME-SERVICE"))
-                // Face service (external, no load balancer)
-                .route("face-service", r -> r
-                        .path("/EverCare/face/**")
-                        .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
-                        .uri("http://localhost:8085"))
+                        .path("/dailyme/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("http://localhost:8098"))
+// Tracking service
+                .route("tracking-service", r -> r
+                        .path("/tracking/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://TRACKING-SERVICE"))
                 // Blog service
-                .route("blog-service", r -> r
-                        .path("/EverCare/blog-service/**")
-                        .filters(f -> f.rewritePath("/EverCare/blog-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://blog-service"))
                 // ✅ Communication service – REST API (ajoutée)
                 .route("communication-service", r -> r
                         .path("/EverCare/communication-service/**")

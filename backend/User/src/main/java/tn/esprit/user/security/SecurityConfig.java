@@ -39,7 +39,8 @@ public class SecurityConfig {
                                 "/users/by-email",
                                 "/users/activity/**",
                                 "/uploads/**",
-                                "/users/{id}"
+                                "/users/{id}",
+                                "/internal/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

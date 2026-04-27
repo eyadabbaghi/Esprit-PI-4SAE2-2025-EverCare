@@ -52,21 +52,29 @@ const routes: Routes = [
         path: 'blog',
         loadChildren: () => import('../blog/blog.module').then(m => m.BlogModule)
       },
-      // ✅ NOUVEAU : route pour la messagerie
       {
         path: 'communication',
         loadChildren: () => import('../communication/communication.module').then(m => m.CommunicationModule)
+      },
+      // ✅ NEW: Daily Me module
+      {
+        path: 'daily-me',
+        loadChildren: () => import('../daily-me/daily-me.module').then(m => m.DailyMeModule)
+      },
+      
+      // ✅ NEW: Tracking module (supports sub-routes like /tracking/doctor, /tracking/caregiver, /tracking/saved-places)
+      {
+        path: 'tracking',
+        loadChildren: () => import('../tracking/tracking.module').then(m => m.TrackingModule)
       },
       { path: 'setup-face-id', component: FaceSetupComponent },
       { path: 'face-login', component: FaceLoginComponent },
     ],
   },
-  
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class FrontOfficeRoutingModule {
-} 
+export class FrontOfficeRoutingModule {}

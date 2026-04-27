@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import * as faceapi from 'face-api.js';
 
 // ✅ ng2-charts / chart.js
+import Chart from 'chart.js/auto';
 import { ChartConfiguration, ChartData } from 'chart.js';
 
 type SimplePatient = { userId: string; name: string; email: string };

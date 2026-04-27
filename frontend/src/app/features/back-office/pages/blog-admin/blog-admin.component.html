@@ -1,0 +1,180 @@
+<div class="p-6 lg:p-10 bg-[#F8F9FE] min-h-screen">
+  
+  <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-white flex flex-col md:flex-row justify-between items-center mb-10 gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
+    <div>
+      <h2 class="text-3xl font-black text-[#2D264B] tracking-tight">Content <span class="text-[#7C3AED]">Studio</span></h2>
+      <p class="text-gray-500 mt-1 font-medium">EverCare Publication Manager.</p>
+    </div>
+    <button (click)="openAddModal()" class="bg-[#7C3AED] text-white px-8 py-4 rounded-2xl hover:bg-[#6D28D9] flex items-center gap-3 shadow-xl shadow-purple-200 transition-all active:scale-95 group">
+      <lucide-angular name="plus" size="20" class="group-hover:rotate-90 transition-transform"></lucide-angular> 
+      <span class="font-black uppercase text-sm tracking-wider">New Article</span>
+    </button>
+  </div>
+
+  <div class="mb-10 bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-white shadow-sm flex flex-wrap items-center gap-4 animate-in fade-in duration-1000">
+    <div class="flex items-center gap-3 mr-4">
+      <div class="w-2 h-10 bg-[#7C3AED] rounded-full"></div>
+      <span class="text-xs font-black text-[#2D264B] uppercase tracking-[0.2em]">Themes</span>
+    </div>
+    
+    <div *ngFor="let cat of categories" class="group relative flex items-center gap-3 bg-white text-[#2D264B] px-6 py-3 rounded-2xl border border-purple-50 transition-all hover:shadow-lg hover:border-[#7C3AED]/20 hover:-translate-y-1">
+      <span class="font-bold text-sm">{{ cat.name }}</span>
+      <span class="text-[10px] bg-[#F3F0FF] text-[#7C3AED] px-2.5 py-1 rounded-lg font-black">
+        {{ getArticlesCountByCategory(cat.id) }}
+      </span>
+      <button (click)="deleteCategory(cat.id)" class="hidden group-hover:flex ml-2 text-red-400 hover:text-red-600 transition-colors">
+        <lucide-angular name="trash-2" size="14"></lucide-angular>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button *ngIf="!showCatInput" (click)="showCatInput = true" class="w-12 h-12 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-[#7C3AED] hover:text-[#7C3AED] transition-all flex items-center justify-center bg-white/50">
+        <lucide-angular name="plus" size="20"></lucide-angular>
+      </button>
+      <div *ngIf="showCatInput" class="flex items-center gap-2 animate-in slide-in-from-left-4 duration-300">
+        <input type="text" [(ngModel)]="newCatName" (keyup.enter)="addCategory()" placeholder="Name..." class="px-5 py-3 bg-white border border-purple-100 rounded-2xl outline-none focus:ring-2 focus:ring-[#7C3AED]/20 w-40 text-sm shadow-sm">
+        <button (click)="addCategory()" class="bg-green-500 text-white p-3 rounded-2xl hover:bg-green-600 shadow-lg transition-transform active:scale-90">
+            <lucide-angular name="plus" size="18"></lucide-angular>
+        </button>
+        <button (click)="showCatInput = false" class="text-gray-400 hover:text-red-500 p-2">
+            <lucide-angular name="trash-2" size="18"></lucide-angular>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-[3rem] shadow-sm overflow-hidden border border-white mb-12">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50/50 text-[#6B5B8C] uppercase text-[10px] font-black tracking-[0.2em] border-b border-gray-50">
+            <th class="p-8">Manuscript</th>
+            <th class="p-8">Tag</th>
+            <th class="p-8 text-center">Engagement 📊</th>
+            <th class="p-8">Creation Date</th>
+            <th class="p-8 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr *ngFor="let article of articles" class="hover:bg-[#F8F9FE] transition-colors group">
+            <td class="p-6">
+              <div class="flex items-center gap-5">
+                <div class="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 border-2 border-white shadow-sm shrink-0">
+                  <img [src]="article.coverImageUrl || 'assets/blog-placeholder.jpg'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <span class="font-bold text-[#2D264B] text-lg">{{ article.title }}</span>
+              </div>
+            </td>
+            <td class="p-6">
+              <span class="px-4 py-2 bg-[#F3F0FF] text-[#7C3AED] rounded-xl text-[10px] font-black uppercase tracking-widest border border-purple-50">
+                {{ article.category?.name || 'General' }}
+              </span>
+            </td>
+            <td class="p-6 text-center">
+              <div class="flex flex-col gap-2 items-center">
+                <div class="inline-flex items-center gap-2 bg-blue-50 text-blue-500 px-4 py-1.5 rounded-2xl font-black text-xs w-24 justify-center">
+                  <span>👁️</span> {{ article.viewCount || 0 }}
+                </div>
+                <div class="inline-flex items-center gap-2 bg-red-50 text-red-500 px-4 py-1.5 rounded-2xl font-black text-xs w-24 justify-center">
+                  <span>❤️</span> {{ article.likeCount || 0 }}
+                </div>
+              </div>
+            </td>
+            <td class="p-6 text-sm text-gray-400 font-bold">{{ article.createdAt | date:'dd/MM/yyyy' }}</td>
+            <td class="p-6">
+              <div class="flex justify-center gap-3">
+                <button (click)="openEditModal(article)" class="w-10 h-10 flex items-center justify-center bg-white text-blue-500 hover:bg-blue-50 rounded-xl border border-gray-100 shadow-sm transition-all hover:-translate-y-1">
+                  <lucide-angular name="edit" size="16"></lucide-angular>
+                </button>
+                <button (click)="deleteArticle(article.id!)" class="w-10 h-10 flex items-center justify-center bg-white text-red-500 hover:bg-red-50 rounded-xl border border-gray-100 shadow-sm transition-all hover:-translate-y-1">
+                  <lucide-angular name="trash-2" size="16"></lucide-angular>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <div class="lg:col-span-2 bg-white p-10 rounded-[3.5rem] border border-white shadow-sm">
+      <h3 class="text-xl font-black text-[#2D264B] mb-10 flex items-center gap-3">
+        <lucide-angular name="pie-chart" size="24" class="text-[#7C3AED]"></lucide-angular>
+        Analytical Performance by Theme
+      </h3>
+      
+      <div class="space-y-8">
+        <div *ngFor="let stat of categoryStats">
+          <div class="flex justify-between items-end mb-3">
+            <div>
+              <span class="text-sm font-black text-[#2D264B] uppercase tracking-widest">{{ stat.categoryName }}</span>
+              <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase">
+                {{ stat.articleCount }} articles • {{ stat.totalViews }} views • {{ stat.averageLikes | number:'1.1-1' }} avg likes
+              </div>
+            </div>
+            <span class="text-sm font-black text-[#7C3AED] bg-[#F3F0FF] px-3 py-1 rounded-lg">
+                {{ stat.engagementRate | number:'1.1-1' }}%
+            </span>
+          </div>
+          <div class="w-full h-3 bg-gray-50 rounded-full overflow-hidden border border-gray-100 shadow-inner">
+            <div class="h-full bg-gradient-to-r from-[#7C3AED] to-[#A855F7] rounded-full transition-all duration-1000"
+                 [style.width.%]="stat.engagementRate > 100 ? 100 : stat.engagementRate">
+            </div>
+          </div>
+        </div>
+        <div *ngIf="categoryStats.length === 0" class="text-center py-10 text-gray-400 italic">
+            No analytical data available.
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-[#2D264B] p-12 rounded-[3.5rem] text-white flex flex-col justify-center text-center shadow-2xl relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-[#7C3AED] opacity-10 blur-[60px] group-hover:scale-150 transition-transform duration-700"></div>
+      <h4 class="text-7xl font-black mb-2 tracking-tighter">{{ articles.length }}</h4>
+      <p class="text-[#7C3AED] font-black uppercase tracking-[0.3em] text-xs">Total Publications</p>
+      <div class="h-px bg-white/5 my-8 w-1/2 mx-auto"></div>
+      <p class="text-gray-400 text-sm italic font-medium">"Visualize your content impact."</p>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#2D264B]/80 backdrop-blur-md p-4">
+    <div class="bg-white w-full max-w-3xl rounded-[3.5rem] shadow-2xl p-12 relative animate-in zoom-in duration-300">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-3xl font-black text-[#2D264B]">{{ isEditMode ? 'Edit' : 'New Publication' }}</h2>
+            <button (click)="showModal = false" class="text-gray-400 hover:text-red-500 transition-colors text-2xl font-black">✕</button>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-[#7C3AED] mb-2 block ml-2">Title</label>
+                <input type="text" [(ngModel)]="newArticle.title" class="w-full p-5 bg-[#F8F9FE] rounded-2xl outline-none focus:ring-2 focus:ring-[#7C3AED]/20 font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#7C3AED] mb-2 block ml-2">Category</label>
+                    <select [(ngModel)]="newArticle.categoryId" class="w-full p-5 bg-[#F8F9FE] rounded-2xl outline-none focus:ring-2 focus:ring-[#7C3AED]/20 font-bold">
+                        <option [ngValue]="null" disabled>Choose...</option>
+                        <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#7C3AED] mb-2 block ml-2">Image URL</label>
+                    <input type="text" [(ngModel)]="newArticle.coverImageUrl" class="w-full p-5 bg-[#F8F9FE] rounded-2xl outline-none focus:ring-2 focus:ring-[#7C3AED]/20 font-bold">
+                </div>
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase tracking-widest text-[#7C3AED] mb-2 block ml-2">Content</label>
+                <textarea [(ngModel)]="newArticle.content" rows="6" class="w-full p-6 bg-[#F8F9FE] rounded-[2rem] outline-none focus:ring-2 focus:ring-[#7C3AED]/20"></textarea>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-6 mt-10">
+            <button (click)="showModal = false" class="font-black uppercase text-[10px] tracking-widest text-gray-400">Cancel</button>
+            <button (click)="handleSave()" class="bg-[#2D264B] text-white px-10 py-4 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all">
+                {{ isEditMode ? 'Update' : 'Publish' }}
+            </button>
+        </div>
+    </div>
+</div>

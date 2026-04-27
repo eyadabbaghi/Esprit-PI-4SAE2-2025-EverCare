@@ -27,7 +27,11 @@ export class BlogService {
   }
 
   createArticle(article: Article, categoryId: number): Observable<Article> {
-    return this.http.post<Article>(`${this.apiUrl}/articles/category/${categoryId}`, article).pipe(catchError(this.handleError));
+    const payload = {
+      ...article,
+      categoryId: categoryId
+    };
+    return this.http.post<Article>(`${this.apiUrl}/articles`, payload).pipe(catchError(this.handleError));
   }
 
   updateArticle(id: number, article: Article): Observable<Article> {

@@ -2,6 +2,7 @@ package com.yourteam.blogservice.services;
 
 import com.yourteam.blogservice.Repository.ArticleLikeRepository;
 import com.yourteam.blogservice.dto.CategoryPerformanceDTO;
+import com.yourteam.blogservice.dto.CreateArticleRequest;
 import com.yourteam.blogservice.dto.NotificationRequest;
 import com.yourteam.blogservice.entity.ArticleLike;
 import com.yourteam.blogservice.entity.Article;
@@ -52,9 +53,20 @@ public class ArticleService {
     }
 
     @Transactional
-    public Article createArticle(Article article, Long categoryId, String authorEmail) {
+    public Article createArticle(CreateArticleRequest request, String authorEmail) {
+        Long categoryId = request.getCategoryId();
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+        
+        Article article = Article.builder()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .coverImageUrl(request.getCoverImageUrl())
+                .language(request.getLanguage())
+                .readingTime(request.getReadingTime())
+                .isPublished(request.getIsPublished() != null ? request.getIsPublished() : true)
+                .build();
+        
         category.setTotalArticles((category.getTotalArticles() == null ? 0 : category.getTotalArticles()) + 1);
         categoryRepository.save(category);
         article.setMoods(performAutoTagging(article.getTitle(), article.getContent()));

@@ -6,7 +6,6 @@ import com.yourteam.communicationservice.service.ContentFilterService;
 import com.yourteam.communicationservice.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,10 +27,8 @@ public class MessageController {
     @PostMapping("/{conversationId}")
     public ResponseEntity<Message> sendMessage(
             @PathVariable Long conversationId,
-            @RequestBody Message message,
-            JwtAuthenticationToken token) {
-        String email = token.getToken().getClaimAsString("email");
-        if (email != null) email = email.trim().toLowerCase();
+            @RequestBody Message message) {
+        String email = "anonymous";
         message.setSenderId(email);
         return ResponseEntity.ok(messageService.sendMessage(conversationId, message));
     }
@@ -39,10 +36,8 @@ public class MessageController {
     @PostMapping("/{conversationId}/upload")
     public ResponseEntity<Message> uploadFile(
             @PathVariable Long conversationId,
-            @RequestParam("file") MultipartFile file,
-            JwtAuthenticationToken token) {
-        String email = token.getToken().getClaimAsString("email");
-        if (email != null) email = email.trim().toLowerCase();
+            @RequestParam("file") MultipartFile file) {
+        String email = "anonymous";
         return ResponseEntity.ok(messageService.saveFile(conversationId, file, email));
     }
 
@@ -69,10 +64,8 @@ public class MessageController {
 
     @GetMapping("/search")
     public ResponseEntity<List<MessageSearchDTO>> searchGlobalMessages(
-            @RequestParam String query,
-            JwtAuthenticationToken token) {
-        String email = token.getToken().getClaimAsString("email");
-        if (email != null) email = email.trim().toLowerCase();
+            @RequestParam String query) {
+        String email = "anonymous";
         return ResponseEntity.ok(messageService.searchGlobally(email, query));
     }
 }

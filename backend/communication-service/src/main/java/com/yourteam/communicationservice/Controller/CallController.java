@@ -4,7 +4,6 @@ import com.yourteam.communicationservice.entity.Call;
 import com.yourteam.communicationservice.service.CallService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,10 +14,8 @@ public class CallController {
     private final CallService callService;
 
     @PostMapping("/{conversationId}")
-    public ResponseEntity<Call> startCall(@PathVariable Long conversationId,
-                                          JwtAuthenticationToken token) {
-        String email = token.getToken().getClaimAsString("email");
-        if (email != null) email = email.trim().toLowerCase();
+    public ResponseEntity<Call> startCall(@PathVariable Long conversationId) {
+        String email = "anonymous";
         return ResponseEntity.ok(callService.startCall(conversationId, email));
     }
 

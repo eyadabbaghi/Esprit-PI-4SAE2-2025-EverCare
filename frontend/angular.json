@@ -106,7 +106,9 @@
             ],
             "styles": [
               "src/styles/_purple-theme.css",
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/maplibre-gl/dist/maplibre-gl.css",
+              "node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": []
           }

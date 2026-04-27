@@ -5,5 +5,8 @@ export interface SavedPlace {
   addressText: string;
   lat: number;
   lng: number;
-  createdAt?: string;
+
+  // 🔥 NEW
+  status?: 'SAFE' | 'IDLE' | 'DANGER';
+  duration?: string; // e.g. "2h"
 }

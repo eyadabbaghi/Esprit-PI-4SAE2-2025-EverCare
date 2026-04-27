@@ -12,11 +12,12 @@ import { DailyMeAlert } from '../../../models/dailyme-alert';
 export class DailyTaskService {
 
   // ✅ Gateway / dailyme routes (keep consistent)
-  private tasksUrl = 'http://localhost:8089/api/daily-tasks';
-  private insightsUrl = 'http://localhost:8089/api/insights';
+  // ✅ Through API Gateway
+private tasksUrl = 'http://localhost:8089/dailyme/api/daily-tasks';
+private insightsUrl = 'http://localhost:8089/dailyme/api/insights';
 
-  // ✅ Alerts endpoint (same gateway)
-  private alertsUrl = 'http://localhost:8089/api/dailyme-alerts';
+// Alerts
+private alertsUrl = 'http://localhost:8089/dailyme/api/dailyme-alerts';
 
   constructor(private http: HttpClient) {}
 

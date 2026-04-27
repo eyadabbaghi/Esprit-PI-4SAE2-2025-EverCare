@@ -72,6 +72,9 @@ export class NavigationComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Request notification permission early (merged from tracking branch)
+    this.requestBrowserNotificationPermission();
+
     this.userSub = this.authService.currentUser$.subscribe((user) => {
       this.user = user;
 
@@ -111,7 +114,6 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.userSub?.unsubscribe();
     this.pollingSub?.unsubscribe();
     this.taskWatcherSub?.unsubscribe();
-
     if (this.alertTimer) {
       clearTimeout(this.alertTimer);
       this.alertTimer = null;
@@ -146,12 +148,18 @@ export class NavigationComponent implements OnInit, OnDestroy {
       { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
       { id: 'communication', label: 'Messages', route: '/communication' },
       { id: 'blog', label: 'Blog', route: '/blog' },
+      // Tracking added from dailyme-tracking branch
+      { id: 'tracking', label: 'Tracking', route: '/tracking' },
     ];
   }
 
   // ─── Navigation ───────────────────────────────────────────────────────────
 
   isActive(route: string): boolean {
+    // Special handling for tracking routes (merged from tracking branch)
+    if (route === '/tracking') {
+      return this.router.url.startsWith('/tracking');
+    }
     if (route === '/') {
       return this.router.url === '/';
     }
@@ -173,7 +181,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
       '/profile',
       '/communication',
       '/daily-me',
-      '/blog',  
+      '/blog',
+      '/tracking', // added tracking
     ];
 
     if (protectedRoutes.includes(route) && !this.user) {
@@ -185,6 +194,14 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.isMobileMenuOpen = false;
     this.profileOpen = false;
     this.notificationsOpen = false;
+  }
+
+  // Returns dynamic tracking route based on user role (merged from tracking branch)
+  getTrackingRoute(): string {
+    const role = (this.user?.role || '').toString().toLowerCase();
+    if (role === 'doctor') return '/tracking/doctor';
+    if (role === 'caregiver') return '/tracking/caregiver';
+    return '/tracking/saved-places';
   }
 
   // ─── UI toggles ───────────────────────────────────────────────────────────
@@ -328,7 +345,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Activity notifications ───────────────────────────────────────────────
+  // ─── Activity notifications (from your branch) ────────────────────────────
 
   private startActivityPolling(): void {
     this.fetchActivityNotifications();
@@ -367,7 +384,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Task watcher ─────────────────────────────────────────────────────────
+  // ─── Task watcher (enhanced with tracking branch flexibility) ─────────────
 
   private startTaskWatcher(patientId: string): void {
     this.stopTaskWatcher();
@@ -390,21 +407,22 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.taskWatcherSub = undefined;
   }
 
+  // Enhanced checkTasksDue – supports scheduledTime, time, dueAt (from tracking branch)
   private checkTasksDue(tasks: DailyTask[]): void {
-    const now       = Date.now();
-    const windowMs  = 60000;
+    const now = Date.now();
+    const windowMs = 60000;
 
     tasks.forEach((task) => {
       const dueMs = this.getTaskDueMs(task);
       if (!dueMs || Math.abs(dueMs - now) > windowMs) return;
 
-      const dayKey    = this.todayKey();
-      const uniqueKey = `task_notified_${dayKey}_${task.id}_${task.scheduledTime}`;
+      const dayKey = this.todayKey();
+      const uniqueKey = `task_notified_${dayKey}_${task.id}_${task.scheduledTime || (task as any).time || (task as any).dueAt || dueMs}`;
       if (localStorage.getItem(uniqueKey) === '1') return;
 
       localStorage.setItem(uniqueKey, '1');
 
-      const title   = (task.title || 'Task').trim();
+      const title = (task.title || 'Task').trim();
       const message = `Time to do: ${title}`;
 
       this.showInstantTaskAlert(title, message);
@@ -428,8 +446,15 @@ export class NavigationComponent implements OnInit, OnDestroy {
     });
   }
 
-  private getTaskDueMs(task: DailyTask): number | null {
-    return this.buildTodayMsFromHHmm(task.scheduledTime);
+  // Enhanced getTaskDueMs – handles multiple date fields (from tracking branch)
+  private getTaskDueMs(task: any): number | null {
+    if (task.scheduledTime) return this.buildTodayMsFromHHmm(task.scheduledTime);
+    if (task.time) return this.buildTodayMsFromHHmm(task.time);
+    if (task.dueAt) {
+      const ms = new Date(task.dueAt).getTime();
+      return isNaN(ms) ? null : ms;
+    }
+    return null;
   }
 
   private buildTodayMsFromHHmm(hhmm: string): number | null {
@@ -442,41 +467,59 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private todayKey(): string {
-    const date  = new Date();
-    const year  = date.getFullYear();
+    const date = new Date();
+    const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day   = String(date.getDate()).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
   private openTaskAlert(title: string, message: string): void {
-    this.taskAlertTitle   = title;
+    this.taskAlertTitle = title;
     this.taskAlertMessage = message;
-    this.showTaskAlert    = true;
+    this.showTaskAlert = true;
 
     if (this.alertTimer) clearTimeout(this.alertTimer);
-
     this.alertTimer = setTimeout(() => {
       this.showTaskAlert = false;
-      this.alertTimer    = null;
+      this.alertTimer = null;
     }, 6000);
   }
 
-  private showInstantTaskAlert(title: string, body: string): void {
+  // Enhanced browser notification with secure context check (from tracking branch)
+  private requestBrowserNotificationPermission(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     try {
-      if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          new Notification(`Task: ${title}`, { body });
-        } else if (Notification.permission === 'default') {
-          Notification.requestPermission();
-        }
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
       }
+    } catch {
+      // ignore
+    }
+  }
+
+  private showInstantTaskAlert(title: string, body: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      const canUseOSNotif =
+        ('Notification' in window) &&
+        Notification.permission === 'granted' &&
+        (window.isSecureContext || window.location.hostname === 'localhost');
+
+      if (canUseOSNotif) {
+        new Notification(`Task: ${title}`, { body });
+        return;
+      }
+      // Fallback alert (from tracking branch) – but avoid alert spam, use console?
+      // Keeping your original console log as less intrusive
+      console.log(`${title}: ${body}`);
     } catch {
       console.log(body);
     }
   }
 
-  // ─── Persistence ──────────────────────────────────────────────────────────
+  // ─── Persistence (from your branch) ───────────────────────────────────────
 
   private loadClearedIds(): void {
     try {
@@ -496,7 +539,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Bell animation ───────────────────────────────────────────────────────
+  // ─── Bell animation (from your branch) ────────────────────────────────────
 
   private shakeBell(): void {
     this.bellShaking = false;
@@ -513,7 +556,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     }, 10);
   }
 
-  // ─── Patient ID resolution ────────────────────────────────────────────────
+  // ─── Patient ID resolution (enhanced from both) ───────────────────────────
 
   private getPatientId(user: User): string | null {
     const candidate =

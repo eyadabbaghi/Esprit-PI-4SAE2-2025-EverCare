@@ -7,7 +7,7 @@ import { DailyEntry } from '../models/daily-entry.model';
 @Injectable({ providedIn: 'root' })
 export class DailyMeService {
 
-  private baseUrl = 'http://localhost:8089/api/daily-entries';
+ private baseUrl = 'http://localhost:8089/dailyme/api/daily-entries';
 
   // ✅ Patient mode uses subject
   private entriesSubject = new BehaviorSubject<DailyEntry[]>([]);

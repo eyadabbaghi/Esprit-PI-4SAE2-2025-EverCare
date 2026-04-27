@@ -1,10 +1,10 @@
 /**
  * LoginComponent - Login and Registration page
- * 
+ *
  * CHANGED: Converted to standalone component to fix NG8002 formGroup error.
  * Previously was declared in FrontOfficeModule but needed ReactiveFormsModule
  * imported directly in the component for formGroup directive to work.
- * 
+ *
  * Changes made:
  * - Added `standalone: true` to @Component decorator
  * - Added `imports: [CommonModule, ReactiveFormsModule]` to import required modules
@@ -71,6 +71,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     { value: 'PATIENT', label: 'Patient' },
     { value: 'CAREGIVER', label: 'Caregiver' },
     { value: 'DOCTOR', label: 'Doctor' },
+
   ];
 
   constructor(

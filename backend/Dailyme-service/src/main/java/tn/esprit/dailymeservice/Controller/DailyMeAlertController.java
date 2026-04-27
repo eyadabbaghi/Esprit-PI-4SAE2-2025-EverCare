@@ -12,6 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/dailyme-alerts")
 @RequiredArgsConstructor
+
 public class DailyMeAlertController {
 
     private final DailyMeAlertService service;

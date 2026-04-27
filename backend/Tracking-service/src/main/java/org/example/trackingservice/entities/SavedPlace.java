@@ -20,6 +20,7 @@ public class SavedPlace {
 
     private Double lat;
     private Double lng;
+    private Double radius = 350.0; // meters default
 
     private LocalDateTime createdAt;
 
@@ -30,7 +31,8 @@ public class SavedPlace {
     // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
+    public Double getRadius() { return radius; }
+    public void setRadius(Double radius) { this.radius = radius; }
     public String getPatientId() { return patientId; }
     public void setPatientId(String patientId) { this.patientId = patientId; }
 

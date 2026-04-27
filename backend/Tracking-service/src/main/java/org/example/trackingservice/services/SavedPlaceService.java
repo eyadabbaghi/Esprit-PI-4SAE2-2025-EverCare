@@ -10,16 +10,31 @@ import java.util.List;
 public class SavedPlaceService {
 
     private final SavedPlaceRepository repo;
+    private final PatientValidationService patientValidationService;
 
-    public SavedPlaceService(SavedPlaceRepository repo) {
+    public SavedPlaceService(SavedPlaceRepository repo,
+                             PatientValidationService patientValidationService) {
         this.repo = repo;
+        this.patientValidationService = patientValidationService;
     }
 
     public SavedPlace add(SavedPlace place) {
+
+        if (place.getPatientId() == null || place.getPatientId().isEmpty()) {
+            throw new RuntimeException("patientId is required");
+        }
+
+        patientValidationService.validatePatientExists(place.getPatientId());
+
+        if (place.getRadius() == null) {
+            place.setRadius(350.0);
+        }
+
         return repo.save(place);
     }
 
     public List<SavedPlace> getByPatient(String patientId) {
+        patientValidationService.validatePatientExists(patientId);
         return repo.findByPatientId(patientId);
     }
 

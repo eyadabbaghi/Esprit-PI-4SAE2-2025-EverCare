@@ -61,6 +61,7 @@ const routes: Routes = [
       { path: 'face-login', component: FaceLoginComponent },
     ],
   },
+  
 ];
 
 @NgModule({

@@ -28,14 +28,14 @@ pipeline {
             }
             post {
                 always {
-                    // Publier les rapports de tests JUnit
-                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-                    // Publier le rapport HTML JaCoCo (même si seuil non atteint)
+                    // Publication des rapports JUnit
+                    junit allowEmptyResults: true, testResults: 'backend/appointment-service/target/surefire-reports/*.xml'
+                    // Publication du rapport HTML JaCoCo
                     publishHTML([
                             allowMissing: true,
                             alwaysLinkToLastBuild: true,
                             keepAll: true,
-                            reportDir: 'target/site/jacoco',
+                            reportDir: 'backend/appointment-service/target/site/jacoco',
                             reportFiles: 'index.html',
                             reportName: 'JaCoCo Coverage Report'
                     ])

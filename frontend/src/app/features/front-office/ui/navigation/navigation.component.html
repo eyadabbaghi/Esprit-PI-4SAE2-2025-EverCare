@@ -3,19 +3,19 @@
     <div class="flex items-center justify-between h-16">
 
       <!-- Logo -->
-      <button type="button" class="flex items-center space-x-3 cursor-pointer" (click)="navigate('/')">
-        <img src="/logo.png" alt="EverCare logo" class="h-9 w-9 rounded-xl object-contain" />
-        <span class="text-xl font-bold text-[#2D1B4E]">EverCare</span>
+      <button type="button" class="flex items-center space-x-2 cursor-pointer" (click)="navigate('/')">
+        <img src="/logo.png" alt="EverCare logo" class="h-8 w-8 rounded-lg object-contain" />
+        <span class="text-base font-bold text-[#2D1B4E]">EverCare</span>
       </button>
 
       <!-- Desktop Navigation -->
-      <div class="hidden md:flex items-center space-x-1">
-        <button
+      <div class="hidden md:flex items-center space-x-1 mr-4">
+<button
           *ngFor="let item of navItems"
           type="button"
           (click)="navigate(item.route)"
           [ngClass]="isActive(item.route) ? 'bg-[#F3E8FF] text-[#7C3AED]' : 'text-[#6B5B8C] hover:bg-[#F3E8FF] hover:text-[#7C3AED]'"
-          class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition"
         >
           <!-- Activities -->
           <ng-container *ngIf="item.id === 'activities'">
@@ -108,14 +108,14 @@
       </div>
 
       <!-- Right Section (unchanged, but ensure profilePicture safe) -->
-      <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2">
 
-        <!-- Notifications Bell (unchanged) -->
-        <div class="relative">
+        <!-- Notifications Bell (only show when logged in) -->
+        <div *ngIf="user" class="relative">
           <button id="notifications-button" type="button"
-                  class="relative inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#F3E8FF] transition-colors"
+                  class="relative inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-[#F3E8FF] transition-colors"
                   (click)="openAlerts()">
-            <svg class="w-5 h-5 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            <svg class="w-4 h-4 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                  [class.bell-shake]="bellShaking">
               <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                     d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 10-12 0v3a2 2 0 01-.6 1.6L4 17h5m6 0a3 3 0 11-6 0"/>
@@ -187,12 +187,12 @@
         </div>
 
         <!-- Auth-aware section (with safe profilePicture handling) -->
-        <ng-container *ngIf="user !== null; else authLoading">
-          <div *ngIf="user" class="hidden md:flex items-center space-x-2 relative">
+        <!-- Show Profile when user is logged in -->
+<div *ngIf="user" class="hidden md:flex items-center space-x-1 relative">
             <button id="profile-button" type="button"
-                    class="flex items-center space-x-2 px-2 py-1 rounded-full hover:bg-[#F3E8FF] transition-all duration-200"
+                    class="flex items-center space-x-1 px-1 py-0.5 rounded-full hover:bg-[#F3E8FF] transition-all duration-200"
                     (click)="toggleProfileMenu()">
-              <div class="w-9 h-9 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold overflow-hidden">
+              <div class="w-8 h-8 rounded-full bg-[#C4B5FD] flex items-center justify-center text-xs font-semibold overflow-hidden">
                 <ng-container *ngIf="user.profilePicture; else initials">
                   <img [src]="user.profilePicture" alt="Profile" class="w-full h-full object-cover" />
                 </ng-container>
@@ -201,8 +201,8 @@
                 </ng-template>
               </div>
               <div class="flex flex-col text-left">
-                <span class="text-sm font-medium text-[#2D1B4E]">{{ user.name }}</span>
-                <span class="text-[11px] text-[#6B5B8C] capitalize">{{ user.role }}</span>
+                <span class="text-xs font-medium text-[#2D1B4E]">{{ user.name }}</span>
+                <span class="text-[10px] text-[#6B5B8C] capitalize">{{ user.role }}</span>
               </div>
             </button>
 
@@ -226,24 +226,18 @@
             </div>
           </div>
 
-          <div *ngIf="!user" class="hidden md:block">
-            <button type="button"
-                    class="flex items-center gap-2 px-3 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9]"
-                    (click)="navigate('/login')">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                      d="M15 12H3m0 0l4-4m-4 4l4 4m6-12h6v18h-6"/>
-              </svg>
-              Log In
-            </button>
-          </div>
-        </ng-container>
-
-        <ng-template #authLoading>
-          <div class="hidden md:block">
-            <div class="w-24 h-9 bg-gray-100 rounded-full animate-pulse"></div>
-          </div>
-        </ng-template>
+        <!-- Show Login button when user is NOT logged in (and auth check is complete) -->
+        <div *ngIf="!user && !isCheckingAuth" class="hidden md:block">
+          <button type="button"
+                  class="flex items-center gap-2 px-3 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium hover:bg-[#6D28D9]"
+                  (click)="navigate('/login')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 12H3m0 0l4-4m-4 4l4 4m6-12h6v18h-6"/>
+            </svg>
+            Log In
+          </button>
+        </div>
 
         <!-- Mobile Menu Toggle -->
         <button type="button"

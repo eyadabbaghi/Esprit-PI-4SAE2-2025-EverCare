@@ -44,6 +44,7 @@ interface TaskNotification {
 })
 export class NavigationComponent implements OnInit, OnDestroy {
   user: User | null = null;
+  isCheckingAuth = true;
   isMobileMenuOpen = false;
   notificationsOpen = false;
   profileOpen = false;
@@ -77,6 +78,12 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
     this.userSub = this.authService.currentUser$.subscribe((user) => {
       this.user = user;
+      
+      if (user !== null) {
+        this.isCheckingAuth = false;
+      } else if (!this.authService.getToken()) {
+        this.isCheckingAuth = false;
+      }
 
       if (!isPlatformBrowser(this.platformId)) {
         return;
@@ -138,18 +145,16 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   get navItems(): NavItem[] {
     return [
-      { id: 'home', label: 'Home', route: '/' },
       { id: 'activities', label: 'Activities', route: '/activities' },
       { id: 'appointments', label: 'Appointments', route: '/appointments' },
+      { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
       { id: 'prescriptions', label: 'Prescriptions', route: '/prescriptions' },
       { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
       { id: 'cognitive-stimulation', label: 'Cognitive Care', route: this.cognitiveRoute },
-      { id: 'alerts', label: 'Alerts', route: '/alerts' },
-      { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
+      { id: 'tracking', label: 'Tracking', route: this.getTrackingRoute() },
       { id: 'communication', label: 'Messages', route: '/communication' },
       { id: 'blog', label: 'Blog', route: '/blog' },
-      // Dynamic tracking route based on user role
-      { id: 'tracking', label: 'Tracking', route: this.getTrackingRoute() },
+      { id: 'alerts', label: 'Alerts', route: '/alerts' },
     ];
   }
 
@@ -177,12 +182,14 @@ export class NavigationComponent implements OnInit, OnDestroy {
       '/prescriptions',
       '/medical-record',
       '/cognitive-stimulation',
+      '/cognitive-stimulation/catalog',
       '/alerts',
       '/profile',
       '/communication',
       '/daily-me',
       '/blog',
-      '/tracking', // added tracking
+      '/tracking',
+      '/tracking/saved-places',
     ];
 
     if (protectedRoutes.includes(route) && !this.user) {

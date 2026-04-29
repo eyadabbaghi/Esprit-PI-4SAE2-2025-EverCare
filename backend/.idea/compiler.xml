@@ -21,6 +21,7 @@
         <module name="evercare-ai-service" />
         <module name="Tracking-service" />
         <module name="Alerts" />
+        <module name="tracking-service" />
       </profile>
       <profile name="Annotation profile for blog-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -63,6 +64,7 @@
       <module name="medical-record-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="spring-boot-starter-parent" options="-parameters" />
+      <module name="tracking-service" options="-parameters" />
     </option>
   </component>
 </project>

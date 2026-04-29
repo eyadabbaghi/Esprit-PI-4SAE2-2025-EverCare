@@ -297,8 +297,8 @@ public class TrackingLogicService {
     }
 
     public String getDangerLevel(long minutes) {
-        if (minutes < 1) return "LOW";
-        if (minutes <= 2) return "MEDIUM";
+        if (minutes < 5) return "LOW";
+        if (minutes <= 15) return "MEDIUM";
         return "CRITICAL";
     }
 

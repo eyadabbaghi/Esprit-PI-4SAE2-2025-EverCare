@@ -1,7 +1,8 @@
 import { Component, Input, OnDestroy, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { Subscription } from 'rxjs';
+import Chart from 'chart.js/auto';
 import { ChartConfiguration } from 'chart.js';
-import { NgForm } from '@angular/forms'; // ✅ ADDED
+import { NgForm } from '@angular/forms';
 
 import { DailyTask } from '../models/daily-task.model';
 import { DailyTaskService } from '../services/daily-task.service';

@@ -1,0 +1,54 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - img "EverCare logo" [ref=e8]
+      - heading "EverCare" [level=1] [ref=e9]
+    - heading "Caring for your loved ones, every day" [level=2] [ref=e10]
+    - paragraph [ref=e11]: A comprehensive elderly care platform designed to support patients, caregivers, and healthcare professionals with warmth and compassion.
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - generic [ref=e17]:
+          - heading "Daily Care Support" [level=3] [ref=e18]
+          - paragraph [ref=e19]: Track moods, medications, and daily activities
+      - generic [ref=e20]:
+        - img [ref=e22]
+        - generic [ref=e24]:
+          - heading "Safety Alerts" [level=3] [ref=e25]
+          - paragraph [ref=e26]: Real-time incident tracking and emergency notifications
+      - generic [ref=e27]:
+        - img [ref=e29]
+        - generic [ref=e31]:
+          - heading "Connected Care" [level=3] [ref=e32]
+          - paragraph [ref=e33]: Coordinate appointments and medical records seamlessly
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - heading "Welcome" [level=2] [ref=e37]
+      - paragraph [ref=e38]: Sign in to your account or create a new one
+    - generic [ref=e40]:
+      - button "Sign In" [ref=e41] [cursor=pointer]
+      - button "Sign Up" [ref=e42] [cursor=pointer]
+    - generic [ref=e43]:
+      - generic [ref=e48]: Or continue with
+      - generic [ref=e50]:
+        - button "تسجيل الدخول باستخدام Googleيفتح الرابط في علامة تبويب جديدة" [ref=e52] [cursor=pointer]:
+          - generic [ref=e54]:
+            - img [ref=e56]
+            - generic [ref=e63]: تسجيل الدخول باستخدام Google
+        - iframe
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - text: Email
+        - generic [ref=e67]:
+          - img [ref=e68]
+          - textbox "your.email@example.com" [ref=e71]: testplaywright@test.com
+      - generic [ref=e72]:
+        - text: Password
+        - generic [ref=e73]:
+          - img [ref=e74]
+          - textbox "••••••••" [ref=e77]: Test@1234
+      - button "Sign In" [ref=e78] [cursor=pointer]
+      - generic [ref=e83]: or
+      - button "Continue with Face ID" [ref=e84] [cursor=pointer]:
+        - img [ref=e85]
+        - generic [ref=e88]: Continue with Face ID

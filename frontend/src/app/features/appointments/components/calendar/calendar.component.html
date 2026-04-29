@@ -1,1 +1,57 @@
-<p>calendar works!</p>
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-6">
+    <!-- Calendar Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-[#2D1B4E]">{{ monthName }} {{ year }}</h3>
+      <div class="flex space-x-2">
+        <button
+          class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+          (click)="previousMonth()">
+          <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button
+          class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+          (click)="nextMonth()">
+          <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Day Headers -->
+    <div class="grid grid-cols-7 gap-2 mb-2">
+      <div *ngFor="let day of dayHeaders"
+           class="text-center text-sm font-semibold text-[#6B5B8C] py-2">
+        {{ day }}
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="grid grid-cols-7 gap-2">
+      <!-- Empty cells for month start -->
+      <div *ngFor="let _ of emptyCells" class="aspect-square"></div>
+
+      <!-- Days -->
+      <div *ngFor="let day of days"
+           class="aspect-square p-1 rounded-lg border transition-all cursor-pointer"
+           [class]="getDayClass(day.date)"
+           (click)="onDateClick()">
+
+        <div class="text-sm font-medium"
+             [class]="isToday(day.date) ? 'text-[#7C3AED]' : 'text-[#2D1B4E]'">
+          {{ day.number }}
+        </div>
+
+        <!-- Appointment count badge -->
+        <div *ngIf="day.appointmentCount > 0" class="mt-1 flex justify-center">
+              <span class="inline-flex items-center justify-center w-6 h-6 text-xs bg-[#7C3AED] text-white rounded-full">
+                {{ day.appointmentCount }}
+              </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

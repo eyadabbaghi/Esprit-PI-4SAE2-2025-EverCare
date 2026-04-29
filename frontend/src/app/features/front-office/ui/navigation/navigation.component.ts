@@ -1,11 +1,24 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectorRef,
+  Component,
+  HostListener,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { AuthService, User } from '../../pages/login/auth.service'; // adjust path if needed
-import { DailyTaskService } from '../../../daily-me/services/daily-task.service';
+import {
+  NotificationService,
+  Notification as ActivityNotification,
+} from '../../../../core/services/notification.service';
 import { DailyTask } from '../../../daily-me/models/daily-task.model';
+import { DailyTaskService } from '../../../daily-me/services/daily-task.service';
+import { AuthService, User } from '../../pages/login/auth.service';
 
 interface NavItem {
   id: string;
@@ -13,11 +26,11 @@ interface NavItem {
   route: string;
 }
 
-interface NotificationItem {
+interface TaskNotification {
   id: string;
   title: string;
   message: string;
-  type: 'alert' | 'appointment' | 'medication' | 'message' | 'task';
+  type: 'task';
   time: string;
   read: boolean;
   severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -30,121 +43,392 @@ interface NotificationItem {
   styleUrls: ['./navigation.component.css'],
 })
 export class NavigationComponent implements OnInit, OnDestroy {
-  navItems: NavItem[] = [
-    { id: 'home', label: 'Home', route: '/' },
-    { id: 'activities', label: 'Activities', route: '/activities' },
-    { id: 'appointments', label: 'Appointments', route: '/appointments' },
-    { id: 'medical-folder', label: 'Medical Folder', route: '/medical-folder' },
-    { id: 'alerts', label: 'Alerts', route: '/alerts' },
-    { id: 'tracking', label: 'Tracking', route: '/tracking' },
-  ];
-
   user: User | null = null;
-
   isMobileMenuOpen = false;
   notificationsOpen = false;
   profileOpen = false;
+  bellShaking = false;
+  showTaskAlert = false;
+  taskAlertTitle = '';
+  taskAlertMessage = '';
 
-  notifications: NotificationItem[] = [];
+  activityNotifications: Array<ActivityNotification & { read: boolean }> = [];
+  taskNotifications: TaskNotification[] = [];
 
-  private userSub!: Subscription;
-  private taskWatcherSub!: Subscription;
+  private userSub?: Subscription;
+  private pollingSub?: Subscription;
+  private taskWatcherSub?: Subscription;
+  private alertTimer: ReturnType<typeof setTimeout> | null = null;
+  private clearedIds = new Set<string>();
+  private readonly clearedKey = 'clearedNotificationIds';
 
   constructor(
     private readonly router: Router,
-    private authService: AuthService,
-    private dailyTaskService: DailyTaskService
+    private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
+    private readonly dailyTaskService: DailyTaskService,
+    private readonly cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {}
 
   ngOnInit(): void {
-    // ✅ Ask permission once (works on localhost OR https)
+    // Request notification permission early (merged from tracking branch)
     this.requestBrowserNotificationPermission();
 
-    // ✅ Start watcher only when user is available
-    this.userSub = this.authService.currentUser$.subscribe((user: User | null) => {
+    this.userSub = this.authService.currentUser$.subscribe((user) => {
       this.user = user;
-      if (!user) return;
 
-      const patientId = this.getPatientId(user);
-      if (!patientId) return;
+      if (!isPlatformBrowser(this.platformId)) {
+        return;
+      }
 
-      this.startTaskWatcher(patientId);
+      if (user?.role === 'PATIENT') {
+        const patientId = this.getPatientId(user);
+        if (patientId) {
+          this.startTaskWatcher(patientId);
+        } else {
+          this.stopTaskWatcher();
+        }
+      } else {
+        this.stopTaskWatcher();
+      }
     });
+
+    if (this.authService.getToken() && !this.authService.getCurrentUserValue()) {
+      this.authService.fetchCurrentUser().subscribe({
+        error: (err) => {
+          if (err?.status === 401) {
+            this.authService.logout();
+          }
+        },
+      });
+    }
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadClearedIds();
+      this.startActivityPolling();
+    }
   }
 
   ngOnDestroy(): void {
-    if (this.userSub) this.userSub.unsubscribe();
-    if (this.taskWatcherSub) this.taskWatcherSub.unsubscribe();
+    this.userSub?.unsubscribe();
+    this.pollingSub?.unsubscribe();
+    this.taskWatcherSub?.unsubscribe();
+    if (this.alertTimer) {
+      clearTimeout(this.alertTimer);
+      this.alertTimer = null;
+    }
   }
 
-  // =========================
-  // ✅ Extract patientId safely (because User may not have "id")
-  // =========================
-  private getPatientId(user: User): string | null {
-    const u: any = user;
-    const val =
-      u.id ??
-      u.userId ??
-      u.patientId ??
-      u._id ??
-      u.username ??
-      u.email ??
-      null;
+  // ─── Computed properties ──────────────────────────────────────────────────
 
-    return val ? String(val) : null;
+  get unreadCount(): number {
+    return (
+      this.activityNotifications.filter((n) => !n.read).length +
+      this.taskNotifications.filter((n) => !n.read).length
+    );
   }
 
-  // =========================
-  // ✅ TASK WATCHER (PC time vs scheduledTime)
-  // =========================
-  private startTaskWatcher(patientId: string): void {
-    if (this.taskWatcherSub) this.taskWatcherSub.unsubscribe();
+  get cognitiveRoute(): string {
+    const role = this.user?.role?.trim().toUpperCase();
+    return role === 'PATIENT' || role === 'CAREGIVER'
+      ? '/cognitive-stimulation'
+      : '/cognitive-stimulation/catalog';
+  }
 
-    // run once
-    this.dailyTaskService.getTasksByPatient(patientId).subscribe({
-      next: (tasks: DailyTask[]) => this.checkTasksDue(tasks),
-      error: () => {},
-    });
+  get navItems(): NavItem[] {
+    return [
+      { id: 'home', label: 'Home', route: '/' },
+      { id: 'activities', label: 'Activities', route: '/activities' },
+      { id: 'appointments', label: 'Appointments', route: '/appointments' },
+      { id: 'prescriptions', label: 'Prescriptions', route: '/prescriptions' },
+      { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
+      { id: 'cognitive-stimulation', label: 'Cognitive Care', route: this.cognitiveRoute },
+      { id: 'alerts', label: 'Alerts', route: '/alerts' },
+      { id: 'daily-me', label: 'Daily Me', route: '/daily-me' },
+      { id: 'communication', label: 'Messages', route: '/communication' },
+      { id: 'blog', label: 'Blog', route: '/blog' },
+      // Dynamic tracking route based on user role
+      { id: 'tracking', label: 'Tracking', route: this.getTrackingRoute() },
+    ];
+  }
 
-    // poll every 30 seconds
-    this.taskWatcherSub = interval(30000)
-      .pipe(switchMap(() => this.dailyTaskService.getTasksByPatient(patientId)))
+  // ─── Navigation ───────────────────────────────────────────────────────────
+
+  isActive(route: string): boolean {
+    // Special handling for tracking routes (merged from tracking branch)
+    if (route === '/tracking') {
+      return this.router.url.startsWith('/tracking');
+    }
+    if (route === '/') {
+      return this.router.url === '/';
+    }
+    return (
+      this.router.url === route ||
+      this.router.url.startsWith(`${route}/`) ||
+      this.router.url.startsWith(`${route}?`)
+    );
+  }
+
+  navigate(route: string): void {
+    const protectedRoutes = [
+      '/activities',
+      '/appointments',
+      '/prescriptions',
+      '/medical-record',
+      '/cognitive-stimulation',
+      '/alerts',
+      '/profile',
+      '/communication',
+      '/daily-me',
+      '/blog',
+      '/tracking', // added tracking
+    ];
+
+    if (protectedRoutes.includes(route) && !this.user) {
+      this.router.navigateByUrl('/login');
+    } else {
+      this.router.navigateByUrl(route);
+    }
+
+    this.isMobileMenuOpen = false;
+    this.profileOpen = false;
+    this.notificationsOpen = false;
+  }
+
+  // Returns dynamic tracking route based on user role (merged from tracking branch)
+  getTrackingRoute(): string {
+    const role = (this.user?.role || '').toString().toLowerCase();
+    if (role === 'doctor') return '/tracking/doctor';
+    if (role === 'caregiver') return '/tracking/caregiver';
+    return '/tracking/saved-places';
+  }
+
+  // ─── UI toggles ───────────────────────────────────────────────────────────
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  openAlerts(): void {
+    this.notificationsOpen = !this.notificationsOpen;
+    if (this.notificationsOpen) {
+      this.profileOpen = false;
+    }
+  }
+
+  toggleProfileMenu(): void {
+    this.profileOpen = !this.profileOpen;
+    if (this.profileOpen) {
+      this.notificationsOpen = false;
+    }
+  }
+
+  // ─── Notification actions ─────────────────────────────────────────────────
+
+  markAllAsRead(): void {
+    this.activityNotifications = this.activityNotifications.map((n) => ({ ...n, read: true }));
+    this.taskNotifications = this.taskNotifications.map((n) => ({ ...n, read: true }));
+  }
+
+  clearAllNotifications(): void {
+    this.activityNotifications.forEach((n) => this.clearedIds.add(n.id));
+    this.saveClearedIds();
+    this.activityNotifications = [];
+    this.taskNotifications = [];
+  }
+
+  handleActivityNotificationClick(notification: ActivityNotification & { read: boolean }): void {
+    this.activityNotifications = this.activityNotifications.map((n) =>
+      n.id === notification.id ? { ...n, read: true } : n,
+    );
+    this.navigate(`/activities/${notification.activityId}`);
+  }
+
+  handleTaskNotificationClick(notification: TaskNotification): void {
+    this.taskNotifications = this.taskNotifications.map((n) =>
+      n.id === notification.id ? { ...n, read: true } : n,
+    );
+    this.navigate('/daily-me');
+  }
+
+  // ─── Task alert banner ────────────────────────────────────────────────────
+
+  closeTaskAlert(): void {
+    this.showTaskAlert = false;
+    if (this.alertTimer) {
+      clearTimeout(this.alertTimer);
+      this.alertTimer = null;
+    }
+  }
+
+  // ─── Display helpers ──────────────────────────────────────────────────────
+
+  getActivityIcon(action: string): string {
+    switch (action) {
+      case 'EVICARE_ALERT': return '🤖';
+      case 'CREATED':       return '🆕';
+      case 'UPDATED':       return '✏️';
+      case 'DELETED':       return '🗑️';
+      default:              return '📢';
+    }
+  }
+
+  getActivityTitle(action: string): string {
+    switch (action) {
+      case 'EVICARE_ALERT': return 'EviCare prevention alert';
+      case 'CREATED':       return 'New activity available';
+      case 'UPDATED':       return 'Activity updated';
+      case 'DELETED':       return 'Activity removed';
+      default:              return 'Activity notification';
+    }
+  }
+
+  getSeverityClasses(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): string {
+    switch (severity) {
+      case 'CRITICAL': return 'bg-[#FDE2E7] text-[#C06C84]';
+      case 'HIGH':     return 'bg-[#FCE7F3] text-[#BE185D]';
+      case 'MEDIUM':   return 'bg-[#EDE9FE] text-[#7C3AED]';
+      case 'LOW':      return 'bg-[#DCFCE7] text-[#15803D]';
+      default:         return 'bg-[#F3F4F6] text-[#6B7280]';
+    }
+  }
+
+  getInitials(name: string | undefined): string {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase();
+  }
+
+  // ─── Auth actions ─────────────────────────────────────────────────────────
+
+  logout(): void {
+    this.profileOpen = false;
+    const user = this.authService.getCurrentUserValue();
+    const isPatient = user?.role === 'PATIENT';
+    this.authService.logout(isPatient);
+  }
+
+  goToProfile(): void {
+    this.profileOpen = false;
+    this.navigate('/profile');
+  }
+
+  // ─── Click-outside handler ────────────────────────────────────────────────
+
+  @HostListener('document:click', ['$event.target'])
+  onClickOutside(target: EventTarget | null): void {
+    if (!(target instanceof HTMLElement)) return;
+
+    const profileDropdown = document.getElementById('profile-dropdown');
+    const profileButton   = document.getElementById('profile-button');
+    const alertsPanel     = document.getElementById('notifications-dropdown');
+    const alertsButton    = document.getElementById('notifications-button');
+
+    if (
+      profileDropdown && profileButton &&
+      !profileDropdown.contains(target) &&
+      !profileButton.contains(target)
+    ) {
+      this.profileOpen = false;
+    }
+
+    if (
+      alertsPanel && alertsButton &&
+      !alertsPanel.contains(target) &&
+      !alertsButton.contains(target)
+    ) {
+      this.notificationsOpen = false;
+    }
+  }
+
+  // ─── Activity notifications (from your branch) ────────────────────────────
+
+  private startActivityPolling(): void {
+    this.fetchActivityNotifications();
+
+    this.pollingSub?.unsubscribe();
+    this.pollingSub = interval(10000)
+      .pipe(switchMap(() => this.notificationService.getNotifications()))
       .subscribe({
-        next: (tasks: DailyTask[]) => this.checkTasksDue(tasks),
-        error: () => {},
+        next: (notifications) => this.mergeActivityNotifications(notifications),
+        error: (err) => console.error('Failed to fetch notifications', err),
       });
   }
 
-  // =========================
-  // ✅ PC time compare with task time (scheduledTime HH:mm)
-  // =========================
-  private checkTasksDue(tasks: DailyTask[]) {
-    const now = Date.now();           // ✅ PC time
-    const windowMs = 60_000;          // ±1 minute (you can set 300000 for 5 min)
+  private fetchActivityNotifications(): void {
+    this.notificationService.getNotifications().subscribe({
+      next: (notifications) => this.mergeActivityNotifications(notifications),
+      error: (err) => console.error('Initial notification fetch failed', err),
+    });
+  }
 
-    tasks.forEach((t: any) => {
-      const dueMs = this.getTaskDueMs(t);
-      if (!dueMs) return;
+  private mergeActivityNotifications(notifications: ActivityNotification[]): void {
+    const filtered    = notifications.filter((n) => !this.clearedIds.has(n.id));
+    const existingMap = new Map(this.activityNotifications.map((n) => [n.id, n.read]));
 
-      const isDueNow = Math.abs(dueMs - now) <= windowMs;
-      if (!isDueNow) return;
+    const merged = filtered.map((n) => ({
+      ...n,
+      read: existingMap.get(n.id) ?? false,
+    }));
 
-      // ✅ prevent duplicates per day
+    const previousIds = new Set(this.activityNotifications.map((n) => n.id));
+    const hasNewItems = merged.some((n) => !previousIds.has(n.id));
+
+    this.activityNotifications = merged;
+    if (hasNewItems) {
+      this.shakeBell();
+    }
+  }
+
+  // ─── Task watcher (enhanced with tracking branch flexibility) ─────────────
+
+  private startTaskWatcher(patientId: string): void {
+    this.stopTaskWatcher();
+
+    this.dailyTaskService.getTasksByPatient(patientId).subscribe({
+      next: (tasks) => this.checkTasksDue(tasks),
+      error: () => undefined,
+    });
+
+    this.taskWatcherSub = interval(30000)
+      .pipe(switchMap(() => this.dailyTaskService.getTasksByPatient(patientId)))
+      .subscribe({
+        next: (tasks) => this.checkTasksDue(tasks),
+        error: () => undefined,
+      });
+  }
+
+  private stopTaskWatcher(): void {
+    this.taskWatcherSub?.unsubscribe();
+    this.taskWatcherSub = undefined;
+  }
+
+  // Enhanced checkTasksDue – supports scheduledTime, time, dueAt (from tracking branch)
+  private checkTasksDue(tasks: DailyTask[]): void {
+    const now = Date.now();
+    const windowMs = 60000;
+
+    tasks.forEach((task) => {
+      const dueMs = this.getTaskDueMs(task);
+      if (!dueMs || Math.abs(dueMs - now) > windowMs) return;
+
       const dayKey = this.todayKey();
-      const uniqueKey = `task_notified_${dayKey}_${t.id}_${t.scheduledTime || t.time || t.dueAt || dueMs}`;
-      const already = localStorage.getItem(uniqueKey) === '1';
-      if (already) return;
+      const uniqueKey = `task_notified_${dayKey}_${task.id}_${task.scheduledTime || (task as any).time || (task as any).dueAt || dueMs}`;
+      if (localStorage.getItem(uniqueKey) === '1') return;
 
       localStorage.setItem(uniqueKey, '1');
 
-      const title = (t.title || t.name || 'Task').toString().trim();
+      const title = (task.title || 'Task').trim();
       const message = `Time to do: ${title}`;
 
-      // ✅ TS-only popup: try OS notification, else fallback alert()
       this.showInstantTaskAlert(title, message);
+      this.openTaskAlert(title, message);
 
-      // ✅ Add to navbar notifications dropdown
-      this.notifications = [
+      this.taskNotifications = [
         {
           id: crypto.randomUUID(),
           title: 'Task reminder',
@@ -153,53 +437,58 @@ export class NavigationComponent implements OnInit, OnDestroy {
           time: 'Just now',
           read: false,
           severity: 'MEDIUM',
-          taskId: t.id,
+          taskId: task.id,
         },
-        ...this.notifications,
+        ...this.taskNotifications,
       ];
+
+      this.shakeBell();
     });
   }
 
-  // ✅ Your backend uses scheduledTime (HH:mm)
-  private getTaskDueMs(t: any): number | null {
-    if (t.scheduledTime) return this.buildTodayMsFromHHmm(t.scheduledTime);
-    if (t.time) return this.buildTodayMsFromHHmm(t.time);
-
-    if (t.dueAt) {
-      const ms = new Date(t.dueAt).getTime();
+  // Enhanced getTaskDueMs – handles multiple date fields (from tracking branch)
+  private getTaskDueMs(task: any): number | null {
+    if (task.scheduledTime) return this.buildTodayMsFromHHmm(task.scheduledTime);
+    if (task.time) return this.buildTodayMsFromHHmm(task.time);
+    if (task.dueAt) {
+      const ms = new Date(task.dueAt).getTime();
       return isNaN(ms) ? null : ms;
     }
-
     return null;
   }
 
   private buildTodayMsFromHHmm(hhmm: string): number | null {
     if (!hhmm) return null;
-
-    const parts = String(hhmm).split(':');
-    if (parts.length < 2) return null;
-
-    const hh = Number(parts[0]);
-    const mm = Number(parts[1]);
-    if (isNaN(hh) || isNaN(mm)) return null;
-
-    const d = new Date(); // ✅ PC date
-    d.setHours(hh, mm, 0, 0);
-    return d.getTime();
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date.getTime();
   }
 
   private todayKey(): string {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
-  // =========================
-  // ✅ TS-only "alert" popup (OS notif if allowed, else alert())
-  // =========================
+  private openTaskAlert(title: string, message: string): void {
+    this.taskAlertTitle = title;
+    this.taskAlertMessage = message;
+    this.showTaskAlert = true;
+
+    if (this.alertTimer) clearTimeout(this.alertTimer);
+    this.alertTimer = setTimeout(() => {
+      this.showTaskAlert = false;
+      this.alertTimer = null;
+    }, 6000);
+  }
+
+  // Enhanced browser notification with secure context check (from tracking branch)
   private requestBrowserNotificationPermission(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     try {
       if (!('Notification' in window)) return;
       if (Notification.permission === 'default') {
@@ -211,139 +500,74 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private showInstantTaskAlert(title: string, body: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     try {
       const canUseOSNotif =
         ('Notification' in window) &&
-        (Notification.permission === 'granted') &&
+        Notification.permission === 'granted' &&
         (window.isSecureContext || window.location.hostname === 'localhost');
 
       if (canUseOSNotif) {
-        new Notification(`⏰ ${title}`, { body });
+        new Notification(`Task: ${title}`, { body });
         return;
       }
-
-      // fallback (always works, TS-only)
-      alert(`⏰ ${body}`);
+      // Fallback alert (from tracking branch) – but avoid alert spam, use console?
+      // Keeping your original console log as less intrusive
+      console.log(`${title}: ${body}`);
     } catch {
-      alert(`⏰ ${body}`);
-    }
-  }
-// ✅ in-app alert state
-showTaskAlert = false;
-taskAlertTitle = '';
-taskAlertMessage = '';
-private alertTimer: any = null;
-
-private openTaskAlert(title: string, message: string) {
-  this.taskAlertTitle = title;
-  this.taskAlertMessage = message;
-  this.showTaskAlert = true;
-
-  // auto-close after 6s
-  if (this.alertTimer) clearTimeout(this.alertTimer);
-  this.alertTimer = setTimeout(() => {
-    this.showTaskAlert = false;
-  }, 6000);
-}
-
-closeTaskAlert() {
-  this.showTaskAlert = false;
-  if (this.alertTimer) clearTimeout(this.alertTimer);
-}
-  // =========================
-  // NAV / UI
-  // =========================
-  get unreadCount(): number {
-    return this.notifications.filter((n) => !n.read).length;
-  }
-
-  isActive(route: string): boolean {
-    if (route === '/tracking') {
-      return this.router.url.startsWith('/tracking');
-    }
-    return this.router.url === route;
-  }
-
-  navigate(route: string): void {
-    this.router.navigateByUrl(route);
-    this.isMobileMenuOpen = false;
-  }
-
-  getTrackingRoute(): string {
-    const role = (this.user?.role || '').toString().toLowerCase();
-    if (role === 'doctor') return '/tracking/doctor';
-    if (role === 'caregiver') return '/tracking/caregiver';
-    return '/tracking/saved-places';
-  }
-
-  toggleMobileMenu(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
-  }
-
-  openAlerts(): void {
-    this.notificationsOpen = !this.notificationsOpen;
-  }
-
-  toggleProfileMenu(): void {
-    this.profileOpen = !this.profileOpen;
-  }
-
-  markAsRead(id: string): void {
-    this.notifications = this.notifications.map((n) =>
-      n.id === id ? { ...n, read: true } : n
-    );
-  }
-
-  markAllAsRead(): void {
-    this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
-  }
-
-  handleNotificationClick(notification: NotificationItem): void {
-    this.markAsRead(notification.id);
-
-    if (notification.type === 'alert') this.navigate('/alerts');
-    else if (notification.type === 'appointment') this.navigate('/appointments');
-    else if (notification.type === 'task') this.navigate('/daily-me');
-  }
-
-  getSeverityClasses(severity?: string): string {
-    switch (severity) {
-      case 'CRITICAL': return 'bg-[#C06C84] text-white';
-      case 'HIGH': return 'bg-[#B39DDB] text-white';
-      case 'MEDIUM': return 'bg-[#DCCEF9] text-[#7C3AED]';
-      case 'LOW': return 'bg-[#A8E6CF] text-[#22c55e]';
-      default: return '';
+      console.log(body);
     }
   }
 
-  getInitials(name: string | undefined): string {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
-  }
+  // ─── Persistence (from your branch) ───────────────────────────────────────
 
-  logout(): void {
-    this.authService.logout();
-    this.profileOpen = false;
-  }
-
-  goToProfile(): void {
-    this.profileOpen = false;
-    this.navigate('/profile');
-  }
-
-  /** Close profile dropdown when clicking outside */
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: Event) {
-    const target = event.target as HTMLElement;
-    const dropdown = document.getElementById('profile-dropdown');
-    const button = document.getElementById('profile-button');
-
-    if (dropdown && button && !dropdown.contains(target) && !button.contains(target)) {
-      this.profileOpen = false;
+  private loadClearedIds(): void {
+    try {
+      const stored = localStorage.getItem(this.clearedKey);
+      if (!stored) return;
+      this.clearedIds = new Set(JSON.parse(stored) as string[]);
+    } catch {
+      this.clearedIds = new Set<string>();
     }
+  }
+
+  private saveClearedIds(): void {
+    try {
+      localStorage.setItem(this.clearedKey, JSON.stringify([...this.clearedIds]));
+    } catch {
+      console.error('Failed to persist cleared notification IDs');
+    }
+  }
+
+  // ─── Bell animation (from your branch) ────────────────────────────────────
+
+  private shakeBell(): void {
+    this.bellShaking = false;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.bellShaking = true;
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.bellShaking = false;
+        this.cdr.detectChanges();
+      }, 800);
+    }, 10);
+  }
+
+  // ─── Patient ID resolution (enhanced from both) ───────────────────────────
+
+  private getPatientId(user: User): string | null {
+    const candidate =
+      (user as User & { id?: string }).id ??
+      user.userId ??
+      (user as User & { patientId?: string }).patientId ??
+      (user as User & { _id?: string })._id ??
+      (user as User & { username?: string }).username ??
+      user.email ??
+      null;
+
+    return candidate ? String(candidate).trim() : null;
   }
 }

@@ -1,65 +1,25 @@
 <div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
-  <div class="max-w-5xl mx-auto space-y-6">
+  <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-[#2D1B4E] mb-2">Profile Settings</h1>
-      <p class="text-[#6B5B8C]">Manage your personal information and preferences</p>
+      <h1 class="text-4xl font-bold text-[#2D1B4E] mb-2">My Profile</h1>
+      <p class="text-lg text-[#6B5B8C]">Manage your personal information and care connections</p>
     </div>
 
-    <!-- Profile card -->
-    <div *ngIf="user as u; else noUser" class="profile-card border border-[#C4B5FD] rounded-2xl bg-white">
-      <div class="p-6 flex flex-col md:flex-row items-center md:items-start gap-6">
-
+    <!-- Profile Header Card -->
+    <div *ngIf="user" class="border-2 border-[#C4B5FD] bg-white rounded-2xl shadow-lg p-6 md:p-8">
+      <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
         <!-- Avatar with dropdown -->
         <div class="relative">
-          <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden">
-            <ng-container *ngIf="u.profilePicture; else initials">
-              <img [src]="u.profilePicture" alt="Profile" class="w-full h-full object-cover">
+          <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
+            <ng-container *ngIf="user.profilePicture; else initials">
+              <img [src]="user.profilePicture" alt="Profile" class="w-full h-full object-cover" (error)="user.profilePicture = undefined">
             </ng-container>
             <ng-template #initials>
-              <span>{{ getInitials(u.name) }}</span>
+              <span>{{ getInitials(user.name) }}</span>
             </ng-template>
           </div>
-
-          <!-- Camera icon -->
-          <div class="absolute bottom-0 right-0">
-            <button
-              type="button"
-              class="w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
-              (click)="togglePictureMenu()"
-              [disabled]="isLoading"
-            >
-              📷
-            </button>
-
-            <!-- Dropdown -->
-            <div
-              *ngIf="showPictureMenu"
-              class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50"
-            >
-              <button
-                type="button"
-                class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center"
-                (click)="triggerFileInput()"
-              >
-                <span class="mr-2">📷</span>
-                Upload Picture
-              </button>
-
-              <button
-                *ngIf="u.profilePicture"
-                type="button"
-                class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                (click)="removePicture()"
-              >
-                <span class="mr-2">🗑️</span>
-                Remove Picture
-              </button>
-            </div>
-          </div>
-
-          <!-- Hidden file input -->
           <input
             type="file"
             id="profile-picture-input"
@@ -67,51 +27,720 @@
             class="hidden"
             (change)="onFileSelected($event)"
           />
+          <button
+            type="button"
+            class="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9] transition-colors"
+            (click)="togglePictureMenu()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+          <div *ngIf="showPictureMenu" class="absolute right-0 bottom-full mb-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
+            <button
+              class="w-full text-left px-4 py-2.5 text-sm text-[#2D1B4E] hover:bg-[#F3E8FF] flex items-center gap-2 transition-colors"
+              (click)="triggerFileInput()"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+              Upload Picture
+            </button>
+            <button
+              *ngIf="user.profilePicture"
+              class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+              (click)="removePicture()"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Remove Picture
+            </button>
+          </div>
         </div>
 
-        <div class="flex-1 text-center md:text-left space-y-2">
-          <h2 class="text-2xl font-bold text-[#2D1B4E]">{{ u.name }}</h2>
-          <p class="text-[#6B5B8C]">{{ u.email }}</p>
-
-          <div class="flex flex-wrap gap-2 justify-center md:justify-start mt-3">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-[#7C3AED] text-xs font-medium text-white capitalize">
-              {{ u.role }}
+        <!-- User Info -->
+        <div class="flex-1 text-center md:text-left">
+          <h2 class="text-3xl font-bold text-[#2D1B4E] mb-2">{{ user.name }}</h2>
+          <p class="text-lg text-[#6B5B8C] mb-4">{{ user.email }}</p>
+          <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+            <span class="px-4 py-1 rounded-full text-white text-sm capitalize {{ getRoleBadgeColor() }}">
+              {{ user.role }}
             </span>
-            <span class="inline-flex items-center px-3 py-1 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] bg-[#F9FAFB]">
-              <span class="mr-1">🛡️</span> Verified account
+            <span class="inline-flex items-center px-4 py-1 rounded-full border-2 border-[#C4B5FD] text-[#7C3AED] text-sm gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Verified Account
             </span>
           </div>
         </div>
+
+        <!-- Edit Button -->
+        <button
+          class="px-6 py-2.5 rounded-full text-white font-medium transition-all transform hover:scale-105 {{ isEditing ? 'bg-green-600 hover:bg-green-700' : 'bg-[#7C3AED] hover:bg-[#6D28D9]' }} flex items-center gap-2 shadow-md"
+          (click)="toggleEdit()"
+        >
+          <svg *ngIf="!isEditing" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3l4 4-7 7H10v-4l7-7z"/>
+            <path d="M4 20h16"/>
+          </svg>
+          <svg *ngIf="isEditing" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span *ngIf="!isEditing">Edit Profile</span>
+          <span *ngIf="isEditing">Save Changes</span>
+        </button>
       </div>
     </div>
 
-    <ng-template #noUser>
-      <div class="border border-[#E5E7EB] rounded-2xl bg-white p-6 text-[#6B5B8C]">
-        No user loaded. Please login first.
-      </div>
-    </ng-template>
-
     <!-- Tabs -->
-    <div class="w-full">
-      <div class="grid grid-cols-3 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB]">
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'personal' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('personal')">Personal Info</button>
+    <div class="grid grid-cols-2 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB] shadow-sm">
+      <button
+        type="button"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
+        [ngClass]="activeTab === 'personal' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-[#6B5B8C] hover:text-[#2D1B4E] hover:bg-[#F3E8FF]'"
+        (click)="setTab('personal')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Personal Info
+      </button>
+      <button
+        type="button"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
+        [ngClass]="activeTab === 'settings' ? 'bg-[#7C3AED] text-white shadow-md' : 'text-[#6B5B8C] hover:text-[#2D1B4E] hover:bg-[#F3E8FF]'"
+        (click)="setTab('settings')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </button>
+    </div>
 
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'health' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('health')">Health Info</button>
+    <!-- Main content grid -->
+    <div class="grid lg:grid-cols-3 gap-6">
 
-        <button type="button" class="px-4 py-2 rounded-full text-sm font-medium"
-          [ngClass]="activeTab === 'settings' ? 'bg-[#7C3AED] text-white shadow-sm' : 'text-[#6B5B8C] hover:text-[#4B5563]'"
-          (click)="setTab('settings')">Settings</button>
+      <!-- Left Column – Personal Information (including doctor fields) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="border-2 border-[#DDD6FE] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+          <h3 class="text-xl font-semibold text-[#2D1B4E] flex items-center gap-2 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Personal Information
+          </h3>
+          <p class="text-sm text-[#6B5B8C] mb-6">Your basic profile details</p>
+
+          <form [formGroup]="personalForm" class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <!-- Name -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Full Name *</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-2.5 text-[#6B5B8C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    formControlName="name"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [class.border-red-500]="isInvalid('name')"
+                    [disabled]="!isEditing"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div *ngIf="isInvalid('name')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  Name is required.
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Email Address *</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-2.5 text-[#6B5B8C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2"/>
+                      <path d="M22 7l-10 7L2 7"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [class.border-red-500]="isInvalid('email')"
+                    [disabled]="!isEditing"
+                    placeholder="john@example.com"
+                  />
+                </div>
+                <div *ngIf="isInvalid('email')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span *ngIf="personalForm.get('email')?.errors?.['required']">Email required.</span>
+                  <span *ngIf="personalForm.get('email')?.errors?.['email']">Invalid email.</span>
+                </div>
+              </div>
+
+              <!-- Phone with country code -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Phone Number *</label>
+                <div class="flex gap-2">
+                  <select
+                    [(ngModel)]="phoneCountryCode"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white focus:ring-2 focus:ring-[#7C3AED] transition-all"
+                    [disabled]="!isEditing"
+                  >
+                    <option *ngFor="let c of countries" [value]="c.code">{{ c.flag }} {{ c.code }}</option>
+                  </select>
+                  <input
+                    type="tel"
+                    formControlName="phone"
+                    class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [class.border-red-500]="isInvalid('phone')"
+                    [disabled]="!isEditing"
+                    placeholder="123456789"
+                  />
+                </div>
+                <div *ngIf="isInvalid('phone')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span *ngIf="personalForm.get('phone')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('phone')?.errors?.['invalidPhone']">Invalid characters.</span>
+                </div>
+              </div>
+
+              <!-- Date of Birth -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Date of Birth *</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-2.5 text-[#6B5B8C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="16" y1="2" x2="16" y2="6"/>
+                      <line x1="8" y1="2" x2="8" y2="6"/>
+                      <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="date"
+                    formControlName="dateOfBirth"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [class.border-red-500]="isInvalid('dateOfBirth')"
+                    [disabled]="!isEditing"
+                  />
+                </div>
+                <div *ngIf="isInvalid('dateOfBirth')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span *ngIf="personalForm.get('dateOfBirth')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('dateOfBirth')?.errors?.['futureDate']">Must be past.</span>
+                </div>
+              </div>
+
+              <!-- Emergency Contact -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Emergency Contact *</label>
+                <div class="flex gap-2">
+                  <select
+                    [(ngModel)]="emergencyCountryCode"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white focus:ring-2 focus:ring-[#7C3AED] transition-all"
+                    [disabled]="!isEditing"
+                  >
+                    <option *ngFor="let c of countries" [value]="c.code">{{ c.flag }} {{ c.code }}</option>
+                  </select>
+                  <input
+                    type="tel"
+                    formControlName="emergencyContact"
+                    class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [class.border-red-500]="isInvalid('emergencyContact')"
+                    [disabled]="!isEditing"
+                    placeholder="123456789"
+                  />
+                </div>
+                <div *ngIf="isInvalid('emergencyContact')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <span *ngIf="personalForm.get('emergencyContact')?.errors?.['required']">Required.</span>
+                  <span *ngIf="personalForm.get('emergencyContact')?.errors?.['invalidPhone']">Invalid.</span>
+                </div>
+              </div>
+
+              <!-- Address (optional) -->
+              <div class="space-y-1 md:col-span-2">
+                <label class="text-sm font-medium text-[#374151]">Address</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-2.5 text-[#6B5B8C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    formControlName="address"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [disabled]="!isEditing"
+                    placeholder="123 Main St, City, Country"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor‑specific fields (only visible when role = DOCTOR) -->
+            <div *ngIf="user?.role === 'DOCTOR'" class="mt-6 pt-4 border-t border-[#E5E7EB] space-y-4">
+              <h4 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                Professional Information
+              </h4>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Years of Experience</label>
+                  <input
+                    type="number"
+                    formControlName="yearsExperience"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [disabled]="!isEditing"
+                    placeholder="5"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Specialization</label>
+                  <input
+                    type="text"
+                    formControlName="specialization"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [disabled]="!isEditing"
+                    placeholder="Cardiology"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Medical License</label>
+                  <input
+                    type="text"
+                    formControlName="medicalLicense"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [disabled]="!isEditing"
+                    placeholder="LIC-12345"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Workplace Name</label>
+                  <input
+                    type="text"
+                    formControlName="workplaceName"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                    [disabled]="!isEditing"
+                    placeholder="City General Hospital"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-medium text-[#374151]">Workplace Type</label>
+                  <select
+                    formControlName="workplaceType"
+                    class="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg bg-white focus:ring-2 focus:ring-[#7C3AED] transition-all"
+                    [disabled]="!isEditing"
+                  >
+                    <option value="hospital">Hospital</option>
+                    <option value="private">Private Practice</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <!-- Keep the rest of your tabs exactly as you had (personal/health/settings forms) -->
-      <!-- IMPORTANT: any [(ngModel)] inside a reactive form should use [ngModelOptions]="{standalone:true}" -->
-      <!-- You already did that for country codes. Good. -->
-      <!-- ... your existing tab content stays ... -->
+      <!-- Right Column – Care Connections -->
+      <div class="space-y-6">
 
+        <!-- PATIENT VIEW -->
+        <ng-container *ngIf="user?.role === 'PATIENT'">
+          <!-- Caregivers List -->
+          <div class="border-2 border-green-200 bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              My Caregivers
+            </h3>
+            <div *ngIf="caregivers.length > 0; else noCaregivers" class="space-y-3">
+              <div *ngFor="let caregiver of caregivers; trackBy: trackByEmail" class="flex items-start gap-3 p-2 rounded-lg hover:bg-green-100/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-sm font-semibold text-green-700 overflow-hidden">
+                  <ng-container *ngIf="caregiver.profilePicture; else caregiverInitials">
+                    <img [src]="caregiver.profilePicture" alt="" class="w-full h-full object-cover" (error)="caregiver.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #caregiverInitials>
+                    <span>{{ getInitials(caregiver.name) || 'CG' }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium text-[#2D1B4E]">{{ caregiver.name || caregiver.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ caregiver.email }}</p>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                  (click)="removeConnection(caregiver)"
+                  title="Remove caregiver"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <ng-template #noCaregivers>
+              <p class="text-sm text-[#6B5B8C] mb-3 text-center py-4">No caregivers added yet</p>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-green-300 text-green-700 rounded-lg hover:bg-green-50 flex items-center justify-center gap-2 transition-all hover:scale-105"
+              (click)="showCaregiverSearch = true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Caregiver
+            </button>
+          </div>
+
+          <!-- Doctor Card -->
+          <div class="border-2 border-purple-200 bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+              My Doctor
+            </h3>
+            <div *ngIf="assignedDoctor; else noDoctor" class="space-y-3">
+              <div class="flex items-start gap-3 p-2 rounded-lg">
+                <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-lg font-semibold text-purple-700 overflow-hidden">
+                  <ng-container *ngIf="assignedDoctor.profilePicture; else doctorInitials">
+                    <img [src]="assignedDoctor.profilePicture" alt="" class="w-full h-full object-cover" (error)="assignedDoctor.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #doctorInitials>
+                    <span>{{ getInitials(assignedDoctor.name) }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-[#2D1B4E]">{{ assignedDoctor.name }}</p>
+                  <p class="text-sm text-[#6B5B8C] mb-2">{{ assignedDoctor.email }}</p>
+                  <span *ngIf="assignedDoctor.specialization" class="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full border border-purple-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="16"/>
+                      <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    {{ assignedDoctor.specialization }}
+                  </span>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                  (click)="removeConnection(assignedDoctor)"
+                  title="Remove doctor"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <p *ngIf="assignedDoctor.workplaceName" class="text-sm text-[#6B5B8C] flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                {{ assignedDoctor.workplaceName }}
+              </p>
+            </div>
+            <ng-template #noDoctor>
+              <div class="text-center py-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-purple-200 mx-auto mb-2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+                <p class="text-sm text-[#6B5B8C]">No doctor assigned yet</p>
+              </div>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 flex items-center justify-center gap-2 transition-all hover:scale-105"
+              (click)="showDoctorSearch = true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              {{ assignedDoctor ? 'Change Doctor' : 'Add Your Doctor' }}
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- CAREGIVER VIEW -->
+        <ng-container *ngIf="user?.role === 'CAREGIVER'">
+          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              My Patients
+            </h3>
+            <div *ngIf="patients.length > 0; else noPatients" class="space-y-3">
+              <div *ngFor="let patient of patients; trackBy: trackByEmail" class="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-100/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700 overflow-hidden">
+                  <ng-container *ngIf="patient.profilePicture; else patientInitials">
+                    <img [src]="patient.profilePicture" alt="" class="w-full h-full object-cover" (error)="patient.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #patientInitials>
+                    <span>{{ getInitials(patient.name) || 'PT' }}</span>
+                  </ng-template>
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium text-[#2D1B4E]">{{ patient.name || patient.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ patient.email }}</p>
+                </div>
+                <button
+                  class="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                  (click)="removeConnection(patient)"
+                  title="Remove patient"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <ng-template #noPatients>
+              <p class="text-sm text-[#6B5B8C] mb-3 text-center py-4">No patients added yet</p>
+            </ng-template>
+            <button
+              class="w-full mt-4 px-4 py-2 border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 flex items-center justify-center gap-2 transition-all hover:scale-105"
+              (click)="showPatientSearch = true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Patient
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- DOCTOR VIEW – Patients List -->
+        <ng-container *ngIf="user?.role === 'DOCTOR'">
+          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+            <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              My Patients
+            </h3>
+            <p class="text-sm text-[#6B5B8C] mb-4">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} under your care</p>
+            <div class="space-y-3 max-h-80 overflow-y-auto pr-2">
+              <div
+                *ngFor="let patient of patients; trackBy: trackByEmail"
+                class="flex items-center gap-3 p-3 bg-white border border-blue-200 rounded-lg hover:shadow-md transition-all hover:scale-102"
+              >
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-sm font-semibold text-blue-700 overflow-hidden">
+                  <ng-container *ngIf="patient.profilePicture; else docPatientInitials">
+                    <img [src]="patient.profilePicture" alt="" class="w-full h-full object-cover" (error)="patient.profilePicture = undefined">
+                  </ng-container>
+                  <ng-template #docPatientInitials>
+                    <span>{{ getInitials(patient.name) || 'PT' }}</span>
+                  </ng-template>
+                </div>
+                <div>
+                  <p class="font-semibold text-[#2D1B4E] text-sm">{{ patient.name || patient.email }}</p>
+                  <p class="text-xs text-[#6B5B8C]">{{ patient.email }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Settings Tab (Password Change + Danger Zone) -->
+    <div *ngIf="activeTab === 'settings'" class="space-y-4">
+      <!-- Password change card -->
+      <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Security
+        </h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg hover:bg-[#F3E8FF] transition-colors">
+            <div>
+              <p class="font-medium text-[#2D1B4E]">Change password</p>
+              <p class="text-sm text-[#6B5B8C]">Update your account password</p>
+            </div>
+            <button
+              class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] hover:bg-[#F3E8FF] transition-all"
+              (click)="toggleChangePassword()"
+            >
+              {{ isChangingPassword ? 'Cancel' : 'Change' }}
+            </button>
+          </div>
+
+          <div *ngIf="isChangingPassword" class="p-4 bg-white border border-[#E5E7EB] rounded-lg space-y-3 animate-slideDown">
+            <div>
+              <label class="block text-xs font-medium text-[#374151] mb-1">Current Password</label>
+              <input
+                type="password"
+                class="w-full px-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                [(ngModel)]="passwordData.currentPassword"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-[#374151] mb-1">New Password</label>
+              <input
+                type="password"
+                class="w-full px-3 py-2 rounded-lg border border-[#E5E7EB] text-sm focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
+                [(ngModel)]="passwordData.newPassword"
+                placeholder="••••••••"
+              />
+              <p class="text-xs text-[#6B5B8C] mt-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Must be at least 8 chars, include uppercase, digit, and special character.
+              </p>
+            </div>
+            <button
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-medium py-2 rounded-lg transition-all transform hover:scale-105"
+              (click)="handleChangePassword()"
+              [disabled]="isLoading"
+            >
+              {{ isLoading ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Face ID Card -->
+      <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 15v3c0 1.1.9 2 2 2h3"/>
+            <path d="M22 15v3c0 1.1-.9 2-2 2h-3"/>
+            <path d="M2 9V6c0-1.1.9-2 2-2h3"/>
+            <path d="M22 9V6c0-1.1-.9-2-2-2h-3"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Face ID
+        </h3>
+        <div class="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-lg hover:bg-[#F3E8FF] transition-colors">
+          <div>
+            <p class="font-medium text-[#2D1B4E]">
+              {{ hasFaceId ? 'Face ID is configured' : 'Set up Face ID' }}
+            </p>
+            <p class="text-sm text-[#6B5B8C]">
+              {{ hasFaceId ? 'You can log in using facial recognition' : 'Enable faster login with facial recognition' }}
+            </p>
+          </div>
+          <button
+            class="px-3 py-1.5 rounded-full border border-[#C4B5FD] text-xs text-[#2D1B4E] hover:bg-[#F3E8FF] transition-all"
+            (click)="goToFaceSetup()"
+          >
+            {{ hasFaceId ? 'Reconfigure' : 'Set Up' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="border-2 border-red-200 bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <h3 class="text-lg font-semibold text-red-600 flex items-center gap-2 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Danger Zone
+        </h3>
+        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+          <div>
+            <p class="font-medium text-red-700">Delete account</p>
+            <p class="text-sm text-red-600">Permanently delete your account and all associated data</p>
+          </div>
+          <button
+            class="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-all transform hover:scale-105"
+            (click)="confirmDeleteAccount()"
+            [disabled]="isLoading"
+          >
+            {{ isLoading ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Doctor Search Modal -->
+<app-doctor-search-modal
+  [open]="showDoctorSearch"
+  [role]="'DOCTOR'"
+  (closed)="showDoctorSearch = false"
+  (userSelected)="onDoctorSelected($event)"
+></app-doctor-search-modal>
+
+<!-- Caregiver Search Modal (for patients adding caregivers) -->
+<app-doctor-search-modal
+  [open]="showCaregiverSearch"
+  [role]="'CAREGIVER'"
+  (closed)="showCaregiverSearch = false"
+  (userSelected)="onCaregiverSelected($event)"
+></app-doctor-search-modal>
+
+<!-- Patient Search Modal (for caregivers adding patients) -->
+<app-doctor-search-modal
+  [open]="showPatientSearch"
+  [role]="'PATIENT'"
+  (closed)="showPatientSearch = false"
+  (userSelected)="onPatientSelected($event)"
+></app-doctor-search-modal>

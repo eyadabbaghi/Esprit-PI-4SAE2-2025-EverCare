@@ -1,0 +1,144 @@
+<!-- Add Consultation Type Form -->
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden mb-5">
+  <div class="p-6 border-b border-[#C4B5FD] bg-[#F9FAFB]">
+    <h3 class="font-semibold text-[#2D1B4E]">Add New Consultation Type</h3>
+  </div>
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- Name -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Name</label>
+        <input type="text" [(ngModel)]="newType.name"
+               placeholder="e.g., Standard Follow-up"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Description</label>
+        <input type="text" [(ngModel)]="newType.description"
+               placeholder="Brief description"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <!-- Default Duration -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Default Duration (min)</label>
+        <input type="number" [(ngModel)]="newType.defaultDuration"
+               min="5" max="120" step="5"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- Alzheimer Duration -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Alzheimer Duration (min)</label>
+        <input type="number" [(ngModel)]="newType.alzheimerDuration"
+               min="5" max="120" step="5"
+               [value]="newType.defaultDuration * 1.25"
+               class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+      </div>
+
+      <!-- Environment Preset -->
+      <div>
+        <label class="block text-sm font-medium text-[#2D1B4E] mb-2">Environment</label>
+        <select [(ngModel)]="newType.environmentPreset"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          <option value="STANDARD">Standard</option>
+          <option value="CALM">Calm</option>
+          <option value="HIGH_CONTRAST">High Contrast</option>
+          <option value="DARK">Dark</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-6 mb-4">
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" [(ngModel)]="newType.requiresCaregiver"
+               class="w-4 h-4 text-[#7C3AED] border-gray-300 rounded focus:ring-[#7C3AED]">
+        <span class="text-sm text-[#2D1B4E]">Requires caregiver presence</span>
+      </label>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" [(ngModel)]="newType.active"
+               class="w-4 h-4 text-[#7C3AED] border-gray-300 rounded focus:ring-[#7C3AED]" checked>
+        <span class="text-sm text-[#2D1B4E]">Active</span>
+      </label>
+    </div>
+
+    <button class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-6 py-2 rounded-md transition-colors"
+            (click)="onAddType()">
+      Add Consultation Type
+    </button>
+  </div>
+</div>
+
+<!-- Consultation Types List -->
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-6 border-b border-[#C4B5FD] bg-[#F9FAFB] flex justify-between items-center">
+    <h3 class="font-semibold text-[#2D1B4E]">Your Consultation Types</h3>
+    <span class="text-sm text-[#6B5B8C]">{{ types.length }} types</span>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+    <div *ngFor="let type of types"
+         class="border border-[#E5E7EB] rounded-lg p-4 hover:border-[#C4B5FD] transition-colors">
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <h4 class="font-semibold text-[#2D1B4E]">{{ type.name }}</h4>
+          <p class="text-sm text-[#6B5B8C]">{{ type.description }}</p>
+        </div>
+        <span class="px-2 py-1 text-xs rounded-full"
+              [class.bg-green-100]="type.active"
+              [class.text-green-700]="type.active"
+              [class.bg-gray-100]="!type.active"
+              [class.text-gray-600]="!type.active">
+              {{ type.active ? 'Active' : 'Inactive' }}
+            </span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+        <div class="flex items-center space-x-1 text-[#6B5B8C]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+          </svg>
+          <span>Standard: {{ type.defaultDuration }}min</span>
+        </div>
+        <div class="flex items-center space-x-1 text-[#6B5B8C]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 8v8M8 12h8"/>
+          </svg>
+          <span>Alzheimer: {{ type.alzheimerDuration }}min</span>
+        </div>
+        <div class="flex items-center space-x-1 text-[#6B5B8C]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 10.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2v-8.5"/><circle cx="12" cy="15" r="2"/>
+          </svg>
+          <span>Env: {{ type.environmentPreset }}</span>
+        </div>
+        <div class="flex items-center space-x-1 text-[#6B5B8C]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>{{ type.requiresCaregiver ? 'Caregiver required' : 'No caregiver' }}</span>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2">
+      <!--   <button class="p-2 hover:bg-[#F3E8FF] rounded-md transition-colors"
+                (click)="onEditType()">
+          <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+          </svg>
+        </button>
+        -->
+        <button class="p-2 hover:bg-[#FEF2F2] rounded-md transition-colors"
+                (click)="onDeleteType(type.typeId)">
+          <svg class="w-4 h-4 text-[#C06C84]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div *ngIf="types.length === 0" class="col-span-2 p-8 text-center text-[#6B5B8C]">
+      No consultation types defined yet
+    </div>
+  </div>
+</div>

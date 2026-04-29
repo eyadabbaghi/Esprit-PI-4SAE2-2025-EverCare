@@ -1,44 +1,44 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, NgZone, OnDestroy, OnInit } from '@angular/core'; // ← add NgZone here
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
+import { MatDialog } from '@angular/material/dialog';
+import { Observable, Subscription, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-type IncidentType = 'Medical' | 'Behavioral' | 'Safety';
-type AlertStatus = 'active' | 'acknowledged' | 'resolved';
+import { AuthService, User } from '../../../../features/front-office/pages/login/auth.service';
+import { AlertsService } from '../../../../core/services/alerts.service';
+import { UserService, Patient } from '../../../../core/services/user.service';
+import { AddIncidentDialogComponent } from '../../../../add-incident-dialog/add-incident-dialog.component';
+import { AddAlertDialogComponent } from '../../../../add-alert-dialog/add-alert-dialog.component';
+import { Incident, Alert, Severity, IncidentType, AlertStatus } from '../../../../core/model/alerts.models';
+// At the top with other imports
+import { IncidentDetailsDialogComponent } from './incident-details-dialog.component';
+import { AlertSchedulerService } from '../../../../core/services/alert-scheduler.service';
+import { VoiceSosService } from '../../../../core/services/voice-sos.service';
+import { CheckService } from './services/check.service';
+import { ConfirmDialogComponent } from './components/confirm-dialog.component';
 
-interface Incident {
-  id: string;
-  title: string;
-  type: IncidentType;
-  severity: Severity;
-  description: string;
+// Extended UI models (include extra fields for display)
+interface IncidentUI extends Incident {
   patientName: string;
-  patientId: string;
   patientAvatar?: string;
   patientAge?: number;
-  location: string;
-  createdAt: Date;
   detectedBy: string;
-  status: 'active' | 'resolved';
-  comments: { user: string; text: string; time: Date }[];
+  comments: any[];
   aiSuggestion?: string;
   medicalNotes?: string;
-  vitalSigns?: { heartRate?: number; bloodPressure?: string; temperature?: number };
+  vitalSigns?: any;
   medicationAdherence?: number;
+  patientEmail?: string;   // add this
+
 }
 
-interface Alert {
-  id: string;
-  incidentId: string;
-  status: AlertStatus;
-  triggeredAt: Date;
-  acknowledgedAt?: Date;
-  resolvedAt?: Date;
-  targetRoles: string[];
-  notificationChannels: string[];
-  acknowledgedBy?: string;
-  resolvedBy?: string;
+interface AlertUI extends Alert {
+  senderName?: string;
+  senderAvatar?: string;
+  targetName?: string;
+  label?: string;   // <-- add this
 }
 
 @Component({
@@ -47,15 +47,50 @@ interface Alert {
   styleUrls: ['./alerts.component.css'],
 })
 export class AlertsComponent implements OnInit, OnDestroy {
-  // Role (stubbed – wire to auth service if available)
+  currentUser: User | null = null;
+  voiceListening = false;
+  private voiceStarted = false;
   userRole: 'doctor' | 'caregiver' | 'patient' | 'admin' = 'caregiver';
+  patientCache: Map<string, { name: string; avatar?: string; email?: string }> = new Map();
+  // For caregivers: set of patient IDs they are allowed to see
+  allowedPatientIds: Set<string> | null = null;
+// For doctors: list of patients they are connected to
+doctorPatients: Patient[] = [];
+selectedDoctorPatient: Patient | null = null;
+sosPopupVisible = false;
+sosCountdown = 10;
+private sosCountdownTimer?: any;
+
+eviCarePopupVisible = false;
+eviCareRiskScore: any = null;
+
+// Voice-guided check properties
+currentUserId!: string;
+patientId!: string;
+caregiverId!: string;
+
+checkPopupVisible = false;
+checkPopupPatientId = '';
+checkPopupPatientName = '';
+checkPopupStatus: string = 'idle';
+
+patientActivityStatuses: Map<string, any> = new Map();
+activityLoading = false;
+
+disconnectedPatients: Map<string, { name: string; since: Date }> = new Map();
+disconnectPopup: { patientId: string; patientName: string; since: Date } | null = null;
+pinnedDisconnects: Map<string, { patientName: string; since: Date }> = new Map();
+private disconnectCheckInterval?: any;
+
 
   get isDoctor(): boolean {
     return this.userRole === 'doctor';
   }
-
   get isPatient(): boolean {
     return this.userRole === 'patient';
+  }
+  get isCaregiver(): boolean {
+    return this.userRole === 'caregiver' || this.userRole === 'admin';
   }
 
   // Filters
@@ -71,212 +106,508 @@ export class AlertsComponent implements OnInit, OnDestroy {
   incidentPage = 1;
   alertsPage = 1;
 
-  // Data
-  incidents: Incident[] = [
-    {
-      id: 'INC-001',
-      title: 'Fall Detected in Bathroom',
-      type: 'Safety',
-      severity: 'CRITICAL',
-      description:
-        'Sudden impact detected. Patient may have fallen. Emergency response activated.',
-      patientName: 'John Anderson',
-      patientId: 'P-001',
-      patientAge: 78,
-      location: 'Bathroom - Main Floor',
-      createdAt: new Date(Date.now() - 45 * 60000),
-      detectedBy: 'Smart Sensor System',
-      status: 'active',
-      comments: [],
-      aiSuggestion:
-        'Pattern detected: 3rd fall in bathroom this month. Consider installing grab bars.',
-      medicalNotes: 'Patient has history of dizziness. Monitor blood pressure.',
-      vitalSigns: { heartRate: 92, bloodPressure: '140/90', temperature: 98.6 },
-      medicationAdherence: 85,
-    },
-    {
-      id: 'INC-002',
-      title: 'Missed Medication - Morning Dose',
-      type: 'Medical',
-      severity: 'HIGH',
-      description: 'Patient did not take scheduled 8:00 AM medication.',
-      patientName: 'Mary Wilson',
-      patientId: 'P-002',
-      patientAge: 82,
-      location: 'Home - Bedroom',
-      createdAt: new Date(Date.now() - 120 * 60000),
-      detectedBy: 'Medication Tracking System',
-      status: 'resolved',
-      comments: [],
-      vitalSigns: { heartRate: 78, bloodPressure: '130/85', temperature: 98.2 },
-      medicationAdherence: 75,
-    },
-    {
-      id: 'INC-003',
-      title: 'Wandering Alert - Left Safe Zone',
-      type: 'Safety',
-      severity: 'HIGH',
-      description: 'GPS tracking shows patient left designated safe zone.',
-      patientName: 'Robert Chen',
-      patientId: 'P-003',
-      patientAge: 75,
-      location: 'Oak Street Park',
-      createdAt: new Date(Date.now() - 30 * 60000),
-      detectedBy: 'GPS System',
-      status: 'active',
-      comments: [],
-      aiSuggestion: '4th wandering incident this week, all 2-4 PM. Schedule activities.',
-      medicationAdherence: 90,
-    },
-  ];
-
-  alerts: Alert[] = [
-    {
-      id: 'ALT-001',
-      incidentId: 'INC-001',
-      status: 'active',
-      triggeredAt: new Date(Date.now() - 45 * 60000),
-      targetRoles: ['Caregiver', 'Doctor', 'Emergency Contacts'],
-      notificationChannels: ['in-app', 'sms', 'phone-call'],
-    },
-    {
-      id: 'ALT-002',
-      incidentId: 'INC-002',
-      status: 'resolved',
-      triggeredAt: new Date(Date.now() - 120 * 60000),
-      acknowledgedAt: new Date(Date.now() - 90 * 60000),
-      resolvedAt: new Date(Date.now() - 60 * 60000),
-      targetRoles: ['Caregiver'],
-      notificationChannels: ['in-app', 'sms'],
-      acknowledgedBy: 'Caregiver John',
-      resolvedBy: 'Caregiver John',
-    },
-    {
-      id: 'ALT-003',
-      incidentId: 'INC-003',
-      status: 'acknowledged',
-      triggeredAt: new Date(Date.now() - 30 * 60000),
-      acknowledgedAt: new Date(Date.now() - 28 * 60000),
-      targetRoles: ['Caregiver', 'Family'],
-      notificationChannels: ['in-app', 'sms'],
-      acknowledgedBy: 'Caregiver Lisa',
-    },
-  ];
+  // Data from backend
+  incidents: IncidentUI[] = [];
+  alerts: AlertUI[] = [];
 
   // Selection
-  selectedIncident: Incident | null = null;
-  selectedAlert: Alert | null = null;
-
-  // Inline forms
-  showIncidentForm = false;
-  editingIncident: Incident | null = null;
-
-  showAlertForm = false;
-  editingAlert: Alert | null = null;
-
-  newIncident: {
-    title: string;
-    type: IncidentType;
-    severity: Severity;
-    description: string;
-    patientId: string;
-    location: string;
-  } = {
-    title: '',
-    type: 'Medical',
-    severity: 'MEDIUM',
-    description: '',
-    patientId: '',
-    location: '',
-  };
-
-  newAlert: {
-    targetRoles: string[];
-    notificationChannels: string[];
-    triggerTime: string;
-  } = {
-    targetRoles: [],
-    notificationChannels: [],
-    triggerTime: '',
-  };
+  selectedIncident: IncidentUI | null = null;
+  selectedAlert: AlertUI | null = null;
 
   currentTime = new Date();
   private timerId?: any;
   private readonly isBrowser: boolean;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     @Inject(PLATFORM_ID) platformId: Object,
-    private readonly toastr: ToastrService,
+    public readonly toastr: ToastrService,
+    private authService: AuthService,
+    private alertsService: AlertsService,
+    private userService: UserService,
+    private dialog: MatDialog,
+    private alertScheduler: AlertSchedulerService,
+    private voiceSos: VoiceSosService,
+    private ngZone: NgZone ,
+    private checkService: CheckService  // ADD THIS
+
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    this.newAlert.triggerTime = this.getDefaultTriggerTime();
   }
 
-  ngOnInit(): void {
-    if (this.isBrowser) {
-      this.timerId = setInterval(() => {
-        this.currentTime = new Date();
-      }, 60000);
-    }
+ngOnInit(): void {
+  if (this.isBrowser) {
+    this.timerId = setInterval(() => {
+      this.currentTime = new Date();
+    }, 60000);
   }
+
+  this.subscriptions.push(
+    this.authService.currentUser$.subscribe((user: User | null) => {
+      this.currentUser = user;
+      if (!user) return;
+
+      this.userRole = user.role.toLowerCase() as any;
+
+      // Populate IDs for voice-guided check
+      this.currentUserId = user.userId!;
+
+      if (this.isPatient) {
+        this.patientId = user.userId!;
+        const primaryEmail = user.caregiverEmails?.[0];
+        if (primaryEmail) {
+          this.userService.getUserByEmail(primaryEmail).subscribe(cg => {
+            this.caregiverId = cg.userId;
+          });
+        }
+      } else if (this.isCaregiver) {
+        // Caregiver WebSocket connected per-patient inside the component itself
+      }
+
+      // Start voice SOS listener for patients — guarded to only run once
+      if (this.isPatient && this.isBrowser && !this.voiceStarted) {
+        this.voiceStarted = true;
+        this.subscriptions.push(
+          this.voiceSos.sosTrigger$.subscribe(() => {
+            this.triggerSOS();
+          })
+        );
+        this.voiceSos.start();
+        this.voiceListening = true;
+      }
+
+      if (this.isDoctor) {
+        this.loadDoctorPatients();
+      }
+
+      // For caregivers, load allowed patients first
+      if (this.isCaregiver) {
+        this.getConnectedPatients().subscribe(patients => {
+          this.allowedPatientIds = new Set(patients.map(p => p.userId));
+          this.loadData();
+        });
+      } else {
+        // For patients or other roles: load data first
+        this.loadData();
+        // Then load EviCare insight if patient
+        this.loadEviCareInsight();
+      }
+
+      // ← start auto-refresh for activity statuses
+      this.startActivityRefresh();
+    })
+  );
+}
+/**
+ * Load EviCare risk analysis for patient and show popup if needed
+ */
+private loadEviCareInsight(): void {
+  if (!this.isPatient || !this.currentUser || !this.currentUser.userId) return;
+
+  this.alertsService.getEviCareAnalysis(this.currentUser.userId).subscribe({
+    next: (score) => {
+      this.eviCareRiskScore = score;
+      if (score.level !== 'LOW') {
+        this.eviCarePopupVisible = true;
+      }
+    },
+    error: () => {}
+  });
+}
 
   ngOnDestroy(): void {
-    if (this.timerId) {
-      clearInterval(this.timerId);
+    if (this.timerId) clearInterval(this.timerId);
+    if (this.sosCountdownTimer) clearInterval(this.sosCountdownTimer); // ← add this
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.voiceSos.stop();
+    if (this.disconnectCheckInterval) clearInterval(this.disconnectCheckInterval);
+    //this.checkService.disconnect(); // ADD THIS
+
+  }
+
+loadData(): void {
+  if (!this.currentUser) return;
+
+  this.alertsService.getIncidents().subscribe({
+    next: (incidents: Incident[]) => {
+      console.log('Incidents from backend:', incidents);
+
+      // Role‑based filtering
+      if (this.isPatient) {
+        incidents = incidents.filter(i =>
+          this.currentUser != null && (
+            i.reportedByUserId === this.currentUser.userId ||
+            i.patientId === this.currentUser.userId
+          )
+        );
+      } else if (this.isCaregiver && this.allowedPatientIds) {
+        incidents = incidents.filter(
+          i => this.allowedPatientIds!.has(i.patientId)
+        );
+      } else if (this.isDoctor) {
+        const doctorPatientIds = new Set(
+          this.doctorPatients.map(p => p.userId)
+        );
+        incidents = incidents.filter(
+          i => doctorPatientIds.has(i.patientId)
+        );
+      }
+
+      this.incidents = incidents.map(i => this.enrichIncident(i));
+      console.log('Mapped incidents:', this.incidents);
+
+      const patientIds = [...new Set(incidents.map(i => i.patientId))];
+      this.loadPatientDetails(patientIds);
+
+      this.loadAlerts();
+
+      // load patient activity statuses after incidents are ready
+      this.loadPatientActivityStatuses();
+
+      // start disconnect monitoring for caregivers and doctors
+      this.startDisconnectCheck();
+    },
+    error: (err) => {
+      console.error('Failed to load incidents', err);
+      this.toastr.error('Could not load incidents');
+    }
+  });
+}
+
+ loadAlerts(): void {
+  this.alertsService.getAlerts().subscribe({
+    next: (alerts: Alert[]) => {
+      console.log('Alerts loaded:', alerts);
+      this.alerts = alerts.map(alert => this.enrichAlert(alert));
+      this.startScheduler();
+    },
+    error: (err) => {
+      console.error('Failed to load alerts', err);
+      this.toastr.warning('Alerts could not be loaded');
+    }
+  });
+}
+
+  loadPatientDetails(patientIds: string[]): void {
+  patientIds.forEach(id => {
+    if (!this.patientCache.has(id)) {
+      this.userService.getUserById(id).subscribe({
+        next: (patient) => {
+          this.patientCache.set(id, { 
+            name: patient.name, 
+            avatar: patient.profilePicture,
+            email: patient.email      // add this
+          });
+          this.incidents = this.incidents.map(i =>
+            i.patientId === id ? this.enrichIncident(i) : i
+          );
+        },
+        error: (err) => console.error('Failed to load patient', err)
+      });
+    }
+  });
+}
+  private enrichIncident(incident: Incident): IncidentUI {
+  let patientName = 'Unknown patient';
+  let patientAvatar = undefined;
+  let patientEmail = undefined;   // add
+
+  if (this.isPatient) {
+    patientName = this.currentUser?.name ?? 'Me';
+    patientAvatar = this.currentUser?.profilePicture;
+    patientEmail = this.currentUser?.email;   // add
+  } else {
+    const cached = this.patientCache.get(incident.patientId);
+    if (cached) {
+      patientName = cached.name;
+      patientAvatar = cached.avatar;
+      patientEmail = cached.email;   // need to store email in cache
+    } else {
+      patientName = `Patient (${incident.patientId.substring(0, 6)})`;
     }
   }
 
-  get stats() {
+  return {
+    ...incident,
+    patientName,
+    patientAvatar,
+    patientEmail,
+    detectedBy: incident.reportedByUserId,
+    comments: [],
+    aiSuggestion: incident.aiSuggestion,
+  };
+}
+
+  private enrichAlert(alert: Alert): AlertUI {
     return {
-      total: this.alerts.length,
-      active: this.alerts.filter((a) => a.status === 'active').length,
-      resolved: this.alerts.filter((a) => a.status === 'resolved').length,
-      critical: this.alerts.filter((a) => {
-        const inc = this.incidents.find((i) => i.id === a.incidentId);
-        return inc?.severity === 'CRITICAL' && a.status === 'active';
-      }).length,
+      ...alert,
     };
   }
 
-  private getIncidentStatus(incidentId: string): AlertStatus | 'none' {
-    const related = this.alerts.filter((a) => a.incidentId === incidentId);
-    if (!related.length) {
-      return 'none';
+  // Fetch the list of patients connected to the current user (for caregivers/doctors)
+  private getConnectedPatients(): Observable<Patient[]> {
+    if (!this.currentUser) return of([]);
+
+    let emailList: string[] = [];
+    if (this.currentUser.role === 'CAREGIVER' || this.currentUser.role === 'DOCTOR') {
+      emailList = this.currentUser.patientEmails || [];
+    } else if (this.currentUser.role === 'PATIENT') {
+      return of([]);
     }
-    if (related.some((a) => a.status === 'active')) {
-      return 'active';
-    }
-    if (related.some((a) => a.status === 'acknowledged')) {
-      return 'acknowledged';
-    }
-    if (related.some((a) => a.status === 'resolved')) {
-      return 'resolved';
-    }
-    return 'none';
+
+    if (emailList.length === 0) return of([]);
+
+    // Fetch each patient by email and map to Patient objects
+    const requests = emailList.map(email =>
+      this.userService.getUserByEmail(email).pipe(
+        catchError(() => of(null))
+      )
+    );
+    return forkJoin(requests).pipe(
+      map(users => users.filter(u => u !== null) as Patient[])
+    );
   }
 
-  get filteredIncidents(): Incident[] {
-    return this.incidents.filter((incident) => {
-      const status = this.getIncidentStatus(incident.id);
+  // ---------- Dialog openers ----------
+  openCreateIncidentDialog(): void {
+    if (this.isPatient && this.currentUser) {
+      const dialogRef = this.dialog.open(AddIncidentDialogComponent, {
+        width: '800px',
+        maxWidth: '95vw',
+        data: {}
+      });
+      this.handleIncidentDialogResult(dialogRef);
+    } else if (this.isCaregiver) {
+      this.getConnectedPatients().subscribe((patients: Patient[]) => {
+        const dialogRef = this.dialog.open(AddIncidentDialogComponent, {
+          width: '800px',
+          maxWidth: '95vw',
+          data: { allowedPatients: patients }
+        });
+        this.handleIncidentDialogResult(dialogRef);
+      });
+    }
+  }
+
+  private handleIncidentDialogResult(dialogRef: any) {
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        this.alertsService.createIncident(result).subscribe({
+          next: () => {
+            this.toastr.success('Incident created');
+            this.loadData();
+          },
+          error: (err) => this.toastr.error('Failed to create incident')
+        });
+      }
+    });
+  }
+
+  openEditIncidentDialog(incident: IncidentUI): void {
+    // For editing, load all patients (or restrict to connected ones if desired)
+    this.userService.getPatients().subscribe((patients: Patient[]) => {
+      const dialogRef = this.dialog.open(AddIncidentDialogComponent, {
+        width: '800px',
+        maxWidth: '95vw',
+        data: { incident, allowedPatients: patients }
+      });
+      dialogRef.afterClosed().subscribe((result: any) => {
+        if (result) {
+          this.alertsService.updateIncident(incident.incidentId, result).subscribe({
+            next: (updated: Incident) => {
+              const index = this.incidents.findIndex(i => i.incidentId === updated.incidentId);
+              if (index !== -1) {
+                this.incidents[index] = this.enrichIncident(updated);
+              }
+              this.toastr.success('Incident updated');
+            },
+            error: (err) => this.toastr.error('Failed to update incident')
+          });
+        }
+      });
+    });
+  }
+
+ openCreateAlertDialog(incident: IncidentUI): void {
+  const dialogRef = this.dialog.open(AddAlertDialogComponent, {
+    width: '600px',
+    maxWidth: '95vw',
+    data: { incident } // pass the whole incident
+  });
+
+  dialogRef.afterClosed().subscribe((result: any) => {
+    if (result) {
+      this.alertsService.createAlert(result).subscribe({
+        next: (newAlert: Alert) => {
+          this.alerts = [this.enrichAlert(newAlert), ...this.alerts];
+          this.toastr.success('Alert created');
+        },
+        error: (err) => this.toastr.error('Failed to create alert')
+      });
+    }
+  });
+}
+
+ openEditAlertDialog(incident: IncidentUI, alert: AlertUI): void {
+  const dialogRef = this.dialog.open(AddAlertDialogComponent, {
+    width: '600px',
+    maxWidth: '95vw',
+    data: { incident, alert }
+  });
+
+  dialogRef.afterClosed().subscribe((result: any) => {
+    if (result) {
+      this.alertsService.updateAlert(alert.alertId, result).subscribe({
+        next: (updated: Alert) => {
+          const idx = this.alerts.findIndex(a => a.alertId === updated.alertId);
+          if (idx !== -1) {
+            this.alerts[idx] = this.enrichAlert(updated);
+          }
+          this.toastr.success('Alert updated');
+        },
+        error: (err) => this.toastr.error('Failed to update alert')
+      });
+    }
+  });
+}
+
+ deleteIncident(incident: IncidentUI): void {
+  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    width: '350px',
+    data: { message: 'Delete this incident and all related alerts?' }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      this.alertsService.deleteIncident(incident.incidentId).subscribe({
+        next: () => {
+          this.incidents = this.incidents.filter(i => i.incidentId !== incident.incidentId);
+          this.alerts = this.alerts.filter(a => a.incidentId !== incident.incidentId);
+
+          if (this.selectedIncident?.incidentId === incident.incidentId) {
+            this.selectedIncident = null;
+            this.selectedAlert = null;
+          }
+
+          this.toastr.success('Incident deleted');
+        },
+        error: () => this.toastr.error('Failed to delete incident')
+      });
+    }
+  });
+}
+
+ deleteAlert(alert: AlertUI): void {
+  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    width: '350px',
+    data: { message: 'Delete this alert?' }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      this.alertsService.deleteAlert(alert.alertId).subscribe({
+        next: () => {
+          this.alerts = this.alerts.filter(a => a.alertId !== alert.alertId);
+
+          if (this.selectedAlert?.alertId === alert.alertId) {
+            this.selectedAlert = null;
+          }
+
+          this.toastr.success('Alert deleted');
+        },
+        error: () => this.toastr.error('Failed to delete alert')
+      });
+    }
+  });
+}
+
+  acknowledgeAlert(alert: AlertUI): void {
+    this.alertsService.acknowledgeAlert(alert.alertId).subscribe({
+      next: (updated: Alert) => {
+        const idx = this.alerts.findIndex(a => a.alertId === updated.alertId);
+        if (idx !== -1) this.alerts[idx] = this.enrichAlert(updated);
+        this.toastr.success('Alert acknowledged');
+      },
+      error: (err) => this.toastr.error('Failed to acknowledge alert')
+    });
+  }
+
+  resolveAlert(alert: AlertUI): void {
+    this.alertsService.resolveAlert(alert.alertId).subscribe({
+      next: (updated: Alert) => {
+        const idx = this.alerts.findIndex(a => a.alertId === updated.alertId);
+        if (idx !== -1) this.alerts[idx] = this.enrichAlert(updated);
+        this.toastr.success('Alert resolved');
+      },
+      error: (err) => this.toastr.error('Failed to resolve alert')
+    });
+  }
+
+  // ---------- Filtering and pagination ----------
+  get stats() {
+  const alertsForStats = this.isDoctor
+    ? this.alerts.filter(a => a.targetId === this.currentUser?.userId)
+    : this.alerts;
+
+  const incidentsForStats = this.isDoctor
+    ? this.incidents.filter(i =>
+        new Set(alertsForStats.map(a => a.incidentId)).has(i.incidentId)
+      )
+    : this.incidents;
+
+  return {
+    total: alertsForStats.length,
+    active: incidentsForStats.filter(i => i.status === 'OPEN').length,
+    acknowledged: incidentsForStats.filter(i => i.status === 'ACKNOWLEDGED').length,
+    resolved: incidentsForStats.filter(i => i.status === 'RESOLVED').length,
+    critical: incidentsForStats.filter(i =>
+      (i.severity === 'CRITICAL' || i.severity === 'HIGH') && i.status === 'OPEN'
+    ).length,
+  };
+}
+
+  get filteredIncidents(): IncidentUI[] {
+    let filtered = this.incidents ?? [];
+
+    // Doctor restriction (already done in loadData? Actually loadData doesn't filter for doctors.
+    // But we have the `targetIncidentIds` logic here, which is correct.)
+    if (this.isDoctor && this.currentUser?.userId) {
+      const targetIncidentIds = new Set(
+        (this.alerts ?? [])
+          .filter(a => a?.targetId === this.currentUser!.userId)
+          .map(a => a?.incidentId)
+      );
+      filtered = filtered.filter(inc =>
+        inc?.incidentId && targetIncidentIds.has(inc.incidentId)
+      );
+    }
+
+    const search = (this.searchQuery ?? '').toLowerCase();
+
+    return filtered.filter(incident => {
+      const title = (incident?.title ?? '').toLowerCase();
+      const patientName = (incident?.patientName ?? '').toLowerCase();
+      const severity = incident?.severity ?? null;
+      const type = incident?.type ?? null;
+      const patientId = incident?.patientId ?? null;
 
       const matchesSearch =
-        incident.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        incident.patientName.toLowerCase().includes(this.searchQuery.toLowerCase());
+        title.includes(search) ||
+        patientName.includes(search);
 
       const matchesSeverity =
-        this.filterSeverity === 'all' || incident.severity === this.filterSeverity;
+        this.filterSeverity === 'all' ||
+        severity === this.filterSeverity;
 
       const matchesType =
-        this.filterType === 'all' || incident.type === this.filterType;
-
-      const matchesStatus =
-        this.filterStatus === 'all' || (status !== 'none' && status === this.filterStatus);
+        this.filterType === 'all' ||
+        type === this.filterType;
 
       const matchesPatient =
         this.selectedPatientFilter === 'all' ||
-        incident.patientId === this.selectedPatientFilter;
+        patientId === this.selectedPatientFilter;
 
-      return matchesSearch && matchesSeverity && matchesType && matchesStatus && matchesPatient;
+      return matchesSearch && matchesSeverity && matchesType && matchesPatient;
     });
   }
 
@@ -284,371 +615,416 @@ export class AlertsComponent implements OnInit, OnDestroy {
     return Math.max(1, Math.ceil(this.filteredIncidents.length / this.INCIDENTS_PER_PAGE));
   }
 
-  get paginatedIncidents(): Incident[] {
+  get paginatedIncidents(): IncidentUI[] {
     const start = (this.incidentPage - 1) * this.INCIDENTS_PER_PAGE;
     return this.filteredIncidents.slice(start, start + this.INCIDENTS_PER_PAGE);
   }
 
-  get alertsForSelectedIncident(): Alert[] {
-    if (!this.selectedIncident) {
-      return [];
-    }
-    return this.alerts.filter((a) => a.incidentId === this.selectedIncident!.id);
+  get alertsForSelectedIncident(): AlertUI[] {
+    if (!this.selectedIncident) return [];
+    return this.alerts.filter(a => a.incidentId === this.selectedIncident!.incidentId);
   }
 
   get totalAlertPages(): number {
     return Math.max(1, Math.ceil(this.alertsForSelectedIncident.length / this.ALERTS_PER_PAGE));
   }
 
-  get paginatedAlerts(): Alert[] {
+  get paginatedAlerts(): AlertUI[] {
     const start = (this.alertsPage - 1) * this.ALERTS_PER_PAGE;
     return this.alertsForSelectedIncident.slice(start, start + this.ALERTS_PER_PAGE);
   }
 
-  getFirstAlert(incidentId: string): Alert | undefined {
-    return this.alerts.find((a) => a.incidentId === incidentId);
+  getFirstAlert(incidentId: string): AlertUI | undefined {
+    return this.alerts.find(a => a.incidentId === incidentId);
   }
 
-  // Alerts
-
-  acknowledge(alert: Alert): void {
-    if (alert.status !== 'active') {
-      return;
-    }
-    alert.status = 'acknowledged';
-    alert.acknowledgedAt = new Date();
-    alert.acknowledgedBy = 'You';
-    this.toastr.success('Alert acknowledged');
-  }
-
-  resolve(alert: Alert): void {
-    if (alert.status === 'resolved') {
-      return;
-    }
-    alert.status = 'resolved';
-    alert.resolvedAt = new Date();
-    alert.resolvedBy = 'You';
-    this.toastr.success('Alert resolved');
-  }
-
-  openCreateAlert(incident: Incident): void {
+  selectIncident(incident: IncidentUI): void {
     this.selectedIncident = incident;
-    this.showAlertForm = true;
-    this.editingAlert = null;
-    this.newAlert = {
-      targetRoles: [],
-      notificationChannels: [],
-      triggerTime: this.getDefaultTriggerTime(),
-    };
-    this.alertsPage = 1;
-  }
-
-  openEditAlert(alert: Alert): void {
-    this.editingAlert = alert;
-    this.showAlertForm = true;
-    this.newAlert = {
-      targetRoles: [...alert.targetRoles],
-      notificationChannels: [...alert.notificationChannels],
-      triggerTime: this.formatTimeForInput(alert.triggeredAt),
-    };
-  }
-
-  saveAlert(): void {
-    if (!this.selectedIncident) {
-      return;
-    }
-
-    if (!this.newAlert.triggerTime) {
-      this.toastr.error('Please choose a trigger time for the alert');
-      return;
-    }
-
-    if (this.editingAlert) {
-      this.alerts = this.alerts.map((a) =>
-        a.id === this.editingAlert!.id
-          ? {
-              ...a,
-              targetRoles: [...this.newAlert.targetRoles],
-              notificationChannels: [...this.newAlert.notificationChannels],
-              triggeredAt: this.computeNextTriggerDate(this.newAlert.triggerTime),
-            }
-          : a,
-      );
-      this.toastr.success('Alert updated');
-    } else {
-      const newAlert: Alert = {
-        id: `ALT-${Date.now()}`,
-        incidentId: this.selectedIncident.id,
-        status: 'active',
-        triggeredAt: this.computeNextTriggerDate(this.newAlert.triggerTime),
-        targetRoles: [...this.newAlert.targetRoles],
-        notificationChannels: [...this.newAlert.notificationChannels],
-      };
-      this.alerts = [newAlert, ...this.alerts];
-      this.toastr.success('Alert created');
-    }
-
-    this.showAlertForm = false;
-    this.editingAlert = null;
-    this.newAlert = {
-      targetRoles: [],
-      notificationChannels: [],
-      triggerTime: this.getDefaultTriggerTime(),
-    };
-  }
-
-  deleteAlert(alert: Alert): void {
-    this.alerts = this.alerts.filter((a) => a.id !== alert.id);
-    if (this.selectedAlert?.id === alert.id) {
-      this.selectedAlert = null;
-    }
-    this.toastr.success('Alert deleted');
-  }
-
-  // Incidents
-
-  onCreateIncidentClick(): void {
-    this.showIncidentForm = true;
-    this.editingIncident = null;
-    this.newIncident = {
-      title: '',
-      type: 'Medical',
-      severity: 'MEDIUM',
-      description: '',
-      patientId: '',
-      location: '',
-    };
-  }
-
-  createIncident(): void {
-    const patient = this.getPatientById(this.newIncident.patientId);
-    const incident: Incident = {
-      id: `INC-${Date.now()}`,
-      title: this.newIncident.title,
-      type: this.newIncident.type,
-      severity: this.newIncident.severity,
-      description: this.newIncident.description,
-      patientName: patient?.name || 'Unknown',
-      patientId: this.newIncident.patientId,
-      patientAvatar: patient?.avatar,
-      patientAge: patient?.age,
-      location: this.newIncident.location,
-      createdAt: new Date(),
-      detectedBy: 'System',
-      status: 'active',
-      comments: [],
-    };
-
-    this.incidents = [incident, ...this.incidents];
-    this.showIncidentForm = false;
-    this.newIncident = {
-      title: '',
-      type: 'Medical',
-      severity: 'MEDIUM',
-      description: '',
-      patientId: '',
-      location: '',
-    };
-    this.toastr.success('Incident created');
-  }
-
-  openEditIncident(incident: Incident): void {
-    this.editingIncident = incident;
-    this.showIncidentForm = true;
-    this.newIncident = {
-      title: incident.title,
-      type: incident.type,
-      severity: incident.severity,
-      description: incident.description,
-      patientId: incident.patientId,
-      location: incident.location,
-    };
-  }
-
-  saveIncident(): void {
-    if (!this.editingIncident) {
-      return;
-    }
-    this.incidents = this.incidents.map((i) =>
-      i.id === this.editingIncident!.id
-        ? {
-            ...i,
-            title: this.newIncident.title,
-            type: this.newIncident.type,
-            severity: this.newIncident.severity,
-            description: this.newIncident.description,
-            location: this.newIncident.location,
-          }
-        : i,
-    );
-    this.editingIncident = null;
-    this.showIncidentForm = false;
-    this.newIncident = {
-      title: '',
-      type: 'Medical',
-      severity: 'MEDIUM',
-      description: '',
-      patientId: '',
-      location: '',
-    };
-    this.toastr.success('Incident updated');
-  }
-
-  deleteIncident(incident: Incident): void {
-    this.incidents = this.incidents.filter((i) => i.id !== incident.id);
-    this.alerts = this.alerts.filter((a) => a.incidentId !== incident.id);
-    if (this.selectedIncident?.id === incident.id) {
-      this.selectedIncident = null;
-      this.selectedAlert = null;
-    }
-    this.toastr.success('Incident and related alerts deleted');
-  }
-
-  // Selection & pagination
-
-  selectIncident(incident: Incident): void {
-    this.selectedIncident = incident;
-    this.selectedAlert = this.getFirstAlert(incident.id) || null;
+    this.selectedAlert = this.getFirstAlert(incident.incidentId) || null;
     this.alertsPage = 1;
   }
 
   previousIncidentPage(): void {
-    if (this.incidentPage > 1) {
-      this.incidentPage -= 1;
-    }
+    if (this.incidentPage > 1) this.incidentPage--;
   }
 
   nextIncidentPage(): void {
-    if (this.incidentPage < this.totalIncidentPages) {
-      this.incidentPage += 1;
-    }
+    if (this.incidentPage < this.totalIncidentPages) this.incidentPage++;
   }
 
   previousAlertsPage(): void {
-    if (this.alertsPage > 1) {
-      this.alertsPage -= 1;
-    }
+    if (this.alertsPage > 1) this.alertsPage--;
   }
 
   nextAlertsPage(): void {
-    if (this.alertsPage < this.totalAlertPages) {
-      this.alertsPage += 1;
-    }
+    if (this.alertsPage < this.totalAlertPages) this.alertsPage++;
   }
 
-  // Styling helpers
-
+  // ---------- Helpers for UI ----------
   getSeverityBadgeClasses(severity: Severity): string {
     switch (severity) {
-      case 'CRITICAL':
-        return 'bg-[#C06C84] text-white';
-      case 'HIGH':
-        return 'bg-[#B39DDB] text-white';
-      case 'MEDIUM':
-        return 'bg-[#DCCEF9] text-[#7C3AED]';
-      case 'LOW':
-        return 'bg-[#A8E6CF] text-[#22c55e]';
+      case 'CRITICAL': return 'bg-[#C06C84] text-white';
+      case 'HIGH': return 'bg-[#B39DDB] text-white';
+      case 'MEDIUM': return 'bg-[#DCCEF9] text-[#7C3AED]';
+      case 'LOW': return 'bg-[#A8E6CF] text-[#22c55e]';
     }
   }
 
   getStatusBadgeClasses(status: AlertStatus): string {
     switch (status) {
-      case 'active':
-        return 'bg-[#C06C84] text-white';
-      case 'acknowledged':
-        return 'bg-[#F59E0B] text-white';
-      case 'resolved':
-        return 'bg-[#22c55e] text-white';
+      case 'SENT': return 'bg-[#C06C84] text-white';
+      case 'ACKNOWLEDGED': return 'bg-[#F59E0B] text-white';
+      case 'RESOLVED': return 'bg-[#22c55e] text-white';
     }
   }
 
   getElapsedMinutes(date: Date): string {
-    const diff = date.getTime() - this.currentTime.getTime();
+    const diff = this.currentTime.getTime() - new Date(date).getTime();
     const minutes = Math.floor(Math.abs(diff) / 60000);
     const hours = Math.floor(minutes / 60);
     if (diff > 0) {
-      if (hours > 0) {
-        return `in ${hours}h ${minutes % 60}m`;
-      }
+      if (hours > 0) return `in ${hours}h ${minutes % 60}m`;
       return `in ${minutes}m`;
     }
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m ago`;
-    }
+    if (hours > 0) return `${hours}h ${minutes % 60}m ago`;
     return `${minutes}m ago`;
   }
 
-  private getPatientById(id: string) {
-    return [
-      { id: 'P-001', name: 'John Anderson', avatar: '', age: 78 },
-      { id: 'P-002', name: 'Mary Wilson', avatar: '', age: 82 },
-      { id: 'P-003', name: 'Robert Chen', avatar: '', age: 75 },
-      { id: 'P-004', name: 'Emma Davis', avatar: '', age: 80 },
-    ].find((p) => p.id === id);
-  }
-
-  private getDefaultTriggerTime(): string {
-    const now = new Date();
-    // Default to 5 minutes from now, like many alarm apps
-    now.setMinutes(now.getMinutes() + 5);
-    return this.formatTimeForInput(now);
-  }
-
-  private computeNextTriggerDate(time: string): Date {
-    const [hoursStr, minutesStr] = time.split(':');
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-
-    const now = new Date();
-    const scheduled = new Date(now);
-    scheduled.setHours(hours, minutes, 0, 0);
-
-    // If the time has already passed today, schedule it for tomorrow
-    if (scheduled <= now) {
-      scheduled.setDate(scheduled.getDate() + 1);
-    }
-
-    return scheduled;
-  }
-
-  private formatTimeForInput(date: Date): string {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-
-  // Helpers used from template to avoid complex expressions there
-  onTargetRoleToggle(role: string, checked: boolean): void {
-    if (checked) {
-      if (!this.newAlert.targetRoles.includes(role)) {
-        this.newAlert.targetRoles = [...this.newAlert.targetRoles, role];
-      }
-    } else {
-      this.newAlert.targetRoles = this.newAlert.targetRoles.filter((r) => r !== role);
-    }
-  }
-
-  onChannelToggle(channel: string, checked: boolean): void {
-    if (checked) {
-      if (!this.newAlert.notificationChannels.includes(channel)) {
-        this.newAlert.notificationChannels = [...this.newAlert.notificationChannels, channel];
-      }
-    } else {
-      this.newAlert.notificationChannels = this.newAlert.notificationChannels.filter(
-        (c) => c !== channel,
-      );
-    }
-  }
-
   getInitials(name?: string): string {
-    if (!name) {
-      return '';
+    if (!name) return '';
+    return name.split(' ').filter(p => p.length > 0).map(p => p[0]).join('');
+  }
+
+  getSeverityIcon(severity: Severity): string {
+    switch (severity) {
+      case 'LOW': return '🙂';
+      case 'MEDIUM': return '😐';
+      case 'HIGH': return '⚠️';
+      case 'CRITICAL': return '🚨';
+      default: return '';
     }
-    return name
-      .split(' ')
-      .filter((part) => part.length > 0)
-      .map((part) => part[0])
-      .join('');
+  }
+
+  // Pagination helpers
+  get currentPage(): number {
+    return this.incidentPage;
+  }
+
+  get totalPages(): number {
+    return this.totalIncidentPages;
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  setPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.incidentPage = page;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.incidentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.incidentPage++;
+    }
+  }
+
+  // Load doctor's patients from patientEmails
+loadDoctorPatients(): void {
+  console.log('loadDoctorPatients called, currentUser:', this.currentUser);
+  if (!this.currentUser || !this.currentUser.patientEmails) {
+    console.log('No patientEmails in currentUser');
+    return;
+  }
+  console.log('patientEmails:', this.currentUser.patientEmails);
+  const emailList = this.currentUser.patientEmails;
+  const requests = emailList.map(email =>
+    this.userService.getUserByEmail(email).pipe(catchError(() => of(null)))
+  );
+  forkJoin(requests).pipe(map(users => users.filter(u => u !== null) as Patient[]))
+    .subscribe(patients => {
+      console.log('Loaded doctorPatients:', patients);
+      this.doctorPatients = patients;
+      if (patients.length) this.selectDoctorPatient(patients[0]);
+    });
+}
+
+selectDoctorPatient(patient: Patient): void {
+  this.selectedDoctorPatient = patient;
+  // Filter incidents by this patient
+}
+get incidentsForSelectedPatient(): IncidentUI[] {
+  return this.incidents.filter(i => i.patientId === this.selectedDoctorPatient?.userId);
+}
+
+getIncidentCountForPatient(patientId: string): number {
+  return this.incidents.filter(i => i.patientId === patientId).length;
+}
+
+openIncidentDetailsDialog(incident: IncidentUI): void {
+  this.dialog.open(IncidentDetailsDialogComponent, {
+    width: '500px',
+    data: { incident }
+  });
+}
+
+
+private startScheduler(): void {
+  if (!this.isBrowser || !this.isPatient) return;
+
+  // Get caregiver phone: first caregiverEmail resolved to a user with phone
+  let caregiverPhone = '';
+  const caregiverEmails = this.currentUser?.caregiverEmails || [];
+
+  const patientName = this.currentUser?.name || 'Patient';
+
+  const doStart = (phone: string) => {
+    this.alertScheduler.start(
+      () => this.alerts,
+      (incidentId: string) => {
+        const inc = this.incidents.find(i => i.incidentId === incidentId);
+        return inc?.title || 'Unknown incident';
+      },
+      phone,
+      patientName
+    );
+  };
+
+  if (caregiverEmails.length > 0) {
+    this.userService.getUserByEmail(caregiverEmails[0]).subscribe({
+      next: (caregiver) => {
+        caregiverPhone = caregiver.phone || '';
+        doStart(caregiverPhone);
+      },
+      error: () => doStart('')
+    });
+  } else {
+    doStart('');
   }
 }
 
+
+onAlarmDismissed(alertId: any): void {
+  this.alertsService.resolveAlert(alertId).subscribe({
+    next: (updated: Alert) => {
+      const idx = this.alerts.findIndex(a => a.alertId === updated.alertId);
+      if (idx !== -1) this.alerts[idx] = this.enrichAlert(updated);
+      this.toastr.success('Alert marked as complete');
+    },
+    error: () => this.toastr.error('Could not resolve alert')
+  });
+}
+
+triggerSOS(): void {
+  if (!this.currentUser) return;
+
+  // Show popup immediately — don't wait for the API call
+  this.showSosPopup();
+
+  const caregiverEmails = this.currentUser.caregiverEmails || [];
+  if (caregiverEmails.length === 0) {
+    this.toastr.error('No caregiver connected to your account');
+    return;
+  }
+
+  this.userService.getUserByEmail(caregiverEmails[0]).subscribe({
+    next: (caregiver) => {
+      if (!caregiver.phone) {
+        this.toastr.error('Caregiver has no phone number on file');
+        return;
+      }
+
+      this.alertsService.triggerSosCall({
+        caregiverPhone: caregiver.phone,
+        patientName: this.currentUser!.name,
+        patientId: this.currentUser!.userId ?? ''
+      }).subscribe({
+        next: () => {
+          this.toastr.success('🚨 SOS call triggered — caregiver is being called now');
+        },
+        error: () => {
+          this.toastr.error('Failed to trigger SOS call');
+        }
+      });
+    },
+    error: () => {
+      this.toastr.error('Could not reach caregiver info');
+    }
+  });
+}
+
+private showSosPopup(): void {
+  // Clear any existing countdown to prevent overlap
+  if (this.sosCountdownTimer) {
+    clearInterval(this.sosCountdownTimer);
+    this.sosCountdownTimer = undefined;
+  }
+
+  this.sosPopupVisible = true;
+  this.sosCountdown = 10;
+
+  // Run outside Angular zone so setInterval doesn't trigger
+  // constant change detection on every tick
+  this.ngZone.runOutsideAngular(() => {
+    this.sosCountdownTimer = setInterval(() => {
+      this.ngZone.run(() => {
+        this.sosCountdown--;
+        if (this.sosCountdown <= 0) {
+          clearInterval(this.sosCountdownTimer);
+          this.sosCountdownTimer = undefined;
+          this.sosPopupVisible = false;
+        }
+      });
+    }, 1000);
+  });
+}
+
+acknowledgeIncident(incident: IncidentUI): void {
+  this.alertsService.acknowledgeIncident(incident.incidentId).subscribe({
+    next: (updated: Incident) => {
+      const idx = this.incidents.findIndex(i => i.incidentId === updated.incidentId);
+      if (idx !== -1) this.incidents[idx] = this.enrichIncident(updated);
+      this.toastr.success('Incident acknowledged');
+    },
+    error: () => this.toastr.error('Failed to acknowledge incident')
+  });
+}
+
+resolveIncident(incident: IncidentUI): void {
+  this.alertsService.resolveIncident(incident.incidentId).subscribe({
+    next: (updated: Incident) => {
+      const idx = this.incidents.findIndex(i => i.incidentId === updated.incidentId);
+      if (idx !== -1) this.incidents[idx] = this.enrichIncident(updated);
+      this.toastr.success('Incident resolved');
+    },
+    error: () => this.toastr.error('Failed to resolve incident')
+  });
+}
+
+openCheckPopup(incident: IncidentUI): void {
+  this.checkPopupPatientId = incident.patientId;
+  this.checkPopupPatientName = incident.patientName;
+  this.checkPopupStatus = 'idle';
+  this.checkPopupVisible = true;
+}
+
+closeCheckPopup(): void {
+  this.checkPopupVisible = false;
+}
+
+
+loadPatientActivityStatuses(): void {
+  if (!this.isCaregiver && !this.isDoctor) return;
+
+  const patientIds = this.isDoctor
+    ? this.doctorPatients.map(p => p.userId)
+    : [...(this.allowedPatientIds || [])];
+
+  if (patientIds.length === 0) return;
+
+  this.activityLoading = true;
+  this.alertsService.getBatchActivityStatus(patientIds).subscribe({
+    next: (statuses) => {
+      statuses.forEach(s => this.patientActivityStatuses.set(s.userId, s));
+      this.activityLoading = false;
+    },
+    error: () => this.activityLoading = false
+  });
+}
+
+getActivityStatus(patientId: string): any {
+  return this.patientActivityStatuses.get(patientId);
+}
+
+private startActivityRefresh(): void {
+  if (!this.isBrowser) return;
+  setInterval(() => this.loadPatientActivityStatuses(), 120000);
+}
+
+getUniquePatientIds(): string[] {
+  return [...new Set(this.incidents.map(i => i.patientId))];
+}
+
+getPatientNameById(patientId: string): string {
+  const incident = this.incidents.find(i => i.patientId === patientId);
+  return incident?.patientName || 'Unknown Patient';
+}
+
+private startDisconnectCheck(): void {
+  if (!this.isBrowser || (!this.isCaregiver && !this.isDoctor)) return;
+
+  const check = () => {
+    const patientIds = this.isDoctor
+      ? this.doctorPatients.map(p => p.userId)
+      : [...(this.allowedPatientIds || [])];
+
+    if (patientIds.length === 0) return;
+
+    this.alertsService.getBatchActivityStatus(patientIds).subscribe({
+      next: (statuses) => {
+        statuses.forEach(s => {
+          this.patientActivityStatuses.set(s.userId, s);
+          const wasOnline = this.disconnectedPatients.has(s.userId) === false;
+          const isOffline = !s.onlineNow;
+          const alreadyPinned = this.pinnedDisconnects.has(s.userId);
+          const popupOpen = this.disconnectPopup?.patientId === s.userId;
+
+          if (isOffline && !alreadyPinned && !popupOpen) {
+            const since = s.lastLogin ? new Date(s.lastLogin) : new Date();
+            const name = this.getPatientNameById(s.userId);
+            this.disconnectPopup = { patientId: s.userId, patientName: name, since };
+          } else if (!isOffline) {
+            // Patient came back online — remove pinned notification
+            this.pinnedDisconnects.delete(s.userId);
+            if (this.disconnectPopup?.patientId === s.userId) {
+              this.disconnectPopup = null;
+            }
+          }
+        });
+      }
+    });
+  };
+
+  check(); // immediate first check
+  this.disconnectCheckInterval = setInterval(check, 30000); // every 30s
+}
+
+dismissDisconnectPopup(): void {
+  if (!this.disconnectPopup) return;
+  this.pinnedDisconnects.set(this.disconnectPopup.patientId, {
+    patientName: this.disconnectPopup.patientName,
+    since: this.disconnectPopup.since,
+  });
+  this.disconnectPopup = null;
+}
+
+closePinnedDisconnect(patientId: string): void {
+  this.pinnedDisconnects.delete(patientId);
+}
+
+getPinnedDisconnectList(): { patientId: string; patientName: string; since: Date }[] {
+  return [...this.pinnedDisconnects.entries()]
+    .map(([patientId, v]) => ({ patientId, ...v }));
+}
+
+getMinutesSince(date: Date): string {
+  const mins = Math.round((Date.now() - new Date(date).getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins === 1) return '1 min ago';
+  return `${mins} min ago`;
+}
+
+formatDisconnectDate(date: Date): string {
+  return new Date(date).toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+}

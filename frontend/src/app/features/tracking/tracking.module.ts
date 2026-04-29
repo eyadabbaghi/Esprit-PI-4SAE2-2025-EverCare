@@ -18,7 +18,12 @@ import { CaregiverDashboardComponent } from './pages/caregiver-dashboard/caregiv
     CommonModule,
     TrackingRoutingModule,
     ReactiveFormsModule,
-    FormsModule   // ✅ ADD THIS
+    FormsModule
+  ],
+  exports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule
   ]
 })
 export class TrackingModule { }

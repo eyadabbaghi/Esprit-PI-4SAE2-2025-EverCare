@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\frontend",
+    "\\frontend\\src",
+    "\\frontend\\src\\app",
+    "\\frontend\\src\\app\\features",
+    "\\frontend\\src\\app\\features\\communication",
+    "\\frontend\\src\\app\\features\\communication\\models",
+    "\\frontend\\src\\app\\features\\communication\\pages",
+    "\\frontend\\src\\app\\features\\communication\\pages\\chat",
+    "\\frontend\\src\\app\\features\\communication\\services"
+  ],
+  "PreviewInSolutionExplorer": false
+}

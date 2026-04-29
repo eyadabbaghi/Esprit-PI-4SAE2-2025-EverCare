@@ -20,7 +20,9 @@ export interface UpdateUserByAdminRequest {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://localhost:8096/EverCare/admin';
+ //private apiUrl = 'http://localhost:8096/EverCare/admin';
+  // New gateway URL
+  private apiUrl = 'http://localhost:8089/EverCare/admin';
 
   constructor(private http: HttpClient) {}
 

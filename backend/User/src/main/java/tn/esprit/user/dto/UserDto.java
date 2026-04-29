@@ -2,9 +2,9 @@ package tn.esprit.user.dto;
 
 import lombok.Data;
 import tn.esprit.user.entity.UserRole;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 public class UserDto {
@@ -15,7 +15,24 @@ public class UserDto {
     private String phone;
     private boolean isVerified;
     private LocalDateTime createdAt;
+
+    // Common profile fields
     private LocalDate dateOfBirth;
     private String emergencyContact;
     private String profilePicture;
+
+    // Doctor fields
+    private Integer yearsExperience;
+    private String specialization;
+    private String medicalLicense;
+    private String workplaceType;
+    private String workplaceName;
+
+    // Relationship fields (emails of connected users)
+    private Set<String> caregiverEmails;   // for patient
+    private Set<String> patientEmails;
+    private String doctorEmail;// for caregiver
+
+
+    private String keycloakId;
 }

@@ -1,15 +1,41 @@
-// models/appointment.model.ts
 export interface Appointment {
-  id: string;
-  title: string;
-  doctor: string;
-  date: string;
-  time: string;
-  type: 'in-person' | 'video';
-  location: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
-  notes?: string;
+  appointmentId: string;
+  patientId: string;
+  patientName?: string;
+  patientPhoto?: string;
+  doctorId: string;
+  doctorName?: string;
+  doctorPhoto?: string;
+  caregiverId?: string;
+  caregiverName?: string;
+  consultationTypeId: string;
+  consultationTypeName?: string;
+  startDateTime: Date;
+  endDateTime: Date;
+  status: AppointmentStatus;
+  confirmationDatePatient?: Date;
+  confirmationDateCaregiver?: Date;
+  caregiverPresence?: CaregiverPresence;
+  videoLink?: string;
+  isRecurring: boolean;
+  recurrencePattern?: RecurrencePattern;
+  doctorNotes?: string;
+  simpleSummary?: string;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
-export type AppointmentType = 'in-person' | 'video';
-export type AppointmentStatus = 'upcoming' | 'completed' | 'cancelled';
+export type AppointmentStatus =
+  | 'SCHEDULED'
+  | 'CONFIRMED_BY_PATIENT'
+  | 'CONFIRMED_BY_CAREGIVER'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'RESCHEDULED'
+  | 'MISSED'
+  |'IN_PROGRESS';
+
+
+export type CaregiverPresence = 'PHYSICAL' | 'REMOTE' | 'NONE';
+
+export type RecurrencePattern = 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ONCE';

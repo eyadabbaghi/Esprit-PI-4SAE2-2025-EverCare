@@ -1,0 +1,263 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm">
+
+  <!-- Form header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-[#F3E8FF]">
+    <div>
+      <h3 class="font-semibold text-[#2D1B4E] text-lg">New Prescription</h3>
+      <p class="text-xs text-[#6B5B8C] mt-0.5">Fill in the details below to issue a prescription</p>
+    </div>
+    <button (click)="onClose.emit()"
+            class="text-[#6B5B8C] hover:text-[#2D1B4E] transition-colors">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>//
+  </div>
+
+  <div class="p-5 space-y-6">
+
+    <!-- Error message -->
+    <div *ngIf="errorMessage"
+         class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center space-x-2">
+      <span>⚠️</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- SECTION 1: Medication -->
+    <div>
+      <label class="block text-sm font-semibold text-[#2D1B4E] mb-2">
+        Medication <span class="text-red-500">*</span>
+      </label>
+      <app-medication-selector
+        [selectedMedicament]="selectedMedicament"
+        placeholder="Search by name, INN, or CIP code..."
+        (medicamentSelected)="onMedicamentSelected($event)"
+        (medicamentCleared)="onMedicamentCleared()">
+      </app-medication-selector>
+    </div>
+
+    <!-- SECTION 2: Dates -->
+    <div>
+      <p class="text-sm font-semibold text-[#2D1B4E] mb-3">
+        Treatment Period <span class="text-red-500">*</span>
+      </p>
+
+      <!-- Duration presets -->
+      <div class="flex flex-wrap gap-2 mb-3">
+        <button *ngFor="let preset of durationPresets"
+                (click)="applyDurationPreset(preset.days)"
+                class="text-xs px-3 py-1.5 border border-[#C4B5FD] rounded-full text-[#7C3AED]
+                       hover:bg-[#F3E8FF] transition-colors">
+          {{ preset.label }}
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-[#6B5B8C] mb-1">Start Date</label>
+          <input type="date"
+                 [(ngModel)]="form.dateDebut"
+                 class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                        focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs text-[#6B5B8C] mb-1">End Date</label>
+          <input type="date"
+                 [(ngModel)]="form.dateFin"
+                 [min]="form.dateDebut"
+                 class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                        focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Dosage -->
+    <div>
+      <label class="block text-sm font-semibold text-[#2D1B4E] mb-2">
+        Dosage Instructions <span class="text-red-500">*</span>
+      </label>
+      <input type="text"
+             [(ngModel)]="form.posologie"
+             placeholder="e.g. 1 tablet morning and evening"
+             class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                    placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                    focus:border-transparent">
+    </div>
+
+    <!-- SECTION 4: Instructions -->
+    <div>
+      <label class="block text-sm font-semibold text-[#2D1B4E] mb-2">
+        Additional Instructions
+      </label>
+      <input type="text"
+             [(ngModel)]="form.instructions"
+             placeholder="e.g. Take with food"
+             class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                    placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                    focus:border-transparent">
+    </div>
+
+    <!-- SECTION 5: Renewal -->
+    <div class="bg-[#F9FAFB] rounded-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="text-sm font-semibold text-[#2D1B4E]">Renewable Prescription</p>
+          <p class="text-xs text-[#6B5B8C]">Allow this prescription to be renewed</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox"
+                 [checked]="form.renouvelable"
+                 (change)="onRenouvelableChange($any($event.target).checked)"
+                 class="sr-only peer">
+          <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2
+                      peer-focus:ring-[#7C3AED] rounded-full peer
+                      peer-checked:after:translate-x-full peer-checked:after:border-white
+                      after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                      after:bg-white after:border-gray-300 after:border after:rounded-full
+                      after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7C3AED]">
+          </div>
+        </label>
+      </div>
+
+      <!-- Renewal count — only shown when renewable is on -->
+      <div *ngIf="form.renouvelable" class="flex items-center space-x-3 mt-2">
+        <label class="text-xs text-[#6B5B8C] flex-shrink-0">Number of renewals allowed:</label>
+        <input type="number"
+               [(ngModel)]="form.nombreRenouvellements"
+               [min]="1"
+               [max]="12"
+               class="w-20 px-3 py-1.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                      focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+      </div>
+    </div>
+
+    <!-- SECTION 6: Alzheimer Schedule (collapsible) -->
+    <div>
+      <button type="button"
+              (click)="showAlzheimerFields = !showAlzheimerFields"
+              class="flex items-center justify-between w-full text-left">
+        <div>
+          <p class="text-sm font-semibold text-[#2D1B4E]">🧠 Alzheimer Daily Schedule</p>
+          <p class="text-xs text-[#6B5B8C]">Add simplified daily reminders for the patient</p>
+        </div>
+        <svg class="w-4 h-4 text-[#7C3AED] transition-transform"
+             [class.rotate-180]="showAlzheimerFields"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+
+      <div *ngIf="showAlzheimerFields" class="mt-3 space-y-3 bg-[#F9FAFB] rounded-lg p-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xl w-6 text-center flex-shrink-0">🌅</span>
+          <div class="flex-1">
+            <label class="block text-xs text-[#6B5B8C] mb-1">Morning</label>
+            <input type="text"
+                   [(ngModel)]="form.priseMatin"
+                   placeholder="e.g. Donépézil 10mg"
+                   class="w-full px-3 py-2 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                          placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                          focus:border-transparent">
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="text-xl w-6 text-center flex-shrink-0">☀️</span>
+          <div class="flex-1">
+            <label class="block text-xs text-[#6B5B8C] mb-1">Noon</label>
+            <input type="text"
+                   [(ngModel)]="form.priseMidi"
+                   placeholder="e.g. Mémantine 10mg"
+                   class="w-full px-3 py-2 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                          placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                          focus:border-transparent">
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="text-xl w-6 text-center flex-shrink-0">🌙</span>
+          <div class="flex-1">
+            <label class="block text-xs text-[#6B5B8C] mb-1">Evening</label>
+            <input type="text"
+                   [(ngModel)]="form.priseSoir"
+                   placeholder="e.g. Mémantine 10mg"
+                   class="w-full px-3 py-2 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                          placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                          focus:border-transparent">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-[#6B5B8C] mb-1">Simple Summary for Patient</label>
+          <input type="text"
+                 [(ngModel)]="form.resumeSimple"
+                 placeholder="e.g. 💊 blue pill = morning"
+                 class="w-full px-3 py-2 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                        placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                        focus:border-transparent">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: Doctor Notes (collapsible) -->
+    <div>
+      <button type="button"
+              (click)="showDoctorNotes = !showDoctorNotes"
+              class="flex items-center justify-between w-full text-left">
+        <div>
+          <p class="text-sm font-semibold text-[#2D1B4E]">🔒 Private Doctor Notes</p>
+          <p class="text-xs text-[#6B5B8C]">Only visible to the doctor</p>
+        </div>
+        <svg class="w-4 h-4 text-[#7C3AED] transition-transform"
+             [class.rotate-180]="showDoctorNotes"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+
+      <div *ngIf="showDoctorNotes" class="mt-3">
+        <textarea
+          [(ngModel)]="form.notesMedecin"
+          rows="3"
+          placeholder="Private notes about this prescription..."
+          class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+                 placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+                 focus:border-transparent resize-none">
+        </textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer actions -->
+  <div class="flex items-center justify-between px-5 py-4 border-t border-[#F3E8FF] bg-[#FDFBFF] rounded-b-xl">
+    <button (click)="onClose.emit()"
+            class="px-4 py-2 text-sm text-[#6B5B8C] border border-[#E2E8F0] rounded-lg
+                   hover:bg-[#F9FAFB] transition-colors">
+      Cancel
+    </button>
+
+    <div class="flex items-center space-x-3">
+      <button (click)="checkSafety()"
+              [disabled]="checking || loading"
+              class="px-4 py-2 text-sm font-medium text-[#7C3AED] border border-[#7C3AED] rounded-lg
+                     hover:bg-[#F3E8FF] transition-colors disabled:opacity-50
+                     disabled:cursor-not-allowed flex items-center space-x-2">
+        <div *ngIf="checking"
+             class="w-4 h-4 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin">
+        </div>
+        <span>{{ checking ? 'Checking...' : 'Check Safety' }}</span>
+      </button>
+
+      <button (click)="submit()"
+              [disabled]="loading"
+              class="px-6 py-2 text-sm font-medium text-white bg-[#7C3AED] rounded-lg
+                     hover:bg-[#6D28D9] transition-colors disabled:opacity-50
+                     disabled:cursor-not-allowed flex items-center space-x-2">
+        <div *ngIf="loading"
+             class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
+        </div>
+        <span>{{ loading ? 'Saving...' : 'Issue Prescription' }}</span>
+      </button>
+    </div>
+  </div>
+
+</div>

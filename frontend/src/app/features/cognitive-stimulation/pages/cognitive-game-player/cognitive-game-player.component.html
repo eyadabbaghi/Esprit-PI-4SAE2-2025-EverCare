@@ -1,0 +1,185 @@
+<section class="player-page">
+  <div class="player-shell">
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Preparing therapeutic game...</div>
+
+    <ng-container *ngIf="!isLoading && medicalRecord && game && challenge">
+      <div class="timeout-overlay" *ngIf="timeoutNoticeVisible">
+        <div class="timeout-overlay-card">
+          <strong>Time is up</strong>
+          <p>The session is being recorded automatically.</p>
+        </div>
+      </div>
+
+      <div class="final-countdown-overlay" *ngIf="showFinalCountdown">
+        <div class="final-countdown-circle" [class.final-countdown-danger]="isTimerDanger">
+          {{ remainingSeconds }}
+        </div>
+      </div>
+
+      <div class="page-header" [ngClass]="gameThemeClass">
+        <div>
+          <a class="back-link" [routerLink]="['/cognitive-stimulation/medical-record', medicalRecord.id]">← Back to Cognitive Plan</a>
+          <h2>{{ game.title }}</h2>
+          <p>{{ game.description }}</p>
+          <div class="hero-support-copy">{{ gameHelperText }}</div>
+        </div>
+        <div class="hero-badges">
+          <span class="hero-badge">Level {{ game.difficultyLevel }}/5</span>
+          <span class="hero-badge">{{ game.estimatedDuration }} min</span>
+          <span class="hero-badge timer-badge" [class.timer-critical]="isTimerCritical" [class.timer-danger]="isTimerDanger" *ngIf="phase === 'question'">
+            Time Left {{ formattedRemainingTime }}
+          </span>
+        </div>
+      </div>
+
+      <div class="layout-grid">
+        <article class="panel gameplay-card" [ngClass]="gameThemeClass">
+          <div class="game-banner">
+            <div class="game-banner-visual">
+              <img [src]="gameVisual" [alt]="game.title" />
+            </div>
+            <div class="game-banner-copy">
+              <span class="overline">Therapeutic Game</span>
+              <h3>{{ supportTitle }}</h3>
+              <p>{{ game.instructions }}</p>
+            </div>
+          </div>
+
+          <div class="card-head">
+            <div>
+              <span class="overline">Session Goal</span>
+              <h3>{{ challenge.prompt }}</h3>
+            </div>
+          </div>
+
+          <ng-container [ngSwitch]="phase">
+            <div *ngSwitchCase="'preview'" class="memory-preview">
+              <p>{{ challenge.intro }}</p>
+              <div class="memory-chip-grid">
+                <span class="memory-chip" *ngFor="let item of challenge.memoryPreview">{{ item }}</span>
+              </div>
+              <div class="timer-intro">
+                <span class="hero-badge">Game Time: {{ game.estimatedDuration }} min</span>
+                <p>The timer will start when you launch the activity.</p>
+              </div>
+              <button type="button" class="btn-solid" (click)="startChallenge()">I Memorized It, Start</button>
+            </div>
+
+            <ng-container *ngSwitchCase="'question'">
+              <div *ngIf="isInteractiveMemoryGame; else standardQuestion" class="memory-play">
+                <div class="question-box" [class.question-box-danger]="isTimerDanger">
+                  <div class="question-topline">
+                    <span class="question-label">Memory Board</span>
+                    <span class="timer-inline" [class.timer-critical]="isTimerCritical" [class.timer-danger]="isTimerDanger">{{ formattedRemainingTime }}</span>
+                  </div>
+                  <h3>{{ challenge.prompt }}</h3>
+                  <div class="memory-progress">
+                    <span>{{ matchedPairs }}/{{ totalMemoryPairs }} pairs</span>
+                    <span>{{ memoryTurns }} turns</span>
+                  </div>
+                  <p class="timeout-hint" *ngIf="isTimerCritical">Time is almost over. Try to finish the board.</p>
+                </div>
+
+                <div class="memory-board">
+                  <button
+                    type="button"
+                    class="memory-card-button"
+                    *ngFor="let card of memoryCards"
+                    [class.flipped]="card.flipped || card.matched"
+                    [class.matched]="card.matched"
+                    [disabled]="card.matched || isResolvingMemoryPair"
+                    (click)="flipMemoryCard(card)">
+                    <span class="memory-card-inner">
+                      <span class="memory-card-face memory-card-front">?</span>
+                      <span class="memory-card-face memory-card-back">{{ card.value }}</span>
+                    </span>
+                  </button>
+                </div>
+
+                <p class="memory-hint">Flip two cards at a time and find every matching pair before the timer ends.</p>
+              </div>
+
+              <ng-template #standardQuestion>
+                <form [formGroup]="feedbackForm" (ngSubmit)="submitGame()" class="play-form">
+                  <div class="question-box" [class.question-box-danger]="isTimerDanger">
+                    <div class="question-topline">
+                      <span class="question-label">Question</span>
+                      <span class="timer-inline" [class.timer-critical]="isTimerCritical" [class.timer-danger]="isTimerDanger">{{ formattedRemainingTime }}</span>
+                    </div>
+                    <h3>{{ challenge.prompt }}</h3>
+                    <p class="timeout-hint" *ngIf="isTimerCritical">Time is almost over. Choose your answer.</p>
+                  </div>
+
+                  <div class="options-grid">
+                    <button
+                      type="button"
+                      class="option-card"
+                      *ngFor="let option of challenge.options"
+                      [class.selected]="selectedAnswer === option"
+                      (click)="feedbackForm.patchValue({ selectedAnswer: option })">
+                      {{ option }}
+                    </button>
+                  </div>
+
+                  <button type="submit" class="btn-solid" [disabled]="!canSubmit">Submit Answer</button>
+                </form>
+              </ng-template>
+            </ng-container>
+
+            <div *ngSwitchCase="'result'" class="result-card">
+              <div class="result-badge" [class.good]="isCorrect" [class.bad]="!isCorrect && !hasTimedOut" [class.timeout]="hasTimedOut">
+                {{ hasTimedOut ? 'Time is up' : (isCorrect ? 'Correct Answer' : 'Answer to Review') }}
+              </div>
+              <h3>Score: {{ computedScore }}/100</h3>
+              <p class="result-answer">
+                Your Answer: <strong>{{ createdSession?.playerAnswer || selectedAnswer || 'No answer' }}</strong>
+              </p>
+              <p class="result-answer">
+                Expected Answer: <strong>{{ challenge.correctAnswer }}</strong>
+              </p>
+              <p class="explanation">{{ challenge.explanation }}</p>
+              <div class="result-meta">
+                <span>Time: {{ elapsedSeconds }} sec</span>
+                <span *ngIf="isInteractiveMemoryGame">Pairs: {{ matchedPairs }}/{{ totalMemoryPairs }}</span>
+                <span *ngIf="isInteractiveMemoryGame">Turns: {{ memoryTurns }}</span>
+                <span *ngIf="createdSession">Session recorded on {{ createdSession.playedAt | date: 'dd/MM/yyyy, HH:mm' }}</span>
+              </div>
+              <div class="result-actions">
+                <button type="button" class="btn-muted" (click)="replay()">Play Again</button>
+                <a class="btn-link" [routerLink]="['/cognitive-stimulation/medical-record', medicalRecord.id]">Back to Plan</a>
+              </div>
+            </div>
+          </ng-container>
+        </article>
+
+        <aside class="panel support-card" [ngClass]="gameThemeClass">
+          <span class="overline">Therapeutic Guidance</span>
+          <h3>How to use this session</h3>
+          <ul>
+            <li>Let the patient read or listen to the instructions calmly.</li>
+            <li>Avoid intervening too quickly to measure real autonomy.</li>
+            <li>Focus on the answer and the remaining time.</li>
+            <li>The result will be added automatically to cognitive progress.</li>
+          </ul>
+
+          <div class="support-visual">
+            <img [src]="gameVisual" [alt]="game.title" />
+          </div>
+
+          <div class="support-metrics">
+            <div>
+              <span>Difficulty</span>
+              <strong>{{ game.difficultyLevel }}/5</strong>
+            </div>
+            <div>
+              <span>Target Duration</span>
+              <strong>{{ game.estimatedDuration }} min</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </ng-container>
+  </div>
+</section>

@@ -1,45 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>tn.esprit</groupId>
+    <groupId>com.Brainiacs</groupId>
     <artifactId>microservices-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <!-- SPRING BOOT GLOBAL -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.2.2</version>
         <relativePath/>
     </parent>
 
-    <!-- GLOBAL CONFIG -->
     <properties>
         <java.version>17</java.version>
-        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+
+        <!-- SonarQube Configuration -->
+        <sonar.host.url>http://10.0.2.15:9000</sonar.host.url>
+        <sonar.projectKey>evercare-parent</sonar.projectKey>
+        <sonar.projectName>EverCare - Parent</sonar.projectName>
+        <sonar.java.source>17</sonar.java.source>
+        <sonar.modules>Eureka-service,ApiGateway,notification-service,Dailyme-service,Activities,Alerts,configServer,evercare-ai-service,communication-service,blog-service,appointment-service,User,medical-record-service,cognitive-stimulation-service,Tracking-service</sonar.modules>
     </properties>
 
-    <!-- MODULES -->
+    <!-- MUST match your folder names exactly -->
     <modules>
-        <module>appointment-service</module>
+        <module>Eureka-service</module>
+        <module>ApiGateway</module>
+        <module>notification-service</module>
+        <module>Dailyme-service</module>
         <module>Activities</module>
         <module>Alerts</module>
+        <module>configServer</module>
+        <module>evercare-ai-service</module>
+        <module>communication-service</module>
+        <module>blog-service</module>
+        <module>appointment-service</module>
         <module>User</module>
-        <module>Dailyme-service</module>
-        <module>ApiGateway</module>
-        <module>Eureka-service</module>
+        <module>medical-record-service</module>
+        <module>cognitive-stimulation-service</module>
+        <module>Tracking-service</module>
     </modules>
 
-    <!-- GLOBAL DEPENDENCIES VERSION -->
     <dependencyManagement>
         <dependencies>
-
-            <!-- Spring Cloud -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -47,9 +56,44 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -57,7 +101,34 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <!-- SonarQube Scanner Plugin -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.10.0.2594</version>
+            </plugin>
+
+            <!-- JaCoCo for test coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
 </project>

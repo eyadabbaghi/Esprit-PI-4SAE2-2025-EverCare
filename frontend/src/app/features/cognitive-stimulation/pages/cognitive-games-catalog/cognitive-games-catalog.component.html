@@ -1,0 +1,193 @@
+<section class="cognitive-page">
+  <div class="cognitive-shell">
+    <div class="page-header">
+      <div>
+        <h2>Cognitive Stimulation Catalog</h2>
+        <p>Browse and manage therapeutic games proposed to patients based on their cognitive level.</p>
+      </div>
+      <a routerLink="/cognitive-stimulation" class="btn-muted">My Plan</a>
+    </div>
+
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Loading catalog...</div>
+    <div *ngIf="!canManageGames && !canLaunchGames" class="status-message info">
+      Open your medical record first to launch a therapeutic activity linked to your cognitive follow-up.
+    </div>
+
+    <div class="panel editor-panel" *ngIf="canManageGames">
+      <div class="editor-head">
+        <div>
+          <h3>{{ editingGameId ? 'Edit Therapeutic Game' : 'Create Therapeutic Game' }}</h3>
+          <p>Reference the exercises used for patients' cognitive stimulation.</p>
+        </div>
+        <button
+          *ngIf="editingGameId"
+          type="button"
+          class="btn-link"
+          (click)="resetEditor()">
+          Cancel Editing
+        </button>
+      </div>
+
+      <form [formGroup]="gameForm" (ngSubmit)="submitGame()" class="editor-form">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="gameTitle">Title</label>
+            <input id="gameTitle" type="text" formControlName="title" />
+          </div>
+
+          <div class="field">
+            <label for="gameType">Type</label>
+            <select id="gameType" formControlName="gameType">
+              <option *ngFor="let option of gameTypeOptions" [value]="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="gameDifficulty">Difficulty</label>
+            <input id="gameDifficulty" type="number" min="1" max="5" formControlName="difficultyLevel" />
+          </div>
+
+          <div class="field">
+            <label for="gameDuration">Estimated Duration (min)</label>
+            <input id="gameDuration" type="number" min="1" max="60" formControlName="estimatedDuration" />
+          </div>
+
+          <div class="field toggle-field">
+            <label>
+              <input type="checkbox" formControlName="active" />
+              Active Game
+            </label>
+          </div>
+
+          <div class="field full">
+            <label for="gameDescription">Description</label>
+            <textarea id="gameDescription" rows="3" formControlName="description"></textarea>
+          </div>
+
+          <div class="field full">
+            <label for="gameInstructions">Instructions</label>
+            <textarea id="gameInstructions" rows="4" formControlName="instructions"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-solid" [disabled]="isSubmitting">
+          {{ editingGameId ? 'Update Game' : 'Create Game' }}
+        </button>
+      </form>
+    </div>
+
+    <div class="panel filter-panel">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="searchTerm">Search</label>
+          <input
+            id="searchTerm"
+            type="text"
+            [(ngModel)]="searchTerm"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="applyFilters()"
+            placeholder="Title, description, or instructions" />
+        </div>
+
+        <div class="field">
+          <label for="selectedType">Type</label>
+          <select
+            id="selectedType"
+            [(ngModel)]="selectedType"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="applyFilters()">
+            <option value="ALL">All</option>
+            <option *ngFor="let option of gameTypeOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="selectedDifficulty">Difficulty</label>
+          <select
+            id="selectedDifficulty"
+            [(ngModel)]="selectedDifficulty"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="applyFilters()">
+            <option value="ALL">All</option>
+            <option *ngFor="let level of [1, 2, 3, 4, 5]" [ngValue]="level">Level {{ level }}</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="selectedActive">Status</label>
+          <select
+            id="selectedActive"
+            [(ngModel)]="selectedActive"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="applyFilters()">
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="games-grid" *ngIf="!isLoading && filteredGames.length > 0">
+      <article class="panel game-card" [ngClass]="themeClassForGame(game)" *ngFor="let game of filteredGames">
+        <div class="game-visual">
+          <img [src]="imageForGame(game)" [alt]="game.title" />
+          <div class="visual-overlay">
+            <span class="visual-pill">{{ spotlightLabelForGame(game) }}</span>
+            <span class="visual-type">{{ labelForType(game.gameType) }}</span>
+          </div>
+        </div>
+
+        <div class="game-card-head">
+          <div>
+            <span class="overline">{{ labelForType(game.gameType) }}</span>
+            <h3>{{ game.title }}</h3>
+          </div>
+          <span class="badge" [class.active]="game.active" [class.archived]="!game.active">
+            {{ game.active ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <p class="game-description">{{ game.description }}</p>
+
+        <div class="game-story">
+          <strong>Therapeutic angle</strong>
+          <p>{{ helperTextForGame(game) }}</p>
+        </div>
+
+        <div class="hero-chips">
+          <div class="chip">
+            <span>Difficulty</span>
+            <strong>{{ game.difficultyLevel }}/5</strong>
+          </div>
+          <div class="chip">
+            <span>Duration</span>
+            <strong>{{ game.estimatedDuration }} min</strong>
+          </div>
+        </div>
+
+        <div class="instructions-box">
+          <span>Instructions</span>
+          <p>{{ game.instructions }}</p>
+        </div>
+
+        <div class="card-actions" *ngIf="canManageGames || (canLaunchGames && game.active)">
+          <a
+            *ngIf="canLaunchGames && game.active"
+            class="btn-solid"
+            [routerLink]="buildPlayLink(game)">
+            Play Now
+          </a>
+          <button *ngIf="canManageGames" type="button" class="btn-link dark" (click)="startEdit(game)">Edit</button>
+          <button *ngIf="canManageGames" type="button" class="btn-link danger" (click)="deleteGame(game)">Delete</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="panel empty-panel" *ngIf="!isLoading && filteredGames.length === 0">
+      <p>No therapeutic game matches the selected filters.</p>
+    </div>
+  </div>
+</section>

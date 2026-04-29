@@ -1,0 +1,165 @@
+<section class="record-list">
+  <div class="list-shell">
+    <div class="list-header">
+      <div>
+        <h2>{{ isPatientRole ? 'My Medical Record' : 'Medical Records' }}</h2>
+        <p>
+          {{ isPatientRole
+          ? 'Access only your own medical record.'
+          : 'Manage patient records, their status, and access to details.' }}
+        </p>
+      </div>
+      <a *ngIf="permissions.canCreate" routerLink="/medical-record/new" class="btn-solid">
+        New Record
+      </a>
+    </div>
+
+    <div class="panel filter-panel" *ngIf="!isPatientRole">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="patientSearch">Search by Patient Identifier</label>
+          <input
+            id="patientSearch"
+            type="text"
+            [formControl]="searchControl"
+            placeholder="Enter the patient identifier" />
+        </div>
+
+        <div class="field">
+          <label for="activeFilter">Status Filter</label>
+          <select
+            id="activeFilter"
+            [value]="activeFilter"
+            (change)="changeFilter($any($event.target).value)">
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-outline" (click)="searchByPatientId()">Search</button>
+          <button type="button" class="btn-muted" (click)="resetSearch()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid" *ngIf="!isPatientRole">
+      <article class="stat-card critical">
+        <p class="stat-label">Critical</p>
+        <strong class="stat-value">{{ criticalCount }}</strong>
+        <span class="stat-note">Reports with active alerts</span>
+      </article>
+      <article class="stat-card active">
+        <p class="stat-label">Active</p>
+        <strong class="stat-value">{{ activeCount }}</strong>
+        <span class="stat-note">Active records</span>
+      </article>
+      <article class="stat-card total">
+        <p class="stat-label">Total</p>
+        <strong class="stat-value">{{ totalCount }}</strong>
+        <span class="stat-note">All records</span>
+      </article>
+      <article class="stat-card archived">
+        <p class="stat-label">Archived</p>
+        <strong class="stat-value">{{ archivedCount }}</strong>
+        <span class="stat-note">Archived records</span>
+      </article>
+    </div>
+    <div *ngIf="!isPatientRole && isStatsLoading" class="status-message info">Loading statistics...</div>
+
+    <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="isLoading" class="status-message info">Loading records...</div>
+
+    <div class="records-grid" *ngIf="!isLoading && records.length > 0">
+      <article class="panel record-card" *ngFor="let record of records">
+        <div class="record-card-head">
+          <div>
+            <p class="record-label">Patient</p>
+            <h3>{{ getPatientDisplayName(record) }}</h3>
+          </div>
+          <span class="badge" [class.active]="record.active" [class.archived]="!record.active">
+            {{ record.active ? 'Active' : 'Archived' }}
+          </span>
+        </div>
+
+        <div class="record-hero">
+          <div class="record-chip stage-chip">
+            <span>Stage</span>
+            <strong>{{ record.alzheimerStage || '-' }}</strong>
+          </div>
+          <div class="record-chip">
+            <span>Blood Group</span>
+            <strong>{{ record.bloodGroup || '-' }}</strong>
+          </div>
+          <div class="record-chip muted-chip">
+            <span>Updated</span>
+            <strong>{{ record.updatedAt | date: 'dd/MM/yyyy, HH:mm' }}</strong>
+          </div>
+        </div>
+
+        <div class="record-meta">
+          <div class="meta-item">
+            <span>Emergency Contact</span>
+            <strong>{{ record.emergencyContactName || '-' }}</strong>
+          </div>
+          <div class="meta-item">
+            <span>Phone</span>
+            <strong>{{ record.emergencyContactPhone || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="record-actions">
+          <a *ngIf="permissions.canViewDetails" [routerLink]="['/medical-record', record.id]" class="btn-link">Details</a>
+          <a
+            *ngIf="currentRole === 'DOCTOR' || currentRole === 'ADMIN'"
+            [routerLink]="['/doctor/reports']"
+            [queryParams]="{ patientId: record.patientId }"
+            class="btn-link">
+            Results
+          </a>
+          <a *ngIf="permissions.canUpdate" [routerLink]="['/medical-record', record.id, 'edit']" class="btn-link dark">Edit</a>
+          <button
+            *ngIf="permissions.canArchive"
+            type="button"
+            class="btn-link danger"
+            [disabled]="!record.active"
+            (click)="archive(record)">
+            Archive
+          </button>
+          <button
+            *ngIf="currentRole === 'ADMIN'"
+            type="button"
+            class="btn-link success"
+            [disabled]="record.active"
+            (click)="restore(record)">
+            Restore
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <div class="panel empty-panel" *ngIf="!isLoading && records.length === 0">
+      <p class="empty-row">
+        {{ isPatientRole ? 'No record is linked to your account.' : 'No records found.' }}
+      </p>
+    </div>
+
+    <div class="pager" *ngIf="!isSearchMode && !isPatientRole">
+      <span>Total: {{ totalElements }}</span>
+      <div class="pager-controls">
+        <button type="button" class="btn-muted small" (click)="previousPage()" [disabled]="page === 0">Previous</button>
+        <span>Page {{ page + 1 }} / {{ totalPages || 1 }}</span>
+        <button type="button" class="btn-muted small" (click)="nextPage()" [disabled]="page + 1 >= totalPages">Next</button>
+      </div>
+    </div>
+
+    <p class="search-hint" *ngIf="isSearchMode && !isPatientRole">
+      Search mode is active. Reset to return to pagination.
+    </p>
+
+    <div *ngIf="!permissions.canRead" class="status-message warning">
+      You are not authorized to access medical records.
+    </div>
+  </div>
+</section>

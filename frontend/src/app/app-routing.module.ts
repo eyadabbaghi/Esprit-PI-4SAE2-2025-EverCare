@@ -1,33 +1,34 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import {LoginComponent} from './features/front-office/pages/login/login.component';
+import {RegisterComponent} from './features/front-office/pages/register/register.component';
+import {AppointmentsPageComponent} from './features/appointments/pages/appointments-page/appointments-page.component';
 
 const routes: Routes = [
 
 
-  // ✅ 2) Admin
-  {
-    path: 'admin',
-    loadChildren: () =>
-      import('./features/back-office/back-office.module').then(
-        (m) => m.BackOfficeModule
-      ),
-  },
-
-  // ✅ 3) Front-office last for ''
   {
     path: '',
     loadChildren: () =>
       import('./features/front-office/front-office.module').then(
-        (m) => m.FrontOfficeModule
+        (m) => m.FrontOfficeModule,
       ),
   },
-
-  // ✅ 4) Wildcard always last
-  { path: '**', redirectTo: '' },
+  {
+    path: '',
+    loadChildren: () =>
+      import('./features/back-office/back-office.module').then(
+        (m) => m.BackOfficeModule,
+      ),
+  },
+  {
+    path: '**',
+    redirectTo: '',
+  },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule],
+  exports: [RouterModule]
 })
 export class AppRoutingModule {}

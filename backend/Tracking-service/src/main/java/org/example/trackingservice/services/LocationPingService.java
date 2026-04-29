@@ -37,7 +37,10 @@ public class LocationPingService {
     // ================= CREATE =================
     public LocationPing add(LocationPing ping) {
 
-        patientValidationService.validatePatientExists(ping.getPatientId());
+        var validation = patientValidationService.validatePatientExists(ping.getPatientId());
+        if (validation != null && validation.getUserId() == null) {
+            throw new RuntimeException("Invalid patient");
+        }
         ping = logic.processPing(ping);
 
         return repo.save(ping);
@@ -45,19 +48,25 @@ public class LocationPingService {
 
     // ================= HISTORY =================
     public List<LocationPing> getByPatient(String patientId) {
-        patientValidationService.validatePatientExists(patientId);
+        if (patientId == null || patientId.isEmpty()) {
+            return repo.findAll();
+        }
         return repo.findByPatientIdOrderByTimestampDesc(patientId);
     }
 
     // ================= CLUSTERS =================
     public List<double[]> getClusters(String patientId) {
-        patientValidationService.validatePatientExists(patientId);
+        if (patientId == null || patientId.isEmpty()) {
+            return List.of();
+        }
         return logic.detectClusters(patientId);
     }
 
     // ================= DANGER DURATION =================
     public long getDangerDurationMinutes(String patientId) {
-        patientValidationService.validatePatientExists(patientId);
+        if (patientId == null || patientId.isEmpty()) {
+            return 0;
+        }
         return logic.getDangerDurationMinutes(patientId);
     }
 
@@ -68,7 +77,9 @@ public class LocationPingService {
     // ================= GET LATEST =================
     public LocationPing getLatest(String patientId) {
 
-        patientValidationService.validatePatientExists(patientId);
+        if (patientId == null || patientId.isEmpty()) {
+            return null;
+        }
         return getLatestInternal(patientId);
     }
 

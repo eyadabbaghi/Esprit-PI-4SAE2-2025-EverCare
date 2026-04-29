@@ -1,0 +1,15 @@
+mat-dialog-content {
+  min-width: 500px;
+  @media (max-width: 600px) {
+    min-width: 90vw;
+  }
+}
+
+/* Purple, soft, bubbly dialog styling */
+::ng-deep .mat-dialog-container {
+  @apply p-6 rounded-2xl shadow-2xl 
+         bg-gradient-to-br from-[#F3E8FF] to-[#EDE9FE] 
+         font-sans;
+  min-width: 500px;
+  max-width: 700px;
+}

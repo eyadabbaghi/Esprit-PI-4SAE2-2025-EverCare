@@ -1,330 +1,296 @@
-<!-- appointments.component.html -->
 <div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl font-bold text-[#2D1B4E] mb-2">Appointments</h1>
-        <p class="text-[#6B5B8C]">Manage your medical appointments and schedule</p>
-      </div>
+    <!-- Header with tabs -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4  " >
 
-      <!-- Add Appointment Dialog Trigger -->
-      <button
-        class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center"
-        (click)="isAddDialogOpen = true">
-        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        Schedule Appointment
-      </button>
+
+      <!-- Tabs -->
+      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
+        <button class="px-4 py-2 rounded-md transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'my-appointments'"
+                [class.text-white]="activeTab === 'my-appointments'"
+                [class.text-[#2D1B4E]]="activeTab !== 'my-appointments'"
+                (click)="activeTab = 'my-appointments'">
+          📅 My Appointments
+        </button>
+        <button class="px-4 py-2 rounded-md transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'book-appointment'"
+                [class.text-white]="activeTab === 'book-appointment'"
+                [class.text-[#2D1B4E]]="activeTab !== 'book-appointment'"
+                (click)="activeTab = 'book-appointment'">
+          ➕ Book Appointment
+        </button>
+      </div>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6">
-
-      <!-- Calendar Card -->
-      <div class="lg:col-span-2 bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-[#2D1B4E]">{{ monthName }}</h3>
-            <div class="flex space-x-2">
-              <button
-                class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
-                (click)="previousMonth()">
-                <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M15 18l-6-6 6-6"/>
-                </svg>
-              </button>
-              <button
-                class="p-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
-                (click)="nextMonth()">
-                <svg class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Calendar Grid -->
-          <div class="grid grid-cols-7 gap-2">
-            <!-- Day headers -->
-            <div *ngFor="let day of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']"
-                 class="text-center text-sm font-semibold text-[#6B5B8C] py-2">
-              {{ day }}
-            </div>
-
-            <!-- Empty cells -->
-            <div *ngFor="let _ of [].constructor(startingDayOfWeek)" class="aspect-square"></div>
-
-            <!-- Days -->
-            <div *ngFor="let day of [].constructor(daysInMonth); let i = index"
-                 class="aspect-square p-1 rounded-lg border transition-all cursor-pointer"
-                 [class]="isToday(currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + (i + 1))
-                          ? 'border-[#7C3AED] bg-[#F3E8FF]'
-                          : 'border-[#E5E7EB] hover:border-[#C4B5FD] hover:bg-[#FAF8FC]'">
-
-              <div class="text-sm"
-                   [class]="isToday(currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + (i + 1))
-                            ? 'font-bold text-[#7C3AED]'
-                            : 'text-[#2D1B4E]'">
-                {{ i + 1 }}
-              </div>
-
-              <!-- Appointments for this day -->
-              <div *ngIf="getAppointmentsForDate(currentDate.getFullYear() + '-' +
-                                                (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                                                (i + 1).toString().padStart(2, '0')).length > 0"
-                   class="mt-1 space-y-1">
-
-                <ng-container *ngFor="let apt of getAppointmentsForDate(currentDate.getFullYear() + '-' +
-                                                       (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                                                       (i + 1).toString().padStart(2, '0')) | slice:0:2">
-                  <div class="text-xs bg-[#7C3AED] text-white rounded px-1 py-0.5 truncate"
-                       [title]="apt.title">
-                    {{ apt.title }}
-                  </div>
-                </ng-container>
-
-                <div *ngIf="getAppointmentsForDate(currentDate.getFullYear() + '-' +
-                                                  (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                                                  (i + 1).toString().padStart(2, '0')).length > 2"
-                     class="text-xs text-[#6B5B8C]">
-                  +{{ getAppointmentsForDate(currentDate.getFullYear() + '-' +
-                  (currentDate.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                  (i + 1).toString().padStart(2, '0')).length - 2 }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Loading State -->
+    <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
+        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-[#2D1B4E]">Loading...</span>
       </div>
+    </div>
 
-      <!-- Upcoming Appointments Card -->
-      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
-        <div class="p-6">
-          <h3 class="text-lg font-semibold text-[#2D1B4E] mb-1">Upcoming</h3>
-          <p class="text-sm text-[#6B5B8C] mb-4">{{ upcomingAppointments.length }} scheduled</p>
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center justify-between">
+      <span>{{ errorMessage }}</span>
+      <button class="text-red-500 hover:text-red-700" (click)="errorMessage = ''">✕</button>
+    </div>
 
-          <div class="space-y-4">
-            <ng-container *ngFor="let apt of upcomingAppointments | slice:0:5">
-              <div class="p-4 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB] hover:border-[#C4B5FD] transition-colors">
-                <div class="flex items-start justify-between mb-2">
-                  <h4 class="font-semibold text-[#2D1B4E]">{{ apt.title }}</h4>
-                  <svg *ngIf="apt.type === 'video'" class="w-4 h-4 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M22 6l-6 4 6 4V6z"/><rect x="2" y="4" width="16" height="16" rx="2"/>
-                  </svg>
-                  <svg *ngIf="apt.type === 'in-person'" class="w-4 h-4 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M21 10.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2v-8.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><circle cx="12" cy="15" r="2"/>
-                  </svg>
-                </div>
+    <!-- ========== TAB 1: MY APPOINTMENTS (EXISTING) ========== -->
+    <div *ngIf="activeTab === 'my-appointments'" class="space-y-6">
 
-                <div class="space-y-1 text-sm text-[#6B5B8C]">
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    <span>{{ apt.doctor }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
-                    </svg>
-                    <span>{{ apt.date }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                    </svg>
-                    <span>{{ apt.time }}</span>
-                  </div>
-                </div>
+      <!-- Filters Component (existing) -->
+      <app-appointment-filters
+        [doctors]="doctors"
+        (filtersChanged)="onFiltersChanged($event)">
+      </app-appointment-filters>
 
-                <div *ngIf="apt.notes" class="mt-2 text-xs text-[#6B5B8C] bg-[#F3E8FF] p-2 rounded">
-                  {{ apt.notes }}
-                </div>
-              </div>
-            </ng-container>
-
-            <div *ngIf="upcomingAppointments.length === 0" class="text-center py-8">
-              <svg class="w-12 h-12 text-[#C4B5FD] mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <!-- Stats Cards (existing) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Total</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ appointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                 <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
               </svg>
-              <p class="text-[#6B5B8C]">No upcoming appointments</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Upcoming</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ upcomingAppointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#E6F0FA] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2D1B4E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Completed</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ pastAppointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#F1F5F9] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Main Grid with Calendar and Upcoming List (existing) -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Calendar Component (existing) -->
+        <div class="lg:col-span-2">
+          <app-calendar
+            [appointments]="appointments"
+            [currentDate]="currentDate"
+            (monthChanged)="onMonthChanged($event)"
+            (dateSelected)="onDateSelected($event)">
+          </app-calendar>
+        </div>
+
+        <!-- Upcoming List Component (existing) -->
+        <app-appointment-list
+          title="Upcoming"
+          [appointments]="upcomingAppointments"
+          emptyMessage="No upcoming appointments"
+          addButtonText="Book appointment"
+          [showAddButton]="true"
+          [showActionButtons]="true"
+          [scrollable]="true"
+          (onCardClick)="viewAppointmentDetails($event)"
+          (onAction)="handleAppointmentAction($event)"
+          (onAddClick)="activeTab = 'book-appointment'">
+        </app-appointment-list>
+      </div>
+
+      <!-- Past Appointments List (existing) -->
+      <div id="appointments-section">
+        <app-appointment-list
+          title="History"
+          [appointments]="pastAppointments"
+          emptyMessage="No past appointments"
+          [showActionButtons]="false"
+          [scrollable]="true"
+          (onCardClick)="viewAppointmentDetails($event)">
+        </app-appointment-list>
+      </div>
     </div>
 
-    <!-- All Appointments List -->
-    <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
-      <div class="p-6">
-        <h3 class="text-lg font-semibold text-[#2D1B4E] mb-4">All Appointments</h3>
+    <!-- ========== TAB 2: BOOK APPOINTMENT (NEW) ========== -->
+    <div *ngIf="activeTab === 'book-appointment'" class="space-y-6">
 
-        <div class="space-y-3">
-          <div *ngFor="let apt of appointments"
-               class="p-4 rounded-lg border transition-all"
-               [class]="apt.status === 'completed'
-                        ? 'bg-[#F9FAFB] border-[#E5E7EB] opacity-60'
-                        : 'bg-white border-[#C4B5FD] hover:shadow-md'">
+      <!-- Tab header -->
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <h2 class="text-xl font-semibold text-[#2D1B4E] mb-2">Book a New Appointment</h2>
+        <p class="text-[#6B5B8C]">Choose a doctor and an available time slot</p>
+      </div>
 
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div class="flex-1">
-                <div class="flex items-center space-x-3 mb-2">
-                  <h4 class="font-semibold text-[#2D1B4E]">{{ apt.title }}</h4>
-
-                  <!-- Status Badge -->
-                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
-                        [class]="apt.status === 'upcoming' ? 'bg-[#7C3AED] text-white' : 'bg-[#F1F5F9] text-[#2D1B4E]'">
-                    {{ apt.status }}
-                  </span>
-
-                  <!-- Type Badge -->
-                  <span class="inline-flex items-center rounded-md border border-[#C4B5FD] px-2 py-0.5 text-xs font-medium">
-                    {{ apt.type === 'video' ? '📹 Video' : '🏥 In-Person' }}
-                  </span>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-2 text-sm text-[#6B5B8C]">
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    <span>{{ apt.doctor }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                      <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
-                    </svg>
-                    <span>{{ apt.date }} at {{ apt.time }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M21 10.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2v-8.5"/>
-                      <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><circle cx="12" cy="15" r="2"/>
-                    </svg>
-                    <span>{{ apt.location }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="apt.status === 'upcoming'" class="flex space-x-2">
-                <button class="px-3 py-1 border border-[#C4B5FD] rounded-md text-sm hover:bg-[#F3E8FF] transition-colors">
-                  Reschedule
-                </button>
-                <button class="px-3 py-1 border border-[#C06C84] text-[#C06C84] rounded-md text-sm hover:bg-[#FEF2F2] transition-colors">
-                  Cancel
-                </button>
-              </div>
-            </div>
+      <!-- Step indicator -->
+      <div class="flex items-center justify-between max-w-2xl mx-auto">
+        <div class="flex items-center flex-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 1"
+               [class.text-white]="bookingStep >= 1"
+               [class.bg-gray-200]="bookingStep < 1">
+            1
+          </div>
+          <div class="flex-1 h-1 mx-2 transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 2"
+               [class.bg-gray-200]="bookingStep < 2"></div>
+        </div>
+        <div class="flex items-center flex-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 2"
+               [class.text-white]="bookingStep >= 2"
+               [class.bg-gray-200]="bookingStep < 2">
+            2
+          </div>
+          <div class="flex-1 h-1 mx-2 transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 3"
+               [class.bg-gray-200]="bookingStep < 3"></div>
+        </div>
+        <div class="flex items-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 3"
+               [class.text-white]="bookingStep >= 3"
+               [class.bg-gray-200]="bookingStep < 3">
+            3
           </div>
         </div>
       </div>
-    </div>
-  </div>
+      <div class="flex justify-between max-w-2xl mx-auto text-sm text-[#6B5B8C] px-2">
+        <span>Choose Doctor</span>
+        <span>Choose Slot</span>
+        <span>Confirm</span>
+      </div>
 
-  <!-- Add Appointment Dialog -->
-  <div *ngIf="isAddDialogOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black/50" (click)="isAddDialogOpen = false"></div>
+      <!-- Step 1: Doctor Selection -->
+      <div *ngIf="bookingStep === 1" class="grid lg:grid-cols-3 gap-6">
+        <!-- Doctor list with availability -->
+        <div class="lg:col-span-2">
+          <app-doctor-availability
+            [doctors]="doctors"
+            [selectedDoctorId]="selectedDoctorId"
+            (doctorSelected)="onDoctorSelected($event)">
+          </app-doctor-availability>
+        </div>
 
-    <!-- Dialog Content -->
-    <div class="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-6">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h2 class="text-xl font-semibold text-[#2D1B4E]">Schedule New Appointment</h2>
-            <p class="text-sm text-[#6B5B8C] mt-1">Fill in the appointment details below</p>
-          </div>
-          <button class="p-1 hover:bg-[#F3E8FF] rounded-full" (click)="isAddDialogOpen = false">
-            <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M18 6L6 18M6 6l12 12"/>
+        <!-- Quick preview -->
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <h3 class="font-semibold text-[#2D1B4E] mb-3">Your Selection</h3>
+          <div *ngIf="!selectedDoctorId" class="text-center text-[#6B5B8C] py-8">
+            <svg class="w-12 h-12 mx-auto mb-3 text-[#C4B5FD]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="8" r="4"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/>
             </svg>
-          </button>
+            <p>Select a doctor</p>
+          </div>
+          <div *ngIf="selectedDoctorId" class="space-y-3">
+            <div class="flex items-center space-x-3">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
+              <div>
+                <h4 class="font-semibold">{{ getSelectedDoctor().name }}</h4>
+              </div>
+            </div>
+            <button class="w-full bg-[#7C3AED] text-white py-2 rounded-md hover:bg-[#6D28D9] transition-colors"
+                    (click)="bookingStep = 2">
+              Continue
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div class="space-y-4">
-          <!-- Title -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-[#1E293B]">Appointment Title</label>
-            <input
-              type="text"
-              [(ngModel)]="newAppointment.title"
-              placeholder="e.g., General Checkup"
-              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-          </div>
+      <!-- Step 2: Slot Selection -->
+      <div *ngIf="bookingStep === 2">
+        <app-weekly-schedule
+          [doctorId]="selectedDoctorId"
+          [consultationTypes]="consultationTypes"
+          (slotSelected)="onSlotSelected($event)">
+        </app-weekly-schedule>
 
-          <!-- Doctor -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-[#1E293B]">Doctor / Healthcare Provider</label>
-            <input
-              type="text"
-              [(ngModel)]="newAppointment.doctor"
-              placeholder="e.g., Dr. Sarah Wilson"
-              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-          </div>
-
-          <!-- Date and Time -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <label class="text-sm font-medium text-[#1E293B]">Date</label>
-              <input
-                type="date"
-                [(ngModel)]="newAppointment.date"
-                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-            </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium text-[#1E293B]">Time</label>
-              <input
-                type="time"
-                [(ngModel)]="newAppointment.time"
-                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-            </div>
-          </div>
-
-          <!-- Type -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-[#1E293B]">Appointment Type</label>
-            <select
-              [(ngModel)]="newAppointment.type"
-              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-              <option value="in-person">In-Person Visit</option>
-              <option value="video">Video Call</option>
-            </select>
-          </div>
-
-          <!-- Location -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-[#1E293B]">Location</label>
-            <input
-              type="text"
-              [(ngModel)]="newAppointment.location"
-              placeholder="e.g., Medical Center, Room 203 or Video Call"
-              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-          </div>
-
-          <!-- Notes -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-[#1E293B]">Notes (Optional)</label>
-            <input
-              type="text"
-              [(ngModel)]="newAppointment.notes"
-              placeholder="Any additional information"
-              class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
-          </div>
-
-          <!-- Submit Button -->
-          <button
-            (click)="addAppointment()"
-            [disabled]="!isFormValid()"
-            class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            Schedule Appointment
+        <div class="flex justify-between mt-4">
+          <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+                  (click)="bookingStep = 1">
+            ← Back
+          </button>
+          <button *ngIf="selectedSlot"
+                  class="px-4 py-2 bg-[#7C3AED] text-white rounded-md hover:bg-[#6D28D9] transition-colors"
+                  (click)="bookingStep = 3">
+            Continue →
           </button>
         </div>
       </div>
+
+      <!-- Step 3: Confirmation -->
+      <div *ngIf="bookingStep === 3" class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-6">
+          <h3 class="text-lg font-semibold text-[#2D1B4E] mb-4">Confirm Details</h3>
+
+          <!-- Summary -->
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
+              <div>
+                <p class="font-semibold">{{ getSelectedDoctor().name }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="p-3 bg-[#F9FAFB] rounded-lg">
+                <p class="text-xs text-[#6B5B8C]">Date</p>
+                <p class="font-semibold">{{ selectedSlot?.date | date:'dd MMMM yyyy' }}</p>
+              </div>
+              <div class="p-3 bg-[#F9FAFB] rounded-lg">
+                <p class="text-xs text-[#6B5B8C]">Time</p>
+                <p class="font-semibold">{{ selectedSlot?.startTime }}</p>
+              </div>
+            </div>
+
+            <!-- Reused appointment form -->
+            <app-appointment-form
+              [doctors]="[getSelectedDoctor()]"
+              [consultationTypes]="consultationTypes"
+              [caregivers]="myCaregivers"
+              [availableSlots]="[selectedSlot?.startTime]"
+              [formData]="newAppointment"
+              (onClose)="bookingStep = 2"
+              (onSubmit)="bookAppointment($event)">
+            </app-appointment-form>
+
+            <div class="flex justify-between mt-4">
+              <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+                      (click)="bookingStep = 2">
+                ← Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Appointment Details Modal (existing) -->
+    <app-appointment-details
+      *ngIf="selectedAppointment"
+      [appointment]="selectedAppointment"
+      (onClose)="closeDetailsDialog()"
+      (onConfirm)="confirmAppointment($event)"
+      (onCancel)="cancelAppointment($event)"
+      (onJoinCall)="joinVideoCall($event)">
+    </app-appointment-details>
+
   </div>
 </div>

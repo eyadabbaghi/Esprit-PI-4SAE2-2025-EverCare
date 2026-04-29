@@ -1,0 +1,27 @@
+<div class="jitsi-wrapper">
+
+  <!-- Loading overlay (on top, not blocking) -->
+  <div *ngIf="isLoading && !error" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Connecting to consultation room...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="error-overlay">
+    <div class="error-icon">⚠️</div>
+    <h3>Connection Failed</h3>
+    <p>{{ error }}</p>
+    <button class="btn-leave" (click)="leaveCall()">Go Back</button>
+  </div>
+
+  <!-- Jitsi container — always rendered -->
+  <div #jitsiContainer class="jitsi-container"></div>
+
+  <!-- Leave button -->
+  <div class="leave-btn-container">
+    <button class="btn-leave-overlay" (click)="leaveCall()">
+      ✕ Leave Consultation
+    </button>
+  </div>
+
+</div>

@@ -3,6 +3,8 @@ package org.example.trackingservice.services;
 import feign.FeignException;
 import org.example.trackingservice.client.UserServiceClient;
 import org.example.trackingservice.dto.PatientUserDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -10,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class PatientValidationService {
 
+    private static final Logger log = LoggerFactory.getLogger(PatientValidationService.class);
     private final UserServiceClient userServiceClient;
 
     public PatientValidationService(UserServiceClient userServiceClient) {
@@ -33,7 +36,8 @@ public class PatientValidationService {
         } catch (FeignException.NotFound ex) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found: " + patientId);
         } catch (FeignException ex) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "User service unavailable");
+            log.warn("User service unavailable, skipping validation for patient: {}", patientId);
+            return null;
         }
     }
 }

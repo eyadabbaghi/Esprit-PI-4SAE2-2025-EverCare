@@ -222,19 +222,13 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!ping) return;
 
     const previousStatus = this.currentStatus;
-    const shouldSyncLocationFromBackend =
-      this.mode !== 'tracking' || this.watchId === null || !this.hasLocationSnapshot;
 
     this.latestBackendPing = ping;
     this.currentStatus = this.getStatus(ping);
     this.isInSafeZone = this.currentStatus === 'SAFE';
     this.riskLevel = this.currentStatus;
 
-    if (
-      shouldSyncLocationFromBackend &&
-      typeof ping.lat === 'number' &&
-      typeof ping.lng === 'number'
-    ) {
+    if (typeof ping.lat === 'number' && typeof ping.lng === 'number') {
       this.currentLat = ping.lat;
       this.currentLng = ping.lng;
       this.hasLocationSnapshot = true;
@@ -468,58 +462,46 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startTracking() {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-    }
+    this.watchId = navigator.geolocation.watchPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+      this.currentLat = lat;
+      this.currentLng = lng;
+      this.hasLocationSnapshot = true;
 
-        this.currentLat = lat;
-        this.currentLng = lng;
-        this.hasLocationSnapshot = true;
+      this.updateTrackingMap(lat, lng);
+      this.checkSafeZone(lat, lng);
+      this.detectIdle(lat, lng);
 
-        this.updateTrackingMap(lat, lng);
-        this.checkSafeZone(lat, lng);
-        this.detectIdle(lat, lng);
+      const payload = {
+        patientId: this.patientId,
+        lat,
+        lng
+      };
 
-        const payload = {
-          patientId: this.patientId,
-          lat,
-          lng
-        };
+      this.http.post(
+        'http://localhost:8089/tracking/location-pings',
+        payload
+      ).subscribe({
+        next: () => {
+          console.log('sent to backend');
+          this.loadPatientStatusFromBackend();
+          this.loadClusters();
+        },
+        error: (e) => console.log('send failed', e)
+      });
 
-        this.http.post(
-          'http://localhost:8089/tracking/location-pings',
-          payload
-        ).subscribe({
-          next: () => {
-            console.log('sent to backend');
-            this.loadPatientStatusFromBackend();
-            this.loadClusters();
-          },
-          error: (e) => console.log('send failed', e)
-        });
+      this.history.unshift({
+        time: new Date().toLocaleTimeString(),
+        date: new Date().toLocaleDateString(),
+        lat,
+        lng,
+        status: this.currentStatus
+      });
 
-        this.history.unshift({
-          time: new Date().toLocaleTimeString(),
-          date: new Date().toLocaleDateString(),
-          lat,
-          lng,
-          status: this.currentStatus
-        });
-
-        localStorage.setItem(`history_${this.patientId}`, JSON.stringify(this.history));
-      },
-      (error) => console.log('watch position failed', error),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      }
-    );
+      localStorage.setItem(`history_${this.patientId}`, JSON.stringify(this.history));
+    });
   }
 
   triggerAlert(msg: string, severity: string = 'HIGH') {
@@ -579,6 +561,10 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.riskLevel = inside ? 'Low' : 'High';
     this.refreshSetupMapLayers();
     this.updateGuidance();
+
+    if (this.latestBackendPing) {
+      this.applyBackendStatus(this.latestBackendPing);
+    }
   }
 
   detectIdle(lat: number, lng: number) {

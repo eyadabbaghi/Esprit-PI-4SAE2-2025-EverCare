@@ -114,4 +114,9 @@ public class AlertService {
     public List<Alert> getPatientAlerts(String patientId) {
         return alertRepo.findByPatientIdOrderByTimestampDesc(patientId);
     }
+
+    // ================= CREATE =================
+    public Alert create(Alert alert) {
+        return alertRepo.save(alert);
+    }
 }

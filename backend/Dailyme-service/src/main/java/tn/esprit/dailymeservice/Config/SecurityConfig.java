@@ -13,10 +13,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
 
-                // ❗ VERY IMPORTANT → disable redirect to login
+                // VERY IMPORTANT → disable redirect to login
                 .formLogin(form -> form.disable())
 
-                // ❗ VERY IMPORTANT → disable basic auth popup
+                // VERY IMPORTANT → disable basic auth popup
                 .httpBasic(basic -> basic.disable())
 
                 // allow everything (for now)

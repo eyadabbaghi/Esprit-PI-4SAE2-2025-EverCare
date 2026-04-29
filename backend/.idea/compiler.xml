@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="spring-boot-starter-parent" />
+        <module name="Activities" />
+        <module name="appointment-service" />
+        <module name="communication-service" />
+        <module name="ApiGateway" />
+        <module name="notification-service" />
+        <module name="Dailyme-service" />
+        <module name="cognitive-stimulation-service" />
+        <module name="medical-record-service" />
+        <module name="configServer" />
+        <module name="Eureka-service" />
+        <module name="evercare-ai-service" />
+        <module name="Tracking-service" />
+        <module name="Alerts" />
+      </profile>
+      <profile name="Annotation profile for blog-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
+        </processorPath>
+        <module name="blog-service" />
+      </profile>
+      <profile name="Annotation profile for microservices-parent" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="User" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="dailyme-service" target="17" />
+      <module name="Tracking-service" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Activities" options="-parameters" />
+      <module name="Alerts" options="-parameters" />
+      <module name="ApiGateway" options="-parameters" />
+      <module name="Dailyme-service" options="-parameters" />
+      <module name="Eureka-service" options="-parameters" />
+      <module name="Tracking-service" options="-parameters" />
+      <module name="User" options="-parameters" />
+      <module name="appointment-service" options="-parameters" />
+      <module name="blog-service" options="-parameters" />
+      <module name="cognitive-stimulation-service" options="-parameters" />
+      <module name="communication-service" options="-parameters" />
+      <module name="dailyme-service" options="-parameters" />
+      <module name="medical-record-service" options="-parameters" />
+      <module name="notification-service" options="-parameters" />
+      <module name="spring-boot-starter-parent" options="-parameters" />
+    </option>
+  </component>
+</project>

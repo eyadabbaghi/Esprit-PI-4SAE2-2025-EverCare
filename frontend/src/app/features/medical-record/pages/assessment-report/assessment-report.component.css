@@ -1,0 +1,283 @@
+.assessment-report-page {
+  padding: 1.5rem 1rem 2rem;
+  background: #f6f2fc;
+  min-height: calc(100vh - 76px);
+}
+
+.report-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #dccff6;
+  border-radius: 16px;
+}
+
+.report-card {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.report-head h2 {
+  margin: 0;
+  font-size: 1.85rem;
+  color: #2d1b4e;
+}
+
+.report-head p {
+  margin: 0.45rem 0 0.95rem;
+  color: #6b5b8c;
+}
+
+.status-message {
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.92rem;
+}
+
+.status-message.error {
+  border: 1px solid #f7bfc9;
+  background: #fff5f7;
+  color: #9d174d;
+}
+
+.status-message.info {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.72rem;
+  margin-bottom: 0.9rem;
+}
+
+.info-chip {
+  border: 1px solid #ede4fb;
+  border-radius: 10px;
+  padding: 0.58rem 0.75rem;
+  background: #fcfafe;
+  min-width: 0;
+}
+
+.info-chip span {
+  display: block;
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #6b5b8c;
+  margin-bottom: 0.2rem;
+}
+
+.info-chip strong {
+  color: #2d1b4e;
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.info-chip.score strong {
+  font-size: 1.2rem;
+}
+
+.alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.24rem 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.alert-badge.high {
+  background: #ffe8ee;
+  color: #c1124d;
+}
+
+.alert-badge.normal {
+  background: #edf2f7;
+  color: #596579;
+}
+
+.recommendation-box,
+.disclaimer-box {
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.recommendation-box {
+  border: 1px solid #e6daf9;
+  background: #faf7ff;
+}
+
+.recommendation-box h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  color: #4c3d71;
+}
+
+.recommendation-box p {
+  margin: 0;
+  color: #2d1b4e;
+}
+
+.disclaimer-box {
+  border: 1px solid #f9d293;
+  background: #fff8eb;
+  color: #8a450d;
+  font-size: 0.91rem;
+}
+
+.actions-row {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.btn-link,
+.btn-muted {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.52rem 0.82rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.btn-link {
+  border-color: #c9b3f4;
+  color: #7c3aed;
+  background: #fff;
+}
+
+.btn-link:hover {
+  background: #f5eeff;
+}
+
+.btn-link.dark {
+  border-color: #b3b6c8;
+  color: #2f3859;
+}
+
+.btn-link.dark:hover {
+  background: #f4f5f9;
+}
+
+.btn-link.small {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.58rem;
+}
+
+.btn-muted {
+  border-color: #d7c5f5;
+  background: #f8f6fd;
+  color: #4c3d71;
+}
+
+.btn-muted:hover {
+  background: #f0e7ff;
+}
+
+.divider {
+  height: 1px;
+  margin: 1rem 0 0.9rem;
+  background: #efe5fb;
+}
+
+.history-head h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  color: #2d1b4e;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e8dcfb;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background: #f8f4ff;
+}
+
+th {
+  text-align: left;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #59457f;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e6daf9;
+}
+
+td {
+  padding: 0.72rem 0.75rem;
+  color: #2d1b4e;
+  border-bottom: 1px solid #f1ebfc;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.right {
+  text-align: right;
+}
+
+.empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 1rem 0.75rem;
+}
+
+@media (max-width: 1000px) {
+  .top-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .assessment-report-page {
+    padding: 1rem 0.75rem 1.5rem;
+  }
+
+  .report-card {
+    padding: 0.95rem;
+  }
+
+  .report-head h2 {
+    font-size: 1.45rem;
+  }
+
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-row {
+    flex-direction: column;
+  }
+
+  .actions-row > * {
+    width: 100%;
+  }
+}

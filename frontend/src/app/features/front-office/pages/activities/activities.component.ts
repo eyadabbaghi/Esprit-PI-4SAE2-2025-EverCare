@@ -1,298 +1,485 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { forkJoin } from 'rxjs';
+import { ActivityService, Activity, ActivityWithUserData } from '../../../../core/services/activity.service';
+import { AuthService, User } from '../login/auth.service';
+import { UserService, Patient } from '../../../../core/services/user.service';
 
-type ActivityType = 'Relaxation' | 'Cognitive' | 'Physical' | 'Social' | 'Creative';
-type DifficultyLevel = 'Easy' | 'Moderate' | 'Challenging';
-type AlzheimerStage = 'Early' | 'Moderate' | 'Advanced';
-
-interface Activity {
+export interface RoutineActivity {
   id: string;
   name: string;
-  type: ActivityType;
+  type: string;
   duration: number;
-  scheduledTime?: string;
-  description: string;
-  instructions: string[];
-  difficulty: DifficultyLevel;
-  recommendedStage: AlzheimerStage[];
-  frequency: string;
-  supervision: string;
-  benefits: string[];
-  precautions?: string[];
-  completed: boolean;
-  favorite: boolean;
-  doctorSuggested?: boolean;
-  completedAt?: Date;
   imageUrl: string;
-  rating: number;
-  totalRatings: number;
+  completed: boolean;
+  pinnedAt: string;
 }
+
+export interface RoutineGoal {
+  type: string;
+  target: number;
+  label: string;
+  emoji: string;
+}
+
+const DEFAULT_GOALS: RoutineGoal[] = [
+  { type: 'Cognitive',   target: 3, label: 'Train your mind',   emoji: '🧠' },
+  { type: 'Physical',    target: 3, label: 'Move your body',    emoji: '💪' },
+  { type: 'Relaxation',  target: 2, label: 'Find your calm',    emoji: '🧘' },
+  { type: 'Social',      target: 2, label: 'Connect with others', emoji: '🤝' },
+  { type: 'Creative',    target: 2, label: 'Express yourself',  emoji: '🎨' },
+];
 
 @Component({
   selector: 'app-activities',
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.css'],
 })
-export class ActivitiesComponent {
-  activities: Activity[] = [];
-  todayActivities: Activity[] = [];
-  recommendedActivities: Activity[] = [];
+export class ActivitiesComponent implements OnInit {
+  // Role-specific data
+  userRole: string = '';
+  user: User | null = null;
+  userId: string | null = null;
+  patients: Patient[] = [];
+  recommending = new Set<string>();
+  doctorActivities: Activity[] = [];
+
+  // Doctor dropdown state
+  patientDropdownOpen: string | null = null;
+  selectedPatient: { [key: string]: Patient } = {};
+
+  // Shared activity data
+  allActivities: ActivityWithUserData[] = [];
+  todayActivities: ActivityWithUserData[] = [];
+  recommendedActivities: ActivityWithUserData[] = [];
+
+  // Filter properties
+  searchTerm: string = '';
+  selectedType: string = 'all';
+  selectedDifficulty: string = 'all';
+
+  // Available filter options
+  types: string[] = [];
+  difficulties: string[] = [];
+
+  // Pagination
+  currentPage: number = 1;
+  pageSize: number = 6;
+  totalPages: number = 1;
+
+  private filteredActivities: ActivityWithUserData[] = [];
+
+  // Translation and summarization
+  translations: { [key: string]: { name: string; description: string; instructions: string[]; benefits: string[]; precautions: string[] } } = {};
+  showOriginal: { [key: string]: boolean } = {};
+  summaries: { [key: string]: string } = {};
+  summaryLoading: { [key: string]: boolean } = {};
+  translating: { [key: string]: boolean } = {};
+
+  languages = [
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'de', name: 'German', flag: '🇩🇪' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+  ];
+  selectedLang: { [key: string]: string } = {};
+  currentTranslationLang: { [key: string]: string } = {};
+
+  // ─── MY ROUTINE ───────────────────────────────────────────────────────────
+  showRoutineModal = false;
+  routineActivities: RoutineActivity[] = [];
+  routineGoals: RoutineGoal[] = DEFAULT_GOALS;
+
+  // Completion celebration
+  showCompletionPopup = false;
+  completedActivityName = '';
+  completionTimeout: any;
+
+  private get routineStorageKey(): string {
+    return `routine_${this.userId}`;
+  }
 
   constructor(
     private readonly router: Router,
     private readonly toastr: ToastrService,
-  ) {
-    this.initializeMockData();
+    private activityService: ActivityService,
+    private authService: AuthService,
+    private userService: UserService
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.userId) {
+        this.user = user;
+        this.userId = user.userId;
+        this.userRole = user.role;
+
+        if (this.userRole === 'DOCTOR') {
+          this.loadDoctorPatients();
+          this.loadDoctorActivities();
+        } else {
+          this.loadActivities();
+          this.loadRoutine();
+        }
+      }
+    });
   }
 
-  private initializeMockData(): void {
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        name: 'Morning Breathing Exercise',
-        type: 'Relaxation',
-        duration: 10,
-        scheduledTime: '08:00 AM',
-        description:
-          'Gentle breathing exercises to start the day with calm and focus. This mindfulness practice helps reduce anxiety and promotes mental clarity.',
-        instructions: [
-          'Find a comfortable seated position in a quiet space',
-          'Close your eyes gently or maintain a soft gaze',
-          'Breathe in slowly through your nose for 4 counts',
-          'Hold your breath gently for 2 counts',
-          'Breathe out slowly through your mouth for 6 counts',
-          'Repeat this cycle for 10 minutes',
-          'Notice how your body relaxes with each breath',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: 'Daily',
-        supervision: 'Independent or minimal supervision',
-        benefits: [
-          'Reduces anxiety and stress',
-          'Improves focus and concentration',
-          'Promotes relaxation and calm',
-          'Enhances overall well-being',
-        ],
-        completed: false,
-        favorite: true,
-        doctorSuggested: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1562658048-b4c459feab21?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.8,
-        totalRatings: 142,
-      },
-      {
-        id: '2',
-        name: 'Memory Card Game',
-        type: 'Cognitive',
-        duration: 20,
-        scheduledTime: '10:00 AM',
-        description:
-          'Fun card matching game to exercise memory and recognition skills. This engaging activity stimulates cognitive function and provides mental exercise.',
-        instructions: [
-          'Lay out 12 cards face down in a grid pattern',
-          'Turn over two cards at a time',
-          'Try to find matching pairs',
-          'Remember where cards are located',
-          'Continue until all pairs are found',
-          'Celebrate each successful match',
-        ],
-        difficulty: 'Moderate',
-        recommendedStage: ['Early', 'Moderate'],
-        frequency: '3 times per week',
-        supervision: 'Caregiver presence recommended',
-        benefits: [
-          'Enhances memory recall',
-          'Improves concentration and focus',
-          'Provides mental stimulation',
-          'Boosts confidence',
-        ],
-        precautions: [
-          'Start with fewer cards if needed',
-          'Take breaks if frustrated',
-          'Keep sessions positive and encouraging',
-        ],
-        completed: true,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1737505599159-5ffc1dcbc08f?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.5,
-        totalRatings: 98,
-      },
-      {
-        id: '3',
-        name: 'Gentle Walking',
-        type: 'Physical',
-        duration: 30,
-        scheduledTime: '04:00 PM',
-        description:
-          'Light walking exercise in a safe, familiar environment. Regular walking helps maintain physical health, mobility, and mental well-being.',
-        instructions: [
-          'Wear comfortable, supportive shoes',
-          'Choose a safe, familiar walking area',
-          'Maintain a comfortable, steady pace',
-          'Stay hydrated with water breaks',
-          'Walk for 15-30 minutes based on comfort',
-          'Use walking aids if needed',
-          'Cool down with gentle stretches',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate'],
-        frequency: 'Daily',
-        supervision: 'Companion recommended for safety',
-        benefits: [
-          'Improves cardiovascular health',
-          'Boosts mood and energy',
-          'Maintains mobility and balance',
-          'Provides social interaction',
-        ],
-        precautions: [
-          'Ensure safe walking path',
-          'Avoid extreme weather conditions',
-          'Monitor for fatigue',
-        ],
-        completed: false,
-        favorite: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1764628039015-222c6d30c68d?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.7,
-        totalRatings: 215,
-      },
-      {
-        id: '4',
-        name: 'Music Therapy Session',
-        type: 'Creative',
-        duration: 25,
-        scheduledTime: '02:00 PM',
-        description:
-          'Listen to favorite songs and engage with familiar melodies. Music therapy triggers positive memories and enhances emotional well-being.',
-        instructions: [
-          'Choose familiar, favorite songs from their era',
-          'Create a comfortable listening environment',
-          'Encourage singing or humming along',
-          'Discuss memories associated with the music',
-          'Use simple instruments if available',
-          'Share stories about the songs',
-          'End with a calming piece',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '4 times per week',
-        supervision: 'Minimal supervision needed',
-        benefits: [
-          'Triggers positive memories',
-          'Reduces stress and anxiety',
-          'Enhances emotional well-being',
-          'Provides enjoyment and comfort',
-        ],
-        completed: false,
-        favorite: true,
-        doctorSuggested: true,
-        imageUrl:
-          'https://images.unsplash.com/photo-1741770067276-a10e15ff5197?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.9,
-        totalRatings: 187,
-      },
-      {
-        id: '5',
-        name: 'Photo Album Review',
-        type: 'Cognitive',
-        duration: 30,
-        scheduledTime: '11:00 AM',
-        description:
-          'Review family photos and discuss memories together. This activity stimulates memory recall and provides meaningful social connection.',
-        instructions: [
-          'Gather family photo albums or digital photos',
-          'Sit in a comfortable, well-lit area',
-          'Look through photos together slowly',
-          'Ask gentle questions about the photos',
-          'Listen to stories and memories',
-          'Label photos if helpful for future reference',
-          'Focus on positive memories and emotions',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '3 times per week',
-        supervision: 'Caregiver participation required',
-        benefits: [
-          'Stimulates memory recall',
-          'Provides social interaction',
-          'Strengthens family bonds',
-          'Triggers positive emotions',
-        ],
-        completed: false,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1587955793432-7c4ff80918ba?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.6,
-        totalRatings: 156,
-      },
-      {
-        id: '6',
-        name: 'Simple Art & Coloring',
-        type: 'Creative',
-        duration: 40,
-        description:
-          'Creative expression through simple art activities. Art therapy provides sensory stimulation and promotes relaxation.',
-        instructions: [
-          'Set up art supplies in a comfortable space',
-          'Provide coloring books or simple drawing materials',
-          'Encourage free expression without judgment',
-          'No pressure for perfection - focus on enjoyment',
-          'Display finished artwork proudly',
-          'Clean up together as part of the activity',
-          'Praise effort and creativity',
-        ],
-        difficulty: 'Easy',
-        recommendedStage: ['Early', 'Moderate', 'Advanced'],
-        frequency: '2-3 times per week',
-        supervision: 'Minimal supervision needed',
-        benefits: [
-          'Promotes creativity and self-expression',
-          'Reduces anxiety and stress',
-          'Provides sensory stimulation',
-          'Builds confidence',
-        ],
-        completed: false,
-        favorite: false,
-        imageUrl:
-          'https://images.unsplash.com/photo-1761034036989-24640be78e90?auto=format&fit=crop&w=1080&q=80',
-        rating: 4.4,
-        totalRatings: 123,
-      },
-    ];
+  // ─── ROUTINE PERSISTENCE ──────────────────────────────────────────────────
+  private loadRoutine(): void {
+    try {
+      const raw = localStorage.getItem(this.routineStorageKey);
+      this.routineActivities = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.routineActivities = [];
+    }
+  }
 
-    this.activities = mockActivities;
-    this.todayActivities = mockActivities.slice(0, 4);
-    this.recommendedActivities = mockActivities.slice(4, 6);
+  private saveRoutine(): void {
+    try {
+      localStorage.setItem(this.routineStorageKey, JSON.stringify(this.routineActivities));
+    } catch {
+      console.error('Failed to save routine');
+    }
+  }
+
+  // ─── ROUTINE ACTIONS ──────────────────────────────────────────────────────
+  openRoutineModal(): void {
+    this.showRoutineModal = true;
+  }
+
+  closeRoutineModal(): void {
+    this.showRoutineModal = false;
+  }
+
+  isInRoutine(activityId: string): boolean {
+    return this.routineActivities.some(r => r.id === activityId);
+  }
+
+  pinToRoutine(activity: ActivityWithUserData, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.isInRoutine(activity.id)) return;
+
+    const routineItem: RoutineActivity = {
+      id: activity.id,
+      name: activity.name,
+      type: activity.type,
+      duration: activity.duration,
+      imageUrl: activity.imageUrl,
+      completed: false,
+      pinnedAt: new Date().toISOString()
+    };
+    this.routineActivities = [routineItem, ...this.routineActivities];
+    this.saveRoutine();
+    this.toastr.success(`"${activity.name}" added to your routine! 📌`);
+  }
+
+  unpinFromRoutine(activityId: string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.routineActivities = this.routineActivities.filter(r => r.id !== activityId);
+    this.saveRoutine();
+  }
+
+  completeRoutineActivity(routine: RoutineActivity, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (routine.completed) return;
+
+    routine.completed = true;
+    this.saveRoutine();
+
+    // Show celebration popup
+    this.completedActivityName = routine.name;
+    this.showCompletionPopup = true;
+    if (this.completionTimeout) clearTimeout(this.completionTimeout);
+    this.completionTimeout = setTimeout(() => {
+      this.showCompletionPopup = false;
+    }, 3500);
+  }
+
+  resetRoutineProgress(): void {
+    this.routineActivities = this.routineActivities.map(r => ({ ...r, completed: false }));
+    this.saveRoutine();
+  }
+
+  // ─── ROUTINE STATS ────────────────────────────────────────────────────────
+  getRoutineCompletedCount(): number {
+    return this.routineActivities.filter(r => r.completed).length;
+  }
+
+  getRoutineTotalCount(): number {
+    return this.routineActivities.length;
+  }
+
+  getOverallProgress(): number {
+    const total = this.routineActivities.length;
+    if (total === 0) return 0;
+    return Math.round((this.getRoutineCompletedCount() / total) * 100);
+  }
+
+  getTypeProgress(type: string): number {
+    const typeItems = this.routineActivities.filter(r => r.type === type);
+    if (typeItems.length === 0) return 0;
+    const completed = typeItems.filter(r => r.completed).length;
+    return Math.round((completed / typeItems.length) * 100);
+  }
+
+  getTypeCompleted(type: string): number {
+    return this.routineActivities.filter(r => r.type === type && r.completed).length;
+  }
+
+  getTypeTotal(type: string): number {
+    return this.routineActivities.filter(r => r.type === type).length;
+  }
+
+  getGoalProgress(goal: RoutineGoal): number {
+    const completed = this.getTypeCompleted(goal.type);
+    return Math.min(100, Math.round((completed / goal.target) * 100));
+  }
+
+  isGoalMet(goal: RoutineGoal): boolean {
+    return this.getTypeCompleted(goal.type) >= goal.target;
+  }
+
+  getActiveGoals(): RoutineGoal[] {
+    // Only show goals for types that exist in routine OR all goals
+    return this.routineGoals;
+  }
+
+  getRoutineByType(type: string): RoutineActivity[] {
+    return this.routineActivities.filter(r => r.type === type);
+  }
+
+  getUniqueRoutineTypes(): string[] {
+    return [...new Set(this.routineActivities.map(r => r.type))];
+  }
+
+  getTypeColor(type: string): string {
+    const colors: { [key: string]: string } = {
+      'Cognitive':  '#7C3AED',
+      'Physical':   '#059669',
+      'Relaxation': '#0284C7',
+      'Social':     '#DB2777',
+      'Creative':   '#D97706',
+    };
+    return colors[type] || '#6B7280';
+  }
+
+  getTypeBgClass(type: string): string {
+    const classes: { [key: string]: string } = {
+      'Cognitive':  'bg-purple-100 text-purple-700',
+      'Physical':   'bg-green-100 text-green-700',
+      'Relaxation': 'bg-blue-100 text-blue-700',
+      'Social':     'bg-pink-100 text-pink-700',
+      'Creative':   'bg-orange-100 text-orange-700',
+    };
+    return classes[type] || 'bg-gray-100 text-gray-700';
+  }
+
+  // ─── ORIGINAL METHODS ─────────────────────────────────────────────────────
+  loadDoctorPatients(): void {
+    if (!this.user?.patientEmails?.length) {
+      this.patients = [];
+      return;
+    }
+    forkJoin(this.user.patientEmails.map(email => this.userService.getUserByEmail(email)))
+      .subscribe(patients => this.patients = patients);
+  }
+
+  loadDoctorActivities(): void {
+    this.activityService.getAllActivities().subscribe(acts => {
+      this.doctorActivities = acts;
+    });
+  }
+
+  loadActivities(): void {
+    if (!this.userId) return;
+    this.activityService.getActivitiesForUser(this.userId).subscribe(data => {
+      this.allActivities = data;
+      this.recommendedActivities = data.filter(a => a.recommendedByDoctor);
+      this.types = [...new Set(data.map(a => a.type))];
+      this.difficulties = [...new Set(data.map(a => a.difficulty))];
+      this.applyFilters();
+    });
+  }
+
+  togglePatientDropdown(activityId: string): void {
+    this.patientDropdownOpen = this.patientDropdownOpen === activityId ? null : activityId;
+  }
+
+  selectPatient(activityId: string, patient: Patient): void {
+    this.selectedPatient[activityId] = patient;
+    this.patientDropdownOpen = null;
+  }
+
+  recommend(activity: Activity, patientId: string): void {
+    if (!this.user?.userId || !patientId) return;
+    if (this.recommending.has(activity.id)) return;
+
+    this.recommending.add(activity.id);
+    this.activityService.recommendActivity(this.user.userId, patientId, activity.id).subscribe({
+      next: () => {
+        this.toastr.success('Activity recommended');
+        this.recommending.delete(activity.id);
+      },
+      error: () => {
+        this.toastr.error('Recommendation failed');
+        this.recommending.delete(activity.id);
+      }
+    });
+  }
+
+  applyFilters(): void {
+    let filtered = this.allActivities.filter(a => !a.recommendedByDoctor);
+
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(a =>
+        a.name.toLowerCase().includes(term) ||
+        a.description.toLowerCase().includes(term)
+      );
+    }
+    if (this.selectedType !== 'all') {
+      filtered = filtered.filter(a => a.type === this.selectedType);
+    }
+    if (this.selectedDifficulty !== 'all') {
+      filtered = filtered.filter(a => a.difficulty === this.selectedDifficulty);
+    }
+
+    this.filteredActivities = filtered;
+    this.currentPage = 1;
+    this.totalPages = Math.max(1, Math.ceil(this.filteredActivities.length / this.pageSize));
+    this.updatePage();
+  }
+
+  private updatePage(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.todayActivities = this.filteredActivities.slice(start, start + this.pageSize);
+  }
+
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.selectedType = 'all';
+    this.selectedDifficulty = 'all';
+    this.applyFilters();
   }
 
   getCompletionRate(): number {
     const total = this.todayActivities.length;
-    const completed = this.todayActivities.filter((a) => a.completed).length;
+    const completed = this.todayActivities.filter(a => a.completed).length;
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   }
 
   getCompletedTodayCount(): number {
-    return this.todayActivities.filter((a) => a.completed).length;
+    return this.todayActivities.filter(a => a.completed).length;
   }
 
-  completeActivity(activity: Activity, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-    if (activity.completed) {
-      return;
-    }
-    activity.completed = true;
-    activity.completedAt = new Date();
-    this.toastr.success('Activity marked as completed');
+  completeActivity(activity: ActivityWithUserData, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (activity.completed || !this.userId) return;
+    this.activityService.markCompleted(this.userId, activity.id).subscribe({
+      next: () => {
+        activity.completed = true;
+        activity.completedAt = new Date().toISOString();
+        this.toastr.success('Activity marked as completed');
+      },
+      error: (err) => {
+        console.error('Complete failed', err);
+        this.toastr.error('Failed to mark complete');
+      }
+    });
   }
 
-  viewDetails(activity: Activity): void {
+  viewDetails(activity: ActivityWithUserData): void {
     this.router.navigate(['/activities', activity.id]);
   }
-}
 
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  setPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePage();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePage();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePage();
+    }
+  }
+
+  getImageUrl(relativePath: string): string {
+    if (!relativePath) return '/assets/logo.png';
+    if (relativePath.startsWith('http')) return relativePath;
+    return `${this.activityService.apiUrl}${relativePath}`;
+  }
+
+  translateActivity(activity: ActivityWithUserData, lang: string): void {
+    if (this.translating[activity.id]) return;
+
+    if (this.translations[activity.id] && this.currentTranslationLang[activity.id] === lang) {
+      this.showOriginal[activity.id] = !this.showOriginal[activity.id];
+      return;
+    }
+
+    this.translating[activity.id] = true;
+    this.activityService.translateActivity(activity.id, lang).subscribe({
+      next: (translated) => {
+        this.translations[activity.id] = {
+          name: translated.name,
+          description: translated.description,
+          instructions: translated.instructions,
+          benefits: translated.benefits,
+          precautions: translated.precautions
+        };
+        this.currentTranslationLang[activity.id] = lang;
+        this.showOriginal[activity.id] = false;
+        this.translating[activity.id] = false;
+        this.toastr.success(`Activity translated to ${this.getLanguageName(lang)}`);
+      },
+      error: (err) => {
+        console.error('Translation failed', err);
+        this.toastr.error('Translation failed');
+        this.translating[activity.id] = false;
+      }
+    });
+  }
+
+  toggleOriginal(activityId: string): void {
+    this.showOriginal[activityId] = !this.showOriginal[activityId];
+  }
+
+  getLanguageName(code: string): string {
+    const lang = this.languages.find(l => l.code === code);
+    return lang ? lang.name : code;
+  }
+
+  summarizeActivity(activity: ActivityWithUserData): void {
+    if (this.summaryLoading[activity.id]) return;
+    this.summaryLoading[activity.id] = true;
+    this.activityService.summarizeActivity(activity.id).subscribe({
+      next: (summary) => {
+        this.summaries[activity.id] = summary;
+        this.summaryLoading[activity.id] = false;
+        this.toastr.info(summary, 'Summary', { timeOut: 10000 });
+      },
+      error: (err) => {
+        console.error('Summarization failed', err);
+        this.toastr.error('Summarization failed');
+        this.summaryLoading[activity.id] = false;
+      }
+    });
+  }
+}

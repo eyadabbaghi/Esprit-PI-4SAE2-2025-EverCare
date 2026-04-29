@@ -1,35 +1,103 @@
 package tn.esprit.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.user.dto.*;
+import tn.esprit.user.dto.FaceLoginRequest;
+import tn.esprit.user.dto.FaceSetupRequest;
+import tn.esprit.user.dto.RegisterRequest;
+import tn.esprit.user.dto.UserDto;
+import tn.esprit.user.entity.LoginType;
 import tn.esprit.user.entity.User;
+import tn.esprit.user.entity.UserRole;
+import tn.esprit.user.service.LoginEventService;
 import tn.esprit.user.service.UserService;
 
-import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-
 public class AuthController {
 
     private final UserService userService;
+    private final LoginEventService loginEventService; // ← add this
+
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody RegisterRequest request) {
-        return userService.register(request);
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request) {
+        userService.register(request);
+        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
 
-    @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
-        return userService.login(request);
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        UserDto userDto = userService.getUserDtoByEmail(email);
+        return ResponseEntity.ok(userDto);
+    }
+
+    // ✅ ONLY ONE face-login method — takes keycloakId + image
+    @PostMapping("/face-login")
+    public ResponseEntity<?> faceLogin(@RequestBody FaceLoginRequest request) {
+        try {
+            Map<String, Object> result = userService.faceLogin(
+                    request.getKeycloakId(), request.getImage());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            e.printStackTrace(); // ← see exact error in Spring console
+            if (e.getMessage() != null && e.getMessage().contains("Face not recognized")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", e.getMessage()));
+            }
+            // Token exchange or other server error — return 500 not 401
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Login failed: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/setup-face-id")
+    public ResponseEntity<?> setupFaceId(
+            @RequestBody FaceSetupRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        userService.setupFaceId(email, request.getImages());
+        return ResponseEntity.ok(Map.of("message", "Face ID setup successful"));
+    }
+
+    @GetMapping("/has-face-id")
+    public ResponseEntity<?> hasFaceId(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        boolean has = userService.hasFaceId(email);
+        return ResponseEntity.ok(Map.of("hasFaceId", has));
+    }
+
+    @PostMapping("/record-login")
+    public ResponseEntity<?> recordLogin(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userService.findByEmail(email);
+        loginEventService.recordLogin(user.getUserId(), user.getEmail(), LoginType.PASSWORD);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/ping")
+    public ResponseEntity<?> ping(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userService.findByEmail(email);
+        user.setLastSeenAt(java.time.LocalDateTime.now());
+        // You need to expose save through userService or userRepository
+        // Add this method to UserService:
+        userService.updateLastSeen(email);
+        return ResponseEntity.ok().build();
     }
 
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());
+        dto.setKeycloakId(user.getKeycloakId());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
@@ -39,25 +107,19 @@ public class AuthController {
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setEmergencyContact(user.getEmergencyContact());
         dto.setProfilePicture(user.getProfilePicture());
+        dto.setYearsExperience(user.getYearsExperience());
+        dto.setSpecialization(user.getSpecialization());
+        dto.setMedicalLicense(user.getMedicalLicense());
+        dto.setWorkplaceType(user.getWorkplaceType());
+        dto.setWorkplaceName(user.getWorkplaceName());
+        dto.setDoctorEmail(user.getDoctorEmail());
+        if (user.getRole() == UserRole.PATIENT) {
+            dto.setCaregiverEmails(user.getCaregivers().stream()
+                    .map(User::getEmail).collect(java.util.stream.Collectors.toSet()));
+        } else if (user.getRole() == UserRole.CAREGIVER) {
+            dto.setPatientEmails(user.getPatients().stream()
+                    .map(User::getEmail).collect(java.util.stream.Collectors.toSet()));
+        }
         return dto;
-    }
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> getCurrentUser(Principal principal) {
-        System.out.println("=== /me controller ===");
-        System.out.println("Principal: " + principal);
-        System.out.println("Principal name: " + (principal != null ? principal.getName() : "null"));
-
-        String email = principal.getName();
-        System.out.println("Email from principal: " + email);
-
-        User user = userService.findByEmail(email);
-        System.out.println("User found: " + user.getEmail());
-
-        UserDto dto = mapToDto(user);
-        System.out.println("DTO created: " + dto);
-
-        ResponseEntity<UserDto> response = ResponseEntity.ok(dto);
-        System.out.println("Returning response: " + response);
-        return response;
     }
 }

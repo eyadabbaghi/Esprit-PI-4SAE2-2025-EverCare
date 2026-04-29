@@ -37,51 +37,53 @@ class DrugInteractionCheckerTest {
 
     @Test
     void checkInteractions_withNoActivePrescriptions_returnsNoInteractions() {
+        testMedicament.setCommonInteractions("WARFARIN");
         when(prescriptionRepository.findActiveByPatientId("patient123")).thenReturn(Collections.emptyList());
 
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
         assertEquals("INFO", result.getLevel());
+        verify(prescriptionRepository, times(1)).findActiveByPatientId("patient123");
     }
 
     @Test
     void checkInteractions_withNullPatient_returnsNoInteractions() {
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            null, testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                null, testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verifyNoInteractions(prescriptionRepository);
     }
 
     @Test
     void checkInteractions_withNullMedicament_returnsNoInteractions() {
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", null, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", null, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verifyNoInteractions(prescriptionRepository);
     }
 
     @Test
     void checkInteractions_withNullInteractions_returnsNoInteractions() {
         testMedicament.setCommonInteractions(null);
-        when(prescriptionRepository.findActiveByPatientId("patient123")).thenReturn(Collections.emptyList());
-
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verifyNoInteractions(prescriptionRepository);
     }
 
     @Test
     void checkInteractions_withBlankInteractions_returnsNoInteractions() {
         testMedicament.setCommonInteractions("  ");
-        when(prescriptionRepository.findActiveByPatientId("patient123")).thenReturn(Collections.emptyList());
-
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verifyNoInteractions(prescriptionRepository);
     }
 
     @Test
@@ -91,16 +93,17 @@ class DrugInteractionCheckerTest {
         prescription.setDateDebut(LocalDate.now());
         prescription.setDateFin(LocalDate.now().plusDays(30));
         prescription.setMedicament(null);
-        
+
         when(prescriptionRepository.findActiveByPatientId("patient123"))
-            .thenReturn(List.of(prescription));
+                .thenReturn(List.of(prescription));
 
         testMedicament.setCommonInteractions("WARFARIN");
 
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verify(prescriptionRepository, times(1)).findActiveByPatientId("patient123");
     }
 
     @Test
@@ -109,44 +112,46 @@ class DrugInteractionCheckerTest {
         prescription.setPrescriptionId("RX001");
         prescription.setDateDebut(LocalDate.now().minusDays(60));
         prescription.setDateFin(LocalDate.now().minusDays(30));
-        
+
         Medicament med = new Medicament();
         med.setDenominationCommuneInternationale("WARFARIN");
         med.setNomCommercial("COUMADIN");
         prescription.setMedicament(med);
-        
+
         when(prescriptionRepository.findActiveByPatientId("patient123"))
-            .thenReturn(List.of(prescription));
+                .thenReturn(List.of(prescription));
 
         testMedicament.setCommonInteractions("WARFARIN");
 
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
+        verify(prescriptionRepository, times(1)).findActiveByPatientId("patient123");
     }
 
     @Test
     void checkInteractions_initialResult_hasDefaultValues() {
         testMedicament.setCommonInteractions(null);
-        
+
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertNotNull(result);
         assertFalse(result.isHasInteractions());
         assertEquals("INFO", result.getLevel());
         assertNotNull(result.getInteractions());
+        verifyNoInteractions(prescriptionRepository);
     }
 
     @Test
     void checkInteractions_multipleDrugsParsesCorrectly() {
         testMedicament.setCommonInteractions("WARFARIN, ASPIRIN, IBUPROFEN");
-        
+
         when(prescriptionRepository.findActiveByPatientId("patient123")).thenReturn(Collections.emptyList());
 
         DrugInteractionChecker.InteractionCheckResult result = drugInteractionChecker.checkInteractions(
-            "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
+                "patient123", testMedicament, LocalDate.now(), LocalDate.now().plusDays(30));
 
         assertFalse(result.isHasInteractions());
         verify(prescriptionRepository, times(1)).findActiveByPatientId("patient123");

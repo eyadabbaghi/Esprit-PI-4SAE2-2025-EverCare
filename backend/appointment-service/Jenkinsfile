@@ -18,19 +18,15 @@ pipeline {
             }
         }
 
-        // Étape unique pour compiler, tester, vérifier la couverture (JaCoCo) et packager
         stage('Build, Test & Coverage') {
             steps {
                 dir(env.APP_DIR) {
-                    // clean verify exécute les phases jusqu'à verify (inclut test, jacoco:check, package)
                     sh 'mvn clean verify'
                 }
             }
             post {
                 always {
-                    // Publication des rapports JUnit (tests)
                     junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
-                    // Publication du rapport HTML JaCoCo
                     publishHTML([
                             allowMissing: true,
                             alwaysLinkToLastBuild: true,
@@ -55,7 +51,8 @@ pipeline {
                                 -Dsonar.projectName="EverCare - Appointment Service" \
                                 -Dsonar.java.binaries=target/classes \
                                 -Dsonar.sources=src/main/java \
-                                -Dsonar.tests=src/test/java
+                                -Dsonar.tests=src/test/java \
+                                -Dsonar.skipModules=true
                         """
                     }
                 }

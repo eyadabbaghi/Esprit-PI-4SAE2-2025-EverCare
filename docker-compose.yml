@@ -381,6 +381,39 @@ services:
       timeout: 10s
       retries: 3
 
+  evercare-ai-frontend:
+    image: badrftw/evercare-ai-frontend:latest
+    container_name: evercare-ai-frontend
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - evercare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  face-service:
+    image: badrftw/evercare-face-service:latest
+    container_name: evercare-face
+    environment:
+      DATABASE_URL: mysql+pymysql://root:@mysql:3306/EverCaredb
+    ports:
+      - "8100:8100"
+    networks:
+      - evercare-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ============================================
   # FRONTEND
   # ============================================

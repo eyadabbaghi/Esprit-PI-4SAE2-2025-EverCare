@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: face-service
+  namespace: evercare
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8100
+      targetPort: 8100
+      protocol: TCP
+  selector:
+    app: face-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: face-service-deployment
+  namespace: evercare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: face-service
+  template:
+    metadata:
+      labels:
+        app: face-service
+    spec:
+      containers:
+        - name: face-service
+          image: badrftw/evercare-face-service:latest
+          ports:
+            - containerPort: 8100
+          env:
+            - name: DATABASE_URL
+              value: "mysql+pymysql://root:@mysql-service:3306/EverCaredb"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8100
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8100
+            initialDelaySeconds: 30
+            periodSeconds: 10

@@ -1,26 +1,168 @@
+// Pipeline CI/CD pour le frontend EverCare (Angular) : build, tests, Docker, push
+
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'badrftw/evercare-frontend'
+        DOCKER_REGISTRY = 'docker.io'
+        SONAR_HOST_URL = 'http://10.0.2.15:9000'
+        APP_DIR = 'frontend'
+        BRANCH_NAME = 'Badr-branch'
+        NODE_VERSION = '20'
+    }
+
     stages {
-        stage('Install Dependencies') {
+        stage('Checkout Git') {
             steps {
-                echo 'Installing frontend dependencies...'
-                sh 'npm install'
+                git branch: env.BRANCH_NAME,
+                        url: 'https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git',
+                        credentialsId: 'github-evercare'
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Building frontend...'
-                sh 'ng build --prod'
+                dir(env.APP_DIR) {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm run lint || true'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running frontend tests...'
-                sh 'ng test --watch=false'
+                dir(env.APP_DIR) {
+                    sh 'npm test -- --watch=false --browsers=ChromeHeadless --code-coverage'
+                }
             }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: '**/test-results/*.xml'
+                    publishHTML(target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'coverage/frontend',
+                        reportFiles: 'index.html',
+                        reportName: 'Frontend Coverage Report'
+                    ])
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                dir(env.APP_DIR) {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            npm install -g sonarsource-scanner-cli 2>/dev/null || true
+                            sonar-scanner \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.projectKey=evercare-frontend \
+                                -Dsonar.projectName="EverCare - Frontend" \
+                                -Dsonar.sources=src \
+                                -Dsonar.tests=src \
+                                -Dsonar.typescript.libraries=node_modules \
+                                -Dsonar.javascript.libraries=node_modules
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Angular') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm run build -- --configuration=production'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir(env.APP_DIR) {
+                    script {
+                        sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} ."
+                        sh "docker tag ${DOCKER_IMAGE}:${env.BUILD_ID} ${DOCKER_IMAGE}:latest"
+                    }
+                }
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                            credentialsId: 'dockerhub-evercare',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                            echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    sh """
+                        docker push ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        docker push ${DOCKER_IMAGE}:latest
+                    """
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                dir(env.APP_DIR) {
+                    archiveArtifacts 'dist/**'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker system prune -f || true'
+        }
+        success {
+            echo 'Build and SonarQube analysis successful!'
+            mail to: 'Bader.Klila@esprit.tn,baderklila@gmail.com,tnjoker99@gmail.com, jebabli.achref@esprit.tn',
+                    subject: "[EverCare] Frontend #${env.BUILD_ID} - SUCCESS",
+                    body: """BUILD SUCCESSFUL - Frontend (Angular)
+
+Build Number: ${env.BUILD_ID}
+Branch: ${env.BRANCH_NAME}
+
+Docker Image:
+- Tag: ${DOCKER_IMAGE}:${env.BUILD_ID}
+- Latest: ${DOCKER_IMAGE}:latest
+
+SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-frontend"""
+        }
+        failure {
+            echo 'Pipeline failed!'
+            mail to: 'Bader.Klila@esprit.tn,baderklila@gmail.com,tnjoker99@gmail.com',
+                    subject: "[EverCare] Frontend #${env.BUILD_ID} - FAILED",
+                    body: """BUILD FAILED - Frontend (Angular)
+
+Build: ${env.BUILD_ID}
+Branch: ${env.BRANCH_NAME}
+
+Check Jenkins logs for error details."""
         }
     }
 }

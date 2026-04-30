@@ -4,10 +4,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'badrftw/evercare-appointment-service'
+        DOCKER_IMAGE = 'badrftw/evercare-ai-service'
         DOCKER_REGISTRY = 'docker.io'
         SONAR_HOST_URL = 'http://10.0.2.15:9000'
-        APP_DIR = 'backend/appointment-service'
+        APP_DIR = 'backend/evercare-ai-service'
         BRANCH_NAME = 'Badr-branch'
     }
 
@@ -50,8 +50,8 @@ pipeline {
                             mvn sonar:sonar \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
-                                -Dsonar.projectKey=evercare-appointment-service \
-                                -Dsonar.projectName="EverCare - Appointment Service" \
+                                -Dsonar.projectKey=evercare-ai-service \
+                                -Dsonar.projectName="EverCare - AI Service" \
                                 -Dsonar.java.binaries=target/classes \
                                 -Dsonar.sources=src/main/java \
                                 -Dsonar.tests=src/test/java \
@@ -124,8 +124,8 @@ pipeline {
         success {
             echo 'Build and SonarQube analysis successful!'
             mail to: 'Bader.Klila@esprit.tn,baderklila@gmail.com,tnjoker99@gmail.com, jebabli.achref@esprit.tn',
-                    subject: "[EverCare] Appointment Service #${env.BUILD_ID} - SUCCESS",
-                    body: """BUILD SUCCESSFUL - Appointment Service
+                    subject: "[EverCare] AI Service #${env.BUILD_ID} - SUCCESS",
+                    body: """BUILD SUCCESSFUL - AI Service
 
 Build Number: ${env.BUILD_ID}
 Branch: ${env.BRANCH_NAME}
@@ -134,13 +134,13 @@ Docker Image:
 - Tag: ${DOCKER_IMAGE}:${env.BUILD_ID}
 - Latest: ${DOCKER_IMAGE}:latest
 
-SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-appointment-service"""
+SonarQube: ${SONAR_HOST_URL}/dashboard?id=evercare-ai-service"""
         }
         failure {
             echo 'Pipeline failed!'
             mail to: 'Bader.Klila@esprit.tn,baderklila@gmail.com,tnjoker99@gmail.com',
-                    subject: "[EverCare] Appointment Service #${env.BUILD_ID} - FAILED",
-                    body: """BUILD FAILED - Appointment Service
+                    subject: "[EverCare] AI Service #${env.BUILD_ID} - FAILED",
+                    body: """BUILD FAILED - AI Service
 
 Build: ${env.BUILD_ID}
 Branch: ${env.BRANCH_NAME}

@@ -38,8 +38,6 @@ spec:
               value: "default"
             - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
               value: "http://eureka-service:8761/eureka/"
-            - name: SPRING_CONFIG_IMPORT
-              value: "optional:configserver:http://config-server-service:8888"
           resources:
             requests:
               memory: "256Mi"

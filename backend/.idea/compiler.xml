@@ -16,7 +16,6 @@
         <module name="Dailyme-service" />
         <module name="cognitive-stimulation-service" />
         <module name="medical-record-service" />
-        <module name="configServer" />
         <module name="Eureka-service" />
         <module name="evercare-ai-service" />
         <module name="Tracking-service" />
@@ -43,6 +42,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="configServer" target="17" />
       <module name="dailyme-service" target="17" />
       <module name="Tracking-service" target="17" />
     </bytecodeTargetLevel>

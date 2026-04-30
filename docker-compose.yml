@@ -43,7 +43,7 @@ services:
       start_period: 60s
 
   # ============================================
-  # SERVICE DISCOVERY & CONFIG
+  # SERVICE DISCOVERY
   # ============================================
 
   eureka:
@@ -59,25 +59,6 @@ services:
       timeout: 10s
       retries: 3
 
-  config-server:
-    image: badrftw/evercare-config-server:latest
-    container_name: evercare-config
-    environment:
-      SPRING_PROFILES_ACTIVE: default
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-    ports:
-      - "8888:8888"
-    networks:
-      - evercare-network
-    depends_on:
-      eureka:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   # ============================================
   # API GATEWAY
   # ============================================
@@ -88,15 +69,12 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     ports:
       - "8089:8089"
     networks:
       - evercare-network
     depends_on:
       eureka:
-        condition: service_healthy
-      config-server:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8089/actuator/health"]
@@ -114,7 +92,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -142,7 +119,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -170,7 +146,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -198,7 +173,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -226,7 +200,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -251,7 +224,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -276,7 +248,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -301,7 +272,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -326,7 +296,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -351,7 +320,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -376,7 +344,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/EverCaredb?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
@@ -401,7 +368,6 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka:8761/eureka/
-      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     ports:
       - "8080:8080"
     networks:

@@ -3,6 +3,7 @@ package com.yourteam.blogservice.services;
 import com.yourteam.blogservice.Repository.ArticleLikeRepository;
 import com.yourteam.blogservice.Repository.ArticleRepository;
 import com.yourteam.blogservice.Repository.CategoryRepository;
+import com.yourteam.blogservice.dto.CreateArticleRequest;
 import com.yourteam.blogservice.entity.Article;
 import com.yourteam.blogservice.entity.Category;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ class ArticleServiceTest {
 
     private Category sampleCategory;
     private Article sampleArticle;
+    private CreateArticleRequest sampleRequest;
     private final String authorEmail = "alice@example.com";
 
     @BeforeEach
@@ -54,6 +56,15 @@ class ArticleServiceTest {
                 .viewCount(0)
                 .likeCount(0)
                 .build();
+
+        sampleRequest = CreateArticleRequest.builder()
+                .title("Understanding Alzheimer's")
+                .content("Memory loss is a key symptom.")
+                .categoryId(1L)
+                .isPublished(true)
+                .language("en")
+                .readingTime(5)
+                .build();
     }
 
     @Test
@@ -62,7 +73,7 @@ class ArticleServiceTest {
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(sampleCategory));
         when(articleRepository.save(any(Article.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Article created = articleService.createArticle(sampleArticle, 1L, authorEmail);
+        Article created = articleService.createArticle(sampleRequest, authorEmail);
 
         assertThat(created).isNotNull();
         assertThat(created.getMoods()).contains("lost");
@@ -115,10 +126,15 @@ class ArticleServiceTest {
     @Test
     @DisplayName("Exception si la catégorie n'existe pas")
     void createArticle_ShouldThrowException_WhenCategoryNotFound() {
+        CreateArticleRequest badRequest = CreateArticleRequest.builder()
+                .title("Test")
+                .content("Content")
+                .categoryId(99L)
+                .build();
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                articleService.createArticle(sampleArticle, 99L, authorEmail)
+                articleService.createArticle(badRequest, authorEmail)
         );
         assertThat(exception.getMessage()).contains("Category not found");
     }

@@ -36,7 +36,6 @@
         <module>Dailyme-service</module>
         <module>Activities</module>
         <module>Alerts</module>
-        <module>configServer</module>
         <module>evercare-ai-service</module>
         <module>communication-service</module>
         <module>blog-service</module>

@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Build outputs
+dist
+.angular
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Test reports
+coverage
+test-results
+*.xml
+*.html
+
+# Documentation
+README.md
+docs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# Angular specific
+.angular
+npm-debug.log
+yarn-error.log

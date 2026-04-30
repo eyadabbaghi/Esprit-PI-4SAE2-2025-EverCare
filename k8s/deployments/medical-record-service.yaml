@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: medical-record-service
+  namespace: evercare
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8083
+      targetPort: 8083
+      protocol: TCP
+  selector:
+    app: medical-record-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medical-record-service-deployment
+  namespace: evercare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medical-record-service
+  template:
+    metadata:
+      labels:
+        app: medical-record-service
+    spec:
+      containers:
+        - name: medical-record-service
+          image: badrftw/evercare-medical-record:latest
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "default"
+            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
+              value: "http://eureka-service:8761/eureka/"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-service:3306/EverCaredb?createDatabaseIfNotExist=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ""
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 10

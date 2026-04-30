@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerts
+  namespace: evercare
+data:
+  alerts.yml: |
+    groups:
+      - name: evercare_alerts
+        interval: 30s
+        rules:
+          # Service Down Alert
+          - alert: ServiceDown
+            expr: up{service=~".*-service"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.service }} is down"
+              description: "{{ $labels.service }} has been down for more than 2 minutes"
+            
+          # High CPU Usage
+          - alert: HighCPUUsage
+            expr: sum(rate(process_cpu_seconds_total{service=~".*-service"}[5m])) by (service) * 100 > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on {{ $labels.service }}"
+              description: "CPU usage is above 80% for more than 5 minutes"
+              
+          # High Memory Usage
+          - alert: HighMemoryUsage
+            expr: sum(container_memory_usage_bytes{service=~".*-service"}) by (service) / sum(container_spec_memory_limit_bytes{service=~".*-service"}) by (service) * 100 > 85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on {{ $labels.service }}"
+              description: "Memory usage is above 85% for more than 5 minutes"
+              
+          # Pod Restarts
+          - alert: PodRestartLoop
+            expr: rate(kube_pod_container_status_restarts_total{service=~".*-service"}[15m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} is restarting frequently"
+              description: "Pod has restarted more than 6 times per hour"
+              
+          # High Request Latency
+          - alert: HighRequestLatency
+            expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{service=~".*-service"}[5m])) by (le, service)) > 5
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High latency on {{ $labels.service }}"
+              description: "95th percentile latency is above 5 seconds"
+              
+          # High Error Rate
+          - alert: HighErrorRate
+            expr: sum(rate(http_server_requests_seconds_count{service=~".*-service",status=~"5.."}[5m])) by (service) / sum(rate(http_server_requests_seconds_count{service=~".*-service"}[5m])) by (service) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High error rate on {{ $labels.service }}"
+              description: "Error rate is above 5%"

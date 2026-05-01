@@ -70,9 +70,11 @@ public class User {
             joinColumns = @JoinColumn(name = "patient_id"),
             inverseJoinColumns = @JoinColumn(name = "caregiver_id")
     )
+    @Builder.Default
     private Set<User> caregivers = new HashSet<>();
 
     @ManyToMany(mappedBy = "caregivers")
+    @Builder.Default
     private Set<User> patients = new HashSet<>();
 
     // Helper methods to maintain bidirectional relationship

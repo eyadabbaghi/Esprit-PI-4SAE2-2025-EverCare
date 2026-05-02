@@ -39,6 +39,11 @@ pipeline {
                 dir(env.APP_DIR) {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
+                            if ! command -v sonar-scanner &> /dev/null; then
+                                curl -sL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip -o /tmp/sonar-scanner.zip
+                                unzip -q /tmp/sonar-scanner.zip -d /opt
+                                ln -sf /opt/sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner /usr/local/bin/sonar-scanner
+                            fi
                             sonar-scanner \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \

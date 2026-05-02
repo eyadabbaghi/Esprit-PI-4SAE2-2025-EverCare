@@ -40,9 +40,11 @@ pipeline {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             if ! command -v sonar-scanner &> /dev/null; then
-                                pip install sonar-scanner
+                                curl -sL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip -o /tmp/sonar-scanner.zip
+                                unzip -q /tmp/sonar-scanner.zip -d /tmp
+                                export PATH="/tmp/sonar-scanner-4.8.0.2856-linux/bin:$PATH"
                             fi
-                            sonar-scanner \
+                            /tmp/sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONAR_TOKEN} \
                                 -Dsonar.projectKey=evercare-face-service \

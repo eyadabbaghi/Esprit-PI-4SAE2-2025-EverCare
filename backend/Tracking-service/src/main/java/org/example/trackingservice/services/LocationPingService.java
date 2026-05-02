@@ -51,6 +51,7 @@ public class LocationPingService {
         if (patientId == null || patientId.isEmpty()) {
             return repo.findAll();
         }
+        patientValidationService.validatePatientExists(patientId);
         return repo.findByPatientIdOrderByTimestampDesc(patientId);
     }
 

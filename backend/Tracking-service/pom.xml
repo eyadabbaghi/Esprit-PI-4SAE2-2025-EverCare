@@ -79,10 +79,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 🔥 TEST -->
+        <!-- H2 Database for testing -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 

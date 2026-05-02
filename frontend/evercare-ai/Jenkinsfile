@@ -36,7 +36,18 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                echo 'Skipping SonarQube for Python service'
+                dir(env.APP_DIR) {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            which sonar-scanner && sonar-scanner \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -Dsonar.projectKey=evercare-ai-frontend \
+                                -Dsonar.sources=. \
+                                -Dsonar.python.version=3.11 || echo "SonarQube skipped - scanner not available"
+                        '''
+                    }
+                }
             }
         }
 

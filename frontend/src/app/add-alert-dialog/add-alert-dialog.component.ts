@@ -17,7 +17,7 @@ interface Contact {
 @Component({
   selector: 'app-add-alert-dialog',
   templateUrl: './add-alert-dialog.component.html',
-  styleUrls: ['./add-alert-dialog.component.scss']
+  styleUrls: ['./add-alert-dialog.component.css']
 })
 export class AddAlertDialogComponent implements OnInit, OnDestroy {
   form: FormGroup;

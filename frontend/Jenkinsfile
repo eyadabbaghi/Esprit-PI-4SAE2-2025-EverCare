@@ -24,7 +24,10 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir(env.APP_DIR) {
-                    sh 'npm ci'
+                    sh '''
+                        which node || (curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs)
+                        npm ci
+                    '''
                 }
             }
         }

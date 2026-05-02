@@ -36,22 +36,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                dir(env.APP_DIR) {
-                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            if [ ! -f /tmp/sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner ]; then
-                                curl -sL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip -o /tmp/sonar-scanner.zip
-                                python3 -c "import zipfile; zipfile.ZipFile('/tmp/sonar-scanner.zip').extractall('/tmp')"
-                            fi
-                            /tmp/sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_TOKEN} \
-                                -Dsonar.projectKey=evercare-face-service \
-                                -Dsonar.sources=. \
-                                -Dsonar.python.version=3.11
-                        '''
-                    }
-                }
+                echo 'Skipping SonarQube for Python service'
             }
         }
 

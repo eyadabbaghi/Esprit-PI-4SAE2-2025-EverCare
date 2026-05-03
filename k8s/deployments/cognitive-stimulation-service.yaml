@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cognitive-stimulation-service
+  name: cognitive-stimulation-service-deployment
   labels:
     app: cognitive-stimulation-service
 spec:

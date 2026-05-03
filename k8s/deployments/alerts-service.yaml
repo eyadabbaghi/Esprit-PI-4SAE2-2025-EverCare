@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: alerts-service
+  name: alerts-service-deployment
   labels:
     app: alerts-service
 spec:

@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notification-service
+  name: notification-service-deployment
   labels:
     app: notification-service
 spec:

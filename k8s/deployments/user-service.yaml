@@ -58,17 +58,17 @@ spec:
               memory: "256Mi"
               cpu: "200m"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "500m"
           livenessProbe:
             httpGet:
               path: /EverCare/actuator/health
               port: 8096
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /EverCare/actuator/health
               port: 8096
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 5

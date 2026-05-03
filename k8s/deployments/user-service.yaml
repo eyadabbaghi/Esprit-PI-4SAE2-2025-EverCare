@@ -50,6 +50,8 @@ spec:
               value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
             - name: KEYCLOAK_SERVER_URL
               value: "http://keycloak-service:8080"
+            - name: FACE_SERVICE_URL
+              value: "http://face-service:8085"
           resources:
             requests:
               memory: "256Mi"

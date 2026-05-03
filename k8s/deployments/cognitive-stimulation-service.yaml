@@ -48,6 +48,8 @@ spec:
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
               value: "admin"
+            - name: MEDICAL_RECORD_SERVICE_URL
+              value: "http://medical-record-service:8083"
           resources:
             requests:
               memory: "256Mi"

@@ -1,3 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-config
+  namespace: evercare
+data:
+  realm-import.json: |
+    {
+      "realm": "EverCareRealm",
+      "enabled": true,
+      "displayName": "EverCare",
+      "accessTokenLifespan": 300,
+      "ssoSessionIdleTimeout": 1800,
+      "ssoSessionMaxLifespan": 36000
+    }
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,7 +25,7 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 30180
+      nodePort: 31880
       protocol: TCP
   selector:
     app: keycloak
@@ -28,10 +45,31 @@ spec:
       labels:
         app: keycloak
     spec:
+      initContainers:
+        - name: init-keycloak-db
+          image: mysql:8.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MySQL to be ready..."
+              until mysql -h mysql-service -u root -p'' -e "SELECT 1" 2>/dev/null; do
+                sleep 2
+              done
+              echo "Creating keycloak database if not exists..."
+              mysql -h mysql-service -u root -p'' -e "CREATE DATABASE IF NOT EXISTS keycloak;" || true
+              echo "Keycloak database ready"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0
-          command: ["start-dev"]
+          command: ["start-dev", "--import-realm"]
           ports:
             - containerPort: 8080
           env:
@@ -40,7 +78,17 @@ spec:
             - name: KEYCLOAK_ADMIN_PASSWORD
               value: "admin"
             - name: KC_DB
-              value: "dev-file"
+              value: "mysql"
+            - name: KC_DB_URL
+              value: "jdbc:mysql://mysql-service:3306/keycloak?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            - name: KC_DB_USERNAME
+              value: "root"
+            - name: KC_DB_PASSWORD
+              value: ""
+          volumeMounts:
+            - name: realm-export
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
           resources:
             requests:
               memory: "512Mi"
@@ -60,3 +108,10 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
+      volumes:
+        - name: realm-export
+          configMap:
+            name: keycloak-realm-config
+            items:
+              - key: realm-import.json
+                path: realm-import.json

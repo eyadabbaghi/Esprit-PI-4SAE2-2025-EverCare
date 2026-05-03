@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tracking-service-deployment
+  name: tracking-service
   labels:
     app: tracking-service
 spec:

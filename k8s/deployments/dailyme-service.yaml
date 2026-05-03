@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dailyme-service-deployment
+  name: dailyme-service
   labels:
     app: dailyme-service
 spec:

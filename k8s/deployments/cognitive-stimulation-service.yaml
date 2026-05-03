@@ -43,7 +43,7 @@ spec:
             - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
               value: "http://eureka-service:8761/eureka/"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql-service:3306/EverCaredb?createDatabaseIfNotExist=true"
+              value: "jdbc:mysql://mysql-service:3306/alzheimer_cognitive_stimulation?createDatabaseIfNotExist=true"
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD

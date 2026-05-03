@@ -49,14 +49,18 @@ spec:
               cpu: "500m"
           livenessProbe:
             exec:
-              command: ["mysqladmin", "ping"]
-            initialDelaySeconds: 30
+              command: ["mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
+            initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             exec:
-              command: ["mysql", "-h", "localhost"]
-            initialDelaySeconds: 20
+              command: ["mysql", "-h", "localhost", "-uroot", "-padmin", "-e", "SELECT 1"]
+            initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
       volumes:
         - name: mysql-data
           emptyDir: {}

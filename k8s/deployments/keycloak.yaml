@@ -45,17 +45,6 @@ spec:
       labels:
         app: keycloak
     spec:
-      initContainers:
-        - name: init-keycloak-db
-          image: busybox:1.28
-          command: ['sh', '-c', 'echo "Waiting for MySQL..."; until nc -z mysql-service 3306; do echo "Waiting for MySQL port..."; sleep 2; done; echo "MySQL is ready"']
-          resources:
-            requests:
-              memory: "32Mi"
-              cpu: "50m"
-            limits:
-              memory: "64Mi"
-              cpu: "100m"
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0

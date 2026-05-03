@@ -53,11 +53,11 @@ spec:
             - -c
             - |
               echo "Waiting for MySQL to be ready..."
-              until mysql -h mysql-service -u root -p'' -e "SELECT 1" 2>/dev/null; do
+              until mysql -h mysql-service -u root -p'admin' -e "SELECT 1" 2>/dev/null; do
                 sleep 2
               done
               echo "Creating keycloak database if not exists..."
-              mysql -h mysql-service -u root -p'' -e "CREATE DATABASE IF NOT EXISTS keycloak;" || true
+              mysql -h mysql-service -u root -p'admin' -e "CREATE DATABASE IF NOT EXISTS keycloak;" || true
               echo "Keycloak database ready"
           resources:
             requests:

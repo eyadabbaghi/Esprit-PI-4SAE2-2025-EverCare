@@ -30,6 +30,7 @@ spec:
       containers:
         - name: medical-record-service
           image: badrftw/evercare-medical-record:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:
@@ -41,10 +42,8 @@ spec:
               value: "jdbc:mysql://mysql-service:3306/EverCaredb?createDatabaseIfNotExist=true"
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
-            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
+- name: SPRING_DATASOURCE_PASSWORD
+              value: "admin"
           resources:
             requests:
               memory: "256Mi"
@@ -56,11 +55,11 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8083
-            initialDelaySeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8083
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 10

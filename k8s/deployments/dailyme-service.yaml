@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: dailyme-service
-          image: evercare/dailyme-service:latest
+          image: badrftw/evercare-dailyme-service:latest
           ports:
             - containerPort: 8098
           env:

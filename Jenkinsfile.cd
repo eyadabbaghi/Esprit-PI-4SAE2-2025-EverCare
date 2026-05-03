@@ -15,7 +15,7 @@ pipeline {
         )
         choice(
             name: 'ACTION',
-            choices: ['deploy', 'delete'],
+            choices: ['deploy', 'delete', 'rollback'],
             description: 'Action à effectuer'
         )
     }
@@ -80,6 +80,41 @@ pipeline {
             steps {
                 script {
                     sh "minikube kubectl -- delete -f k8s/deployments/${params.SERVICES}.yaml --ignore-not-found=true"
+                }
+            }
+        }
+
+        stage('Rollback Services') {
+            when {
+                expression { params.ACTION == 'rollback' }
+            }
+            steps {
+                script {
+                    if (params.SERVICES == 'all') {
+                        sh '''
+                            for deploy in $(minikube kubectl -- get deployments -n evercare -o jsonpath='{.items[*].metadata.name}'); do
+                                echo "Rolling back $deploy"
+                                minikube kubectl -- rollout undo deployment/$deploy -n evercare
+                            done
+                        '''
+                    } else {
+                        sh "minikube kubectl -- rollout undo deployment/${params.SERVICES}-deployment -n evercare"
+                    }
+                }
+            }
+        }
+
+        stage('Wait for Rollback') {
+            when {
+                expression { params.ACTION == 'rollback' }
+            }
+            steps {
+                script {
+                    if (params.SERVICES == 'all') {
+                        sh 'minikube kubectl -- rollout status deployment -n evercare --timeout=600s || true'
+                    } else {
+                        sh "minikube kubectl -- rollout status deployment/${params.SERVICES}-deployment -n evercare --timeout=300s || true"
+                    }
                 }
             }
         }

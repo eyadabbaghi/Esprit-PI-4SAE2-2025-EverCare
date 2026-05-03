@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: tracking-service
-          image: evercare/tracking-service:latest
+          image: badrftw/evercare-tracking-service:latest
           ports:
             - containerPort: 8099
           env:

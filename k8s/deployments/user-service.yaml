@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: evercare/user-service:latest
+          image: badrftw/evercare-user-service:latest
           ports:
             - containerPort: 8096
           env:

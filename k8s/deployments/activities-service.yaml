@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: activities-service
-          image: evercare/activities-service:latest
+          image: badrftw/evercare-activities-service:latest
           ports:
             - containerPort: 8092
           env:

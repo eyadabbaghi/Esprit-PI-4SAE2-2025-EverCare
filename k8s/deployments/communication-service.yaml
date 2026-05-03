@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: communication-service
-          image: evercare/communication-service:latest
+          image: badrftw/evercare-communication-service:latest
           ports:
             - containerPort: 8094
           env:

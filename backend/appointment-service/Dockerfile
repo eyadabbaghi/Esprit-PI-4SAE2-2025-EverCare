@@ -9,6 +9,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 
 EXPOSE 8086
 
-ADD target/appointment-service.jar app.jar
+ADD target/appointment-service-0.0.1-SNAPSHOT.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

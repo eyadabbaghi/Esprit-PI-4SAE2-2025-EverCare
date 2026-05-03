@@ -75,18 +75,6 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-          livenessProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
       volumes:
         - name: realm-export
           configMap:

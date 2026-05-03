@@ -34,13 +34,9 @@ spec:
             - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: "rootpassword"
+              value: "admin"
             - name: MYSQL_DATABASE
               value: "EverCaredb"
-            - name: MYSQL_USER
-              value: "evercare"
-            - name: MYSQL_PASSWORD
-              value: "evercarepass"
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql

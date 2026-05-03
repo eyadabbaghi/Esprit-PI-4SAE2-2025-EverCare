@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cognitive-stimulation-service
+  namespace: evercare
   labels:
     app: cognitive-stimulation-service
 spec:
@@ -16,7 +17,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cognitive-stimulation-service
+  name: cognitive-stimulation-service-deployment
+  namespace: evercare
   labels:
     app: cognitive-stimulation-service
 spec:
@@ -32,6 +34,7 @@ spec:
       containers:
         - name: cognitive-stimulation-service
           image: badrftw/evercare-cognitive-stimulation-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8084
           env:
@@ -44,7 +47,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
           resources:
             requests:
               memory: "256Mi"
@@ -62,5 +65,5 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8084
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 5

@@ -30,6 +30,7 @@ spec:
       containers:
         - name: blog-service
           image: badrftw/evercare-blog-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8087
           env:
@@ -42,7 +43,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
           resources:
@@ -56,11 +57,11 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8087
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8087
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 10

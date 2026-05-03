@@ -22,6 +22,7 @@ import javax.crypto.SecretKey;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
+// Security configuration for User service - allows actuator health without auth
 public class SecurityConfig {
 
     private final LocalUserJwtAuthenticationConverter jwtAuthenticationConverter;

@@ -42,7 +42,7 @@ spec:
               value: "jdbc:mysql://mysql-service:3306/EverCaredb?createDatabaseIfNotExist=true"
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
-- name: SPRING_DATASOURCE_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
               value: "admin"
           resources:
             requests:

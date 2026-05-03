@@ -47,24 +47,14 @@ spec:
     spec:
       initContainers:
         - name: init-keycloak-db
-          image: mysql:8.0
-          command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for MySQL to be ready..."
-              until mysql -h mysql-service -u root -p'admin' -e "SELECT 1" 2>/dev/null; do
-                sleep 2
-              done
-              echo "Creating keycloak database if not exists..."
-              mysql -h mysql-service -u root -p'admin' -e "CREATE DATABASE IF NOT EXISTS keycloak;" || true
-              echo "Keycloak database ready"
+          image: busybox:1.28
+          command: ['sh', '-c', 'echo "Waiting for MySQL..."; until nc -z mysql-service 3306; do echo "Waiting for MySQL port..."; sleep 2; done; echo "MySQL is ready"']
           resources:
             requests:
-              memory: "64Mi"
+              memory: "32Mi"
               cpu: "50m"
             limits:
-              memory: "128Mi"
+              memory: "64Mi"
               cpu: "100m"
       containers:
         - name: keycloak
@@ -80,7 +70,7 @@ spec:
             - name: KC_DB
               value: "mysql"
             - name: KC_DB_URL
-              value: "jdbc:mysql://mysql-service:3306/keycloak?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+              value: "jdbc:mysql://mysql-service:3306/EverCaredb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
             - name: KC_DB_USERNAME
               value: "root"
             - name: KC_DB_PASSWORD

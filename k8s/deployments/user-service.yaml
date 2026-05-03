@@ -17,6 +17,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: user-service-deployment
+  namespace: evercare
   labels:
     app: user-service
 spec:

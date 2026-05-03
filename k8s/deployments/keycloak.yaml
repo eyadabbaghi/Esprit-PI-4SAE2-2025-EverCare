@@ -59,7 +59,7 @@ spec:
             - name: KC_DB
               value: "mysql"
             - name: KC_DB_URL
-              value: "jdbc:mysql://mysql-service:3306/EverCaredb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+              value: "jdbc:mysql://mysql-service:3306/keycloakdb?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
             - name: KC_DB_USERNAME
               value: "root"
             - name: KC_DB_PASSWORD

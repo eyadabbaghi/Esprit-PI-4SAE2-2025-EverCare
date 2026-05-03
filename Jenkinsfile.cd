@@ -38,6 +38,12 @@ pipeline {
             }
         }
 
+        stage('Create Namespace') {
+            steps {
+                sh 'minikube kubectl -- apply -f k8s/namespace.yaml'
+            }
+        }
+
         stage('Deploy Services') {
             when {
                 expression { params.ACTION == 'deploy' }
@@ -46,7 +52,6 @@ pipeline {
                 script {
                     if (params.SERVICES == 'all') {
                         sh '''
-                            minikube kubectl -- apply -f k8s/namespace.yaml || true
                             minikube kubectl -- apply -f k8s/configmap.yaml || true
                             minikube kubectl -- apply -f k8s/secrets.yaml || true
                             minikube kubectl -- apply -f k8s/deployments/

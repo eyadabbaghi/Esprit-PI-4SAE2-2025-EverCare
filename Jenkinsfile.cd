@@ -7,7 +7,7 @@ pipeline {
     parameters {
         choice(
             name: 'SERVICES',
-            choices: ['all', 'blog-service', 'medical-record-service', 'appointment-service',
+            choices: ['all', 'mysql', 'keycloak', 'blog-service', 'medical-record-service', 'appointment-service',
                       'communication-service', 'notification-service', 'cognitive-stimulation-service',
                       'user-service', 'tracking-service', 'dailyme-service', 'alerts-service',
                       'activities-service', 'ai-service', 'eureka', 'api-gateway', 'frontend', 'face-service'],
@@ -50,10 +50,17 @@ pipeline {
             }
             steps {
                 script {
-                    if (params.SERVICES == 'keycloak' || params.SERVICES == 'mysql') {
+                    if (params.SERVICES == 'mysql') {
                         sh 'minikube kubectl -- delete deployment mysql-deployment -n evercare --ignore-not-found=true || true'
                         sh 'minikube kubectl -- apply -f k8s/deployments/mysql.yaml'
                         sh 'minikube kubectl -- wait --for=condition=ready pod/mysql-deployment --timeout=120s -n evercare || true'
+                    }
+
+                    if (params.SERVICES == 'keycloak') {
+                        sh 'minikube kubectl -- delete deployment mysql-deployment -n evercare --ignore-not-found=true || true'
+                        sh 'minikube kubectl -- apply -f k8s/deployments/mysql.yaml'
+                        sh 'minikube kubectl -- wait --for=condition=ready pod/mysql-deployment --timeout=120s -n evercare || true'
+                        sh 'minikube kubectl -- apply -f k8s/deployments/keycloak.yaml'
                     }
 
                     if (params.SERVICES == 'all') {
@@ -62,7 +69,7 @@ pipeline {
                             minikube kubectl -- apply -f k8s/secrets.yaml || true
                             minikube kubectl -- apply -f k8s/deployments/
                         '''
-                    } else {
+                    } else if (params.SERVICES != 'mysql' && params.SERVICES != 'keycloak') {
                         sh "minikube kubectl -- apply -f k8s/deployments/${params.SERVICES}.yaml"
                     }
                 }

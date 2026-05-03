@@ -50,7 +50,10 @@ pipeline {
             }
             steps {
                 script {
-                    if (params.SERVICES == 'keycloak') {
+                    if (params.SERVICES == 'keycloak' || params.SERVICES == 'mysql') {
+                        sh 'minikube kubectl -- delete pvc mysql-pvc -n evercare --ignore-not-found=true || true'
+                        sh 'minikube kubectl -- delete pv mysql-pv -n evercare --ignore-not-found=true || true'
+                        sh 'minikube kubectl -- delete deployment mysql-deployment -n evercare --ignore-not-found=true || true'
                         sh 'minikube kubectl -- apply -f k8s/deployments/mysql.yaml'
                         sh 'minikube kubectl -- wait --for=condition=ready pod/mysql-deployment --timeout=120s -n evercare || true'
                     }

@@ -50,6 +50,11 @@ pipeline {
             }
             steps {
                 script {
+                    if (params.SERVICES == 'keycloak') {
+                        sh 'minikube kubectl -- apply -f k8s/deployments/mysql.yaml'
+                        sh 'minikube kubectl -- wait --for=condition=ready pod/mysql-deployment --timeout=120s -n evercare || true'
+                    }
+
                     if (params.SERVICES == 'all') {
                         sh '''
                             minikube kubectl -- apply -f k8s/configmap.yaml || true

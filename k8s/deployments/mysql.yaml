@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: mysql:5.7
           ports:
             - containerPort: 3306
           env:
@@ -47,20 +47,6 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          livenessProbe:
-            exec:
-              command: ["mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin"]
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            exec:
-              command: ["mysql", "-h", "localhost", "-uroot", "-padmin", "-e", "SELECT 1"]
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
       volumes:
         - name: mysql-data
           emptyDir: {}

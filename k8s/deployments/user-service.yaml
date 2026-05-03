@@ -63,11 +63,11 @@ spec:
             httpGet:
               path: /EverCare/actuator/health
               port: 8096
-            initialDelaySeconds: 120
+            initialDelaySeconds: 480
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /EverCare/actuator/health
               port: 8096
-            initialDelaySeconds: 90
+            initialDelaySeconds: 480
             periodSeconds: 5

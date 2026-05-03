@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: appointment-service
+  namespace: evercare
   labels:
     app: appointment-service
 spec:
@@ -16,7 +17,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: appointment-service
+  name: appointment-service-deployment
+  namespace: evercare
   labels:
     app: appointment-service
 spec:
@@ -32,6 +34,7 @@ spec:
       containers:
         - name: appointment-service
           image: badrftw/evercare-appointment-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8086
           env:
@@ -44,7 +47,9 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
           resources:
             requests:
               memory: "256Mi"

@@ -4,53 +4,8 @@ kind: ConfigMap
 metadata:
   name: keycloak-realm-config
   namespace: evercare
-data:
-  realm-import.json: |
-    {
-      "id": "d5ef132e-8df2-4310-b8de-ab18b7500122",
-      "realm": "EverCareRealm",
-      "notBefore": 0,
-      "defaultSignatureAlgorithm": "RS256",
-      "revokeRefreshToken": false,
-      "refreshTokenMaxReuse": 0,
-      "accessTokenLifespan": 300,
-      "accessTokenLifespanForImplicitFlow": 900,
-      "ssoSessionIdleTimeout": 1800,
-      "ssoSessionMaxLifespan": 36000,
-      "enabled": true,
-      "sslRequired": "external",
-      "registrationAllowed": false,
-      "registrationEmailAsUsername": false,
-      "rememberMe": true,
-      "verifyEmail": false,
-      "loginWithEmailAllowed": true,
-      "duplicateEmailsAllowed": false,
-      "resetPasswordAllowed": true,
-      "editUsernameAllowed": false,
-      "bruteForceProtected": false,
-      "roles": {
-        "realm": [
-          {"name": "doctor", "composite": false, "clientRole": false},
-          {"name": "offline_access", "description": "${role_offline-access}", "composite": false, "clientRole": false},
-          {"name": "caregiver", "composite": false, "clientRole": false},
-          {"name": "uma_authorization", "description": "${role_uma_authorization}", "composite": false, "clientRole": false},
-          {"name": "patient", "composite": false, "clientRole": false},
-          {"name": "default-roles-evercarerealm", "description": "${role_default-roles}", "composite": true, "composites": {"realm": ["offline_access", "uma_authorization"]}, "clientRole": false},
-          {"name": "admin", "composite": false, "clientRole": false}
-        ]
-      },
-      "users": [],
-      "clients": [
-        {"clientId": "evercare", "name": "EverCare Client", "enabled": true, "publicClient": false, "serviceAccountsEnabled": true, "directAccessGrantsEnabled": true, "redirectUris": ["/*"], "webOrigins": ["/*"], "protocol": "openid-connect"},
-        {"clientId": "evercare-backend", "name": "EverCare Backend", "enabled": true, "publicClient": false, "serviceAccountsEnabled": true, "protocol": "openid-connect"},
-        {"clientId": "frontend-app", "name": "Frontend App", "enabled": true, "publicClient": false, "directAccessGrantsEnabled": true, "redirectUris": ["http://localhost:4200/*"], "webOrigins": ["http://localhost:4200"], "protocol": "openid-connect"},
-        {"clientId": "face-login-service", "name": "Face Login Service", "enabled": true, "publicClient": false, "serviceAccountsEnabled": true, "directAccessGrantsEnabled": true, "redirectUris": ["/*"], "webOrigins": ["/*"], "protocol": "openid-connect"}
-      ],
-      "browserFlow": "browser",
-      "registrationFlow": "registration",
-      "directGrantFlow": "direct grant",
-      "resetCredentialsFlow": "reset credentials"
-    }
+# Realm will be created manually via Keycloak Admin UI
+# Or import later using: k8s/keycloak/evercare-realm.json
 ---
 apiVersion: v1
 kind: Service
@@ -101,10 +56,6 @@ spec:
               value: "root"
             - name: KC_DB_PASSWORD
               value: "admin"
-          volumeMounts:
-            - name: realm-export
-              mountPath: /opt/keycloak/data/import
-              readOnly: true
           resources:
             requests:
               memory: "512Mi"
@@ -112,10 +63,3 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-      volumes:
-        - name: realm-export
-          configMap:
-            name: keycloak-realm-config
-            items:
-              - key: realm-import.json
-                path: realm-import.json

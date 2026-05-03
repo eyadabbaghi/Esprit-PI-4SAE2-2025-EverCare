@@ -45,7 +45,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: "http://keycloak-service:8080/realms/EverCareRealm/protocol/openid-connect/certs"
           resources:

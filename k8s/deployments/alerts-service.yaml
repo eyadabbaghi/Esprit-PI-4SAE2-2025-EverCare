@@ -57,13 +57,13 @@ spec:
               cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /EverCare/actuator/health
               port: 8095
             initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /EverCare/actuator/health
               port: 8095
             initialDelaySeconds: 120
             periodSeconds: 5

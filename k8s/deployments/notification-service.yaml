@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: notification-service
+  namespace: evercare
   labels:
     app: notification-service
 spec:
@@ -16,7 +17,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notification-service
+  name: notification-service-deployment
+  namespace: evercare
   labels:
     app: notification-service
 spec:
@@ -32,6 +34,7 @@ spec:
       containers:
         - name: notification-service
           image: badrftw/evercare-notification-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8097
           env:
@@ -44,7 +47,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
           resources:
             requests:
               memory: "256Mi"
@@ -56,11 +59,11 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8097
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8097
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
             periodSeconds: 5

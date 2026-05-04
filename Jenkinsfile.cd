@@ -94,7 +94,7 @@ pipeline {
                     if (params.SERVICES == 'all') {
                         sh 'minikube kubectl -- rollout status deployment -n evercare --timeout=600s || true'
                     } else {
-                        sh "minikube kubectl -- rollout status deployment/${params.SERVICES} -n evercare --timeout=300s || true"
+                        sh "minikube kubectl -- rollout status deployment/${params.SERVICES}-deployment -n evercare --timeout=300s || true"
                     }
                 }
             }
@@ -125,7 +125,7 @@ pipeline {
                             done
                         '''
                     } else {
-                        sh "minikube kubectl -- rollout undo deployment/${params.SERVICES} -n evercare"
+                        sh "minikube kubectl -- rollout undo deployment/${params.SERVICES}-deployment -n evercare"
                     }
                 }
             }
@@ -140,7 +140,7 @@ pipeline {
                     if (params.SERVICES == 'all') {
                         sh 'minikube kubectl -- rollout status deployment -n evercare --timeout=600s || true'
                     } else {
-                        sh "minikube kubectl -- rollout status deployment/${params.SERVICES} -n evercare --timeout=300s || true"
+                        sh "minikube kubectl -- rollout status deployment/${params.SERVICES}-deployment -n evercare --timeout=300s || true"
                     }
                 }
             }

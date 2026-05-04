@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'http://api-gateway:8089/EverCare',
   authApiUrl: 'http://keycloak:8080',
   medicalRecordApiUrl: 'http://medical-record-service:8083/api/medical-records',

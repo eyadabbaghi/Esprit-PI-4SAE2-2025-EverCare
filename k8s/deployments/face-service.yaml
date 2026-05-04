@@ -34,7 +34,7 @@ spec:
             - containerPort: 8100
           env:
             - name: DATABASE_URL
-              value: "mysql+pymysql://root:@mysql-service:3306/EverCaredb"
+              value: "mysql+pymysql://root:admin@mysql-service:3306/EverCaredb"
           resources:
             requests:
               memory: "512Mi"

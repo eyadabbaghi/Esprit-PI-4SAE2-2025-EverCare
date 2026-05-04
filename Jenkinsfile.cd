@@ -87,7 +87,7 @@ pipeline {
 
         stage('Wait for Rollout') {
             when {
-                expression { params.ACTION ==   open'deploy' }
+                expression { params.ACTION == 'deploy' }
             }
             steps {
                 script {

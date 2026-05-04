@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dailyme-service
+  namespace: evercare
   labels:
     app: dailyme-service
 spec:
@@ -16,7 +17,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dailyme-service
+  name: dailyme-service-deployment
+  namespace: evercare
   labels:
     app: dailyme-service
 spec:
@@ -32,6 +34,7 @@ spec:
       containers:
         - name: dailyme-service
           image: badrftw/evercare-dailyme-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8098
           env:
@@ -44,7 +47,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: "root"
             - name: SPRING_DATASOURCE_PASSWORD
-              value: ""
+              value: "admin"
           resources:
             requests:
               memory: "256Mi"
@@ -56,11 +59,11 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8098
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8098
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
             periodSeconds: 5

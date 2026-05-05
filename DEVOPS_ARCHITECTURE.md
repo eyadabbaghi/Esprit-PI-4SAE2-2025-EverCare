@@ -56,7 +56,7 @@ Checkout Git → Build → Test (JUnit) → SonarQube → Package → Docker Bui
 | API Gateway | `badrftw/evercare-api-gateway:latest` | 8089 |
 | Eureka | `badrftw/evercare-eureka-service:latest` | 8761 |
 | MySQL | `mysql:8.0` | 3306 |
-| Keycloak | `quay.io/keycloak/keycloak:24.0` | 8180 |
+| Keycloak | `quay.io/keycloak/keycloak:24.0` | 8080 (NodePort 31880) |
 | User Service | `badrftw/evercare-user-service:latest` | 8096 |
 | Blog Service | `badrftw/evercare-blog-service:latest` | 8087 |
 | Medical Record | `badrftw/evercare-medical-record:latest` | 8083 |
@@ -182,7 +182,7 @@ k8s/
 ### 5.1 Authentication
 
 - **Keycloak:** Single Sign-On (SSO)
-- **URL:** http://keycloak:8180
+- **URL:** http://keycloak:8080
 - **Realm:** EverCareRealm
 - **Admin:** admin/admin
 
@@ -195,7 +195,7 @@ k8s/
 
 ```yaml
 - DATABASE_USERNAME: root
-- DATABASE_PASSWORD: ""
+- DATABASE_PASSWORD: "admin"
 - KEYCLOAK_ADMIN: admin
 - KEYCLOAK_ADMIN_PASSWORD: admin
 - JWT_SECRET: evercare-jwt-secret-key-change-in-production

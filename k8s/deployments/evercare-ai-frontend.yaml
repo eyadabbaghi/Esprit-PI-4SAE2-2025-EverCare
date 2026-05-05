@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: evercare-ai-frontend
+  name: evercare-ai-service
   namespace: evercare
 spec:
   type: ClusterIP
@@ -10,50 +10,47 @@ spec:
       targetPort: 8000
       protocol: TCP
   selector:
-    app: evercare-ai-frontend
+    app: evercare-ai
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: evercare-ai-frontend-deployment
+  name: evercare-ai-deployment
   namespace: evercare
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: evercare-ai-frontend
+      app: evercare-ai
   template:
     metadata:
       labels:
-        app: evercare-ai-frontend
+        app: evercare-ai
     spec:
       containers:
-        - name: evercare-ai-frontend
+        - name: evercare-ai
           image: badrftw/evercare-ai-frontend:latest
           ports:
             - containerPort: 8000
           env:
             - name: GROQ_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: evercare-secrets
-                  key: groq-api-key
+              value: "gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
           resources:
             requests:
               memory: "256Mi"
-              cpu: "250m"
+              cpu: "200m"
             limits:
               memory: "512Mi"
               cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /docs
+              path: /health
               port: 8000
             initialDelaySeconds: 30
-            periodSeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /docs
+              path: /health
               port: 8000
             initialDelaySeconds: 10
-            periodSeconds: 10
+            periodSeconds: 5

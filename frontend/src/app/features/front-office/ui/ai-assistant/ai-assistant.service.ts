@@ -20,7 +20,7 @@ export interface ChatResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AiAssistantService {
-  private apiUrl = 'http://localhost:8000/api/chat';
+  private apiUrl = 'http://evercare-ai-service:8000/api/chat';
 
   constructor(private http: HttpClient) {}
 

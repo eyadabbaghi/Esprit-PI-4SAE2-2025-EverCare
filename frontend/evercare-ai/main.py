@@ -14,12 +14,20 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+def get_groq_client():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return None
+    return Groq(api_key=api_key)
+
+
+client = get_groq_client()
 
 SYSTEM_PROMPT = """
 You are EverCare Assistant, a compassionate AI care companion
@@ -59,6 +67,11 @@ class ChatResponse(BaseModel):
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    global client
+    if client is None:
+        client = get_groq_client()
+    if client is None:
+        return ChatResponse(reply="AI service not configured. Please set GROQ_API_KEY environment variable.")
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     for m in request.history:
@@ -95,3 +108,13 @@ async def chat(request: ChatRequest):
             pass
 
     return ChatResponse(reply=raw)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "evercare-ai-chatbot"}
+
+
+@app.get("/")
+def root():
+    return {"message": "EverCare AI Chatbot is running", "docs": "/docs"}

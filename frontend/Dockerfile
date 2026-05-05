@@ -16,6 +16,7 @@ COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN mv /usr/share/nginx/html/index.csr.html /usr/share/nginx/html/index.html || true
 
 EXPOSE 80
 

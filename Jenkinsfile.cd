@@ -10,7 +10,7 @@ pipeline {
             choices: ['all', 'mysql', 'keycloak', 'blog-service', 'medical-record-service', 'appointment-service',
                       'communication-service', 'notification-service', 'cognitive-stimulation-service',
                       'user-service', 'tracking-service', 'dailyme-service', 'alerts-service',
-                      'activities-service', 'ai-service', 'eureka', 'api-gateway', 'frontend', 'face-service'],
+                      'activities-service', 'ai-service', 'eureka', 'api-gateway', 'frontend', 'face-service', 'monitoring'],
             description: 'Service à déployer'
         )
         choice(
@@ -78,6 +78,8 @@ pipeline {
                             minikube kubectl -- apply -f k8s/secrets.yaml || true
                             minikube kubectl -- apply -f k8s/deployments/
                         '''
+                    } else if (params.SERVICES == 'monitoring') {
+                        sh 'minikube kubectl -- apply -f k8s/monitoring/'
                     } else if (params.SERVICES != 'mysql' && params.SERVICES != 'keycloak') {
                         sh "minikube kubectl -- apply -f k8s/deployments/${params.SERVICES}.yaml"
                     }
@@ -93,6 +95,8 @@ pipeline {
                 script {
                     if (params.SERVICES == 'all') {
                         sh 'minikube kubectl -- rollout status deployment -n evercare --timeout=600s || true'
+                    } else if (params.SERVICES == 'monitoring') {
+                        sh 'minikube kubectl -- wait --for=condition=ready pod -l app=prometheus --timeout=120s -n evercare || true'
                     } else {
                         sh "minikube kubectl -- rollout status deployment/${params.SERVICES}-deployment -n evercare --timeout=300s || true"
                     }

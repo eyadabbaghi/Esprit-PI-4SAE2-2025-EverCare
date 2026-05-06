@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import { Subject, firstValueFrom } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
+import { environment } from '../../../../../../environments/environment';
 
 export interface CheckSignalMessage {
   type: 'check-request' | 'offer' | 'answer' | 'ice-candidate' | 'cancel' | 'snapshot-request' | 'snapshot';

@@ -7,6 +7,7 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 type JournalApiEntry = {
   id: number;

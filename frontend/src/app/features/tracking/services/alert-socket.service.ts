@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class AlertSocketService {
 
   connect(patientId: string, callback: (alert: any) => void) {
 
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(environment.apiUrl.replace('http', 'ws') + '/ws');
 
     this.stompClient = new Client({
       webSocketFactory: () => socket as any,

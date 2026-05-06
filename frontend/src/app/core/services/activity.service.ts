@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 // Activity (global)
 export interface Activity {
@@ -134,9 +135,7 @@ export interface ActivityWithDetails extends Activity {
   providedIn: 'root'
 })
 export class ActivityService {
- // private apiUrl = 'http://localhost:8092/EverCare'; // direct to microservice
-  // New gateway URL
-  public apiUrl = 'http://localhost:8089/EverCare';
+  public apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

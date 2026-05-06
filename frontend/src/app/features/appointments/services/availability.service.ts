@@ -5,13 +5,14 @@ import { Observable } from 'rxjs';
 import { of } from 'rxjs';
 
 import { Availability } from '../models/availability.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AvailabilityService {
 
-  private baseUrl = "http://localhost:8089/EverCare/availabilities";
+  private baseUrl = environment.apiUrl + "/availabilities";
 
   constructor(private http: HttpClient) { }
 

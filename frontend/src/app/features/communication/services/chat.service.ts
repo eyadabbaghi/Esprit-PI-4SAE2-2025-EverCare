@@ -5,12 +5,13 @@ import { Message, Conversation, Call } from '../models/messages.model';
 import { User } from '../../front-office/pages/login/auth.service';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  private gatewayUrl = 'http://localhost:8089/EverCare/communication-service/api';
-  private webSocketUrl = 'http://localhost:8086/ws-chat';
-  public uploadUrl = 'http://localhost:8089/EverCare/communication-service/uploads/';
+  private gatewayUrl = environment.apiUrl + '/communication-service/api';
+  private webSocketUrl = environment.apiUrl.replace('http', 'ws') + '/ws-chat';
+  public uploadUrl = environment.apiUrl + '/communication-service/uploads/';
   private stompClient: any;
 
   constructor(private http: HttpClient) { }

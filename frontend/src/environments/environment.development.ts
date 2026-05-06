@@ -4,4 +4,5 @@ export const environment = {
   authApiUrl: 'http://localhost:8097/EverCare/auth',
   medicalRecordApiUrl: 'http://localhost:8083/api/medical-records',
   cognitiveStimulationApiUrl: 'http://localhost:8084/api',
+  aiServiceUrl: 'http://localhost:8000',
 };

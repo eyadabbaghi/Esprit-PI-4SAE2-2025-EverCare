@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 export interface MessageHistory {
   role: 'user' | 'assistant';
@@ -20,7 +21,7 @@ export interface ChatResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AiAssistantService {
-  private apiUrl = 'http://evercare-ai-service:8000/api/chat';
+  private apiUrl = environment.aiServiceUrl + '/api/chat';
 
   constructor(private http: HttpClient) {}
 

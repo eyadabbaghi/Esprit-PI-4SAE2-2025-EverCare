@@ -18,6 +18,7 @@ import {
   TrackingPingDto,
   TrackingStatus
 } from '../../services/tracking-dashboard.service';
+import { environment } from '../../../../../environments/environment';
 
 type AssistantAction = 'use-current-location' | 'save-current-location' | 'open-add-safe-zone' | 'lost';
 
@@ -227,7 +228,7 @@ export class CaregiverDashboardComponent implements OnInit, AfterViewInit, OnDes
 
   private loadSafeZones(patientId: string) {
     this.http
-      .get<any[]>(`http://localhost:8089/tracking/saved-places/patient/${patientId}`)
+      .get<any[]>(`${environment.apiUrl}/tracking/saved-places/patient/${patientId}`)
       .subscribe({
         next: (zones) => {
           this.safeZones = zones || [];

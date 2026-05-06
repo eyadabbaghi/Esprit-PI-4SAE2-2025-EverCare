@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, tap, catchError, delay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { environment } from '../../../../../environments/environment';
 
 export interface LoginRequest { email: string; password: string; }
 export interface RegisterRequest { name: string; email: string; password: string; role: string; }
@@ -16,10 +17,10 @@ export interface ChangePasswordRequest { currentPassword: string; newPassword: s
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:8089/EverCare/auth';
-  private usersUrl = 'http://localhost:8089/EverCare/users';
+  private apiUrl = environment.apiUrl + '/auth';
+  private usersUrl = environment.apiUrl + '/users';
 
-  private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
+  private keycloakUrl = environment.authApiUrl + '/realms/EverCareRealm/protocol/openid-connect/token';
   private clientId = 'frontend-app';
   private clientSecret = 'OsIPqO0KT3AU5LjuvTCfO7npyAMXYB98';   // ← ton secret
 

@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { DailyEntry } from '../models/daily-entry.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DailyMeService {
 
- private baseUrl = 'http://localhost:8089/dailyme/api/daily-entries';
+  private baseUrl = environment.apiUrl + '/dailyme/api/daily-entries';
 
   // ✅ Patient mode uses subject
   private entriesSubject = new BehaviorSubject<DailyEntry[]>([]);

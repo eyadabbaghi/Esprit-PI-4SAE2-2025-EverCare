@@ -33,7 +33,7 @@ connect(userId: string): void {
 
   this.client = new Client({
     // ✅ Pass userId as query param so handshake handler can read it
-    brokerURL: `ws://localhost:8089/EverCare/ws-check?userId=${userId}`,
+    brokerURL: `ws://${environment.apiUrl.replace('http://', '')}/ws-check?userId=${userId}`,
     reconnectDelay: 5000,
     debug: (str) => console.log('STOMP:', str),
     connectHeaders: {
@@ -56,7 +56,7 @@ connect(userId: string): void {
   this.client.onStompError = (frame) => console.error('STOMP error', frame);
   this.client.onWebSocketError = (error) => console.error('WebSocket error', error);
 // check.service.ts — add this before activate()
-console.log('🔌 Connecting with brokerURL:', `ws://localhost:8089/EverCare/ws-check?userId=${userId}`);
+console.log('🔌 Connecting with brokerURL:', `ws://${environment.apiUrl.replace('http://', '')}/ws-check?userId=${userId}`);
   this.client.activate();
 }
 

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Article, Category, CategoryPerformance } from '../../../models/blog.model';
+import { environment } from '../../../../../environments/environment';
 
 
 @Injectable({
@@ -10,7 +11,7 @@ import { Article, Category, CategoryPerformance } from '../../../models/blog.mod
 })
 export class BlogService {
   // Appel via l'API Gateway (port 8089)
-  private apiUrl = 'http://localhost:8089/EverCare/blog-service/api/blog';
+  private apiUrl = environment.apiUrl + '/blog-service/api/blog';
 
   constructor(private http: HttpClient) { }
 

@@ -5,13 +5,14 @@ import { Observable, of, throwError } from 'rxjs';
 import { catchError, timeout, retry, map } from 'rxjs/operators';
 import { Appointment, AppointmentStatus, CaregiverPresence, RecurrencePattern } from '../models/appointment';
 import { CreateAppointmentRequest } from '../models/appointment-request';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentService {
 
-  private baseUrl = "http://localhost:8089/EverCare/appointments";
+  private baseUrl = environment.apiUrl + "/appointments";
   private readonly TIMEOUT = 30000; // 30 seconds timeout
 
   constructor(private http: HttpClient) { }

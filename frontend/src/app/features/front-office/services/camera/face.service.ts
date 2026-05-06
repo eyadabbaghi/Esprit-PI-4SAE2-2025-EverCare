@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService, FaceLoginResponse } from '../../pages/login/auth.service';
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class FaceService {
-  private authUrl = 'http://localhost:8089/EverCare/auth';
+  private authUrl = environment.apiUrl + '/auth';
+  private usersUrl = environment.apiUrl + '/users';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -29,13 +31,13 @@ export class FaceService {
   if (token) {
     // Already have a token (post-login call) — use it normally
     return this.http.get<any>(
-      `http://localhost:8089/EverCare/users/by-email`,
+      `${this.usersUrl}/by-email`,
       { params: { email } }
     );
   } else {
     // Pre-login call — skip auth header
     return this.http.get<any>(
-      `http://localhost:8089/EverCare/users/by-email`,
+      `${this.usersUrl}/by-email`,
       {
         params: { email },
         headers: { 'skip-auth': 'true' }
@@ -48,7 +50,7 @@ getUserByEmailNoAuth(email: string): Observable<any> {
   // Explicitly send request with no Authorization header
   // /users/by-email is permitAll() so no token needed
   return this.http.get<any>(
-    `http://localhost:8089/EverCare/users/by-email`,
+    `${this.usersUrl}/by-email`,
     {
       params: { email },
       headers: new HttpHeaders() // empty — no Authorization header at all

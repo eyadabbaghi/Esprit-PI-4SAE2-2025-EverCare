@@ -7,17 +7,18 @@ import { PatientDashboardInsightsDTO } from '../models/patient-dashboard-insight
 
 // ✅ your alert model is in src/app/models/
 import { DailyMeAlert } from '../../../models/dailyme-alert';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DailyTaskService {
 
   // ✅ Gateway / dailyme routes (keep consistent)
   // ✅ Through API Gateway
-private tasksUrl = 'http://localhost:8089/dailyme/api/daily-tasks';
-private insightsUrl = 'http://localhost:8089/dailyme/api/insights';
+  private tasksUrl = environment.apiUrl + '/dailyme/api/daily-tasks';
+  private insightsUrl = environment.apiUrl + '/dailyme/api/insights';
 
-// Alerts
-private alertsUrl = 'http://localhost:8089/dailyme/api/dailyme-alerts';
+  // Alerts
+  private alertsUrl = environment.apiUrl + '/dailyme/api/dailyme-alerts';
 
   constructor(private http: HttpClient) {}
 

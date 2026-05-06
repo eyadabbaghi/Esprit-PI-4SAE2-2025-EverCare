@@ -5,6 +5,7 @@ import { DailyEntry } from '../models/daily-entry.model';
 import { AuthService } from '../../front-office/pages/login/auth.service';
 import { HttpClient } from '@angular/common/http';
 import * as faceapi from 'face-api.js';
+import { environment } from '../../../../environments/environment';
 
 // ✅ ng2-charts / chart.js
 import Chart from 'chart.js/auto';
@@ -527,7 +528,7 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
 
   // ✅ Patients for doctor
   loadPatients(): void {
-    const url = 'http://localhost:8096/EverCare/users/patients';
+    const url = environment.apiUrl + '/users/patients';
 
     const token =
       localStorage.getItem('token') ||

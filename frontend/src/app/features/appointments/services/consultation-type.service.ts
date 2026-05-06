@@ -4,13 +4,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ConsultationType } from '../models/consultation-type.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConsultationTypeService {
 
-  private baseUrl = "http://localhost:8089/EverCare/consultation-types";
+  private baseUrl = environment.apiUrl + "/consultation-types";
 
   constructor(private http: HttpClient) { }
 

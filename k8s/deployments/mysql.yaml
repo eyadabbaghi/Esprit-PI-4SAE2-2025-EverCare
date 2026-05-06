@@ -12,6 +12,19 @@ spec:
   selector:
     app: mysql
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: evercare
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: standard
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,4 +62,5 @@ spec:
               cpu: "500m"
       volumes:
         - name: mysql-data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: mysql-pvc

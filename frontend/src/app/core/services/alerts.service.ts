@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Incident, Alert } from '../model/alerts.models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AlertsService {
-  private baseUrl = 'http://localhost:8089/EverCare'; // gateway URL
+  private baseUrl = environment.apiUrl; // gateway URL
 
   constructor(private http: HttpClient) {}
 
@@ -77,12 +78,12 @@ acknowledgeIncident(id: string): Observable<Incident> {
 }
 
 getPatientActivityStatus(userId: string): Observable<any> {
-  return this.http.get(`http://localhost:8089/EverCare/users/activity/${userId}/status`);
+  return this.http.get(`${environment.apiUrl}/users/activity/${userId}/status`);
 }
 
 getBatchActivityStatus(userIds: string[]): Observable<any[]> {
   return this.http.post<any[]>(
-    `http://localhost:8089/EverCare/users/activity/batch-status`,
+    `${environment.apiUrl}/users/activity/batch-status`,
     userIds
   );
 }

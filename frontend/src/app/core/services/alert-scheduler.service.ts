@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface ScheduledAlertFire {
   alertId: string;
@@ -14,7 +15,7 @@ export interface ScheduledAlertFire {
 @Injectable({ providedIn: 'root' })
 export class AlertSchedulerService implements OnDestroy {
   private intervalId: any;
-  private readonly baseUrl = 'http://localhost:8089/EverCare';
+  private readonly baseUrl = environment.apiUrl;
 
   // Components subscribe to this to know when an alert fires
   alertFired$ = new Subject<ScheduledAlertFire>();

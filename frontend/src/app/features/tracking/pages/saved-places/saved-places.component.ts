@@ -17,6 +17,7 @@ import {
   TrackingPingDto,
   TrackingStatus
 } from '../../services/tracking-dashboard.service';
+import { environment } from '../../../../../environments/environment';
 
 type AssistantAction = 'use-current-location' | 'save-current-location' | 'open-add-safe-zone' | 'lost';
 type TrackingCluster = { lat: number; lng: number };
@@ -154,7 +155,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadPlacesFromBackend() {
     this.http
-      .get<any[]>(`http://localhost:8089/tracking/saved-places/patient/${this.patientId}`)
+      .get<any[]>(`${environment.apiUrl}/tracking/saved-places/patient/${this.patientId}`)
       .subscribe({
         next: (backendPlaces) => {
           this.places = backendPlaces || [];
@@ -168,7 +169,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadClusters() {
     this.http
-      .get<TrackingCluster[]>(`http://localhost:8089/tracking/clusters/${this.patientId}`)
+      .get<TrackingCluster[]>(`${environment.apiUrl}/tracking/clusters/${this.patientId}`)
       .subscribe({
         next: (data) => {
           this.clusters = data || [];
@@ -375,14 +376,14 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refreshTrackingMapLayers();
 
     if (this.isEditMode && this.currentZoneId !== null) {
-      this.http.put(`http://localhost:8089/tracking/saved-places/${this.currentZoneId}`, placeToSave)
+      this.http.put(`${environment.apiUrl}/tracking/saved-places/${this.currentZoneId}`, placeToSave)
         .pipe(tap(() => this.loadPlacesFromBackend()))
         .subscribe({
           next: () => console.log('updated in backend'),
           error: (e) => console.log('backend error', e)
         });
     } else {
-      this.http.post('http://localhost:8089/tracking/saved-places', placeToSave)
+      this.http.post(environment.apiUrl + '/tracking/saved-places', placeToSave)
         .pipe(tap(() => this.loadPlacesFromBackend()))
         .subscribe({
           next: () => console.log('saved to backend'),
@@ -408,7 +409,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.refreshSetupMapLayers();
 
       this.http.post(
-        'http://localhost:8089/tracking/location-pings',
+        environment.apiUrl + '/tracking/location-pings',
         payload
       ).subscribe(() => {
         console.log('forced refresh ping');
@@ -422,7 +423,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem(`places_${this.patientId}`, JSON.stringify(this.places));
     this.refreshSetupMapLayers(true);
 
-    this.http.delete(`http://localhost:8089/tracking/saved-places/${id}`).subscribe({
+    this.http.delete(`${environment.apiUrl}/tracking/saved-places/${id}`).subscribe({
       next: () => {
         console.log('deleted from backend');
         this.loadPlacesFromBackend();
@@ -481,7 +482,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       this.http.post(
-        'http://localhost:8089/tracking/location-pings',
+        environment.apiUrl + '/tracking/location-pings',
         payload
       ).subscribe({
         next: () => {
@@ -524,7 +525,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showTransientToast(msg);
 
     this.http.post(
-      'http://localhost:8089/tracking/alerts',
+      environment.apiUrl + '/tracking/alerts',
       alertData
     ).subscribe({
       next: () => console.log('alert sent'),

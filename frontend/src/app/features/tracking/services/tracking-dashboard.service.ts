@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 export interface TrackingPingDto {
   id?: number;
@@ -43,7 +44,7 @@ export interface TrackingDangerDurationDto {
 @Injectable({ providedIn: 'root' })
 export class TrackingDashboardService {
 
-  private readonly apiBase = 'http://localhost:8089/tracking';
+  private readonly apiBase = environment.apiUrl + '/tracking';
 
   private readonly noCacheHeaders = new HttpHeaders({
     'Cache-Control': 'no-cache, no-store, must-revalidate',

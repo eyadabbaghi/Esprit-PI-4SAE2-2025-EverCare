@@ -2,12 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SavedPlace } from '../models/saved-place.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SavedPlaceService {
 
-  // âœ… ApiGateway base (change port if needed)
-private baseUrl = 'http://localhost:8099/tracking/saved-places';
+  private baseUrl = environment.apiUrl + '/tracking/saved-places';
 
   constructor(private http: HttpClient) {}
 

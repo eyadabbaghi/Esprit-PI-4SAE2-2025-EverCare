@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { AuthService } from '../../front-office/pages/login/auth.service';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { environment } from '../../../../environments/environment';
 
 export interface RoomInfo {
   roomId: string;
@@ -34,7 +35,7 @@ export interface SignalingMessage {
   providedIn: 'root'
 })
 export class VideoConsultationService {
-  private apiUrl = "http://localhost:8089/EverCare/video";
+  private apiUrl = environment.apiUrl + "/video";
   private stompClient: Client | null = null;
   private peerConnections: Map<string, RTCPeerConnection> = new Map();
 
@@ -119,7 +120,7 @@ export class VideoConsultationService {
       this.currentRoomId = roomId;
 
       this.stompClient = new Client({
-        webSocketFactory: () => new SockJS("http://localhost:8089/EverCare/ws-consultation"),
+        webSocketFactory: () => new SockJS(environment.apiUrl.replace('http', 'ws') + "/ws-consultation"),
         connectHeaders: {
           Authorization: `Bearer ${this.authService.getToken()}`
         },

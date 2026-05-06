@@ -5,13 +5,14 @@ import { Observable, catchError, map } from 'rxjs';
 
 import { User } from '../models/user';
 import { AuthService } from '../../front-office/pages/login/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CaregiverPatientService {
 
-  private baseUrl ="http://localhost:8089/EverCare";
+  private baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,

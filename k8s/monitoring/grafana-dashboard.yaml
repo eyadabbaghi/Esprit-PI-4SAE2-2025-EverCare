@@ -103,8 +103,8 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "sum(rate(http_server_requests_seconds_count{service=~\".*\"}[5m])) by (service)",
-              "legendFormat": "{{service}}",
+              "expr": "sum(rate(http_server_requests_seconds_count{application=~\".*\"}[5m])) by (uri)",
+              "legendFormat": "{{uri}}",
               "refId": "A"
             }
           ],
@@ -184,8 +184,8 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "sum(rate(process_cpu_seconds_total{service=~\".*\"}[5m])) by (service) * 100",
-              "legendFormat": "{{service}}",
+              "expr": "process_cpu_usage{application=~\".*\"}",
+              "legendFormat": "CPU",
               "refId": "A"
             }
           ],
@@ -273,8 +273,8 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "sum(container_memory_usage_bytes{service=~\".*\"}) by (service)",
-              "legendFormat": "{{service}}",
+              "expr": "jvm_memory_used_bytes{application=~\".*\"}",
+              "legendFormat": "{{area}} - {{id}}",
               "refId": "A"
             }
           ],
@@ -342,8 +342,8 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "up{service=~\".*\"}",
-              "legendFormat": "{{service}}",
+              "expr": "up{job=~\".*user.*\"}",
+              "legendFormat": "{{kubernetes_pod_name}}",
               "refId": "A"
             }
           ],

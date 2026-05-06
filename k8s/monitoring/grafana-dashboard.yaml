@@ -103,7 +103,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "sum(rate(http_server_requests_seconds_count{application=~\".*\"}[5m])) by (uri)",
+              "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (uri)",
               "legendFormat": "{{uri}}",
               "refId": "A"
             }
@@ -184,7 +184,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "process_cpu_usage{application=~\".*\"}",
+              "expr": "process_cpu_usage",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -273,7 +273,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "jvm_memory_used_bytes{application=~\".*\"}",
+              "expr": "jvm_memory_used_bytes",
               "legendFormat": "{{area}} - {{id}}",
               "refId": "A"
             }
@@ -342,7 +342,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "up{job=~\".*user.*\"}",
+              "expr": "up",
               "legendFormat": "{{kubernetes_pod_name}}",
               "refId": "A"
             }
@@ -404,13 +404,13 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "hikaricp_connections_active{pool=~\".*\"}",
+              "expr": "hikaricp_connections_active",
               "legendFormat": "Active - {{pool}}",
               "refId": "A"
             },
             {
               "datasource": "Prometheus",
-              "expr": "hikaricp_connections_idle{pool=~\".*\"}",
+              "expr": "hikaricp_connections_idle",
               "legendFormat": "Idle - {{pool}}",
               "refId": "B"
             }
@@ -491,19 +491,19 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "jvm_threads_live_threads{application=~\".*\"}",
+              "expr": "jvm_threads_live_threads",
               "legendFormat": "Live",
               "refId": "A"
             },
             {
               "datasource": "Prometheus",
-              "expr": "jvm_threads_daemon_threads{application=~\".*\"}",
+              "expr": "jvm_threads_daemon_threads",
               "legendFormat": "Daemon",
               "refId": "B"
             },
             {
               "datasource": "Prometheus",
-              "expr": "jvm_threads_peak_threads{application=~\".*\"}",
+              "expr": "jvm_threads_peak_threads",
               "legendFormat": "Peak",
               "refId": "C"
             }
@@ -557,7 +557,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "process_uptime_seconds{application=~\".*\"}",
+              "expr": "process_uptime_seconds",
               "legendFormat": "Uptime",
               "refId": "A"
             }
@@ -646,7 +646,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "http_server_requests_seconds_max{application=~\".*\"}",
+              "expr": "http_server_requests_seconds_max",
               "legendFormat": "{{uri}} - {{method}}",
               "refId": "A"
             }
@@ -727,7 +727,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "jvm_gc_pause_seconds_sum{application=~\".*\"}",
+              "expr": "jvm_gc_pause_seconds_sum",
               "legendFormat": "{{action}} - {{cause}}",
               "refId": "A"
             }
@@ -808,7 +808,7 @@ data:
           "targets": [
             {
               "datasource": "Prometheus",
-              "expr": "spring_security_authorizations_seconds_count{application=~\".*\"}",
+              "expr": "spring_security_authorizations_seconds_count",
               "legendFormat": "{{spring_security_object}}",
               "refId": "A"
             }

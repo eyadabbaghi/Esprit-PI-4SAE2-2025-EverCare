@@ -25,7 +25,7 @@ data:
 
       - job_name: 'user-service'
         static_configs:
-          - targets: ['user-service-deployment:8096']
+          - targets: ['user-service:8096']
         metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'user-service'
@@ -33,7 +33,7 @@ data:
 
       - job_name: 'api-gateway'
         static_configs:
-          - targets: ['api-gateway-deployment:8080']
+          - targets: ['api-gateway-service:8089']
         metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'api-gateway'
@@ -41,7 +41,7 @@ data:
 
       - job_name: 'eureka'
         static_configs:
-          - targets: ['eureka-deployment:8761']
+          - targets: ['eureka-service:8761']
         metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'eureka'
@@ -49,7 +49,7 @@ data:
 
       - job_name: 'keycloak'
         static_configs:
-          - targets: ['keycloak-deployment:8080']
+          - targets: ['keycloak-service:8080']
         metrics_path: '/auth/realms/EverCareRealm/protocol/prometheus'
         relabel_configs:
           - replacement: 'keycloak'
@@ -57,16 +57,16 @@ data:
 
       - job_name: 'evercare-ai'
         static_configs:
-          - targets: ['evercare-ai-deployment:8100']
-        metrics_path: '/actuator/prometheus'
+          - targets: ['evercare-ai-service:8000']
+        metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'evercare-ai'
             target_label: application
 
       - job_name: 'frontend'
         static_configs:
-          - targets: ['frontend-deployment:80']
-        metrics_path: '/actuator/prometheus'
+          - targets: ['frontend-service:80']
+        metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'frontend'
             target_label: application

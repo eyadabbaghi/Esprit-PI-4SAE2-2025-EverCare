@@ -44,8 +44,12 @@ public class SecurityConfig {
                                 "/internal/**",
                                 "/EverCare/actuator/health",
                                 "/EverCare/actuator/health/**",
+                                "/EverCare/actuator/prometheus",
+                                "/EverCare/actuator/prometheus/**",
                                 "/actuator/health",
-                                "/actuator/health/**"
+                                "/actuator/health/**",
+                                "/actuator/prometheus",
+                                "/actuator/prometheus/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

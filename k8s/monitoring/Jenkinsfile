@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = 'grafana/grafana:10.2.0'
+    }
+
+    stages {
+        stage('Deploy Monitoring') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'master'
+                    branch 'Badr-branch'
+                }
+            }
+            steps {
+                echo 'Deploying monitoring stack...'
+                
+                sh 'kubectl apply -f k8s/monitoring/prometheus-configmap.yaml'
+                sh 'kubectl apply -f k8s/monitoring/grafana-configmap.yaml'
+                sh 'kubectl apply -f k8s/monitoring/grafana-dashboard.yaml'
+                sh 'kubectl apply -f k8s/monitoring/alertmanager-configmap.yaml'
+                
+                echo 'Restarting monitoring pods to pick up new config...'
+                sh 'kubectl rollout restart deployment prometheus-deployment -n evercare || true'
+                sh 'kubectl rollout restart deployment grafana-deployment -n evercare || true'
+                sh 'kubectl rollout restart deployment alertmanager-deployment -n evercare || true'
+                
+                echo 'Monitoring stack deployed successfully!'
+            }
+        }
+        
+        stage('Verify Monitoring') {
+            steps {
+                echo 'Verifying monitoring services...'
+                sh 'kubectl get pods -n evercare | grep -E "prometheus|grafana|alertmanager"'
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Monitoring deployment completed successfully!'
+        }
+        failure {
+            echo 'Monitoring deployment failed!'
+        }
+    }
+}

@@ -23,10 +23,66 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
+      - job_name: 'user-service'
+        static_configs:
+          - targets: ['user-service-deployment:8096']
+        metrics_path: '/EverCare/actuator/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'user-service'
+
+      - job_name: 'api-gateway'
+        static_configs:
+          - targets: ['api-gateway-deployment:8080']
+        metrics_path: '/EverCare/actuator/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'api-gateway'
+
+      - job_name: 'eureka'
+        static_configs:
+          - targets: ['eureka-deployment:8761']
+        metrics_path: '/EverCare/actuator/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'eureka'
+
+      - job_name: 'keycloak'
+        static_configs:
+          - targets: ['keycloak-deployment:8080']
+        metrics_path: '/auth/realms/EverCareRealm/protocol/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'keycloak'
+
+      - job_name: 'evercare-ai'
+        static_configs:
+          - targets: ['evercare-ai-deployment:8100']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'evercare-ai'
+
+      - job_name: 'frontend'
+        static_configs:
+          - targets: ['frontend-deployment:80']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: application
+            replacement: 'frontend'
+
       - job_name: 'spring-boot-services'
         kubernetes_sd_configs:
           - role: pod
-        relabel_configs:
+            namespaces:
+              - evercare
+       relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             action: keep
             regex: '.*-service.*'

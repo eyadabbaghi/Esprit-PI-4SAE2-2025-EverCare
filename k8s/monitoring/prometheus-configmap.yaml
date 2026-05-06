@@ -26,8 +26,6 @@ data:
       - job_name: 'user-service'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'user-service.*'
@@ -40,8 +38,6 @@ data:
       - job_name: 'api-gateway'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'api-gateway.*'
@@ -54,8 +50,6 @@ data:
       - job_name: 'eureka'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'eureka.*'
@@ -68,8 +62,6 @@ data:
       - job_name: 'keycloak'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'keycloak.*'
@@ -82,8 +74,6 @@ data:
       - job_name: 'evercare-ai'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'evercare-ai.*'
@@ -96,8 +86,6 @@ data:
       - job_name: 'frontend'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'frontend.*'

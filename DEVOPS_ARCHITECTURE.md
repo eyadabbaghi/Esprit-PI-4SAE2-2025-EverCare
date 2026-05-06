@@ -68,9 +68,8 @@ Checkout Git → Build → Test (JUnit) → SonarQube → Package → Docker Bui
 | DailyMe | `badrftw/evercare-dailyme-service:latest` | 8098 |
 | Alerts | `badrftw/evercare-alerts-service:latest` | 8095 |
 | Activities | `badrftw/evercare-activities-service:latest` | 8092 |
-| AI Backend | `badrftw/evercare-ai-service:latest` | 8080 |
+| AI Service (Chatbot) | `badrftw/evercare-ai-frontend:latest` | 8000 |
 | Face Service | `badrftw/evercare-face-service:latest` | 8100 |
-| AI Frontend | `badrftw/evercare-ai-frontend:latest` | 8000 |
 
 ### 2.2 Docker Compose
 
@@ -218,16 +217,19 @@ k8s/
 | **Database** | MySQL EverCaredb |
 | **Endpoints** | /face/register, /face/verify, /health |
 
-### 6.2 AI Frontend (Chatbot)
+### 6.2 AI Chatbot (EverCare Assistant)
 
 | Détail | Valeur |
 |--------|--------|
 | **Type** | Python FastAPI |
-| **IA** | Groq (Llama 3.3) |
+| **Framework** | Uvicorn + FastAPI |
+| **IA** | Groq (Llama 3.3 70B Versatile) |
 | **Port** | 8000 |
-| **API Key** | GROQ_API_KEY (env) |
-| **Endpoint** | /api/chat |
-| **Connexion** | Direct depuis Angular (pas via Gateway) |
+| **API Key** | GROQ_API_KEY (env variable) |
+| **Endpoints** | /api/chat, /health, / |
+| **K8s Deployment** | ai-service-deployment |
+| **Service Name** | ai-service (ClusterIP) |
+| **Access** | Via evercare-ai-service:8000 ou port-forward |
 
 ---
 

@@ -3,10 +3,11 @@ pipeline {
     
     environment {
         DOCKER_IMAGE = 'grafana/grafana:10.2.0'
+        NAMESPACE = 'evercare'
     }
 
     stages {
-        stage('Deploy Monitoring') {
+        stage('Checkout Monitoring Config') {
             when {
                 anyOf {
                     branch 'main'
@@ -15,17 +16,27 @@ pipeline {
                 }
             }
             steps {
+                echo 'Checking out monitoring configuration from git...'
+                checkout scm
+            }
+        }
+        
+        stage('Deploy Monitoring') {
+            steps {
                 echo 'Deploying monitoring stack...'
                 
                 sh 'kubectl apply -f k8s/monitoring/prometheus-configmap.yaml'
-                sh 'kubectl apply -f k8s/monitoring/grafana-configmap.yaml'
                 sh 'kubectl apply -f k8s/monitoring/grafana-dashboard.yaml'
+                sh 'kubectl apply -f k8s/monitoring/grafana-provisioning.yaml'
                 sh 'kubectl apply -f k8s/monitoring/alertmanager-configmap.yaml'
                 
                 echo 'Restarting monitoring pods to pick up new config...'
-                sh 'kubectl rollout restart deployment prometheus-deployment -n evercare || true'
-                sh 'kubectl rollout restart deployment grafana-deployment -n evercare || true'
-                sh 'kubectl rollout restart deployment alertmanager-deployment -n evercare || true'
+                sh 'kubectl rollout restart deployment prometheus-deployment -n ${NAMESPACE} || kubectl delete pod -l app=prometheus -n ${NAMESPACE} || true'
+                sh 'kubectl rollout restart deployment grafana-deployment -n ${NAMESPACE} || kubectl delete pod -l app=grafana -n ${NAMESPACE} || true'
+                sh 'kubectl rollout restart deployment alertmanager-deployment -n ${NAMESPACE} || kubectl delete pod -l app=alertmanager -n ${NAMESPACE} || true'
+                
+                echo 'Waiting for pods to be ready...'
+                sh 'sleep 30'
                 
                 echo 'Monitoring stack deployed successfully!'
             }
@@ -34,7 +45,7 @@ pipeline {
         stage('Verify Monitoring') {
             steps {
                 echo 'Verifying monitoring services...'
-                sh 'kubectl get pods -n evercare | grep -E "prometheus|grafana|alertmanager"'
+                sh 'kubectl get pods -n ${NAMESPACE}'
             }
         }
     }

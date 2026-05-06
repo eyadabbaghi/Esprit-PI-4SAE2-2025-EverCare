@@ -71,6 +71,102 @@ data:
           - replacement: 'frontend'
             target_label: application
 
+      - job_name: 'notification-service'
+        static_configs:
+          - targets: ['notification-service:8097']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'notification-service'
+            target_label: application
+
+      - job_name: 'medical-record-service'
+        static_configs:
+          - targets: ['medical-record-service:8092']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'medical-record-service'
+            target_label: application
+
+      - job_name: 'communication-service'
+        static_configs:
+          - targets: ['communication-service:8093']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'communication-service'
+            target_label: application
+
+      - job_name: 'cognitive-stimulation-service'
+        static_configs:
+          - targets: ['cognitive-stimulation-service:8094']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'cognitive-stimulation-service'
+            target_label: application
+
+      - job_name: 'blog-service'
+        static_configs:
+          - targets: ['blog-service:8095']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'blog-service'
+            target_label: application
+
+      - job_name: 'appointment-service'
+        static_configs:
+          - targets: ['appointment-service:8091']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'appointment-service'
+            target_label: application
+
+      - job_name: 'tracking-service'
+        static_configs:
+          - targets: ['tracking-service:8098']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'tracking-service'
+            target_label: application
+
+      - job_name: 'dailyme-service'
+        static_configs:
+          - targets: ['dailyme-service:8099']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'dailyme-service'
+            target_label: application
+
+      - job_name: 'alerts-service'
+        static_configs:
+          - targets: ['alerts-service:8101']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'alerts-service'
+            target_label: application
+
+      - job_name: 'activities-service'
+        static_configs:
+          - targets: ['activities-service:8102']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'activities-service'
+            target_label: application
+
+      - job_name: 'ai-service'
+        static_configs:
+          - targets: ['ai-service:8000']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'ai-service'
+            target_label: application
+
+      - job_name: 'face-service'
+        static_configs:
+          - targets: ['face-service:8100']
+        metrics_path: '/actuator/prometheus'
+        relabel_configs:
+          - replacement: 'face-service'
+            target_label: application
+
       - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:
           - role: node

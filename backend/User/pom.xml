@@ -93,13 +93,19 @@
 			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
-		<!-- Spring Boot Actuator -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+	<!-- Spring Boot Actuator -->
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-actuator</artifactId>
+	</dependency>
 
-		<!-- Keycloak -->
+	<!-- Micrometer Prometheus Registry -->
+	<dependency>
+		<groupId>io.micrometer</groupId>
+		<artifactId>micrometer-registry-prometheus</artifactId>
+	</dependency>
+
+	<!-- Keycloak -->
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-admin-client</artifactId>

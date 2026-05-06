@@ -23,28 +23,67 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
-      - job_name: 'spring-boot-services'
+      - job_name: 'user-service'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
-            regex: '.*-deployment.*'
+            regex: 'user-service.*'
             action: keep
           - source_labels: [__meta_kubernetes_pod_name]
-            target_label: service
-          - source_labels: [__meta_kubernetes_pod_name]
-            regex: '(.*)-deployment.*'
-            action: replace
             target_label: application
-            replacement: '${1}'
-          - action: replace
-            target_label: __metrics_path__
-            replacement: '/EverCare/actuator/prometheus'
+            replacement: 'user-service'
         metrics_path: /EverCare/actuator/prometheus
+
+      - job_name: 'api-gateway'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              - evercare
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            regex: 'api-gateway.*'
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: application
+            replacement: 'api-gateway'
+        metrics_path: /EverCare/actuator/prometheus
+
+      - job_name: 'eureka'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              - evercare
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            regex: 'eureka.*'
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: application
+            replacement: 'eureka'
+        metrics_path: /EverCare/actuator/prometheus
+
+      - job_name: 'keycloak'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              - evercare
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            regex: 'keycloak.*'
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: application
+            replacement: 'keycloak'
+        metrics_path: /auth/realms/EverCareRealm/protocol/prometheus
 
       - job_name: 'evercare-ai'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'evercare-ai.*'
@@ -57,6 +96,8 @@ data:
       - job_name: 'frontend'
         kubernetes_sd_configs:
           - role: pod
+            namespaces:
+              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             regex: 'frontend.*'

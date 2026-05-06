@@ -2,13 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ai-service
+  namespace: evercare
   labels:
     app: ai-service
 spec:
   type: ClusterIP
   ports:
-    - port: 8080  
-      targetPort: 8080
+    - port: 8000
+      targetPort: 8000
       protocol: TCP
   selector:
     app: ai-service
@@ -16,7 +17,8 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-service
+  name: ai-service-deployment
+  namespace: evercare
   labels:
     app: ai-service
 spec:
@@ -31,14 +33,12 @@ spec:
     spec:
       containers:
         - name: ai-service
-          image: badrftw/evercare-ai-service:latest
+          image: badrftw/evercare-ai-frontend:latest
           ports:
-            - containerPort: 8080
+            - containerPort: 8000
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: "default"
-            - name: EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE
-              value: "http://eureka-service:8761/eureka/"
+            - name: GROQ_API_KEY
+              value: "gsk_placeholder_replace_with_actual_key"
           resources:
             requests:
               memory: "256Mi"
@@ -48,13 +48,13 @@ spec:
               cpu: "500m"
           livenessProbe:
             httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 60
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 30
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
             periodSeconds: 5

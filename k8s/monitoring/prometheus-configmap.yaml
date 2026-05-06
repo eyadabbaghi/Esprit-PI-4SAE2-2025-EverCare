@@ -26,16 +26,12 @@ data:
       - job_name: 'spring-boot-services'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
-            action: keep
             regex: '.*-deployment.*'
+            action: keep
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: service
-          - source_labels: [__meta_kubernetes_namespace]
-            target_label: namespace
           - source_labels: [__meta_kubernetes_pod_name]
             regex: '(.*)-deployment.*'
             action: replace
@@ -49,12 +45,10 @@ data:
       - job_name: 'evercare-ai'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
-            action: keep
             regex: 'evercare-ai.*'
+            action: keep
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: application
             replacement: 'evercare-ai'
@@ -63,12 +57,10 @@ data:
       - job_name: 'frontend'
         kubernetes_sd_configs:
           - role: pod
-            namespaces:
-              - evercare
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
-            action: keep
             regex: 'frontend.*'
+            action: keep
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: application
             replacement: 'frontend'

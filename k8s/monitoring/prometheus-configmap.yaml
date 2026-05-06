@@ -23,69 +23,15 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
-      - job_name: 'user-service'
-        static_configs:
-          - targets: ['user-service-deployment:8096']
-        metrics_path: '/EverCare/actuator/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'user-service'
-
-      - job_name: 'api-gateway'
-        static_configs:
-          - targets: ['api-gateway-deployment:8080']
-        metrics_path: '/EverCare/actuator/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'api-gateway'
-
-      - job_name: 'eureka'
-        static_configs:
-          - targets: ['eureka-deployment:8761']
-        metrics_path: '/EverCare/actuator/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'eureka'
-
-      - job_name: 'keycloak'
-        static_configs:
-          - targets: ['keycloak-deployment:8080']
-        metrics_path: '/auth/realms/EverCareRealm/protocol/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'keycloak'
-
-      - job_name: 'evercare-ai'
-        static_configs:
-          - targets: ['evercare-ai-deployment:8100']
-        metrics_path: '/actuator/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'evercare-ai'
-
-      - job_name: 'frontend'
-        static_configs:
-          - targets: ['frontend-deployment:80']
-        metrics_path: '/actuator/prometheus'
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: application
-            replacement: 'frontend'
-
       - job_name: 'spring-boot-services'
         kubernetes_sd_configs:
           - role: pod
             namespaces:
               - evercare
-       relabel_configs:
+        relabel_configs:
           - source_labels: [__meta_kubernetes_pod_name]
             action: keep
-            regex: '.*-service.*'
+            regex: '.*-deployment.*'
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: service
           - source_labels: [__meta_kubernetes_namespace]
@@ -95,12 +41,38 @@ data:
             action: replace
             target_label: application
             replacement: '${1}'
-          - source_labels: [__meta_kubernetes_pod_name]
-            regex: '.*-service.*'
-            action: replace
+          - action: replace
             target_label: __metrics_path__
             replacement: '/EverCare/actuator/prometheus'
         metrics_path: /EverCare/actuator/prometheus
+
+      - job_name: 'evercare-ai'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              - evercare
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: keep
+            regex: 'evercare-ai.*'
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: application
+            replacement: 'evercare-ai'
+        metrics_path: /actuator/prometheus
+
+      - job_name: 'frontend'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              - evercare
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: keep
+            regex: 'frontend.*'
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: application
+            replacement: 'frontend'
+        metrics_path: /actuator/prometheus
 
       - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:

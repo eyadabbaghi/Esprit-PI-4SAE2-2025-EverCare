@@ -81,7 +81,7 @@ data:
 
       - job_name: 'medical-record-service'
         static_configs:
-          - targets: ['medical-record-service:8092']
+          - targets: ['medical-record-service:8083']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'medical-record-service'
@@ -89,7 +89,7 @@ data:
 
       - job_name: 'communication-service'
         static_configs:
-          - targets: ['communication-service:8093']
+          - targets: ['communication-service:8094']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'communication-service'
@@ -97,7 +97,7 @@ data:
 
       - job_name: 'cognitive-stimulation-service'
         static_configs:
-          - targets: ['cognitive-stimulation-service:8094']
+          - targets: ['cognitive-stimulation-service:8084']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'cognitive-stimulation-service'
@@ -105,7 +105,7 @@ data:
 
       - job_name: 'blog-service'
         static_configs:
-          - targets: ['blog-service:8095']
+          - targets: ['blog-service:8087']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'blog-service'
@@ -121,7 +121,7 @@ data:
 
       - job_name: 'tracking-service'
         static_configs:
-          - targets: ['tracking-service:8098']
+          - targets: ['tracking-service:8099']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'tracking-service'
@@ -129,7 +129,7 @@ data:
 
       - job_name: 'dailyme-service'
         static_configs:
-          - targets: ['dailyme-service:8099']
+          - targets: ['dailyme-service:8098']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'dailyme-service'
@@ -137,7 +137,7 @@ data:
 
       - job_name: 'alerts-service'
         static_configs:
-          - targets: ['alerts-service:8101']
+          - targets: ['alerts-service:8095']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'alerts-service'
@@ -145,7 +145,7 @@ data:
 
       - job_name: 'activities-service'
         static_configs:
-          - targets: ['activities-service:8102']
+          - targets: ['activities-service:8092']
         metrics_path: '/actuator/prometheus'
         relabel_configs:
           - replacement: 'activities-service'

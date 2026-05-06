@@ -40,14 +40,14 @@ spec:
               value: "admin"
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
-           volumeMounts:
-             - name: grafana-storage
-               mountPath: /var/lib/grafana
-             - name: grafana-dashboards
-               mountPath: /var/lib/grafana/dashboards
-             - name: grafana-provisioning
-               mountPath: /etc/grafana/provisioning/dashboards
-           resources:
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+            - name: grafana-provisioning
+              mountPath: /etc/grafana/provisioning/dashboards
+          resources:
             requests:
               memory: "256Mi"
               cpu: "200m"
@@ -66,12 +66,12 @@ spec:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 10
-       volumes:
-         - name: grafana-storage
-           emptyDir: {}
-         - name: grafana-dashboards
-           configMap:
-             name: grafana-dashboards
-         - name: grafana-provisioning
-           configMap:
-             name: grafana-provisioning
+      volumes:
+        - name: grafana-storage
+          emptyDir: {}
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+        - name: grafana-provisioning
+          configMap:
+            name: grafana-provisioning

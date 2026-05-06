@@ -138,7 +138,7 @@ data:
       - job_name: 'alerts-service'
         static_configs:
           - targets: ['alerts-service:8095']
-        metrics_path: '/actuator/prometheus'
+        metrics_path: '/EverCare/actuator/prometheus'
         relabel_configs:
           - replacement: 'alerts-service'
             target_label: application

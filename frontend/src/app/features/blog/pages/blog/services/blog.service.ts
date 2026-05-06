@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Article, Category, CategoryPerformance } from '../../../models/blog.model';
-import { environment } from '../../../../../../../../environments/environment';
+import { environment } from '../../../../../../environments/environment';
 
 
 @Injectable({

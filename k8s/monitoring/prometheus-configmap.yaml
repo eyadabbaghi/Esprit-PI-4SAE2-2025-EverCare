@@ -35,11 +35,16 @@ data:
           - source_labels: [__meta_kubernetes_namespace]
             target_label: namespace
           - source_labels: [__meta_kubernetes_pod_name]
-            regex: 'user-service.*'
+            regex: '(.*)-deployment.*'
+            action: replace
+            target_label: application
+            replacement: '${1}'
+          - source_labels: [__meta_kubernetes_pod_name]
+            regex: '.*-service.*'
             action: replace
             target_label: __metrics_path__
             replacement: '/EverCare/actuator/prometheus'
-        metrics_path: /actuator/prometheus
+        metrics_path: /EverCare/actuator/prometheus
 
       - job_name: 'kubernetes-nodes'
         kubernetes_sd_configs:

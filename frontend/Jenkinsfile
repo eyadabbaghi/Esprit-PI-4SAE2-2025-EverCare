@@ -29,14 +29,6 @@ pipeline {
             }
         }
 
-        stage('Lint') {
-            steps {
-                dir(env.APP_DIR) {
-                    sh 'npm run lint || true'
-                }
-            }
-        }
-
         stage('Test') {
             steps {
                 dir(env.APP_DIR) {

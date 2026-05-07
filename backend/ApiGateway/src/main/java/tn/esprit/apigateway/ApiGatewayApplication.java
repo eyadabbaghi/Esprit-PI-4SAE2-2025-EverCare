@@ -26,19 +26,19 @@ public class ApiGatewayApplication {
                                 "/EverCare/admin/uploads/**",
                                 "/EverCare/uploads/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://ACTIVITIES-SERVICE"))
+                        .uri("lb://activities-service"))
                 // Alerts WebSocket
                 .route("alerts-service-ws", r -> r
                         .path("/EverCare/ws-check", "/EverCare/ws-check/**")
-                        .uri("lb:ws://ALERTS-SERVICE"))
+                        .uri("lb://alerts-service"))
                 // Alerts REST
                 .route("alerts-service", r -> r
                         .path("/EverCare/incidents/**", "/EverCare/alerts/**", "/EverCare/evicare/**")
-                        .uri("lb://ALERTS-SERVICE"))
+                        .uri("lb://alerts-service"))
                 // User service
                 .route("user-service", r -> r
                         .path("/EverCare/auth/**", "/EverCare/users/**", "/EverCare/test/**", "/EverCare/internal/**")
-                        .uri("lb://User-service"))
+                        .uri("lb://user-service"))
                 // Appointment service
                 .route("appointment-service", r -> r
                         .path("/EverCare/appointments/**",
@@ -47,36 +47,36 @@ public class ApiGatewayApplication {
                                 "/EverCare/medicaments/**",
                                 "/EverCare/prescriptions/**",
                                 "/EverCare/api/clinical-measurements/**")
-                        .uri("lb://APPOINTMENT-SERVICE"))
-                // Notification service
+                        .uri("lb://appointment-service"))
+// Notification service
                 .route("notification-service", r -> r
                         .path("/EverCare/api/notifications/**")
                         .filters(f -> f.rewritePath("/EverCare/(?<segment>.*)", "/${segment}"))
-                        .uri("http://localhost:8097"))
+                        .uri("lb://notification-service"))
                 // Medical record service
                 .route("medical-record-service", r -> r
                         .path("/api/medical-records/**")
-                        .uri("lb://MEDICAL-RECORD-SERVICE"))
+                        .uri("lb://medical-record-service"))
                 // Dailyme service
                 .route("dailyme-service", r -> r
                         .path("/dailyme/**")
                         .filters(f -> f.stripPrefix(1))
-                        .uri("http://localhost:8098"))
-// Tracking service
+                        .uri("lb://dailyme-service"))
+                // Tracking service
                 .route("tracking-service", r -> r
                         .path("/tracking/**")
                         .filters(f -> f.stripPrefix(1))
-                        .uri("lb://TRACKING-SERVICE"))
+                        .uri("lb://tracking-service"))
                 // Blog service
-                // ✅ Communication service – REST API (ajoutée)
+                // Communication service - REST API
                 .route("communication-service", r -> r
                         .path("/EverCare/communication-service/**")
                         .filters(f -> f.rewritePath("/EverCare/communication-service/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://COMMUNICATION-SERVICE"))
-                // ✅ Communication service – WebSocket (conservée)
+                        .uri("lb://communication-service"))
+// Communication service - WebSocket
                 .route("communication-websocket", r -> r
                         .path("/ws-chat/**")
-                        .uri("lb://COMMUNICATION-SERVICE"))
+                        .uri("lb://communication-service"))
                 .build();
     }
 }

@@ -22,7 +22,7 @@ export class AuthService {
 
   private keycloakUrl = environment.authApiUrl + '/realms/EverCareRealm/protocol/openid-connect/token';
   private clientId = 'frontend-app';
-  private clientSecret = 'OsIPqO0KT3AU5LjuvTCfO7npyAMXYB98';   // ← ton secret
+  private clientSecret = 'oinAHPwEUBBEJMKOICuaI41sSQ5zCMvG';   // ← ton secret
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

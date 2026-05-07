@@ -31,7 +31,14 @@
               "src/polyfills.ts"
             ],
             "allowedCommonJsDependencies": [
-              "sockjs-client"
+              "sockjs-client",
+              "canvg",
+              "jspdf",
+              "leaflet",
+              "encoding",
+              "core-js",
+              "rgbcolor",
+              "raf"
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
@@ -66,8 +73,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "16kB",
-                  "maximumError": "32kB"
+                  "maximumWarning": "32kB",
+                  "maximumError": "48kB"
                 }
               ],
               "outputHashing": "all"

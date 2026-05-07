@@ -6,20 +6,20 @@
 
       <!-- Medication photo or fallback icon -->
       <div class="w-12 h-12 rounded-full bg-[#F3E8FF] flex items-center justify-center flex-shrink-0 overflow-hidden">
-        <img *ngIf="prescription.medicament?.photoUrl"
-             [src]="prescription.medicament?.photoUrl"
-             [alt]="prescription.medicament?.nomCommercial"
+        <img *ngIf="prescription.medicament.photoUrl"
+             [src]="prescription.medicament.photoUrl"
+             [alt]="prescription.medicament.nomCommercial"
              class="w-full h-full object-cover">
-        <span *ngIf="!prescription.medicament?.photoUrl" class="text-2xl">💊</span>
+        <span *ngIf="!prescription.medicament.photoUrl" class="text-2xl">💊</span>
       </div>
 
       <div>
         <h3 class="font-semibold text-[#2D1B4E] text-base leading-tight">
-          {{ prescription.medicament?.nomCommercial || 'N/A' }}
+          {{ prescription.medicament.nomCommercial || 'N/A' }}
         </h3>
         <p class="text-xs text-[#6B5B8C]">
-          {{ prescription.medicament?.denominationCommuneInternationale || 'N/A' }}
-          <span *ngIf="prescription.medicament?.dosage"> — {{ prescription.medicament.dosage }}</span>
+          {{ prescription.medicament.denominationCommuneInternationale || 'N/A' }}
+          <span *ngIf="prescription.medicament.dosage"> — {{ prescription.medicament.dosage }}</span>
         </p>
       </div>
     </div>
@@ -99,8 +99,8 @@
       <span class="text-white text-xs">Dr</span>
     </div>
     <span class="text-xs text-[#6B5B8C]">
-      {{ prescription.doctor?.name || 'N/A' }}
-      <span *ngIf="prescription.doctor?.specialization">
+      {{ prescription.doctor.name || 'N/A' }}
+      <span *ngIf="prescription.doctor.specialization">
         · {{ prescription.doctor.specialization }}
       </span>
     </span>

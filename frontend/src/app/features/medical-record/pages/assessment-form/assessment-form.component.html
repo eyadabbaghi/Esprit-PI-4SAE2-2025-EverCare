@@ -1,0 +1,114 @@
+<section class="assessment-page">
+  <div class="assessment-shell">
+    <div class="panel assessment-card">
+      <div class="head">
+        <div>
+          <span class="eyebrow">Medical Record Assessment</span>
+          <h2>Care baseline screening</h2>
+          <p>Answer a short set of questions to create a structured report for your medical record.</p>
+        </div>
+        <div class="header-metrics">
+          <div class="metric-chip">
+            <span>Estimated Score</span>
+            <strong>{{ totalScore }} / {{ maxScore }}</strong>
+          </div>
+          <div class="metric-chip">
+            <span>Likely Stage</span>
+            <strong>{{ previewStage }}</strong>
+          </div>
+          <div class="metric-chip">
+            <span>Status</span>
+            <strong>{{ previewAlertLabel }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>
+      <div *ngIf="isLoading" class="status-message info">Loading previous reports...</div>
+
+      <div class="status-message warning" *ngIf="previousReports.length > 0">
+        A report already exists for this patient. You can view the latest report or create a new assessment.
+        <div class="warning-action">
+          <button type="button" class="btn-link" (click)="openLatestReport()">View latest report</button>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="form-layout">
+          <div class="form-main">
+            <div class="identity-grid">
+              <div class="field">
+                <label for="patientName">Patient Name</label>
+                <input id="patientName" type="text" formControlName="patientName" readonly [class.invalid]="hasError('patientName', 'maxlength')" />
+                <div class="field-error" *ngIf="hasError('patientName', 'maxlength')">Patient name must not exceed 255 characters.</div>
+              </div>
+
+              <div class="field">
+                <label for="caregiverName">Caregiver Name</label>
+                <input id="caregiverName" type="text" formControlName="caregiverName" [class.invalid]="hasError('caregiverName', 'maxlength') || hasError('caregiverName', 'pattern')" />
+                <div class="field-error" *ngIf="hasError('caregiverName', 'maxlength')">Caregiver name must not exceed 255 characters.</div>
+                <div class="field-error" *ngIf="hasError('caregiverName', 'pattern')">Caregiver name is invalid (letters, spaces, apostrophes, and hyphens only).</div>
+              </div>
+            </div>
+
+            <div class="legend-box">
+              <h4>Response scale</h4>
+              <div class="legend-list">
+                <span class="legend-item level-0">0 - No symptoms</span>
+                <span class="legend-item level-1">1 - Mild</span>
+                <span class="legend-item level-2">2 - Moderate</span>
+                <span class="legend-item level-3">3 - Significant</span>
+              </div>
+            </div>
+
+            <div class="form-grid question-grid">
+              <div class="field question-field" *ngFor="let question of questions; let i = index">
+                <label [for]="question.key">
+                  <span class="question-index">{{ i + 1 }}</span>
+                  {{ question.label }}
+                </label>
+                <select [id]="question.key" [formControlName]="question.key" [class]="getSelectClass(question.key)">
+                  <option [ngValue]="0">0 - No symptoms</option>
+                  <option [ngValue]="1">1 - Mild</option>
+                  <option [ngValue]="2">2 - Moderate</option>
+                  <option [ngValue]="3">3 - Significant</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <aside class="preview-panel">
+            <h3>Real-Time Preview</h3>
+            <p>The result is indicative and will be recalculated on submission.</p>
+            <div class="preview-score">
+              <strong>{{ totalScore }}</strong>
+              <span>/ {{ maxScore }}</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="previewPercent"></div>
+            </div>
+            <div class="preview-meta">
+              <div>
+                <span>Stage</span>
+                <strong>{{ previewStage }}</strong>
+              </div>
+              <div>
+                <span>Status</span>
+                <strong>{{ previewAlertLabel }}</strong>
+              </div>
+            </div>
+            <button type="button" class="btn-muted preview-reset" (click)="resetForm()">Reset Answers</button>
+          </aside>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-solid" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Saving assessment...' : 'Submit Assessment' }}
+          </button>
+          <a routerLink="/medical-record" class="btn-muted">Medical Record</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

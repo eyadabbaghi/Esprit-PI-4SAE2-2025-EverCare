@@ -1,0 +1,170 @@
+.back-office-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  background: #f8fafc;
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 1.1rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 32%),
+    linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+  color: #312e81;
+}
+
+.sidebar-brand,
+.sidebar-user-card,
+.nav-link,
+.support-card,
+.logout-button {
+  border-radius: 1.2rem;
+}
+
+.sidebar-brand,
+.sidebar-user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-mark,
+.sidebar-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  background: rgba(124, 58, 237, 0.12);
+}
+
+.brand-mark {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(196, 181, 253, 0.85);
+}
+
+.brand-mark img {
+  width: 2.35rem;
+  height: 2.35rem;
+  object-fit: contain;
+}
+
+.brand-overline {
+  display: block;
+  font-size: 0.72rem;
+  color: #7c3aed;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sidebar-brand strong,
+.sidebar-user-card strong,
+.support-card strong {
+  color: #2d1b4e;
+}
+
+.sidebar-user-card {
+  padding: 0.95rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(196, 181, 253, 0.85);
+  cursor: pointer;
+}
+
+.sidebar-user-card p,
+.support-card p,
+.support-card span {
+  margin: 0.2rem 0 0;
+  color: #6b5b8c;
+}
+
+.sidebar-avatar {
+  overflow: hidden;
+  font-weight: 700;
+}
+
+.sidebar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-nav {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  color: #4c1d95;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.nav-link svg,
+.logout-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-link:hover,
+.nav-active {
+  background: rgba(124, 58, 237, 0.14);
+  color: #5b21b6;
+}
+
+.sidebar-footer {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.support-card {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(196, 181, 253, 0.85);
+}
+
+.logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 0;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-office-main {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .back-office-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
+    height: auto;
+    grid-template-rows: none;
+  }
+}

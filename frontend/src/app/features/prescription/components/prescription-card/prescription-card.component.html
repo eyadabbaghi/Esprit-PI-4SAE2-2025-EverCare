@@ -1,0 +1,144 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4 hover:shadow-md transition-shadow">
+
+  <!-- Top row: medicament name + status badge -->
+  <div class="flex items-start justify-between mb-3">
+    <div class="flex items-center space-x-3">
+
+      <!-- Medication photo or fallback icon -->
+      <div class="w-12 h-12 rounded-full bg-[#F3E8FF] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img *ngIf="prescription.medicament?.photoUrl"
+             [src]="prescription.medicament?.photoUrl"
+             [alt]="prescription.medicament?.nomCommercial"
+             class="w-full h-full object-cover">
+        <span *ngIf="!prescription.medicament?.photoUrl" class="text-2xl"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m10.5 20.5-7-7a3.5 3.5 0 0 1 5-5l7 7a3.5 3.5 0 0 1-5 5Z" stroke-width="2"></path><path d="m8.5 8.5 7 7" stroke-width="2"></path></svg></span>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-[#2D1B4E] text-base leading-tight">
+          {{ prescription.medicament?.nomCommercial || 'N/A' }}
+        </h3>
+        <p class="text-xs text-[#6B5B8C]">
+          {{ prescription.medicament?.denominationCommuneInternationale || 'N/A' }}
+          <span *ngIf="prescription.medicament?.dosage"> — {{ prescription.medicament.dosage }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Status and PDF badges -->
+    <div class="flex items-center space-x-2 flex-shrink-0">
+      <!-- Status badge -->
+      <span class="text-xs font-medium px-2 py-1 rounded-full border"
+            [ngClass]="getStatusClass()">
+        {{ getStatusLabel() }}
+      </span>
+      
+      <!-- PDF preview badge -->
+      <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5
+                   rounded-full bg-teal-50 text-teal-700 border
+                   border-teal-200 cursor-pointer hover:bg-teal-100"
+            (click)="quickDownload(prescription.prescriptionId)"
+            title="Download PDF">
+        <lucide-icon name="Download" [size]="12"></lucide-icon>
+        PDF
+      </span>
+    </div>
+  </div>
+
+  <!-- Expiring soon warning -->
+  <div *ngIf="isExpiringSoon()"
+       class="mb-3 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg flex items-center space-x-2">
+    <span class="text-orange-500"><svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg></span>
+    <span class="text-xs text-orange-600 font-medium">
+      Expires in {{ getDaysLeft() }} day{{ getDaysLeft() > 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <!-- Alzheimer daily schedule -->
+  <div *ngIf="hasAlzheimerSchedule()"
+       class="mb-3 bg-[#F9FAFB] rounded-lg p-3 space-y-1">
+    <p class="text-xs font-medium text-[#6B5B8C] mb-2">Daily Schedule</p>
+    <div *ngIf="prescription.priseMatin" class="flex items-center space-x-2">
+      <span class="text-base"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 18h16M12 4v6M8 8l4-4 4 4M6 14a6 6 0 0 1 12 0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      <span class="text-sm text-[#2D1B4E]">Morning: {{ prescription.priseMatin }}</span>
+    </div>
+    <div *ngIf="prescription.priseMidi" class="flex items-center space-x-2">
+      <span class="text-base"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="2"></circle><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" stroke-width="2" stroke-linecap="round"></path></svg></span>
+      <span class="text-sm text-[#2D1B4E]">Noon: {{ prescription.priseMidi }}</span>
+    </div>
+    <div *ngIf="prescription.priseSoir" class="flex items-center space-x-2">
+      <span class="text-base"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8 8 0 1 0 20 15.5Z" stroke-width="2" stroke-linejoin="round"></path></svg></span>
+      <span class="text-sm text-[#2D1B4E]">Evening: {{ prescription.priseSoir }}</span>
+    </div>
+  </div>
+
+  <!-- Posologie -->
+  <div *ngIf="prescription.posologie" class="mb-3">
+    <p class="text-xs text-[#6B5B8C]">Dosage</p>
+    <p class="text-sm text-[#2D1B4E]">{{ prescription.posologie }}</p>
+  </div>
+
+  <!-- Dates row -->
+  <div class="grid grid-cols-2 gap-2 mb-3">
+    <div class="bg-[#F9FAFB] rounded-lg p-2">
+      <p class="text-xs text-[#6B5B8C]">Start</p>
+      <p class="text-sm font-medium text-[#2D1B4E]">
+        {{ prescription.dateDebut | date:'dd MMM yyyy' }}
+      </p>
+    </div>
+    <div class="bg-[#F9FAFB] rounded-lg p-2">
+      <p class="text-xs text-[#6B5B8C]">End</p>
+      <p class="text-sm font-medium text-[#2D1B4E]">
+        {{ prescription.dateFin | date:'dd MMM yyyy' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Doctor info -->
+  <div class="flex items-center space-x-2 mb-4">
+    <div class="w-6 h-6 rounded-full bg-[#7C3AED] flex items-center justify-center">
+      <span class="text-white text-xs">Dr</span>
+    </div>
+    <span class="text-xs text-[#6B5B8C]">
+      {{ prescription.doctor?.name || 'N/A' }}
+      <span *ngIf="prescription.doctor?.specialization">
+        · {{ prescription.doctor.specialization }}
+      </span>
+    </span>
+  </div>
+
+  <!-- Action buttons -->
+  <div *ngIf="showActions" class="flex items-center space-x-2 pt-3 border-t border-[#F3E8FF]">
+
+    <!-- View details — always visible -->
+    <button
+      class="flex-1 px-3 py-2 text-xs font-medium text-[#7C3AED] border border-[#C4B5FD] rounded-lg hover:bg-[#F3E8FF] transition-colors"
+      (click)="onView.emit(prescription)">
+      View Details
+    </button>
+
+    <!-- Renew — only if active and renewable -->
+    <button *ngIf="prescription.statut === 'ACTIVE' && prescription.renouvelable && prescription.nombreRenouvellements > 0"
+            class="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#7C3AED] rounded-lg hover:bg-[#6D28D9] transition-colors"
+            (click)="onRenew.emit(prescription)">
+      Renew ({{ prescription.nombreRenouvellements }})
+    </button>
+
+    <!-- PDF download -->
+    <button
+      class="px-3 py-2 text-xs font-medium text-[#6B5B8C] border border-[#E2E8F0] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+      (click)="onDownloadPdf.emit(prescription)"
+      title="Download PDF">
+      <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M14 3H6v18h12V7zM14 3v4h4" stroke-width="2" stroke-linejoin="round"></path></svg>
+    </button>
+
+    <!-- Cancel — only if active -->
+    <button *ngIf="prescription.statut === 'ACTIVE'"
+            class="px-3 py-2 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+            (click)="onCancel.emit(prescription)"
+            title="Cancel prescription">
+      <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg>
+    </button>
+
+  </div>
+
+</div>

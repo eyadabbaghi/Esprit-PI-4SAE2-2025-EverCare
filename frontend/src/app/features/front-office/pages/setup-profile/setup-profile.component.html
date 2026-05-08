@@ -1,0 +1,322 @@
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+  <div class="w-full max-w-3xl">
+    <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6">
+      <div class="space-y-6">
+        <div class="text-center space-y-2">
+          <div class="flex items-center justify-center space-x-2 mb-2">
+            <img src="/logo.png" alt="EverCare logo" class="h-10 w-10 rounded-xl object-contain" />
+            <h1 class="text-2xl font-bold text-[#2D1B4E]">EverCare</h1>
+          </div>
+          <h2 class="text-3xl font-semibold text-[#2D1B4E]">Complete Your Profile</h2>
+          <p class="text-sm text-[#6B5B8C]">Let's set up your profile to personalize your EverCare experience</p>
+          <div class="flex justify-center">
+            <div class="px-4 py-2 rounded-full border-2 capitalize text-sm font-semibold {{ getRoleColor() }}">
+              {{ role }} Account
+            </div>
+          </div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <div class="flex flex-col items-center space-y-4">
+            <div class="relative w-32 h-32">
+              <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
+                <ng-container *ngIf="profileImage; else initials">
+                  <img [src]="profileImage" alt="Profile" class="w-full h-full object-cover">
+                </ng-container>
+                <ng-template #initials>
+                  <span>{{ getInitials() }}</span>
+                </ng-template>
+              </div>
+              <input
+                type="file"
+                id="profile-picture-input"
+                accept="image/*"
+                class="hidden"
+                (change)="onFileSelected($event)"
+              />
+              <button
+                type="button"
+                class="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-lg hover:bg-[#6D28D9]"
+                (click)="triggerFileInput()"
+                aria-label="Upload profile picture"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </button>
+            </div>
+            <p class="text-sm text-[#6B5B8C]">Recommended: square image, at least 200x200px</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Date of Birth <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                  </svg>
+                </span>
+                <input
+                  type="date"
+                  formControlName="dateOfBirth"
+                  [attr.min]="minBirthDate"
+                  [attr.max]="maxBirthDate"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [class.border-red-500]="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched" class="text-red-500 text-xs">
+                {{ getDateOfBirthError() }}
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Phone Number <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </span>
+                <input
+                  type="tel"
+                  formControlName="phoneNumber"
+                  placeholder="+1 (555) 123-4567"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  [class.border-red-500]="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched" class="text-red-500 text-xs">
+                {{ getPhoneError('phoneNumber') }}
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="role === 'CAREGIVER'" class="space-y-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Caregiver Information
+            </h3>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Patient's Email Address</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-10 7L2 7"/>
+                  </svg>
+                </span>
+                <input
+                  type="email"
+                  formControlName="connectedEmail"
+                  placeholder="patient@example.com"
+                  class="w-full pl-10 pr-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  [class.border-red-500]="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
+                Please enter a valid email address if you provide one.
+              </div>
+              <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                  <path d="M12 9v4M12 17h.01"/>
+                </svg>
+                This field is very important. You can add it now or later from your profile.
+              </p>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </span>
+                <input
+                  type="tel"
+                  formControlName="emergencyContact"
+                  placeholder="+1 (555) 987-6543"
+                  class="w-full pl-10 pr-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched" class="text-red-500 text-xs">
+                {{ getPhoneError('emergencyContact') }}
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="role === 'PATIENT'" class="space-y-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21a8 8 0 0 0-16 0"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Patient Information
+            </h3>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Caregiver's Email Address</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-10 7L2 7"/>
+                  </svg>
+                </span>
+                <input
+                  type="email"
+                  formControlName="connectedEmail"
+                  placeholder="caregiver@example.com"
+                  class="w-full pl-10 pr-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  [class.border-red-500]="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
+                Please enter a valid email address if you provide one.
+              </div>
+              <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                  <path d="M12 9v4M12 17h.01"/>
+                </svg>
+                This field is very important. You can add it now or later from your profile.
+              </p>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </span>
+                <input
+                  type="tel"
+                  formControlName="emergencyContact"
+                  placeholder="+1 (555) 987-6543"
+                  class="w-full pl-10 pr-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
+                />
+              </div>
+              <div *ngIf="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched" class="text-red-500 text-xs">
+                {{ getPhoneError('emergencyContact') }}
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="role === 'DOCTOR'" class="space-y-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+            <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                <rect x="2" y="7" width="20" height="13" rx="2"/>
+              </svg>
+              Medical Professional Information
+            </h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-[#1E293B]">Years of Experience <span class="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  formControlName="yearsExperience"
+                  placeholder="10"
+                  class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  [class.border-red-500]="profileForm.get('yearsExperience')?.invalid && profileForm.get('yearsExperience')?.touched"
+                />
+                <div *ngIf="profileForm.get('yearsExperience')?.invalid && profileForm.get('yearsExperience')?.touched" class="text-red-500 text-xs">
+                  Years of experience is required (0-60).
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-[#1E293B]">Specialization</label>
+                <input
+                  type="text"
+                  formControlName="specialization"
+                  placeholder="Neurology, Geriatrics, etc."
+                  class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Medical License Number</label>
+              <input
+                type="text"
+                formControlName="medicalLicense"
+                placeholder="MD123456"
+                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Workplace Type <span class="text-red-500">*</span></label>
+              <div class="flex gap-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="workplaceType"
+                    [value]="'hospital'"
+                    [ngModel]="workplaceType"
+                    (ngModelChange)="workplaceType = $event"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-4 h-4 text-[#7C3AED] focus:ring-[#7C3AED]"
+                  />
+                  <span class="text-[#2D1B4E]">Hospital</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="workplaceType"
+                    [value]="'private'"
+                    [ngModel]="workplaceType"
+                    (ngModelChange)="workplaceType = $event"
+                    [ngModelOptions]="{standalone: true}"
+                    class="w-4 h-4 text-[#7C3AED] focus:ring-[#7C3AED]"
+                  />
+                  <span class="text-[#2D1B4E]">Private Practice</span>
+                </label>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">
+                {{ workplaceType === 'hospital' ? 'Hospital Name' : 'Practice Name' }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                formControlName="workplace"
+                [placeholder]="workplaceType === 'hospital' ? 'City General Hospital' : 'Dr. Smith Medical Office'"
+                class="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                [class.border-red-500]="profileForm.get('workplace')?.invalid && profileForm.get('workplace')?.touched"
+              />
+              <div *ngIf="profileForm.get('workplace')?.invalid && profileForm.get('workplace')?.touched" class="text-red-500 text-xs">
+                Workplace name is required.
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50"
+            >
+              {{ isLoading ? 'Setting up...' : 'Complete Profile Setup' }}
+            </button>
+          </div>
+
+          <p class="text-center text-sm text-[#6B5B8C]">
+            You can update your profile information anytime from your account settings
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

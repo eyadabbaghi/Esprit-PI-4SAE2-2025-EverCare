@@ -1,0 +1,86 @@
+<div *ngIf="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl w-full max-w-md">
+    <div class="p-6 space-y-4">
+      <!-- Header – dynamic title -->
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-semibold text-[#2D1B4E]">
+          Find a 
+          {{ role === 'DOCTOR' ? 'Doctor' : role === 'CAREGIVER' ? 'Caregiver' : 'Patient' }}
+        </h3>
+        <button
+          type="button"
+          class="text-[#6B5B8C] hover:text-[#2D1B4E]"
+          (click)="close()"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Search input – dynamic placeholder -->
+      <div class="relative">
+        <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🔍</span>
+        <input
+          type="text"
+          [placeholder]="'Search by name or email...'"
+          [formControl]="searchControl"
+          class="w-full pl-10 pr-3 py-2 border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+        />
+      </div>
+
+      <!-- Loading indicator -->
+      <div *ngIf="isLoading" class="text-center py-4 text-[#6B5B8C]">
+        Searching...
+      </div>
+
+      <!-- Results list -->
+      <div *ngIf="!isLoading && searchResults.length > 0" class="max-h-64 overflow-y-auto space-y-2">
+        <button
+          *ngFor="let user of searchResults"
+          type="button"
+          class="w-full text-left p-3 flex items-center gap-3 hover:bg-[#F3E8FF] rounded-lg transition-colors"
+          (click)="selectUser(user)"
+        >
+          <div class="w-10 h-10 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold text-[#7C3AED] overflow-hidden">
+            <ng-container *ngIf="user.profilePicture; else initials">
+              <img [src]="user.profilePicture" alt="" class="w-full h-full object-cover">
+            </ng-container>
+            <ng-template #initials>
+              <span>{{ getInitials(user.name) }}</span>
+            </ng-template>
+          </div>
+          <div class="flex-1">
+            <p class="font-medium text-[#2D1B4E]">{{ user.name }}</p>
+            <!-- Dynamic subtitle -->
+            <p class="text-xs text-[#6B5B8C]">
+              {{
+                role === 'DOCTOR'
+                  ? (user.specialization || 'Doctor')
+                  : role === 'CAREGIVER'
+                  ? 'Caregiver'
+                  : 'Patient'
+              }}
+            </p>
+          </div>
+        </button>
+      </div>
+
+      <!-- No results -->
+      <div *ngIf="!isLoading && searchControl.value && searchResults.length === 0" class="text-center py-4 text-[#6B5B8C]">
+        No 
+        {{ role === 'DOCTOR' ? 'doctors' : role === 'CAREGIVER' ? 'caregivers' : 'patients' }} 
+        found.
+      </div>
+
+      <!-- Close button at bottom -->
+      <div class="pt-2">
+        <button
+          type="button"
+          class="w-full px-4 py-2 border border-[#C4B5FD] text-[#7C3AED] rounded-md hover:bg-[#F3E8FF] transition-colors"
+          (click)="close()"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

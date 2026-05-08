@@ -1,0 +1,11 @@
+// Map UserSimpleDTO to PatientSimpleDTO
+            PatientSimpleDTO patient = new PatientSimpleDTO();
+            patient.setUserId(userPatient.getUserId());
+            patient.setName(userPatient.getName());
+            patient.setEmail(userPatient.getEmail());
+            patient.setPhone(userPatient.getPhone());
+            patient.setCreatedAt(userPatient.getCreatedAt());
+            patient.setDateOfBirth(userPatient.getDateOfBirth());
+            patient.setEmergencyContact(userPatient.getEmergencyContact());
+            patient.setProfilePicture(userPatient.getProfilePicture());
+            patient.setDoctorEmail(userPatient.getDoctorEmail());

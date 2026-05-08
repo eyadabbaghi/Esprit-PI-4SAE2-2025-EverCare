@@ -1,0 +1,23 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-1 flex space-x-1">
+  <button *ngFor="let tab of tabs"
+          class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-medium"
+          [class.bg-[#7C3AED]]="activeTab === tab.id"
+          [class.text-white]="activeTab === tab.id"
+          [class.text-[#2D1B4E]]="activeTab !== tab.id"
+          [class.hover:bg-[#F3E8FF]]="activeTab !== tab.id"
+          (click)="onTabChange(tab.id)">
+    <span class="mr-2 inline-flex" aria-hidden="true">
+      <svg *ngIf="tab.icon === 'chart'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-3" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <svg *ngIf="tab.icon === 'clock'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+        <path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <svg *ngIf="tab.icon === 'list'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </span>
+    {{ tab.label }}
+  </button>
+</div>

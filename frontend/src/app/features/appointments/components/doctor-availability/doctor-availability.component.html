@@ -1,0 +1,70 @@
+<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-[#C4B5FD] bg-[#F9FAFB]">
+    <h3 class="font-semibold text-[#2D1B4E]">Available Doctors</h3>
+    <p class="text-sm text-[#6B5B8C]">Select a doctor to see their availability</p>
+  </div>
+
+  <!-- Quick filters -->
+  <div class="p-4 border-b border-[#E5E7EB]">
+    <div class="flex space-x-2 overflow-x-auto pb-2">
+      <button *ngFor="let specialty of specialties"
+              class="px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors"
+              [class.bg-[#7C3AED]]="selectedSpecialty === specialty"
+              [class.text-white]="selectedSpecialty === specialty"
+              [class.bg-gray-100]="selectedSpecialty !== specialty"
+              [class.text-[#2D1B4E]]="selectedSpecialty !== specialty"
+              (click)="selectedSpecialty = specialty">
+        {{ specialty }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Doctor list -->
+  <div class="divide-y divide-[#E5E7EB] max-h-[500px] overflow-y-auto">
+    <div *ngFor="let doctor of filteredDoctors"
+         class="p-4 hover:bg-[#F9FAFB] transition-colors cursor-pointer"
+         [class.bg-[#F3E8FF]]="selectedDoctorId === doctor.userId"
+         (click)="selectDoctor(doctor)">
+
+      <div class="flex items-start space-x-3">
+        <img [src]="doctor.profilePicture" class="w-12 h-12 rounded-full">
+        <div class="flex-1">
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-semibold text-[#2D1B4E]">{{ doctor.name }}</h4>
+
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full"
+                  [class.bg-green-100]="getAvailabilityStatus(doctor) === 'high'"
+                  [class.bg-yellow-100]="getAvailabilityStatus(doctor) === 'medium'"
+                  [class.bg-red-100]="getAvailabilityStatus(doctor) === 'low'">
+                  {{ getAvailabilityText(doctor) }}
+                </span>
+          </div>
+
+          <!--  <div class="mt-2 flex items-center text-xs text-[#6B5B8C] space-x-4">
+             <span>⭐ {{ doctor.rating || '4.5' }}</span>
+             <span><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> {{ doctor.experience || 15 }} years exp.</span>
+             <span><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M9 21v-6h6v6M9 8h6M12 5v6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> {{ doctor.workplaceName || 'Hospital' }}</span>
+           </div> -->
+
+          <!-- Next slots preview -->
+          <div class="mt-2 flex space-x-1">
+                <span *ngFor="let slot of getNextSlots(doctor)"
+                      class="text-xs bg-[#F3E8FF] px-2 py-0.5 rounded-full">
+                  {{ slot }}
+                </span>
+            <span *ngIf="getNextSlots(doctor).length === 0"
+                  class="text-xs text-[#6B5B8C]">
+                  No slots this week
+                </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredDoctors.length === 0" class="p-8 text-center text-[#6B5B8C]">
+      No doctors found
+    </div>
+  </div>
+</div>

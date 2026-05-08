@@ -1,0 +1,159 @@
+<div class="analytics-shell">
+  <div class="analytics-inner">
+    <section *ngIf="loading" class="analytics-loading">
+      <div class="spinner"></div>
+      <div>
+        <h2>Loading analytics</h2>
+        <p>Compiling live operational and growth metrics.</p>
+      </div>
+    </section>
+
+    <ng-container *ngIf="data && !loading">
+      <header class="analytics-hero">
+        <div>
+          <p class="analytics-kicker">Admin Analytics</p>
+          <h1>Deep operational analytics for users, content, care programs, and medication data</h1>
+        </div>
+        <div class="hero-chip-list">
+          <span>Verification rate: {{ formatPercent(verificationRate) }}</span>
+          <span>Content score: {{ formatPercent(contentEngagementScore) }}</span>
+          <span>Activity score: {{ formatPercent(activityQualityScore) }}</span>
+        </div>
+      </header>
+
+      <section class="analytics-card-grid">
+        <article class="analytics-card focus-blue">
+          <span>Verified accounts</span>
+          <strong>{{ formatNumber(data.verifiedUsers) }}</strong>
+          <p>{{ formatPercent(verificationRate) }} of all registered users.</p>
+        </article>
+
+        <article class="analytics-card focus-pink">
+          <span>Blog engagement</span>
+          <strong>{{ formatCompact(data.totalBlogViews + data.totalBlogLikes) }}</strong>
+          <p>{{ formatNumber(data.totalBlogViews) }} views and {{ formatNumber(data.totalBlogLikes) }} likes.</p>
+        </article>
+
+        <article class="analytics-card focus-teal">
+          <span>Activity quality</span>
+          <strong>{{ data.averageActivityRating | number:'1.1-1' }}/5</strong>
+          <p>{{ formatNumber(data.totalActivityRatings) }} user ratings captured.</p>
+        </article>
+
+        <article class="analytics-card focus-orange">
+          <span>Medication readiness</span>
+          <strong>{{ formatPercent((data.activeMedicaments / (data.totalMedicaments || 1)) * 100) }}</strong>
+          <p>{{ data.activeMedicaments }} active of {{ data.totalMedicaments }} total medicaments.</p>
+        </article>
+      </section>
+
+      <section class="analytics-main-grid">
+        <article class="analytics-panel">
+          <div class="panel-head">
+            <div>
+              <p class="analytics-kicker">Monthly trends</p>
+              <h3>Six-month creation trend across core admin domains</h3>
+            </div>
+          </div>
+
+          <div class="monthly-chart">
+            <div *ngFor="let point of data.monthlyTrend" class="month-column">
+              <div class="month-bars">
+                <span class="bar users-bar" [style.height.%]="getBarHeight(point.users, getMonthlyMax())"></span>
+                <span class="bar blogs-bar" [style.height.%]="getBarHeight(point.blogs, getMonthlyMax())"></span>
+                <span class="bar activities-bar" [style.height.%]="getBarHeight(point.activities, getMonthlyMax())"></span>
+                <span class="bar meds-bar" [style.height.%]="getBarHeight(point.medicaments, getMonthlyMax())"></span>
+              </div>
+              <strong>{{ point.label }}</strong>
+              <p>{{ point.users + point.blogs + point.activities + point.medicaments }} changes</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="analytics-panel">
+          <div class="panel-head">
+            <div>
+              <p class="analytics-kicker">Role balance</p>
+              <h3>Managed user mix by role</h3>
+            </div>
+          </div>
+
+          <div class="ratio-list">
+            <article *ngFor="let slice of data.roleDistribution" class="ratio-row">
+              <div class="ratio-label">
+                <span class="ratio-swatch" [style.background]="slice.color"></span>
+                <div>
+                  <strong>{{ slice.label }}</strong>
+                  <p>{{ formatNumber(slice.count) }} accounts</p>
+                </div>
+              </div>
+              <div class="ratio-bar">
+                <span [style.width.%]="slice.percentage" [style.background]="slice.color"></span>
+              </div>
+              <span class="ratio-value">{{ formatPercent(slice.percentage) }}</span>
+            </article>
+          </div>
+        </article>
+      </section>
+
+      <section class="analytics-lower-grid">
+        <article class="analytics-panel">
+          <div class="panel-head">
+            <div>
+              <p class="analytics-kicker">Admin execution</p>
+              <h3>Most active admins from recent tracked changes</h3>
+            </div>
+          </div>
+
+          <div class="admin-performance-list">
+            <article *ngFor="let admin of data.topAdmins" class="admin-performance-item">
+              <div>
+                <strong>{{ admin.name }}</strong>
+                <p>{{ admin.email }}</p>
+              </div>
+              <div class="performance-meta">
+                <span>{{ admin.totalActions }} actions</span>
+                <p>{{ admin.blogActions }} blog, {{ admin.activityActions }} activity, {{ admin.medicationActions }} medication</p>
+              </div>
+            </article>
+          </div>
+        </article>
+
+        <article class="analytics-panel">
+          <div class="panel-head">
+            <div>
+              <p class="analytics-kicker">Operational highlights</p>
+              <h3>Where admin attention is creating the most impact</h3>
+            </div>
+          </div>
+
+          <div class="highlight-grid">
+            <div class="highlight-card">
+              <span>Top content category</span>
+              <strong>{{ data.topCategory?.categoryName || 'Unavailable' }}</strong>
+              <p>{{ formatCompact(data.topCategory?.totalViews) }} views across {{ data.topCategory?.articleCount || 0 }} articles.</p>
+            </div>
+
+            <div class="highlight-card">
+              <span>Top activity type</span>
+              <strong>{{ topActivityHighlight?.type || 'Unavailable' }}</strong>
+              <p>{{ topActivityHighlight?.count || 0 }} activities in the strongest category.</p>
+            </div>
+
+            <div class="highlight-card">
+              <span>Top laboratory</span>
+              <strong>{{ topLaboratoryHighlight?.name || 'Unavailable' }}</strong>
+              <p>{{ topLaboratoryHighlight?.count || 0 }} medication records tied to this lab.</p>
+            </div>
+
+            <div class="highlight-card">
+              <span>Draft pressure</span>
+              <strong>{{ formatNumber(data.draftBlogs) }}</strong>
+              <p>Articles still waiting for publication attention.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+  </div>
+</div>

@@ -1,0 +1,44 @@
+package everCare.appointments.services;
+
+import everCare.appointments.dtos.MedicamentAnalyticsSummaryDTO;
+import everCare.appointments.dtos.MedicamentUsageStatsDTO;
+import everCare.appointments.entities.Medicament;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface MedicamentService {
+
+    // ========== CREATE ==========
+    Medicament createMedicament(Medicament medicament, String actorEmail);
+
+    // ========== READ ==========
+    List<Medicament> getAllMedicaments();
+    Optional<Medicament> getMedicamentById(String id);
+    Optional<Medicament> getMedicamentByCodeCIP(String codeCIP);
+    List<Medicament> searchMedicaments(String keyword);
+    List<Medicament> getActiveMedicaments();
+    List<Medicament> getMedicamentsByLaboratoire(String laboratoire);
+    List<Medicament> getMedicamentsByForme(String forme);
+    Page<Medicament> filterMedicaments(String keyword, Boolean actif, String laboratoire,
+                                       String forme, String dosage, Boolean used, Pageable pageable);
+
+    // ========== UPDATE ==========
+    Medicament updateMedicament(String id, Medicament medicamentDetails, String actorEmail);
+    Medicament activateMedicament(String id, String actorEmail);
+    Medicament deactivateMedicament(String id, String actorEmail);
+    Medicament updatePhoto(String id, String photoUrl, String actorEmail);
+    Medicament updateNotice(String id, String notice, String actorEmail);
+
+    // ========== DELETE ==========
+    void deleteMedicament(String id);
+    void deleteAllMedicaments();
+
+    // ========== BUSINESS LOGIC ==========
+    boolean existsByCodeCIP(String codeCIP);
+    long countMedicaments();
+    List<MedicamentUsageStatsDTO> getUsageStats(String doctorId, int limit);
+    MedicamentAnalyticsSummaryDTO getAnalyticsSummary(String doctorId);
+}

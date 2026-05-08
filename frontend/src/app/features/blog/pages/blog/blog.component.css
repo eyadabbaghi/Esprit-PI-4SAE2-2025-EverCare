@@ -1,0 +1,42 @@
+/* Animation de l'égaliseur audio */
+.equalizer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 12px;
+}
+
+.bar {
+  width: 3px;
+  height: 100%;
+  background-color: white;
+  border-radius: 10px;
+  animation: equalize 0.8s ease-in-out infinite;
+}
+
+.bar:nth-child(1) { animation-delay: 0.1s; }
+.bar:nth-child(2) { animation-delay: 0.3s; }
+.bar:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes equalize {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+
+/* Scrollbar personnalisée pour le contenu de l'article */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8f9fe;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #7c3aed44;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7C3AED;
+}

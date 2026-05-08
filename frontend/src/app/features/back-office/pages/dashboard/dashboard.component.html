@@ -1,0 +1,384 @@
+<div class="admin-dashboard-shell">
+  <div class="dashboard-glow dashboard-glow-one"></div>
+  <div class="dashboard-glow dashboard-glow-two"></div>
+
+  <div class="dashboard-content">
+    <section *ngIf="loading" class="dashboard-loading-card">
+      <div class="loading-dot"></div>
+      <div>
+        <h2>Building your live admin dashboard</h2>
+        <p>Loading users, blogs, activities, and medication analytics.</p>
+      </div>
+    </section>
+
+    <section *ngIf="error && !loading" class="dashboard-error-card">
+      <h2>Live dashboard unavailable</h2>
+      <p>{{ error }}</p>
+    </section>
+
+    <ng-container *ngIf="data && !loading">
+      <header class="dashboard-hero animate-card">
+        <div>
+          <p class="hero-label">EverCare Admin Intelligence Center</p>
+          <h1>Operational dashboard with live platform signals</h1>
+          <p class="hero-copy">
+            Monitor user growth, role mix, content performance, medication inventory, and recent admin actions from one place.
+          </p>
+        </div>
+
+        <div class="hero-status-panel">
+          <div class="live-pill">
+            <span class="live-dot"></span>
+            Live refresh every 15s
+          </div>
+          <div class="hero-metric">
+            <span class="hero-metric-label">Last refresh</span>
+            <strong>{{ formatDateTime(data.refreshedAt.toISOString()) }}</strong>
+          </div>
+          <div class="hero-metric">
+            <span class="hero-metric-label">Recent admin actions</span>
+            <strong>{{ data.recentChanges.length }}</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <article class="stat-card stat-primary animate-card">
+          <div class="stat-icon user-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
+              <path d="M21 21v-2a4 4 0 0 0-3-3.87"></path>
+            </svg>
+          </div>
+          <div>
+            <p>Total users</p>
+            <h2>{{ formatNumber(data.totalUsers) }}</h2>
+            <span>{{ data.newUsersThisMonth }} new this month</span>
+          </div>
+        </article>
+
+        <article class="stat-card animate-card">
+          <div class="stat-icon active-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2v4"></path>
+              <path d="M12 18v4"></path>
+              <path d="M4.93 4.93l2.83 2.83"></path>
+              <path d="M16.24 16.24l2.83 2.83"></path>
+              <path d="M2 12h4"></path>
+              <path d="M18 12h4"></path>
+              <path d="M4.93 19.07l2.83-2.83"></path>
+              <path d="M16.24 7.76l2.83-2.83"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <p>Active users</p>
+            <h2>{{ formatNumber(data.activeUsers) }}</h2>
+            <span>Seen in the last 7 days</span>
+          </div>
+        </article>
+
+        <article class="stat-card animate-card">
+          <div class="stat-icon admin-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15l-3.5 2 1-4-3-2.5 4-.5L12 6l1.5 4 4 .5-3 2.5 1 4Z"></path>
+              <path d="M5 20h14"></path>
+            </svg>
+          </div>
+          <div>
+            <p>Total admins</p>
+            <h2>{{ formatNumber(data.totalAdmins) }}</h2>
+            <span>{{ data.recentAdmins.length }} admins recently active</span>
+          </div>
+        </article>
+
+        <article class="stat-card animate-card">
+          <div class="stat-icon blog-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5V4.5A2.5 2.5 0 0 1 6.5 2Z"></path>
+              <path d="M8 7h8"></path>
+              <path d="M8 11h8"></path>
+            </svg>
+          </div>
+          <div>
+            <p>Blog reach</p>
+            <h2>{{ formatCompact(data.totalBlogViews) }}</h2>
+            <span>{{ data.publishedBlogs }} published articles</span>
+          </div>
+        </article>
+
+        <article class="stat-card animate-card">
+          <div class="stat-icon activity-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 12h4l3-8 4 16 3-8h4"></path>
+            </svg>
+          </div>
+          <div>
+            <p>Activity catalog</p>
+            <h2>{{ formatNumber(data.totalActivities) }}</h2>
+            <span>{{ data.doctorSuggestedActivities }} doctor suggested</span>
+          </div>
+        </article>
+
+        <article class="stat-card animate-card">
+          <div class="stat-icon medication-stat-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.5 20.5 3.5 13.5a3.54 3.54 0 0 1 5-5l7 7a3.54 3.54 0 1 1-5 5Z"></path>
+              <path d="m15 9 4.5-4.5"></path>
+            </svg>
+          </div>
+          <div>
+            <p>Medicaments</p>
+            <h2>{{ formatNumber(data.totalMedicaments) }}</h2>
+            <span>{{ data.activeMedicaments }} active inventory entries</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="two-column-grid">
+        <article class="panel trend-panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">7-day movement</p>
+              <h3>Platform growth and publishing velocity</h3>
+            </div>
+            <div class="trend-legend">
+              <span><i class="legend-dot users-dot"></i>Users</span>
+              <span><i class="legend-dot blogs-dot"></i>Blogs</span>
+              <span><i class="legend-dot activities-dot"></i>Activities</span>
+              <span><i class="legend-dot meds-dot"></i>Meds</span>
+            </div>
+          </div>
+
+          <svg viewBox="0 0 480 220" class="trend-svg" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="usersArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3"></stop>
+                <stop offset="100%" stop-color="#2563eb" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <line x1="22" y1="198" x2="458" y2="198" class="trend-axis"></line>
+            <path [attr.d]="buildAreaPath(getWeeklySeries('users'))" fill="url(#usersArea)"></path>
+            <path [attr.d]="buildTrendPath(getWeeklySeries('users'))" class="trend-line users-line"></path>
+            <path [attr.d]="buildTrendPath(getWeeklySeries('blogs'))" class="trend-line blogs-line"></path>
+            <path [attr.d]="buildTrendPath(getWeeklySeries('activities'))" class="trend-line activities-line"></path>
+            <path [attr.d]="buildTrendPath(getWeeklySeries('medicaments'))" class="trend-line meds-line"></path>
+          </svg>
+
+          <div class="trend-labels">
+            <span *ngFor="let point of data.weeklyTrend">{{ point.label }}</span>
+          </div>
+        </article>
+
+        <article class="panel donut-panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Role composition</p>
+              <h3>Majority users by care role</h3>
+            </div>
+            <span class="chip-outline">{{ getManagedRoleTotal() }} managed profiles</span>
+          </div>
+
+          <div class="donut-layout">
+            <div class="donut-wrap">
+              <div class="role-ring" [style.background]="roleRingStyle">
+                <div class="role-ring-center">
+                  <span>Total mix</span>
+                  <strong>{{ formatNumber(getManagedRoleTotal()) }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="role-list">
+              <article *ngFor="let slice of data.roleDistribution" class="role-item">
+                <div class="role-item-main">
+                  <span class="role-swatch" [style.background]="slice.color"></span>
+                  <div>
+                    <h4>{{ slice.label }}</h4>
+                    <p>{{ formatPercent(slice.percentage) }} of managed roles</p>
+                  </div>
+                </div>
+                <strong>{{ formatNumber(slice.count) }}</strong>
+              </article>
+
+              <div *ngIf="majorityRole" class="majority-card">
+                <span>Largest group</span>
+                <strong>{{ majorityRole.label }}</strong>
+                <p>{{ formatNumber(majorityRole.count) }} users lead the distribution.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="insight-grid">
+        <article class="panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Content health</p>
+              <h3>Blog performance snapshot</h3>
+            </div>
+          </div>
+          <div class="micro-stats">
+            <div>
+              <span>Articles</span>
+              <strong>{{ formatNumber(data.totalBlogs) }}</strong>
+            </div>
+            <div>
+              <span>Likes</span>
+              <strong>{{ formatCompact(data.totalBlogLikes) }}</strong>
+            </div>
+            <div>
+              <span>Avg read time</span>
+              <strong>{{ data.avgReadingTime | number:'1.0-1' }} min</strong>
+            </div>
+          </div>
+          <div class="spotlight-card" *ngIf="data.topCategory">
+            <span>Top category</span>
+            <strong>{{ data.topCategory.categoryName }}</strong>
+            <p>{{ formatCompact(data.topCategory.totalViews) }} total views with {{ data.topCategory.articleCount }} articles.</p>
+          </div>
+          <div class="article-list">
+            <article *ngFor="let article of data.topArticles | slice:0:3">
+              <div>
+                <h4>{{ article.title }}</h4>
+                <p>{{ formatCompact(article.viewCount) }} views and {{ formatCompact(article.likeCount) }} likes</p>
+              </div>
+              <span>{{ article.isPublished ? 'Published' : 'Draft' }}</span>
+            </article>
+          </div>
+        </article>
+
+        <article class="panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Programs and engagement</p>
+              <h3>Activities performance</h3>
+            </div>
+          </div>
+          <div class="micro-stats">
+            <div>
+              <span>Average rating</span>
+              <strong>{{ data.averageActivityRating | number:'1.1-1' }}</strong>
+            </div>
+            <div>
+              <span>Total ratings</span>
+              <strong>{{ formatNumber(data.totalActivityRatings) }}</strong>
+            </div>
+            <div>
+              <span>Doctor suggested</span>
+              <strong>{{ formatNumber(data.doctorSuggestedActivities) }}</strong>
+            </div>
+          </div>
+          <div class="ranking-list">
+            <article *ngFor="let item of data.topActivityTypes">
+              <div class="ranking-title">
+                <span>{{ item.type }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <div class="ranking-bar">
+                <span [style.width.%]="getBarHeight(item.count, data.totalActivities)"></span>
+              </div>
+            </article>
+          </div>
+        </article>
+
+        <article class="panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Medication operations</p>
+              <h3>Inventory and usage readiness</h3>
+            </div>
+          </div>
+          <div class="micro-stats">
+            <div>
+              <span>Active</span>
+              <strong>{{ formatNumber(data.activeMedicaments) }}</strong>
+            </div>
+            <div>
+              <span>Inactive</span>
+              <strong>{{ formatNumber(data.inactiveMedicaments) }}</strong>
+            </div>
+            <div>
+              <span>Used in care plans</span>
+              <strong>{{ formatNumber(data.medicamentSummary.usedMedicaments) }}</strong>
+            </div>
+          </div>
+          <div class="ranking-list">
+            <article *ngFor="let item of data.topLaboratories">
+              <div class="ranking-title">
+                <span>{{ item.name }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <div class="ranking-bar warm">
+                <span [style.width.%]="getBarHeight(item.count, data.totalMedicaments)"></span>
+              </div>
+            </article>
+          </div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel activity-feed-panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Admin activity feed</p>
+              <h3>Recent changes across the dashboard</h3>
+            </div>
+            <span class="chip-outline">{{ data.recentChanges.length }} recent actions</span>
+          </div>
+
+          <div class="activity-feed">
+            <article *ngFor="let change of data.recentChanges" class="feed-item">
+              <div class="feed-accent" [style.background]="change.accent"></div>
+              <div class="feed-body">
+                <div class="feed-topline">
+                  <span class="feed-area">{{ change.area }}</span>
+                  <span class="feed-time">{{ relativeTime(change.timestamp) }}</span>
+                </div>
+                <h4>{{ change.actorName }}</h4>
+                <p>{{ change.description }}</p>
+              </div>
+            </article>
+          </div>
+        </article>
+
+        <article class="panel animate-card">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Admin leaderboard</p>
+              <h3>Who is driving change right now</h3>
+            </div>
+          </div>
+
+          <div class="leaderboard-list">
+            <article *ngFor="let admin of data.topAdmins" class="leaderboard-item">
+              <div>
+                <h4>{{ admin.name }}</h4>
+                <p>{{ admin.email }}</p>
+              </div>
+              <div class="leaderboard-stats">
+                <strong>{{ admin.totalActions }}</strong>
+                <span>{{ admin.blogActions }} blogs, {{ admin.activityActions }} activities, {{ admin.medicationActions }} meds</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="recent-admins">
+            <h4>Recently active admins</h4>
+            <article *ngFor="let admin of data.recentAdmins" class="recent-admin-row">
+              <div>
+                <strong>{{ admin.name }}</strong>
+                <p>{{ admin.email }}</p>
+              </div>
+              <span>{{ relativeTime(admin.lastSeenAt || admin.createdAt) }}</span>
+            </article>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+  </div>
+</div>

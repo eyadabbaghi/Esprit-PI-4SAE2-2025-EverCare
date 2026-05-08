@@ -1,0 +1,74 @@
+<div class="settings-shell">
+  <div class="settings-inner">
+    <header class="settings-hero">
+      <div>
+        <p class="settings-kicker">Admin account settings</p>
+        <h1>Security, password control, and account lifecycle</h1>
+        <p>Manage the sensitive actions tied to your administrator account.</p>
+      </div>
+
+      <div class="account-badge">
+        <span>{{ currentUser?.role || 'ADMIN' }}</span>
+        <strong>{{ currentUser?.email }}</strong>
+      </div>
+    </header>
+
+    <section class="settings-grid">
+      <article class="settings-card">
+        <div class="card-head">
+          <div>
+            <p class="settings-kicker">Security</p>
+            <h2>Change password</h2>
+          </div>
+        </div>
+
+        <div class="settings-form-grid">
+          <label>
+            <span>Current password</span>
+            <input type="password" [(ngModel)]="passwordForm.currentPassword" placeholder="Current password">
+          </label>
+
+          <label>
+            <span>New password</span>
+            <input type="password" [(ngModel)]="passwordForm.newPassword" placeholder="Minimum 8 characters">
+          </label>
+
+          <label class="full-width">
+            <span>Confirm new password</span>
+            <input type="password" [(ngModel)]="passwordForm.confirmPassword" placeholder="Repeat the new password">
+          </label>
+        </div>
+
+        <div class="card-actions">
+          <button type="button" class="primary-button" (click)="updatePassword()" [disabled]="isSavingPassword">
+            {{ isSavingPassword ? 'Updating password...' : 'Update password' }}
+          </button>
+        </div>
+      </article>
+
+      <article class="settings-card danger-card">
+        <div class="card-head">
+          <div>
+            <p class="settings-kicker">Danger zone</p>
+            <h2>Delete account</h2>
+          </div>
+        </div>
+
+        <p class="danger-copy">
+          Deleting your account removes your admin access and permanently deletes your user record from the platform.
+        </p>
+
+        <label class="full-width">
+          <span>Type <strong>DELETE</strong> to confirm</span>
+          <input type="text" [(ngModel)]="deleteConfirmation" placeholder="DELETE">
+        </label>
+
+        <div class="card-actions">
+          <button type="button" class="danger-button" (click)="deleteAccount()" [disabled]="isDeleting">
+            {{ isDeleting ? 'Deleting account...' : 'Delete account permanently' }}
+          </button>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>

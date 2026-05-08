@@ -1,0 +1,195 @@
+<div class="users-shell">
+  <div class="users-inner">
+    <header class="users-hero">
+      <div>
+        <p class="users-kicker">Admin access control</p>
+        <h1>Manage platform accounts and create new administrators</h1>
+        <p>
+          Review every account in the platform and create new users with the `ADMIN` role only.
+        </p>
+      </div>
+
+      <button type="button" class="primary-action" (click)="openCreateAdmin()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        Create admin
+      </button>
+    </header>
+
+    <section class="users-summary-grid">
+      <article class="summary-card">
+        <span>Total users</span>
+        <strong>{{ users.length }}</strong>
+        <p>Across all roles and departments.</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Admins</span>
+        <strong>{{ adminCount }}</strong>
+        <p>Accounts with elevated dashboard access.</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Verified</span>
+        <strong>{{ verifiedCount }}</strong>
+        <p>Accounts confirmed and ready to use.</p>
+      </article>
+
+      <article class="summary-card">
+        <span>Recently active</span>
+        <strong>{{ recentlyActiveCount }}</strong>
+        <p>Users seen in the last 7 days.</p>
+      </article>
+    </section>
+
+    <section class="users-table-card">
+      <div class="table-head">
+        <div>
+          <h2>{{ activeFilter === 'ALL' ? 'All platform users' : formatRole(activeFilter) + ' users' }}</h2>
+          <p>Use the role tabs and pagination controls to review accounts without a long table.</p>
+        </div>
+        <span *ngIf="loading" class="loading-badge">Refreshing...</span>
+      </div>
+
+      <div class="users-toolbar">
+        <div class="role-tabs" aria-label="User role filters">
+          <button
+            *ngFor="let filter of filters"
+            type="button"
+            [class.tab-active]="activeFilter === filter.value"
+            (click)="setFilter(filter.value)"
+          >
+            <span>{{ filter.label }}</span>
+            <strong>{{ getFilterCount(filter.value) }}</strong>
+          </button>
+        </div>
+
+        <label class="page-size-control">
+          <span>Rows</span>
+          <select [(ngModel)]="pageSize" (ngModelChange)="setPage(1)">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="8">8</option>
+            <option [ngValue]="12">12</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Last seen</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of pagedUsers">
+              <td>
+                <div class="user-cell">
+                  <div class="avatar">
+                    <ng-container *ngIf="user.profilePicture; else userInitials">
+                      <img [src]="user.profilePicture" [alt]="user.name || user.email">
+                    </ng-container>
+                    <ng-template #userInitials>{{ getInitials(user.name) }}</ng-template>
+                  </div>
+                  <div>
+                    <strong>{{ user.name || 'Unnamed user' }}</strong>
+                    <p>{{ user.email }}</p>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="role-pill" [ngClass]="'role-' + (user.role || '').toLowerCase()">
+                  {{ formatRole(user.role) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="user.isVerified ? 'status-good' : 'status-soft'">
+                  {{ user.isVerified ? 'Verified' : 'Pending' }}
+                </span>
+              </td>
+              <td>{{ formatDate(user.createdAt) }}</td>
+              <td>{{ formatDate(user.lastSeenAt) }}</td>
+              <td class="actions-cell">
+                <button type="button" class="ghost-action" (click)="openEdit(user)">Edit</button>
+                <button type="button" class="danger-action" (click)="deleteUser(user)">Delete</button>
+              </td>
+            </tr>
+
+            <tr *ngIf="!filteredUsers.length && !loading">
+              <td colspan="6" class="empty-state">
+                No users match this view.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar" *ngIf="filteredUsers.length">
+        <p>Showing {{ pageStart }}-{{ pageEnd }} of {{ filteredUsers.length }}</p>
+        <div class="pagination-actions">
+          <button type="button" class="secondary-action" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">Previous</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button type="button" class="secondary-action" [disabled]="currentPage === totalPages" (click)="setPage(currentPage + 1)">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="drawerMode" class="editor-card" #editorSection>
+      <div class="editor-head">
+        <div>
+          <p class="users-kicker">{{ drawerMode === 'create' ? 'Create admin' : 'Edit account' }}</p>
+          <h2>{{ drawerMode === 'create' ? 'Create a new admin account' : 'Update selected account' }}</h2>
+        </div>
+        <button type="button" class="close-button" (click)="closeDrawer()">Close</button>
+      </div>
+
+      <div class="editor-grid">
+        <label>
+          <span>Full name</span>
+          <input type="text" [(ngModel)]="formModel.name" placeholder="Admin full name">
+        </label>
+
+        <label>
+          <span>Email address</span>
+          <input type="email" [(ngModel)]="formModel.email" placeholder="admin@evercare.com">
+        </label>
+
+        <label>
+          <span>Phone number</span>
+          <input type="tel" [(ngModel)]="formModel.phone" placeholder="+234 ...">
+        </label>
+
+        <label>
+          <span>Role</span>
+          <ng-container *ngIf="drawerMode === 'create'; else editableRole">
+            <input type="text" value="ADMIN" disabled>
+          </ng-container>
+          <ng-template #editableRole>
+            <select [(ngModel)]="formModel.role">
+              <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+            </select>
+          </ng-template>
+        </label>
+
+        <label *ngIf="drawerMode === 'create'" class="full-width">
+          <span>Temporary password</span>
+          <input type="password" [(ngModel)]="formModel.password" placeholder="Minimum 8 characters">
+        </label>
+      </div>
+
+      <div class="editor-actions">
+        <button type="button" class="secondary-action" (click)="closeDrawer()">Cancel</button>
+        <button type="button" class="primary-action" (click)="saveUser()">
+          {{ drawerMode === 'create' ? 'Create admin account' : 'Save changes' }}
+        </button>
+      </div>
+    </section>
+  </div>
+</div>

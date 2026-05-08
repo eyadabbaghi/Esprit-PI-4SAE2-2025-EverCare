@@ -1,0 +1,27 @@
+<div class="jitsi-wrapper">
+
+  <!-- Loading overlay (on top, not blocking) -->
+  <div *ngIf="isLoading && !error" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Connecting to consultation room...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="error-overlay">
+    <div class="error-icon"><svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg></div>
+    <h3>Connection Failed</h3>
+    <p>{{ error }}</p>
+    <button class="btn-leave" (click)="leaveCall()">Go Back</button>
+  </div>
+
+  <!-- Jitsi container — always rendered -->
+  <div #jitsiContainer class="jitsi-container"></div>
+
+  <!-- Leave button -->
+  <div class="leave-btn-container">
+    <button class="btn-leave-overlay" (click)="leaveCall()">
+      <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg> Leave Consultation
+    </button>
+  </div>
+
+</div>

@@ -1,0 +1,18 @@
+<div class="consultation-page">
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <h2><svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg> {{ error }}</h2>
+    <a routerLink="/appointments">← Back to Appointments</a>
+  </div>
+
+  <!-- Jitsi component -->
+  <app-jitsi-meet
+    *ngIf="isReady"
+    [roomName]="roomName"
+    [userName]="userName"
+    [userEmail]="userEmail"
+    [isDoctor]="isDoctor">
+  </app-jitsi-meet>
+
+</div>

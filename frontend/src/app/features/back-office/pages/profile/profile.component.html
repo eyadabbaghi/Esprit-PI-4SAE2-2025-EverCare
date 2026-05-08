@@ -1,0 +1,105 @@
+<div class="profile-shell">
+  <div class="profile-inner" *ngIf="user as currentUser">
+    <header class="profile-hero">
+      <div class="profile-identity">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar">
+            <ng-container *ngIf="currentUser.profilePicture; else profileInitials">
+              <img [src]="currentUser.profilePicture" [alt]="currentUser.name">
+            </ng-container>
+            <ng-template #profileInitials>{{ getInitials(currentUser.name) }}</ng-template>
+          </div>
+
+          <button type="button" class="avatar-action" (click)="togglePictureMenu()" [disabled]="isLoading">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h4l2-2h4l2 2h4v11H4z"></path>
+              <circle cx="12" cy="13" r="3"></circle>
+            </svg>
+          </button>
+
+          <div *ngIf="showPictureMenu" class="avatar-menu">
+            <button type="button" (click)="triggerFileInput()">Upload picture</button>
+            <button type="button" *ngIf="currentUser.profilePicture" (click)="removePicture()">Remove picture</button>
+          </div>
+
+          <input
+            id="profile-picture-input"
+            type="file"
+            accept="image/*"
+            class="hidden-input"
+            (change)="onFileSelected($event)"
+          >
+        </div>
+
+        <div class="profile-copy">
+          <p class="profile-kicker">Administrator profile</p>
+          <h1>{{ currentUser.name }}</h1>
+          <p>{{ currentUser.email }}</p>
+          <div class="profile-tags">
+            <span class="tag-primary">{{ currentUser.role }}</span>
+            <span class="tag-soft">{{ currentUser.isVerified ? 'Verified account' : 'Verification pending' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button type="button" class="secondary-button" (click)="goToSettings()">Open account settings</button>
+        <button type="button" class="primary-button" (click)="toggleEdit()" [disabled]="isLoading">
+          {{ isEditing ? 'Save profile' : 'Edit profile' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="profile-highlights">
+      <article class="highlight-card">
+        <span>User ID</span>
+        <strong>{{ currentUser.userId }}</strong>
+        <p>Internal identifier for admin operations.</p>
+      </article>
+
+      <article class="highlight-card">
+        <span>Member since</span>
+        <strong>{{ formatDate(currentUser.createdAt) }}</strong>
+        <p>Account creation date recorded by the platform.</p>
+      </article>
+
+      <article class="highlight-card">
+        <span>Role</span>
+        <strong>{{ currentUser.role }}</strong>
+        <p>Access level for dashboard administration.</p>
+      </article>
+    </section>
+
+    <section class="profile-editor-card">
+      <div class="section-head">
+        <div>
+          <p class="profile-kicker">Editable identity fields</p>
+          <h2>Administrator details</h2>
+        </div>
+        <button *ngIf="isEditing" type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
+      </div>
+
+      <div class="profile-grid">
+        <label>
+          <span>Full name</span>
+          <input type="text" [(ngModel)]="profileData.name" [disabled]="!isEditing">
+        </label>
+
+        <label>
+          <span>Email address</span>
+          <input type="email" [(ngModel)]="profileData.email" [disabled]="!isEditing">
+        </label>
+
+        <label>
+          <span>Phone number</span>
+          <input type="tel" [(ngModel)]="profileData.phone" [disabled]="!isEditing">
+        </label>
+
+        <label>
+          <span>Role</span>
+          <input type="text" [value]="profileData.role" disabled>
+        </label>
+      </div>
+    </section>
+  </div>
+</div>

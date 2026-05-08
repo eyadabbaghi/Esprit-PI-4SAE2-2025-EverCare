@@ -1,0 +1,21 @@
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-4">Recommend Activities to Your Patients</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div *ngFor="let activity of activities" class="border rounded-lg p-4">
+      <img [src]="getImageUrl(activity.imageUrl)" alt="" class="w-full h-40 object-cover rounded mb-2">
+      <h3 class="font-semibold">{{ activity.name }}</h3>
+      <p class="text-sm text-gray-600">{{ activity.description | slice:0:100 }}...</p>
+      <div class="mt-2 flex gap-2">
+        <select #patientSelect class="border rounded p-1 text-sm flex-1">
+          <option value="">Select patient</option>
+          <option *ngFor="let p of patients" [value]="p.userId">{{ p.name }}</option>
+        </select>
+        <button (click)="recommend(activity, patientSelect.value)"
+                [disabled]="!patientSelect.value || recommending.has(activity.id)"
+                class="bg-[#7C3AED] text-white px-3 py-1 rounded text-sm">
+          {{ recommending.has(activity.id) ? 'Recommending...' : 'Recommend' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,680 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\msi\\Desktop\\EverCare\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\services\\chat.service.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\communication\\services\\chat.service.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\models\\messages.model.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\communication\\models\\messages.model.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\badge\\badge.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\badge\\badge.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\button\\button.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\button\\button.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card\\card.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card\\card.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\input\\input.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\input\\input.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\label\\label.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\label\\label.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\loader\\loader.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\loader\\loader.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\modal\\modal.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\modal\\modal.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select\\select.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\select\\select.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\index.html",
+              "RelativeDocumentMoniker": "frontend\\src\\index.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\index.html",
+              "RelativeToolTip": "frontend\\src\\index.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-28T10:17:39.463Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "chat.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.html",
+              "ViewState": "AgIAAAMBAAAAAAAAAAAqwBMBAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-17T10:25:54.898Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "chat.component.css",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css",
+              "RelativeToolTip": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-02-17T22:00:35.074Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "messages.model.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\models\\messages.model.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\communication\\models\\messages.model.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\models\\messages.model.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\communication\\models\\messages.model.ts",
+              "ViewState": "AgIAABQAAAAAAAAAAAAkwCkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T10:11:32.899Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "chat.service.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\services\\chat.service.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\communication\\services\\chat.service.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\services\\chat.service.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\communication\\services\\chat.service.ts",
+              "ViewState": "AgIAAIAAAAAAAAAAAAAswJcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:24:09.003Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "chat.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\communication\\pages\\chat\\chat.component.ts",
+              "ViewState": "AgIAAPwBAAAAAAAAAAAIwPABAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:28:32.013Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "auth.service.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\auth.service.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:09:15.949Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "login.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.ts",
+              "ViewState": "AgIAALMAAAAAAAAAAAAuwMMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:11:23.245Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "profile.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\profile\\profile.component.ts",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T20:56:33.619Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "users.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\back-office\\pages\\users\\users.component.ts",
+              "ViewState": "AgIAAHsAAAAAAAAAAAAQwJEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:17:06.053Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "user-table.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\back-office\\components\\user-table\\user-table.component.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:15:47.28Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "contact-form.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\components\\contact-form\\contact-form.component.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:14:52.158Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "new-user-flow.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\new-user-flow.component.ts",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAwBoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:11:49.17Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "login.component.spec.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.spec.ts",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAQwBcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:10:37.109Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "login.component.css",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\login.component.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-02-17T09:10:33.385Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "auth.interceptor.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\pages\\login\\auth.interceptor.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-17T09:00:25.393Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "navigation.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\features\\front-office\\ui\\navigation\\navigation.component.html",
+              "ViewState": "AgIAAGMAAAAAAAAAAAAAAHIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-17T08:26:45.693Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "badge.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\badge\\badge.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\badge\\badge.component.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-16T22:14:24.672Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "badge.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\badge\\badge.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\badge\\badge.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\badge\\badge.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:14:22.04Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "button.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\button\\button.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\button\\button.component.ts",
+              "ViewState": "AgIAAH8AAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-16T22:13:47.459Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "button.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\button\\button.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\button\\button.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\button\\button.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:44.559Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "card.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card\\card.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card\\card.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card\\card.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card\\card.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:39.598Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "card-action.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-action\\card-action.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:35Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "card-content.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-content\\card-content.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:29.814Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "card-description.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-description\\card-description.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:23.587Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "card-footer.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-footer\\card-footer.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:17.436Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "card-header.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-header\\card-header.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:11.442Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "card-title.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\card-title\\card-title.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:13:05.332Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "dropdown.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\dropdown\\dropdown.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:59.273Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "input.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\input\\input.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\input\\input.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\input\\input.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\input\\input.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:52.431Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "label.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\label\\label.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\label\\label.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\label\\label.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\label\\label.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:47.063Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "loader.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\loader\\loader.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\loader\\loader.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\loader\\loader.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\loader\\loader.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:40.618Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "modal.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\modal\\modal.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\modal\\modal.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:35.541Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "modal.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\modal\\modal.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\modal\\modal.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\modal\\modal.component.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-16T22:12:32.668Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "pagination.component.ts",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\pagination\\pagination.component.ts",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003213|",
+              "WhenOpened": "2026-02-16T22:12:20.404Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "pagination.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\pagination\\pagination.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:16.878Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "scroll-down-button.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\scroll-down-button\\scroll-down-button.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:09.753Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "select.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select\\select.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\select\\select.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select\\select.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\select\\select.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:12:03.607Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "select-content.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\shared\\components\\select-content\\select-content.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:11:58.619Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "hero.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\layouts\\front-office-layout\\hero\\hero.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:10:21.162Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "header.component.html",
+              "DocumentMoniker": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html",
+              "RelativeDocumentMoniker": "frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html",
+              "ToolTip": "C:\\Users\\msi\\Desktop\\EverCare\\frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html",
+              "RelativeToolTip": "frontend\\src\\app\\layouts\\front-office-layout\\header\\header.component.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-02-16T22:10:12.629Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+<div class="flex items-center gap-3">
+  <!-- Download PDF Button -->
+  <button 
+    class="flex items-center gap-2 px-4 py-2 rounded-lg border border-teal-600 text-teal-700 hover:bg-teal-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+    [disabled]="downloading"
+    (click)="downloadPdf()">
+    <lucide-icon 
+      [name]="downloading ? 'Loader' : 'Download'" 
+      [size]="16"
+      [class.animate-spin]="downloading">
+    </lucide-icon>
+    Download PDF
+  </button>
+
+  <!-- Send to Patient Button (only for doctors) -->
+  <button 
+    *ngIf="doctorView"
+    class="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+    [disabled]="sending"
+    (click)="sendByEmail()">
+    <lucide-icon 
+      [name]="sending ? 'Loader' : 'Mail'" 
+      [size]="16"
+      [class.animate-spin]="sending">
+    </lucide-icon>
+    Send to Patient
+  </button>
+</div>

@@ -1,0 +1,75 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="mx-auto max-w-7xl space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Caregiver Prescription View</h1>
+        <p class="mt-1 text-[#6B5B8C]">Select a linked patient, then review active, today and history sections in one place.</p>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{{ errorMessage }}</div>
+    <div *ngIf="loading" class="rounded-xl border border-[#C4B5FD] bg-white p-8 text-center text-sm text-[#6B5B8C] shadow-sm">Loading caregiver workspace...</div>
+
+    <ng-container *ngIf="!loading && linkedPatients.length > 0">
+      <section class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
+        <h2 class="mb-3 text-lg font-semibold text-[#2D1B4E]">Linked Patients</h2>
+        <div class="flex flex-wrap gap-3">
+          <button *ngFor="let patient of linkedPatients; trackBy: trackByPatient" type="button" (click)="selectPatient(patient)"
+                  class="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+                  [ngClass]="selectedPatient?.userId === patient.userId ? 'bg-[#7C3AED] text-white' : 'border border-[#DDD6FE] bg-white text-[#2D1B4E]'">
+            {{ patient.name }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="selectedPatient" class="grid gap-4 md:grid-cols-3">
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Selected Patient</p><p class="mt-2 text-xl font-bold text-[#2D1B4E]">{{ selectedPatient.name }}</p></div>
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Active</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ activePrescriptions.length }}</p></div>
+        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm"><p class="text-sm text-[#6B5B8C]">Today</p><p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ todayPrescriptions.length }}</p></div>
+      </section>
+
+      <div *ngIf="selectedPatient" class="flex space-x-2 rounded-lg border border-[#C4B5FD] bg-white p-1">
+        <button class="px-4 py-2 rounded-md text-sm transition-colors" [class.bg-[#7C3AED]]="activeSection === 'active'" [class.text-white]="activeSection === 'active'" [class.text-[#2D1B4E]]="activeSection !== 'active'" (click)="goToSection('active')"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m10.5 20.5-7-7a3.5 3.5 0 0 1 5-5l7 7a3.5 3.5 0 0 1-5 5Z" stroke-width="2"></path><path d="m8.5 8.5 7 7" stroke-width="2"></path></svg> Active</button>
+        <button class="px-4 py-2 rounded-md text-sm transition-colors" [class.bg-[#7C3AED]]="activeSection === 'today'" [class.text-white]="activeSection === 'today'" [class.text-[#2D1B4E]]="activeSection !== 'today'" (click)="goToSection('today')"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> Today</button>
+        <button class="px-4 py-2 rounded-md text-sm transition-colors" [class.bg-[#7C3AED]]="activeSection === 'history'" [class.text-white]="activeSection === 'history'" [class.text-[#2D1B4E]]="activeSection !== 'history'" (click)="goToSection('history')"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> History</button>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-3">
+        <section *ngIf="activeSection === 'active'" class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm lg:col-span-3">
+          <h2 class="mb-4 text-lg font-semibold text-[#2D1B4E]">Active</h2>
+          <div *ngIf="activePrescriptions.length === 0" class="text-sm text-[#6B5B8C]">No active prescriptions.</div>
+          <div class="space-y-3" *ngIf="activePrescriptions.length > 0">
+            <div *ngFor="let item of activePrescriptions; trackBy: trackByPrescription" (click)="openPrescriptionRoute(item)" class="cursor-pointer rounded-lg border border-[#F3E8FF] p-3 hover:bg-[#FAF5FF]">
+              <div class="font-medium text-[#2D1B4E]">{{ item.medicament.nomCommercial }}</div>
+              <div class="text-sm text-[#6B5B8C]">{{ item.posologie }}</div>
+            </div>
+          </div>
+        </section>
+
+        <section *ngIf="activeSection === 'today'" class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm lg:col-span-3">
+          <h2 class="mb-4 text-lg font-semibold text-[#2D1B4E]">Today</h2>
+          <div *ngIf="todayPrescriptions.length === 0" class="text-sm text-[#6B5B8C]">No medications scheduled today.</div>
+          <div class="space-y-3" *ngIf="todayPrescriptions.length > 0">
+            <div *ngFor="let item of todayPrescriptions; trackBy: trackByPrescription" (click)="openPrescriptionRoute(item)" class="cursor-pointer rounded-lg bg-[#F9FAFB] p-3 hover:bg-[#F3E8FF]">
+              <div class="font-medium text-[#2D1B4E]">{{ item.medicament.nomCommercial }}</div>
+              <div class="text-sm text-[#6B5B8C]">{{ item.posologie }}</div>
+            </div>
+          </div>
+        </section>
+
+        <section *ngIf="activeSection === 'history'" class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm lg:col-span-3">
+          <h2 class="mb-4 text-lg font-semibold text-[#2D1B4E]">History</h2>
+          <div *ngIf="historyPrescriptions.length === 0" class="text-sm text-[#6B5B8C]">No history yet.</div>
+          <div class="space-y-3" *ngIf="historyPrescriptions.length > 0">
+            <div *ngFor="let item of historyPrescriptions; trackBy: trackByPrescription" (click)="openPrescriptionRoute(item)" class="cursor-pointer rounded-lg border border-[#F3E8FF] p-3 hover:bg-[#FAF5FF]">
+              <div class="font-medium text-[#2D1B4E]">{{ item.medicament.nomCommercial }}</div>
+              <div class="text-sm text-[#6B5B8C]">{{ item.statut }}</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<app-prescription-details *ngIf="selectedPrescription" [prescription]="selectedPrescription" [canManage]="false" (onClose)="closeDetails()"></app-prescription-details>

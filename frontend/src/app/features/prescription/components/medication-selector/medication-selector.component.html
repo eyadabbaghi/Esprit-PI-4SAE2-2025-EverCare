@@ -1,0 +1,131 @@
+<div class="relative w-full">
+
+  <!-- Input field -->
+  <div class="relative">
+    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+      <svg *ngIf="!loading" class="w-4 h-4 text-[#6B5B8C]" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <div *ngIf="loading"
+           class="w-4 h-4 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin">
+      </div>
+    </div>
+
+    <input
+      type="text"
+      [value]="searchQuery"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      (input)="onSearchInput($any($event.target).value)"
+      (blur)="closeDropdown()"
+      class="w-full pl-9 pr-10 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
+             placeholder-[#6B5B8C] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]
+             focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+      [class.border-[#7C3AED]]="isOpen"
+      [class.bg-[#FDFBFF]]="!disabled">
+
+    <!-- Clear button — shown when something is selected -->
+    <button *ngIf="selectedMedicament"
+            (click)="clearSelection()"
+            class="absolute inset-y-0 right-3 flex items-center text-[#6B5B8C] hover:text-red-500 transition-colors">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Error message -->
+  <p *ngIf="errorMessage" class="mt-1 text-xs text-red-500">{{ errorMessage }}</p>
+
+  <!-- Hint when typing -->
+  <p *ngIf="searchQuery.length === 1 && !isOpen && !loading"
+     class="mt-1 text-xs text-[#6B5B8C]">
+    Type at least 2 characters to search...
+  </p>
+
+  <!-- Selected medicament preview -->
+  <div *ngIf="selectedMedicament && !isOpen"
+       class="mt-2 p-3 bg-[#F3E8FF] border border-[#C4B5FD] rounded-lg flex items-center space-x-3">
+
+    <!-- Photo or icon -->
+    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#C4B5FD]">
+      <img *ngIf="selectedMedicament.photoUrl"
+           [src]="selectedMedicament.photoUrl"
+           [alt]="selectedMedicament.nomCommercial"
+           class="w-full h-full object-cover">
+      <span *ngIf="!selectedMedicament.photoUrl" class="text-lg" [innerHTML]="getFormeIcon(selectedMedicament.forme)"></span>
+    </div>
+
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-[#2D1B4E] truncate">
+        {{ selectedMedicament.nomCommercial }}
+      </p>
+      <p class="text-xs text-[#6B5B8C] truncate">
+        {{ selectedMedicament.denominationCommuneInternationale }}
+        <span *ngIf="selectedMedicament.dosage"> — {{ selectedMedicament.dosage }}</span>
+        <span *ngIf="selectedMedicament.forme"> · {{ selectedMedicament.forme }}</span>
+      </p>
+    </div>
+
+    <span class="text-xs text-[#7C3AED] font-medium flex-shrink-0 inline-flex items-center gap-1">
+      <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="m5 13 4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      Selected
+    </span>
+  </div>
+
+  <!-- Dropdown results -->
+  <div *ngIf="isOpen && results.length > 0"
+       class="absolute z-50 w-full mt-1 bg-white border border-[#C4B5FD] rounded-lg shadow-lg
+              max-h-64 overflow-y-auto">
+
+    <div *ngFor="let med of results"
+         (mousedown)="selectMedicament(med)"
+         class="flex items-center space-x-3 px-3 py-3 hover:bg-[#F3E8FF] cursor-pointer
+                transition-colors border-b border-[#F9FAFB] last:border-b-0">
+
+      <!-- Icon -->
+      <div class="w-9 h-9 rounded-full bg-[#F3E8FF] flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img *ngIf="med.photoUrl"
+             [src]="med.photoUrl"
+             [alt]="med.nomCommercial"
+             class="w-full h-full object-cover">
+        <span *ngIf="!med.photoUrl" class="text-base" [innerHTML]="getFormeIcon(med.forme)"></span>
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-[#2D1B4E] truncate">
+          {{ med.nomCommercial }}
+        </p>
+        <p class="text-xs text-[#6B5B8C] truncate">
+          {{ med.denominationCommuneInternationale }}
+          <span *ngIf="med.dosage"> — {{ med.dosage }}</span>
+        </p>
+      </div>
+
+      <!-- Forme badge -->
+      <span *ngIf="med.forme"
+            class="text-xs text-[#7C3AED] bg-[#F3E8FF] px-2 py-0.5 rounded-full flex-shrink-0">
+        {{ med.forme }}
+      </span>
+
+      <!-- Inactive warning -->
+      <span *ngIf="!med.actif"
+            class="text-xs text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full flex-shrink-0">
+        Inactive
+      </span>
+
+    </div>
+
+  </div>
+
+  <!-- No results state -->
+  <div *ngIf="isOpen && results.length === 0 && !loading"
+       class="absolute z-50 w-full mt-1 bg-white border border-[#C4B5FD] rounded-lg shadow-lg p-4 text-center">
+    <p class="text-sm text-[#6B5B8C]">No medications found for "{{ searchQuery }}"</p>
+  </div>
+
+</div>

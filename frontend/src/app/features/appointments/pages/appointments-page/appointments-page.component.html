@@ -1,0 +1,296 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header with tabs -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4  " >
+
+
+      <!-- Tabs -->
+      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
+        <button class="px-4 py-2 rounded-md transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'my-appointments'"
+                [class.text-white]="activeTab === 'my-appointments'"
+                [class.text-[#2D1B4E]]="activeTab !== 'my-appointments'"
+                (click)="activeTab = 'my-appointments'">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> My Appointments
+        </button>
+        <button class="px-4 py-2 rounded-md transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'book-appointment'"
+                [class.text-white]="activeTab === 'book-appointment'"
+                [class.text-[#2D1B4E]]="activeTab !== 'book-appointment'"
+                (click)="activeTab = 'book-appointment'">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path></svg> Book Appointment
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
+        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-[#2D1B4E]">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center justify-between">
+      <span>{{ errorMessage }}</span>
+      <button class="text-red-500 hover:text-red-700" (click)="errorMessage = ''"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg></button>
+    </div>
+
+    <!-- ========== TAB 1: MY APPOINTMENTS (EXISTING) ========== -->
+    <div *ngIf="activeTab === 'my-appointments'" class="space-y-6">
+
+      <!-- Filters Component (existing) -->
+      <app-appointment-filters
+        [doctors]="doctors"
+        (filtersChanged)="onFiltersChanged($event)">
+      </app-appointment-filters>
+
+      <!-- Stats Cards (existing) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Total</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ appointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Upcoming</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ upcomingAppointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#E6F0FA] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#2D1B4E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-[#6B5B8C]">Completed</p>
+              <p class="text-2xl font-bold text-[#2D1B4E]">{{ pastAppointments.length }}</p>
+            </div>
+            <div class="w-10 h-10 bg-[#F1F5F9] rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Grid with Calendar and Upcoming List (existing) -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Calendar Component (existing) -->
+        <div class="lg:col-span-2">
+          <app-calendar
+            [appointments]="appointments"
+            [currentDate]="currentDate"
+            (monthChanged)="onMonthChanged($event)"
+            (dateSelected)="onDateSelected($event)">
+          </app-calendar>
+        </div>
+
+        <!-- Upcoming List Component (existing) -->
+        <app-appointment-list
+          title="Upcoming"
+          [appointments]="upcomingAppointments"
+          emptyMessage="No upcoming appointments"
+          addButtonText="Book appointment"
+          [showAddButton]="true"
+          [showActionButtons]="true"
+          [scrollable]="true"
+          (onCardClick)="viewAppointmentDetails($event)"
+          (onAction)="handleAppointmentAction($event)"
+          (onAddClick)="activeTab = 'book-appointment'">
+        </app-appointment-list>
+      </div>
+
+      <!-- Past Appointments List (existing) -->
+      <div id="appointments-section">
+        <app-appointment-list
+          title="History"
+          [appointments]="pastAppointments"
+          emptyMessage="No past appointments"
+          [showActionButtons]="false"
+          [scrollable]="true"
+          (onCardClick)="viewAppointmentDetails($event)">
+        </app-appointment-list>
+      </div>
+    </div>
+
+    <!-- ========== TAB 2: BOOK APPOINTMENT (NEW) ========== -->
+    <div *ngIf="activeTab === 'book-appointment'" class="space-y-6">
+
+      <!-- Tab header -->
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <h2 class="text-xl font-semibold text-[#2D1B4E] mb-2">Book a New Appointment</h2>
+        <p class="text-[#6B5B8C]">Choose a doctor and an available time slot</p>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="flex items-center justify-between max-w-2xl mx-auto">
+        <div class="flex items-center flex-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 1"
+               [class.text-white]="bookingStep >= 1"
+               [class.bg-gray-200]="bookingStep < 1">
+            1
+          </div>
+          <div class="flex-1 h-1 mx-2 transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 2"
+               [class.bg-gray-200]="bookingStep < 2"></div>
+        </div>
+        <div class="flex items-center flex-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 2"
+               [class.text-white]="bookingStep >= 2"
+               [class.bg-gray-200]="bookingStep < 2">
+            2
+          </div>
+          <div class="flex-1 h-1 mx-2 transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 3"
+               [class.bg-gray-200]="bookingStep < 3"></div>
+        </div>
+        <div class="flex items-center">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+               [class.bg-[#7C3AED]]="bookingStep >= 3"
+               [class.text-white]="bookingStep >= 3"
+               [class.bg-gray-200]="bookingStep < 3">
+            3
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-between max-w-2xl mx-auto text-sm text-[#6B5B8C] px-2">
+        <span>Choose Doctor</span>
+        <span>Choose Slot</span>
+        <span>Confirm</span>
+      </div>
+
+      <!-- Step 1: Doctor Selection -->
+      <div *ngIf="bookingStep === 1" class="grid lg:grid-cols-3 gap-6">
+        <!-- Doctor list with availability -->
+        <div class="lg:col-span-2">
+          <app-doctor-availability
+            [doctors]="doctors"
+            [selectedDoctorId]="selectedDoctorId"
+            (doctorSelected)="onDoctorSelected($event)">
+          </app-doctor-availability>
+        </div>
+
+        <!-- Quick preview -->
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+          <h3 class="font-semibold text-[#2D1B4E] mb-3">Your Selection</h3>
+          <div *ngIf="!selectedDoctorId" class="text-center text-[#6B5B8C] py-8">
+            <svg class="w-12 h-12 mx-auto mb-3 text-[#C4B5FD]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="8" r="4"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/>
+            </svg>
+            <p>Select a doctor</p>
+          </div>
+          <div *ngIf="selectedDoctorId" class="space-y-3">
+            <div class="flex items-center space-x-3">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
+              <div>
+                <h4 class="font-semibold">{{ getSelectedDoctor().name }}</h4>
+              </div>
+            </div>
+            <button class="w-full bg-[#7C3AED] text-white py-2 rounded-md hover:bg-[#6D28D9] transition-colors"
+                    (click)="bookingStep = 2">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Slot Selection -->
+      <div *ngIf="bookingStep === 2">
+        <app-weekly-schedule
+          [doctorId]="selectedDoctorId"
+          [consultationTypes]="consultationTypes"
+          (slotSelected)="onSlotSelected($event)">
+        </app-weekly-schedule>
+
+        <div class="flex justify-between mt-4">
+          <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+                  (click)="bookingStep = 1">
+            ← Back
+          </button>
+          <button *ngIf="selectedSlot"
+                  class="px-4 py-2 bg-[#7C3AED] text-white rounded-md hover:bg-[#6D28D9] transition-colors"
+                  (click)="bookingStep = 3">
+            Continue →
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirmation -->
+      <div *ngIf="bookingStep === 3" class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-6">
+          <h3 class="text-lg font-semibold text-[#2D1B4E] mb-4">Confirm Details</h3>
+
+          <!-- Summary -->
+          <div class="space-y-4">
+            <div class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
+              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
+              <div>
+                <p class="font-semibold">{{ getSelectedDoctor().name }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="p-3 bg-[#F9FAFB] rounded-lg">
+                <p class="text-xs text-[#6B5B8C]">Date</p>
+                <p class="font-semibold">{{ selectedSlot?.date | date:'dd MMMM yyyy' }}</p>
+              </div>
+              <div class="p-3 bg-[#F9FAFB] rounded-lg">
+                <p class="text-xs text-[#6B5B8C]">Time</p>
+                <p class="font-semibold">{{ selectedSlot?.startTime }}</p>
+              </div>
+            </div>
+
+            <!-- Reused appointment form -->
+            <app-appointment-form
+              [doctors]="[getSelectedDoctor()]"
+              [consultationTypes]="consultationTypes"
+              [caregivers]="myCaregivers"
+              [availableSlots]="[selectedSlot?.startTime]"
+              [formData]="newAppointment"
+              (onClose)="bookingStep = 2"
+              (onSubmit)="bookAppointment($event)">
+            </app-appointment-form>
+
+            <div class="flex justify-between mt-4">
+              <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
+                      (click)="bookingStep = 2">
+                ← Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment Details Modal (existing) -->
+    <app-appointment-details
+      *ngIf="selectedAppointment"
+      [appointment]="selectedAppointment"
+      (onClose)="closeDetailsDialog()"
+      (onConfirm)="confirmAppointment($event)"
+      (onCancel)="cancelAppointment($event)"
+      (onJoinCall)="joinVideoCall($event)">
+    </app-appointment-details>
+
+  </div>
+</div>

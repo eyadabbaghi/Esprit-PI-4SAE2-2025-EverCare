@@ -1,0 +1,167 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">My Prescriptions</h1>
+        <p class="text-[#6B5B8C] mt-1">
+          Welcome, {{ currentUser?.name }} — here are your active medications
+        </p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'active'"
+                [class.text-white]="activeTab === 'active'"
+                [class.text-[#2D1B4E]]="activeTab !== 'active'"
+                (click)="goToTab('active')">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m10.5 20.5-7-7a3.5 3.5 0 0 1 5-5l7 7a3.5 3.5 0 0 1-5 5Z" stroke-width="2"></path><path d="m8.5 8.5 7 7" stroke-width="2"></path></svg> Active
+        </button>
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'today'"
+                [class.text-white]="activeTab === 'today'"
+                [class.text-[#2D1B4E]]="activeTab !== 'today'"
+                (click)="goToTab('today')">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> Today
+        </button>
+        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+                [class.bg-[#7C3AED]]="activeTab === 'history'"
+                [class.text-white]="activeTab === 'history'"
+                [class.text-[#2D1B4E]]="activeTab !== 'history'"
+                (click)="goToTab('history')">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> History
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
+        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-[#2D1B4E]">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage"
+         class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center justify-between">
+      <span>{{ errorMessage }}</span>
+      <button (click)="errorMessage = ''"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg></button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-[#6B5B8C]">Active</p>
+            <p class="text-2xl font-bold text-[#2D1B4E]">{{ activeCount }}</p>
+          </div>
+          <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <span class="text-lg"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m10.5 20.5-7-7a3.5 3.5 0 0 1 5-5l7 7a3.5 3.5 0 0 1-5 5Z" stroke-width="2"></path><path d="m8.5 8.5 7 7" stroke-width="2"></path></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-[#6B5B8C]">Expiring Soon</p>
+            <p class="text-2xl font-bold text-[#2D1B4E]">{{ expiringCount }}</p>
+          </div>
+          <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+            <span class="text-lg"><svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-[#6B5B8C]">Renewable</p>
+            <p class="text-2xl font-bold text-[#2D1B4E]">{{ renewableCount }}</p>
+          </div>
+          <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
+            <span class="text-lg"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12A9 9 0 0 1 18.5 5.8M18 2v4h4M6 22v-4H2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Active -->
+    <div *ngIf="activeTab === 'active'">
+      <app-prescription-list
+        title="Active Prescriptions"
+        [prescriptions]="activePrescriptions"
+        emptyMessage="No active prescriptions"
+        [showActions]="true"
+        [scrollable]="true"
+        [loading]="loading"
+        (onView)="openPrescriptionRoute($event)"
+        (onRenew)="viewPrescription($event)"
+        (onCancel)="viewPrescription($event)"
+        (onDownloadPdf)="onPdfGenerated($event)">
+      </app-prescription-list>
+    </div>
+
+    <!-- TAB: Today -->
+    <div *ngIf="activeTab === 'today'">
+      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
+        <h3 class="font-semibold text-[#2D1B4E] mb-4"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> Today's Schedule</h3>
+
+        <div *ngIf="todayPrescriptions.length === 0"
+             class="text-center py-8 text-[#6B5B8C]">
+          <span class="text-4xl block mb-2"><svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+          No medications scheduled for today
+        </div>
+
+        <div class="space-y-3">
+          <div *ngFor="let p of todayPrescriptions"
+               class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg
+                      cursor-pointer hover:bg-[#F3E8FF] transition-colors"
+               (click)="openPrescriptionRoute(p)">
+            <span class="text-2xl"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m10.5 20.5-7-7a3.5 3.5 0 0 1 5-5l7 7a3.5 3.5 0 0 1-5 5Z" stroke-width="2"></path><path d="m8.5 8.5 7 7" stroke-width="2"></path></svg></span>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-[#2D1B4E]">
+                {{ p.medicament.nomCommercial }}
+              </p>
+              <p class="text-xs text-[#6B5B8C]">{{ p.posologie }}</p>
+            </div>
+            <div class="flex space-x-2 text-xl">
+              <span *ngIf="p.priseMatin" title="Morning"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 18h16M12 4v6M8 8l4-4 4 4M6 14a6 6 0 0 1 12 0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+              <span *ngIf="p.priseMidi"  title="Noon"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="2"></circle><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19" stroke-width="2" stroke-linecap="round"></path></svg></span>
+              <span *ngIf="p.priseSoir"  title="Evening"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8 8 0 1 0 20 15.5Z" stroke-width="2" stroke-linejoin="round"></path></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: History -->
+    <div *ngIf="activeTab === 'history'">
+      <app-prescription-list
+        title="Prescription History"
+        [prescriptions]="pastPrescriptions"
+        emptyMessage="No past prescriptions"
+        [showActions]="false"
+        [scrollable]="true"
+        [loading]="loading"
+        (onView)="openPrescriptionRoute($event)">
+      </app-prescription-list>
+    </div>
+
+  </div>
+</div>
+
+<!-- Details Modal -->
+<app-prescription-details
+  *ngIf="selectedPrescription"
+  [prescription]="selectedPrescription"
+  [canManage]="false"
+  (onClose)="closeDetails()"
+  (onRenewed)="onPrescriptionRenewed($event)"
+  (onCancelled)="onPrescriptionCancelled($event)"
+  (onPdfGenerated)="onPdfGenerated($event)">
+</app-prescription-details>

@@ -1,0 +1,218 @@
+.record-form-page {
+  padding: 1.5rem 1rem 2rem;
+  background: #f6f2fc;
+  min-height: calc(100vh - 76px);
+}
+
+.form-shell {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.form-card {
+  max-width: 1040px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #dccff6;
+  border-radius: 16px;
+  padding: 1.35rem;
+}
+
+.form-head h2 {
+  margin: 0;
+  font-size: 1.85rem;
+  color: #2d1b4e;
+}
+
+.form-head p {
+  margin: 0.4rem 0 0.9rem;
+  color: #6b5b8c;
+}
+
+.status-message {
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.92rem;
+}
+
+.status-message.error {
+  border: 1px solid #f7bfc9;
+  background: #fff5f7;
+  color: #9d174d;
+}
+
+.status-message.info {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.status-message.warning {
+  border: 1px solid #f9d293;
+  background: #fff8eb;
+  color: #8a450d;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.95rem 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 0.93rem;
+  color: #4c3d71;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #d7c5f5;
+  border-radius: 10px;
+  padding: 0.63rem 0.85rem;
+  font-size: 0.95rem;
+  color: #2d1b4e;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input,
+.field select {
+  min-height: 44px;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.16);
+}
+
+.field input[readonly] {
+  background: #f6f4fb;
+  color: #5b5b73;
+}
+
+.field input.invalid,
+.field select.invalid,
+.field textarea.invalid {
+  border-color: #f07d9c;
+}
+
+.field-error {
+  color: #c1124d;
+  font-size: 0.81rem;
+  line-height: 1.2;
+}
+
+.checkbox-field {
+  margin-top: 0.25rem;
+}
+
+.check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 500;
+  color: #4c3d71;
+  cursor: pointer;
+}
+
+.check-label input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.btn-solid,
+.btn-muted {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.93rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.62rem 1.05rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-solid {
+  background: linear-gradient(135deg, #7c3aed, #9f67f8);
+  color: #fff;
+}
+
+.btn-solid:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn-muted {
+  background: #f8f6fd;
+  border-color: #d7c5f5;
+  color: #4c3d71;
+}
+
+.btn-muted:hover {
+  background: #f0e7ff;
+}
+
+.btn-solid:disabled,
+.btn-muted:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .record-form-page {
+    padding: 1rem 0.75rem 1.5rem;
+  }
+
+  .form-card {
+    padding: 1rem;
+  }
+
+  .form-head h2 {
+    font-size: 1.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}

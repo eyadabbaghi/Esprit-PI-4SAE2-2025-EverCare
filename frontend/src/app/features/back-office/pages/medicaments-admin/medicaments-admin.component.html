@@ -1,0 +1,149 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="mx-auto max-w-7xl space-y-6">
+    <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">Medication</h1>
+        <p class="text-sm text-[#6B5B8C]">Admin-only catalog management with usage-aware visibility.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <a routerLink="/admin/medicaments/analytics" class="rounded-full border border-[#DDD6FE] bg-white px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+          Analytics
+        </a>
+        <button type="button" (click)="goToCreate()" class="rounded-full bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white shadow-sm">
+          New Medication
+        </button>
+      </div>
+    </header>
+
+    <section class="grid gap-4 rounded-2xl border border-[#DDD6FE] bg-white p-5 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Keyword</label>
+        <input [(ngModel)]="filters.keyword" type="text" placeholder="Name, DCI or CIP" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Active</label>
+        <select [(ngModel)]="filters.actif" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+          <option [ngValue]="undefined">All</option>
+          <option [ngValue]="true">Active</option>
+          <option [ngValue]="false">Inactive</option>
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Laboratoire</label>
+        <input [(ngModel)]="filters.laboratoire" type="text" placeholder="Laboratory" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Forme</label>
+        <input [(ngModel)]="filters.forme" type="text" placeholder="Tablet, syrup..." class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Dosage</label>
+        <input [(ngModel)]="filters.dosage" type="text" placeholder="10mg" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Usage</label>
+        <select [(ngModel)]="filters.used" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+          <option [ngValue]="undefined">All</option>
+          <option [ngValue]="true">Used</option>
+          <option [ngValue]="false">Unused</option>
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">Sort</label>
+        <select [(ngModel)]="filters.sort" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm">
+          <option value="nomCommercial,asc">Name A-Z</option>
+          <option value="nomCommercial,desc">Name Z-A</option>
+          <option value="createdAt,desc">Newest</option>
+          <option value="createdAt,asc">Oldest</option>
+        </select>
+      </div>
+      <div class="flex items-end gap-3">
+        <button type="button" (click)="applyFilters()" class="rounded-xl bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white">Apply</button>
+        <button type="button" (click)="resetFilters()" class="rounded-xl border border-[#E5E7EB] px-4 py-2 text-sm font-medium text-[#6B5B8C]">Reset</button>
+      </div>
+    </section>
+
+    <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <section class="overflow-hidden rounded-2xl border border-[#DDD6FE] bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-[#F3E8FF] px-5 py-4">
+        <div>
+          <h2 class="font-semibold text-[#2D1B4E]">Catalog</h2>
+          <p class="text-xs text-[#6B5B8C]">{{ totalElements }} medicament{{ totalElements === 1 ? '' : 's' }}</p>
+        </div>
+        <div class="text-xs text-[#6B5B8C]">Page {{ page + 1 }} / {{ totalPages || 1 }}</div>
+      </div>
+
+      <div *ngIf="loading" class="p-8 text-center text-sm text-[#6B5B8C]">Loading medications...</div>
+
+      <div *ngIf="!loading && medicaments.length === 0" class="p-8 text-center text-sm text-[#6B5B8C]">
+        No medications match the selected filters.
+      </div>
+
+      <div *ngIf="!loading && medicaments.length > 0" class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-[#FAF5FF] text-left text-[#6B5B8C]">
+            <tr>
+              <th class="px-4 py-3 font-medium">Medication</th>
+              <th class="px-4 py-3 font-medium">CIP</th>
+              <th class="px-4 py-3 font-medium">Dosage</th>
+              <th class="px-4 py-3 font-medium">Laboratoire</th>
+              <th class="px-4 py-3 font-medium">Status</th>
+              <th class="px-4 py-3 font-medium">Usage</th>
+              <th class="px-4 py-3 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let medicament of medicaments; trackBy: trackByMedicament" class="border-t border-[#F3E8FF] align-top">
+              <td class="px-4 py-3">
+                <div class="font-medium text-[#2D1B4E]">{{ medicament.nomCommercial }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ medicament.denominationCommuneInternationale }}</div>
+                <div *ngIf="medicament.forme" class="mt-1 text-xs text-[#7C3AED]">{{ medicament.forme }}</div>
+              </td>
+              <td class="px-4 py-3 text-[#2D1B4E]">{{ medicament.codeCIP || 'N/A' }}</td>
+              <td class="px-4 py-3 text-[#2D1B4E]">{{ medicament.dosage || 'N/A' }}</td>
+              <td class="px-4 py-3 text-[#2D1B4E]">{{ medicament.laboratoire || 'N/A' }}</td>
+              <td class="px-4 py-3">
+                <span class="rounded-full px-2 py-1 text-xs font-medium"
+                      [ngClass]="medicament.actif ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'">
+                  {{ medicament.actif ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <ng-container *ngIf="getUsage(medicament.medicamentId) as usage; else noUsage">
+                  <div class="font-medium text-[#2D1B4E]">{{ usage.totalPrescriptions }} total</div>
+                  <div class="text-xs text-[#6B5B8C]">{{ usage.activePrescriptions }} active</div>
+                </ng-container>
+                <ng-template #noUsage>
+                  <span class="text-xs text-[#6B5B8C]">No data</span>
+                </ng-template>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" (click)="goToDetails(medicament)" class="rounded-md border border-[#E5D9FF] px-3 py-1 text-xs font-medium text-[#2D1B4E]">View</button>
+                  <button type="button" (click)="goToEdit(medicament)" class="rounded-md border border-[#E5D9FF] px-3 py-1 text-xs font-medium text-[#2D1B4E]">Edit</button>
+                  <button type="button" (click)="toggleStatus(medicament)" class="rounded-md px-3 py-1 text-xs font-medium"
+                          [ngClass]="medicament.actif ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'">
+                    {{ medicament.actif ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center justify-between border-t border-[#F3E8FF] px-4 py-3">
+        <button type="button" (click)="previousPage()" [disabled]="page === 0" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm disabled:opacity-50">
+          Previous
+        </button>
+        <button type="button" (click)="nextPage()" [disabled]="page + 1 >= totalPages" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm disabled:opacity-50">
+          Next
+        </button>
+      </div>
+    </section>
+  </div>
+</div>

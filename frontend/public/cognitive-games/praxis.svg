@@ -1,0 +1,21 @@
+<svg width="800" height="520" viewBox="0 0 800 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="praxisBg" x1="120" y1="58" x2="684" y2="460" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE8DA"/>
+      <stop offset="1" stop-color="#FFF8F2"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="520" rx="40" fill="url(#praxisBg)"/>
+  <circle cx="648" cy="124" r="74" fill="#FFD4BC"/>
+  <circle cx="162" cy="408" r="84" fill="#FFE8DA"/>
+  <rect x="128" y="118" width="544" height="270" rx="28" fill="white"/>
+  <path d="M260 176C274 176 286 188 286 202V282C286 298 273 312 257 312H250C234 312 222 298 222 282V202C222 188 234 176 248 176H260Z" fill="#FB923C"/>
+  <path d="M308 188C322 188 334 200 334 214V286C334 302 321 316 305 316H298C282 316 270 302 270 286V214C270 200 282 188 296 188H308Z" fill="#FDBA74"/>
+  <path d="M356 170C370 170 382 182 382 196V286C382 302 369 316 353 316H346C330 316 318 302 318 286V196C318 182 330 170 344 170H356Z" fill="#FB923C"/>
+  <path d="M404 198C418 198 430 210 430 224V288C430 304 417 318 401 318H394C378 318 366 304 366 288V224C366 210 378 198 392 198H404Z" fill="#FED7AA"/>
+  <path d="M452 244C476 228 510 242 518 270L532 318H378V300C378 264 424 260 452 244Z" fill="#FDBA74"/>
+  <path d="M540 198H604" stroke="#FB923C" stroke-width="18" stroke-linecap="round"/>
+  <path d="M540 246H620" stroke="#FDBA74" stroke-width="18" stroke-linecap="round"/>
+  <path d="M540 294H588" stroke="#FED7AA" stroke-width="18" stroke-linecap="round"/>
+  <rect x="198" y="418" width="400" height="18" rx="9" fill="#FFD9C3"/>
+</svg>

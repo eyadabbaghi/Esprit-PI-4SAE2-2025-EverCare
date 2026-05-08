@@ -1,0 +1,81 @@
+.check-panel {
+  background: #1a1f2e;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #2d3450;
+  color: #e2e8f0;
+
+  .check-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .patient-label {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .btn-check {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+    &:hover:not(:disabled) { background: #2563eb; }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  .btn-stop {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .status-badge {
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 12px;
+    &.waiting  { background: #f59e0b22; color: #f59e0b; }
+    &.streaming { background: #10b98122; color: #10b981; }
+    &.cancelled { background: #ef444422; color: #ef4444; }
+    &.snapshot  { background: #8b5cf622; color: #8b5cf6; }
+    &.idle      { background: #6b728022; color: #6b7280; }
+  }
+
+  .video-wrapper video {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    border: 2px solid #10b981;
+  }
+ .video-wrapper {
+  &.hidden {
+    display: none;
+  }
+
+  video {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+  }
+}
+
+  .snapshot-wrapper img {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 12px;
+    border: 2px solid #8b5cf6;
+    margin-top: 8px;
+  }
+}

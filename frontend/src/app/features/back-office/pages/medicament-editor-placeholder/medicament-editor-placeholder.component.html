@@ -1,0 +1,97 @@
+<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
+  <div class="mx-auto max-w-4xl rounded-2xl border border-[#DDD6FE] bg-white p-8 shadow-sm">
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2D1B4E]">
+          {{ mode === 'create' ? 'Create medicament' : 'Edit medicament' }}
+        </h1>
+        <p class="mt-1 text-sm text-[#6B5B8C]">
+          Manage the medicament catalog with the fields required by the prescription module.
+        </p>
+      </div>
+      <button type="button" (click)="goBack()" class="rounded-full border border-[#DDD6FE] px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+        Back to catalog
+      </button>
+    </div>
+
+    <div *ngIf="errorMessage" class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="rounded-xl bg-[#F8FAFC] p-6 text-sm text-[#6B5B8C]">
+      Loading medicament data...
+    </div>
+
+    <form *ngIf="!loading" [formGroup]="medicamentForm" class="space-y-6">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Commercial name *</label>
+          <input formControlName="nomCommercial" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+          <p *ngIf="medicamentForm.get('nomCommercial')?.invalid && medicamentForm.get('nomCommercial')?.touched" class="text-xs text-red-500">Commercial name is required.</p>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">DCI *</label>
+          <input formControlName="denominationCommuneInternationale" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+          <p *ngIf="medicamentForm.get('denominationCommuneInternationale')?.invalid && medicamentForm.get('denominationCommuneInternationale')?.touched" class="text-xs text-red-500">DCI is required.</p>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">CIP</label>
+          <input formControlName="codeCIP" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Dosage</label>
+          <input formControlName="dosage" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Forme</label>
+          <input formControlName="forme" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Laboratoire</label>
+          <input formControlName="laboratoire" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Indications</label>
+          <textarea formControlName="indications" rows="4" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm"></textarea>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-[#4B5563]">Contra-indications</label>
+          <textarea formControlName="contreIndications" rows="4" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm"></textarea>
+        </div>
+
+        <div class="space-y-1 md:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Side effects</label>
+          <textarea formControlName="effetsSecondaires" rows="4" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm"></textarea>
+        </div>
+
+        <div class="space-y-1 md:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Simplified notice</label>
+          <textarea formControlName="noticeSimplifiee" rows="3" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm"></textarea>
+        </div>
+
+        <div class="space-y-1 md:col-span-2">
+          <label class="text-xs font-medium text-[#4B5563]">Photo URL</label>
+          <input formControlName="photoUrl" type="text" class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 border-t border-[#F3E8FF] pt-4">
+        <button type="button" (click)="goBack()" class="rounded-xl border border-[#DDD6FE] px-4 py-2 text-sm font-medium text-[#2D1B4E]">
+          Cancel
+        </button>
+        <button type="button" (click)="save()" [disabled]="saving" class="rounded-xl bg-[#7C3AED] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+          {{ saving ? 'Saving...' : (mode === 'create' ? 'Create medicament' : 'Save changes') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

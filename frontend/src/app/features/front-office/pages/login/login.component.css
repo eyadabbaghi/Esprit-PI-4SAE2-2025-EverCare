@@ -27,3 +27,67 @@
     top: 100%;
   }
 }
+
+.remember-me-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b5b8c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remember-me-row input {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: #7c3aed;
+}
+
+.auth-meter {
+  position: relative;
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  box-shadow: inset 0 1px 3px rgba(45, 27, 78, 0.08);
+}
+
+.auth-meter > div {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(148, 163, 184, 0.42);
+  transition: width 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.password-strength-meter.strength-weak > div,
+.password-match-meter.meter-mismatch > div {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.28);
+}
+
+.password-strength-meter.strength-good > div {
+  background: linear-gradient(90deg, #f59e0b, #a855f7);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.2);
+}
+
+.password-strength-meter.strength-strong > div,
+.password-match-meter.meter-match > div {
+  background: linear-gradient(90deg, #22c55e, #14b8a6);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.24);
+}
+
+.password-match-hint {
+  margin: -0.15rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.password-match-hint.hint-mismatch {
+  color: #dc2626;
+}
+
+.password-match-hint.hint-match {
+  color: #059669;
+}

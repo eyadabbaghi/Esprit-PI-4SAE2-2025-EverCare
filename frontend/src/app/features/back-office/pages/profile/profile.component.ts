@@ -193,9 +193,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .slice(0, 2);
   }
 
-  formatDate(value: string | undefined): string {
-    return value
-      ? new Date(value).toLocaleString(undefined, {
+  formatDate(value: string | Date | number[] | undefined): string {
+    const date = this.toDate(value);
+
+    return date
+      ? date.toLocaleString(undefined, {
           month: 'short',
           day: 'numeric',
           year: 'numeric',
@@ -203,5 +205,28 @@ export class ProfileComponent implements OnInit, OnDestroy {
           minute: '2-digit'
         })
       : 'Unavailable';
+  }
+
+  private toDate(value?: string | Date | number[]): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value.map(Number);
+      if (!year) {
+        return null;
+      }
+
+      const date = new Date(year, month - 1, day, hour, minute, second, Math.floor(nano / 1000000));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    if (typeof value === 'string' && /^\d{4},\d{1,2},\d{1,2}/.test(value.trim())) {
+      return this.toDate(value.split(',').map(part => Number(part.trim())));
+    }
+
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 }

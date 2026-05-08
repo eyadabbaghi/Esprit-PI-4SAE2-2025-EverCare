@@ -5,11 +5,12 @@
 
 /* ---- Card ---- */
 .tasks-card{
-  background:#fff;
-  border:1px solid #E9D5FF;
-  border-radius:22px;
-  padding:22px;
-  box-shadow:0 6px 18px rgba(124,58,237,0.06);
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(196,181,253,.64);
+  border-radius:26px;
+  padding:24px;
+  box-shadow:0 24px 52px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,.92);
+  backdrop-filter: blur(14px);
 }
 
 /* header */
@@ -32,6 +33,47 @@
   margin:6px 0 0 0;
   color:#6B5B8C;
   font-size:14px;
+}
+
+.task-svg{
+  display:inline-grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  flex:0 0 auto;
+  border-radius:11px;
+  color:#7C3AED;
+  background:#F3E8FF;
+  border:1px solid #E9D5FF;
+}
+
+.task-svg svg,
+.action-svg{
+  width:17px;
+  height:17px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.task-svg.alert{ color:#DC2626; background:#FEF2F2; border-color:#FECACA; }
+.task-svg.ok{ color:#16A34A; background:#F0FDF4; border-color:#BBF7D0; }
+.task-svg.ai{ color:#6D28D9; background:#F3E8FF; }
+.task-svg.health{ color:#EC4899; background:#FDF2F8; border-color:#FBCFE8; }
+.task-svg.brain{ color:#2563EB; background:#EFF6FF; border-color:#BFDBFE; }
+
+.sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0, 0, 0, 0);
+  white-space:nowrap;
+  border:0;
 }
 
 .percent{
@@ -62,9 +104,10 @@
 
 .progress-fill{
   height:100%;
-  background:#7C3AED;
+  background:linear-gradient(90deg, #a78bfa, #7C3AED);
   border-radius:999px;
   transition:width .25s ease;
+  box-shadow:0 0 18px rgba(124,58,237,.28);
 }
 
 /* ---- Empty state ---- */
@@ -87,8 +130,16 @@
   padding:14px 16px;
   border:1px solid #E9D5FF;
   border-radius:14px;
-  background:#fff;
+  background:linear-gradient(180deg, #ffffff 0%, #fbf8ff 100%);
   margin-bottom:12px;
+  box-shadow:0 12px 26px rgba(124,58,237,.07);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.task-row:hover{
+  transform:translateY(-2px);
+  border-color:#c4b5fd;
+  box-shadow:0 18px 34px rgba(124,58,237,.12);
 }
 
 .left{
@@ -124,9 +175,14 @@
 /* icon */
 .ico{
   display:inline-flex;
-  width:22px;
+  width:28px;
+  height:28px;
   justify-content:center;
-  font-size:16px;
+  align-items:center;
+  border-radius:10px;
+  color:#7C3AED;
+  background:#F3E8FF;
+  border:1px solid #E9D5FF;
   line-height:1;
 }
 
@@ -172,14 +228,18 @@
   background:transparent;
   border:none;
   cursor:pointer;
-  font-size:18px;
+  color:#7C3AED;
   line-height:1;
   padding:8px;
   border-radius:10px;
+  display:inline-grid;
+  place-items:center;
+  transition:transform .16s ease, background .16s ease;
 }
 
 .btn-icon:hover{
   background:#F3E8FF;
+  transform:translateY(-1px);
 }
 
 .btn-icon.danger:hover{
@@ -199,13 +259,50 @@
   opacity:.65;
 }
 
-/* Emoji icons mapping */
-.i-heart::before{ content:"❤"; }
-.i-drop::before{ content:"💧"; }
-.i-sparkle::before{ content:"✨"; }
-.i-cal::before{ content:"📅"; }
-.i-pill::before{ content:"💊"; }
-.i-walk::before{ content:"🚶"; }
+/* SVG task icons */
+.ico::before{
+  content:"";
+  width:16px;
+  height:16px;
+  display:block;
+  background:currentColor;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  -webkit-mask-position:center;
+  mask-position:center;
+  -webkit-mask-size:contain;
+  mask-size:contain;
+}
+
+.i-heart::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 11h4l2-5 4 12 2-7h4' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 11h4l2-5 4 12 2-7h4' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.i-drop::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+.i-sparkle::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 3 2.2 5.2L20 10l-5.2 2.2L12 18l-2.2-5.8L4 10l5.8-1.8L12 3Z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 3 2.2 5.2L20 10l-5.2 2.2L12 18l-2.2-5.8L4 10l5.8-1.8L12 3Z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.i-cal::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.i-pill::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10.5 20.5 3.5 13.5a4.2 4.2 0 0 1 6-6l7 7a4.2 4.2 0 0 1-6 6ZM8 10l6 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10.5 20.5 3.5 13.5a4.2 4.2 0 0 1 6-6l7 7a4.2 4.2 0 0 1-6 6ZM8 10l6 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.i-walk::before{
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM10 8l-2 5 4 2 2 5M11 10l4 2 3-2M8 13l-3 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM10 8l-2 5 4 2 2 5M11 10l4 2 3-2M8 13l-3 6' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 
 /* ---- Floating button ---- */
 .fab{
@@ -424,7 +521,13 @@
   padding:14px 16px;
 }
 .chart-head{ margin-bottom:10px; }
-.chart-title{ font-weight:900; color:#2D1B4E; }
+.chart-title{
+  font-weight:900;
+  color:#2D1B4E;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .chart-sub{ font-size:12px; color:#6B5B8C; margin-top:4px; }
 .chart-body{ height:250px; }
 .chart-body.tall{ height:300px; }
@@ -439,7 +542,12 @@
   background:#0B1220; color:#fff;
   border-radius:18px; padding:14px 16px; margin-bottom:16px;
 }
-.ai-title{ font-weight:900; }
+.ai-title{
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .ai-sub{ font-size:12px; opacity:.8; margin-top:4px; }
 .ai-body{ margin-top:10px; }
 .ai-line{ display:flex; gap:8px; margin:6px 0; font-size:13px; opacity:.95; }
@@ -542,6 +650,9 @@
   font-size: 16px;
   color: #2D1B4E;
   margin-bottom: 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .smart-score{
@@ -571,10 +682,22 @@
 }
 
 .why-line{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
   color: #6B5B8C;
   font-size: 13px;
   line-height: 1.35;
   margin: 4px 0;
+}
+
+.soft-dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:#A78BFA;
+  margin-top:5px;
+  flex:0 0 auto;
 }
 
 .smart-row{
@@ -663,6 +786,9 @@
   font-weight:800;
   font-size:16px;
   color:#2D1B4E;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .doc-alerts-badge{
@@ -688,6 +814,9 @@
   border:1px dashed #ded7f3;
   color:#6B5B8C;
   font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .doc-alert-row{

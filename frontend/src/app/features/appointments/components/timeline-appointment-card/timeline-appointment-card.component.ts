@@ -14,7 +14,7 @@ export class TimelineAppointmentCardComponent {
 
   @Output() onClick = new EventEmitter<Appointment>();
   @Output() onStart = new EventEmitter<Appointment>();
-  @Output() onJoin = new EventEmitter<string>();
+  @Output() onJoin = new EventEmitter<Appointment>();
   @Output() onViewProfile = new EventEmitter<string>();
 
   getDuration(): number {
@@ -28,9 +28,9 @@ export class TimelineAppointmentCardComponent {
   }
 
   get showJoinButton(): boolean {
-    return !!(this.appointment.videoLink &&
-      (this.appointment.status === 'CONFIRMED_BY_PATIENT' ||
-        this.appointment.status === 'CONFIRMED_BY_CAREGIVER'));
+    return this.appointment.status === 'CONFIRMED_BY_PATIENT' ||
+      this.appointment.status === 'CONFIRMED_BY_CAREGIVER' ||
+      this.appointment.status === 'IN_PROGRESS';
   }
 
   getStatusClass(status: string): string {

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SharedModule } from '../../shared/shared.module';
 
 import { MedicalRecordRoutingModule } from './medical-record-routing.module';
 import { MedicalRecordListComponent } from './pages/medical-record-list/medical-record-list.component';
@@ -20,6 +21,7 @@ import { MedicalRecordCardComponent } from './components/medical-record-card/med
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    SharedModule,
     MedicalRecordRoutingModule
   ]
 })

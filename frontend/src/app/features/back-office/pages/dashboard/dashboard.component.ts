@@ -129,12 +129,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return `${(value || 0).toFixed(0)}%`;
   }
 
-  formatDateTime(value: string | undefined): string {
-    if (!value) {
+  formatDateTime(value: string | Date | number[] | undefined): string {
+    const date = this.toDate(value);
+    if (!date) {
       return 'Unavailable';
     }
 
-    return new Date(value).toLocaleString(undefined, {
+    return date.toLocaleString(undefined, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
@@ -142,12 +143,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  relativeTime(value: string | undefined): string {
-    if (!value) {
+  relativeTime(value: string | Date | number[] | undefined): string {
+    const date = this.toDate(value);
+    if (!date) {
       return 'No recent activity';
     }
 
-    const diffMs = Date.now() - new Date(value).getTime();
+    const diffMs = Date.now() - date.getTime();
     const diffMinutes = Math.max(Math.floor(diffMs / 60000), 0);
 
     if (diffMinutes < 1) {
@@ -164,5 +166,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays}d ago`;
+  }
+
+  private toDate(value?: string | Date | number[]): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value.map(Number);
+      if (!year) {
+        return null;
+      }
+      const arrayDate = new Date(year, month - 1, day, hour, minute, second, Math.floor(nano / 1000000));
+      return Number.isNaN(arrayDate.getTime()) ? null : arrayDate;
+    }
+
+    if (typeof value === 'string' && /^\d{4},\d{1,2},\d{1,2}/.test(value.trim())) {
+      return this.toDate(value.split(',').map(part => Number(part.trim())));
+    }
+
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
   }
 }

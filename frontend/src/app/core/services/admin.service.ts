@@ -65,7 +65,44 @@ export class AdminService {
   private normalizeUser(user: UserAdminDto): UserAdminDto {
     return {
       ...user,
-      isVerified: user.isVerified ?? user.verified ?? false
+      isVerified: user.isVerified ?? user.verified ?? false,
+      createdAt: this.normalizeBackendDate((user as any).createdAt),
+      lastSeenAt: this.normalizeBackendDate((user as any).lastSeenAt)
     };
+  }
+
+  private normalizeBackendDate(value: unknown): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+    }
+
+    if (Array.isArray(value)) {
+      const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value.map(Number);
+      if (!year) {
+        return undefined;
+      }
+      const date = new Date(year, month - 1, day, hour, minute, second, Math.floor(nano / 1000000));
+      return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return undefined;
+      }
+
+      if (/^\d{4},\d{1,2},\d{1,2}/.test(trimmed)) {
+        return this.normalizeBackendDate(trimmed.split(',').map(part => Number(part.trim())));
+      }
+
+      const date = new Date(trimmed);
+      return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+    }
+
+    return undefined;
   }
 }

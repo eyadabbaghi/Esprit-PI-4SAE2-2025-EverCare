@@ -2,6 +2,8 @@ import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
 import { AbstractControl, NonNullableFormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { MedicalDocument } from '../../models/medical-document.model';
 import { CreateMedicalHistoryRequest, MedicalHistory, MedicalHistoryType } from '../../models/medical-history.model';
@@ -312,19 +314,37 @@ export class MedicalRecordDetailsComponent implements OnInit {
           return;
         }
 
-        this.record = record;
-        this.resolvePatientDisplayName(record.patientId);
-        this.isLoading = false;
-        this.loadHistory(record.id);
-        this.loadDocuments(record.id);
-        this.loadAssessments(record.patientId);
-        this.refreshCompleteness();
+        if (this.isCareTeamRole()) {
+          this.verifyAssociatedRecord(record).subscribe((allowed) => {
+            if (!allowed) {
+              this.record = null;
+              this.errorMessage = 'You can only view medical records for your associated patients.';
+              this.isLoading = false;
+              return;
+            }
+
+            this.acceptRecord(record);
+          });
+          return;
+        }
+
+        this.acceptRecord(record);
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = this.extractError(error, 'Medical record not found.');
         this.isLoading = false;
       }
     });
+  }
+
+  private acceptRecord(record: MedicalRecord): void {
+    this.record = record;
+    this.resolvePatientDisplayName(record.patientId);
+    this.isLoading = false;
+    this.loadHistory(record.id);
+    this.loadDocuments(record.id);
+    this.loadAssessments(record.patientId);
+    this.refreshCompleteness();
   }
 
   private loadHistory(recordId: string): void {
@@ -379,6 +399,10 @@ export class MedicalRecordDetailsComponent implements OnInit {
 
   private isPatientRole(): boolean {
     return this.currentRole === 'PATIENT';
+  }
+
+  private isCareTeamRole(): boolean {
+    return this.currentRole === 'DOCTOR' || this.currentRole === 'CAREGIVER';
   }
 
   private isOwnRecord(record: MedicalRecord): boolean {
@@ -441,6 +465,73 @@ export class MedicalRecordDetailsComponent implements OnInit {
     return !!this.patientIdentifier && patientId.trim().toLowerCase() === this.patientIdentifier.toLowerCase();
   }
 
+  private verifyAssociatedRecord(record: MedicalRecord): Observable<boolean> {
+    const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const directRequests = directEmails.map((email) =>
+      this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
+    );
+
+    const direct$ = directRequests.length > 0 ? forkJoin(directRequests) : of([]);
+    const fallback$ = this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([])));
+
+    return forkJoin({ direct: direct$, fallback: fallback$ }).pipe(
+      map(({ direct, fallback }) => {
+        const patients = [
+          ...direct.filter((patient): patient is User => !!patient),
+          ...(fallback || []).filter((patient) => this.isAssociatedPatientUser(patient, currentEmail))
+        ];
+
+        return patients.some((patient) => this.recordMatchesPatient(record, patient));
+      }),
+      catchError(() => of(false))
+    );
+  }
+
+  private isAssociatedPatientUser(patient: User, currentEmail: string): boolean {
+    if (!currentEmail) {
+      return false;
+    }
+
+    if (this.currentRole === 'DOCTOR') {
+      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+    }
+
+    const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
+    return caregiverEmails.some((email) => email.toLowerCase() === currentEmail);
+  }
+
+  private recordMatchesPatient(record: MedicalRecord, patient: User): boolean {
+    const recordPatientId = record.patientId.trim().toLowerCase();
+    return this.resolveRecordCandidates(patient).some((candidate) => candidate.toLowerCase() === recordPatientId);
+  }
+
+  private resolveRecordCandidates(patient: User): string[] {
+    return this.uniqueNormalized([
+      patient.userId || '',
+      patient.email || '',
+      patient.name || ''
+    ]);
+  }
+
+  private normalizeEmailList(emails: string[]): string[] {
+    return this.uniqueNormalized(emails || []);
+  }
+
+  private uniqueNormalized(values: string[]): string[] {
+    const seen = new Set<string>();
+    return values
+      .map((value) => String(value || '').trim())
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (!key || seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+  }
+
   private isUuid(value: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
   }
@@ -500,11 +591,11 @@ export class MedicalRecordDetailsComponent implements OnInit {
     const hasKnownName = !!this.patientDisplayName && this.patientDisplayName !== 'Not provided';
     const items: CompletenessItem[] = [
       { key: 'patientName', label: 'Patient Name', completed: hasKnownName },
-      { key: 'bloodGroup', label: 'Groupe sanguin', completed: !!currentRecord.bloodGroup },
-      { key: 'emergencyContactName', label: "Contact d'urgence", completed: !!currentRecord.emergencyContactName },
+      { key: 'bloodGroup', label: 'Blood group', completed: !!currentRecord.bloodGroup },
+      { key: 'emergencyContactName', label: 'Emergency contact', completed: !!currentRecord.emergencyContactName },
       { key: 'emergencyContactPhone', label: "Emergency phone", completed: !!currentRecord.emergencyContactPhone },
       { key: 'allergies', label: 'Allergies', completed: !!currentRecord.allergies },
-      { key: 'chronicDiseases', label: 'Maladies chroniques', completed: !!currentRecord.chronicDiseases },
+      { key: 'chronicDiseases', label: 'Chronic diseases', completed: !!currentRecord.chronicDiseases },
       { key: 'history', label: 'Medical history', completed: this.histories.length > 0 },
       { key: 'documents', label: 'Medical documents', completed: this.documents.length > 0 },
       { key: 'assessment', label: "Alzheimer assessment", completed: this.latestAssessment !== null }

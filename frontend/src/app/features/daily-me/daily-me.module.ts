@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
+import { SharedModule } from '../../shared/shared.module';
 
 import { DailyMeRoutingModule } from './daily-me-routing.module'; // ✅ Add this
 
@@ -19,6 +20,7 @@ import { DailyTaskListComponent } from './daily-task-list/daily-task-list.compon
     CommonModule,
     FormsModule,
     BaseChartDirective,
+    SharedModule,
     DailyMeRoutingModule // ✅ Add routing here
   ],
   exports: [

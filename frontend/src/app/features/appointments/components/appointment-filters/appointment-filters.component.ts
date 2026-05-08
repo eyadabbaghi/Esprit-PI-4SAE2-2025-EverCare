@@ -1,6 +1,4 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { User } from '../../models/user';
 
 @Component({
@@ -18,10 +16,10 @@ export class AppointmentFiltersComponent {
   selectedDoctorId: string = '';
 
   statusOptions = [
-    { value: 'SCHEDULED', label: 'À confirmer' },
-    { value: 'CONFIRMED_BY_PATIENT', label: 'Confirmé' },
-    { value: 'COMPLETED', label: 'Terminé' },
-    { value: 'CANCELLED', label: 'Annulé' }
+    { value: 'SCHEDULED', label: 'Pending confirmation' },
+    { value: 'CONFIRMED_BY_PATIENT', label: 'Confirmed' },
+    { value: 'COMPLETED', label: 'Completed' },
+    { value: 'CANCELLED', label: 'Cancelled' }
   ];
 
   onFilterChange(): void {

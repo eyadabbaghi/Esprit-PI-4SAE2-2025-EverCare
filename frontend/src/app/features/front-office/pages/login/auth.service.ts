@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { map, switchMap, tap, catchError, delay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -39,6 +39,8 @@ export interface User {
   email: string;
   role: string;
   phone?: string;
+  address?: string;
+  country?: string;
   isVerified?: boolean;
   createdAt?: string;
   profilePicture?: string;
@@ -58,6 +60,8 @@ export interface UpdateUserRequest {
   name?: string;
   email?: string;
   phone?: string;
+  address?: string;
+  country?: string;
   dateOfBirth?: string;
   emergencyContact?: string;
   profilePicture?: string;
@@ -112,7 +116,7 @@ export class AuthService {
     return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
       headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
     }).pipe(
-      tap(tokenResponse => this.storeToken(tokenResponse.access_token)),
+      tap(tokenResponse => this.storeTokens(tokenResponse)),
       switchMap(() => this.fetchCurrentUser()),
       tap(() => {
         this.http.post(`${this.apiUrl}/record-login`, {}).subscribe();
@@ -165,6 +169,13 @@ export class AuthService {
     }
   }
 
+  private storeTokens(tokenResponse: KeycloakTokenResponse): void {
+    this.storeToken(tokenResponse.access_token);
+    if (this.isBrowser && tokenResponse.refresh_token) {
+      localStorage.setItem('refresh_token', tokenResponse.refresh_token);
+    }
+  }
+
   getToken(): string | null {
     if (this.isBrowser) {
       return localStorage.getItem('auth_token');
@@ -172,16 +183,69 @@ export class AuthService {
     return null;
   }
 
+  private getRefreshToken(): string | null {
+    if (this.isBrowser) {
+      return localStorage.getItem('refresh_token');
+    }
+    return null;
+  }
+
+  private refreshAccessToken(): Observable<KeycloakTokenResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearStoredSession();
+      this.currentUserSubject.next(null);
+      this.router.navigate(['/login']);
+      return throwError(() => ({ status: 401, message: 'Session expired' }));
+    }
+
+    const body = new URLSearchParams();
+    body.set('grant_type', 'refresh_token');
+    body.set('client_id', this.clientId);
+    body.set('client_secret', this.clientSecret);
+    body.set('refresh_token', refreshToken);
+
+    return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
+    }).pipe(
+      tap(tokenResponse => this.storeTokens(tokenResponse)),
+      catchError(error => {
+        this.clearStoredSession();
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/login']);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  private retryAfterRefresh<T>(requestFactory: () => Observable<T>) {
+    return requestFactory().pipe(
+      catchError(error => {
+        if (error?.status !== 401) {
+          return throwError(() => error);
+        }
+
+        return this.refreshAccessToken().pipe(
+          switchMap(() => requestFactory())
+        );
+      })
+    );
+  }
+
+  private optionalAuthHeaders(): HttpHeaders | undefined {
+    const token = this.getToken();
+    return token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : undefined;
+  }
+
   // ---------- Logout ----------
 logout(triggerFaceRecovery: boolean = false): void {
   const user = this.getCurrentUserValue();
   const wasPatient = user?.role === 'PATIENT';
 
-  if (this.isBrowser) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('current_user');
+    if (this.isBrowser) {
+      this.clearStoredSession();
 
-    // Clear only transient onboarding flags. Assessment results are scoped per user.
+      // Clear only transient onboarding flags. Assessment results are scoped per user.
     localStorage.removeItem('showAlzheimerAssessment');
     localStorage.removeItem('showWelcomeFlow');
     localStorage.removeItem('alzAssessmentReturnTo');
@@ -218,9 +282,13 @@ logout(triggerFaceRecovery: boolean = false): void {
 
   // ---------- Profile endpoints ----------
   updateProfile(data: UpdateUserRequest): Observable<any> {
-    return this.http.put<any>(`${this.usersUrl}/profile`, data, {
-      headers: new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`)
-    });
+    return this.retryAfterRefresh(() => this.http.put<any>(`${this.usersUrl}/profile`, data));
+  }
+
+  assignDoctorToPatient(patientId: string, doctorEmail: string): Observable<any> {
+    return this.retryAfterRefresh(() =>
+      this.http.put<any>(`${this.usersUrl}/patients/${patientId}/doctor`, { doctorEmail })
+    );
   }
 
   changePassword(data: ChangePasswordRequest): Observable<any> {
@@ -245,13 +313,15 @@ logout(triggerFaceRecovery: boolean = false): void {
 
   searchUsersByRole(term: string, role: string): Observable<User[]> {
     return this.http.get<User[]>(`${this.usersUrl}/search`, {
-      params: { q: term, role }
+      params: { q: term, role },
+      headers: this.optionalAuthHeaders()
     });
   }
 
   getUserByEmail(email: string): Observable<User> {
     return this.http.get<User>(`${this.usersUrl}/by-email`, {
-      params: { email }
+      params: { email },
+      headers: this.optionalAuthHeaders()
     });
   }
 
@@ -270,5 +340,12 @@ logout(triggerFaceRecovery: boolean = false): void {
     if (this.isBrowser) {
       localStorage.setItem('current_user', JSON.stringify(user));
     }
+  }
+
+  private clearStoredSession(): void {
+    if (!this.isBrowser) return;
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('current_user');
   }
 }

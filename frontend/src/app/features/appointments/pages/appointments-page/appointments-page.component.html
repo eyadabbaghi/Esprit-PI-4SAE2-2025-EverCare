@@ -1,100 +1,136 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
-  <div class="max-w-7xl mx-auto space-y-6">
+<div class="appointments-page">
+  <div class="appointments-shell">
+    <section class="schedule-hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Care scheduling</span>
+        <h1>Appointments</h1>
+        <p>Review your calendar, choose a trusted doctor, pick a time slot, and confirm the visit in one guided flow.</p>
+      </div>
 
-    <!-- Header with tabs -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4  " >
-
-
-      <!-- Tabs -->
-      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
-        <button class="px-4 py-2 rounded-md transition-colors"
-                [class.bg-[#7C3AED]]="activeTab === 'my-appointments'"
-                [class.text-white]="activeTab === 'my-appointments'"
-                [class.text-[#2D1B4E]]="activeTab !== 'my-appointments'"
-                (click)="activeTab = 'my-appointments'">
-          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> My Appointments
+      <div class="hero-actions">
+        <button
+          type="button"
+          class="hero-tab"
+          [class.hero-tab-active]="activeTab === 'my-appointments'"
+          (click)="activeTab = 'my-appointments'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          My appointments
         </button>
-        <button class="px-4 py-2 rounded-md transition-colors"
-                [class.bg-[#7C3AED]]="activeTab === 'book-appointment'"
-                [class.text-white]="activeTab === 'book-appointment'"
-                [class.text-[#2D1B4E]]="activeTab !== 'book-appointment'"
-                (click)="activeTab = 'book-appointment'">
-          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path></svg> Book Appointment
+        <button
+          type="button"
+          class="hero-tab"
+          [class.hero-tab-active]="activeTab === 'book-appointment'"
+          (click)="activeTab = 'book-appointment'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          Book appointment
         </button>
+      </div>
+    </section>
+
+    <section class="workflow-tutorial">
+      <div class="workflow-cursor" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5.3 3.2a1 1 0 0 1 1.1-.1l13 7a1 1 0 0 1-.1 1.8l-5.2 1.8-2.5 4.9a1 1 0 0 1-1.8-.1l-5-14.1a1 1 0 0 1 .5-1.2Z"></path>
+        </svg>
+      </div>
+
+      <div class="workflow-heading">
+        <span class="eyebrow">How booking works</span>
+        <h2>Follow the scheduling path</h2>
+      </div>
+
+      <div class="workflow-track">
+        <div class="workflow-step">
+          <span class="step-number">1</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <strong>Choose doctor</strong>
+          <p>Pick the professional who matches your care need.</p>
+        </div>
+
+        <div class="workflow-step">
+          <span class="step-number">2</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M9 14h2l1 2 3-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <strong>Select slot</strong>
+          <p>Scan the weekly schedule and reserve a time.</p>
+        </div>
+
+        <div class="workflow-step">
+          <span class="step-number">3</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <strong>Confirm details</strong>
+          <p>Add notes, caregiver presence, then submit.</p>
+        </div>
+      </div>
+    </section>
+
+    <div *ngIf="loading" class="loading-backdrop">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <span>Loading your schedule...</span>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
-      <div class="bg-white rounded-lg p-4 flex items-center space-x-3">
-        <div class="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-[#2D1B4E]">Loading...</span>
-      </div>
-    </div>
-
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center justify-between">
+    <div *ngIf="errorMessage" class="error-banner">
       <span>{{ errorMessage }}</span>
-      <button class="text-red-500 hover:text-red-700" (click)="errorMessage = ''"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg></button>
+      <button type="button" (click)="errorMessage = ''" aria-label="Dismiss error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
     </div>
 
-    <!-- ========== TAB 1: MY APPOINTMENTS (EXISTING) ========== -->
-    <div *ngIf="activeTab === 'my-appointments'" class="space-y-6">
-
-      <!-- Filters Component (existing) -->
+    <div *ngIf="activeTab === 'my-appointments'" class="appointments-view page-section">
       <app-appointment-filters
         [doctors]="doctors"
         (filtersChanged)="onFiltersChanged($event)">
       </app-appointment-filters>
 
-      <!-- Stats Cards (existing) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-[#6B5B8C]">Total</p>
-              <p class="text-2xl font-bold text-[#2D1B4E]">{{ appointments.length }}</p>
-            </div>
-            <div class="w-10 h-10 bg-[#F3E8FF] rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
-              </svg>
-            </div>
+      <div class="stats-strip">
+        <article class="stat-card total-card">
+          <span class="stat-label">Total</span>
+          <strong>{{ appointments.length }}</strong>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
-        </div>
-        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-[#6B5B8C]">Upcoming</p>
-              <p class="text-2xl font-bold text-[#2D1B4E]">{{ upcomingAppointments.length }}</p>
-            </div>
-            <div class="w-10 h-10 bg-[#E6F0FA] rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-[#2D1B4E]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-              </svg>
-            </div>
+        </article>
+
+        <article class="stat-card upcoming-card">
+          <span class="stat-label">Upcoming</span>
+          <strong>{{ upcomingAppointments.length }}</strong>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+              <path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
           </div>
-        </div>
-        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-[#6B5B8C]">Completed</p>
-              <p class="text-2xl font-bold text-[#2D1B4E]">{{ pastAppointments.length }}</p>
-            </div>
-            <div class="w-10 h-10 bg-[#F1F5F9] rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </div>
+        </article>
+
+        <article class="stat-card completed-card">
+          <span class="stat-label">Completed</span>
+          <strong>{{ pastAppointments.length }}</strong>
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
-        </div>
+        </article>
       </div>
 
-      <!-- Main Grid with Calendar and Upcoming List (existing) -->
-      <div class="grid lg:grid-cols-3 gap-6">
-        <!-- Calendar Component (existing) -->
-        <div class="lg:col-span-2">
+      <div class="schedule-grid">
+        <div class="calendar-panel">
           <app-calendar
             [appointments]="appointments"
             [currentDate]="currentDate"
@@ -103,23 +139,23 @@
           </app-calendar>
         </div>
 
-        <!-- Upcoming List Component (existing) -->
-        <app-appointment-list
-          title="Upcoming"
-          [appointments]="upcomingAppointments"
-          emptyMessage="No upcoming appointments"
-          addButtonText="Book appointment"
-          [showAddButton]="true"
-          [showActionButtons]="true"
-          [scrollable]="true"
-          (onCardClick)="viewAppointmentDetails($event)"
-          (onAction)="handleAppointmentAction($event)"
-          (onAddClick)="activeTab = 'book-appointment'">
-        </app-appointment-list>
+        <div class="upcoming-panel">
+          <app-appointment-list
+            title="Upcoming"
+            [appointments]="upcomingAppointments"
+            emptyMessage="No upcoming appointments"
+            addButtonText="Book appointment"
+            [showAddButton]="true"
+            [showActionButtons]="true"
+            [scrollable]="true"
+            (onCardClick)="viewAppointmentDetails($event)"
+            (onAction)="handleAppointmentAction($event)"
+            (onAddClick)="activeTab = 'book-appointment'">
+          </app-appointment-list>
+        </div>
       </div>
 
-      <!-- Past Appointments List (existing) -->
-      <div id="appointments-section">
+      <div id="appointments-section" class="history-panel">
         <app-appointment-list
           title="History"
           [appointments]="pastAppointments"
@@ -131,58 +167,40 @@
       </div>
     </div>
 
-    <!-- ========== TAB 2: BOOK APPOINTMENT (NEW) ========== -->
-    <div *ngIf="activeTab === 'book-appointment'" class="space-y-6">
-
-      <!-- Tab header -->
-      <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
-        <h2 class="text-xl font-semibold text-[#2D1B4E] mb-2">Book a New Appointment</h2>
-        <p class="text-[#6B5B8C]">Choose a doctor and an available time slot</p>
-      </div>
-
-      <!-- Step indicator -->
-      <div class="flex items-center justify-between max-w-2xl mx-auto">
-        <div class="flex items-center flex-1">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-               [class.bg-[#7C3AED]]="bookingStep >= 1"
-               [class.text-white]="bookingStep >= 1"
-               [class.bg-gray-200]="bookingStep < 1">
-            1
-          </div>
-          <div class="flex-1 h-1 mx-2 transition-colors"
-               [class.bg-[#7C3AED]]="bookingStep >= 2"
-               [class.bg-gray-200]="bookingStep < 2"></div>
+    <div *ngIf="activeTab === 'book-appointment'" class="booking-view page-section">
+      <section class="booking-intro">
+        <div>
+          <span class="eyebrow">New appointment</span>
+          <h2>Book a visit in three steps</h2>
+          <p>Choose a doctor, reserve a weekly slot, then confirm your appointment details.</p>
         </div>
-        <div class="flex items-center flex-1">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-               [class.bg-[#7C3AED]]="bookingStep >= 2"
-               [class.text-white]="bookingStep >= 2"
-               [class.bg-gray-200]="bookingStep < 2">
-            2
-          </div>
-          <div class="flex-1 h-1 mx-2 transition-colors"
-               [class.bg-[#7C3AED]]="bookingStep >= 3"
-               [class.bg-gray-200]="bookingStep < 3"></div>
+        <div class="booking-orbit" aria-hidden="true">
+          <span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
         </div>
-        <div class="flex items-center">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-               [class.bg-[#7C3AED]]="bookingStep >= 3"
-               [class.text-white]="bookingStep >= 3"
-               [class.bg-gray-200]="bookingStep < 3">
-            3
-          </div>
+      </section>
+
+      <div class="booking-stepper">
+        <div class="stepper-item" [class.stepper-active]="bookingStep >= 1">
+          <span>1</span>
+          <p>Doctor</p>
+        </div>
+        <div class="stepper-line" [class.stepper-line-active]="bookingStep >= 2"></div>
+        <div class="stepper-item" [class.stepper-active]="bookingStep >= 2">
+          <span>2</span>
+          <p>Slot</p>
+        </div>
+        <div class="stepper-line" [class.stepper-line-active]="bookingStep >= 3"></div>
+        <div class="stepper-item" [class.stepper-active]="bookingStep >= 3">
+          <span>3</span>
+          <p>Confirm</p>
         </div>
       </div>
-      <div class="flex justify-between max-w-2xl mx-auto text-sm text-[#6B5B8C] px-2">
-        <span>Choose Doctor</span>
-        <span>Choose Slot</span>
-        <span>Confirm</span>
-      </div>
 
-      <!-- Step 1: Doctor Selection -->
-      <div *ngIf="bookingStep === 1" class="grid lg:grid-cols-3 gap-6">
-        <!-- Doctor list with availability -->
-        <div class="lg:col-span-2">
+      <div *ngIf="bookingStep === 1" class="booking-grid">
+        <div class="booking-main-panel">
           <app-doctor-availability
             [doctors]="doctors"
             [selectedDoctorId]="selectedDoctorId"
@@ -190,99 +208,98 @@
           </app-doctor-availability>
         </div>
 
-        <!-- Quick preview -->
-        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-4">
-          <h3 class="font-semibold text-[#2D1B4E] mb-3">Your Selection</h3>
-          <div *ngIf="!selectedDoctorId" class="text-center text-[#6B5B8C] py-8">
-            <svg class="w-12 h-12 mx-auto mb-3 text-[#C4B5FD]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="8" r="4"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/>
-            </svg>
-            <p>Select a doctor</p>
-          </div>
-          <div *ngIf="selectedDoctorId" class="space-y-3">
-            <div class="flex items-center space-x-3">
-              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
+        <aside class="selection-panel">
+          <span class="eyebrow">Your selection</span>
+          <ng-container *ngIf="!selectedDoctorId; else doctorSelectedPreview">
+            <div class="selection-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" stroke-width="2"></circle>
+                <path d="M5 21v-2a7 7 0 0 1 14 0v2" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+              <p>Select a doctor to unlock the weekly schedule.</p>
+            </div>
+          </ng-container>
+
+          <ng-template #doctorSelectedPreview>
+            <div class="doctor-preview">
+              <img [src]="getSelectedDoctor().profilePicture || 'assets/default-avatar.png'" alt="Selected doctor">
               <div>
-                <h4 class="font-semibold">{{ getSelectedDoctor().name }}</h4>
+                <strong>{{ getSelectedDoctor().name }}</strong>
+                <span>Ready for slot selection</span>
               </div>
             </div>
-            <button class="w-full bg-[#7C3AED] text-white py-2 rounded-md hover:bg-[#6D28D9] transition-colors"
-                    (click)="bookingStep = 2">
-              Continue
-            </button>
-          </div>
-        </div>
+            <button type="button" class="primary-action" (click)="bookingStep = 2">Continue to slots</button>
+          </ng-template>
+        </aside>
       </div>
 
-      <!-- Step 2: Slot Selection -->
-      <div *ngIf="bookingStep === 2">
+      <div *ngIf="bookingStep === 2" class="booking-stage">
         <app-weekly-schedule
           [doctorId]="selectedDoctorId"
           [consultationTypes]="consultationTypes"
           (slotSelected)="onSlotSelected($event)">
         </app-weekly-schedule>
 
-        <div class="flex justify-between mt-4">
-          <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
-                  (click)="bookingStep = 1">
-            ← Back
+        <div class="stage-actions">
+          <button type="button" class="secondary-action" (click)="bookingStep = 1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M15 18 9 12l6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            Back
           </button>
-          <button *ngIf="selectedSlot"
-                  class="px-4 py-2 bg-[#7C3AED] text-white rounded-md hover:bg-[#6D28D9] transition-colors"
-                  (click)="bookingStep = 3">
-            Continue →
+          <button *ngIf="selectedSlot" type="button" class="primary-action" (click)="bookingStep = 3">
+            Continue
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="m9 18 6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </button>
         </div>
       </div>
 
-      <!-- Step 3: Confirmation -->
-      <div *ngIf="bookingStep === 3" class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm p-6">
-          <h3 class="text-lg font-semibold text-[#2D1B4E] mb-4">Confirm Details</h3>
-
-          <!-- Summary -->
-          <div class="space-y-4">
-            <div class="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
-              <img [src]="getSelectedDoctor().profilePicture" class="w-12 h-12 rounded-full">
-              <div>
-                <p class="font-semibold">{{ getSelectedDoctor().name }}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div class="p-3 bg-[#F9FAFB] rounded-lg">
-                <p class="text-xs text-[#6B5B8C]">Date</p>
-                <p class="font-semibold">{{ selectedSlot?.date | date:'dd MMMM yyyy' }}</p>
-              </div>
-              <div class="p-3 bg-[#F9FAFB] rounded-lg">
-                <p class="text-xs text-[#6B5B8C]">Time</p>
-                <p class="font-semibold">{{ selectedSlot?.startTime }}</p>
-              </div>
-            </div>
-
-            <!-- Reused appointment form -->
-            <app-appointment-form
-              [doctors]="[getSelectedDoctor()]"
-              [consultationTypes]="consultationTypes"
-              [caregivers]="myCaregivers"
-              [availableSlots]="[selectedSlot?.startTime]"
-              [formData]="newAppointment"
-              (onClose)="bookingStep = 2"
-              (onSubmit)="bookAppointment($event)">
-            </app-appointment-form>
-
-            <div class="flex justify-between mt-4">
-              <button class="px-4 py-2 border border-[#C4B5FD] rounded-md hover:bg-[#F3E8FF] transition-colors"
-                      (click)="bookingStep = 2">
-                ← Edit
-              </button>
+      <div *ngIf="bookingStep === 3" class="confirmation-stage">
+        <section class="confirmation-summary">
+          <div class="summary-doctor">
+            <img [src]="getSelectedDoctor().profilePicture || 'assets/default-avatar.png'" alt="Selected doctor">
+            <div>
+              <span class="eyebrow">Confirm details</span>
+              <h3>{{ getSelectedDoctor().name }}</h3>
+              <p>Your selected appointment is almost ready.</p>
             </div>
           </div>
+
+          <div class="summary-grid">
+            <div>
+              <span>Date</span>
+              <strong>{{ selectedSlot?.date | date:'dd MMMM yyyy' }}</strong>
+            </div>
+            <div>
+              <span>Time</span>
+              <strong>{{ selectedSlot?.startTime }}</strong>
+            </div>
+          </div>
+        </section>
+
+        <app-appointment-form
+          [doctors]="[getSelectedDoctor()]"
+          [consultationTypes]="consultationTypes"
+          [caregivers]="myCaregivers"
+          [availableSlots]="[selectedSlot?.startTime]"
+          [formData]="newAppointment"
+          (onClose)="bookingStep = 2"
+          (onSubmit)="bookAppointment($event)">
+        </app-appointment-form>
+
+        <div class="stage-actions">
+          <button type="button" class="secondary-action" (click)="bookingStep = 2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M15 18 9 12l6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            Edit slot
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Appointment Details Modal (existing) -->
     <app-appointment-details
       *ngIf="selectedAppointment"
       [appointment]="selectedAppointment"
@@ -291,6 +308,5 @@
       (onCancel)="cancelAppointment($event)"
       (onJoinCall)="joinVideoCall($event)">
     </app-appointment-details>
-
   </div>
 </div>

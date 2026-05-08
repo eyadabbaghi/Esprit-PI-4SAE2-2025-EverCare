@@ -22,6 +22,7 @@ import { CaregiverPatientPrescriptionsComponent } from './pages/caregiver-patien
 
 // Import PrescriptionActionsComponent from appointments module
 import { PrescriptionActionsComponent } from '../appointments/components/prescription-actions/prescription-actions.component';
+import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import { PrescriptionActionsComponent } from '../appointments/components/prescri
     FormsModule,
     HttpClientModule,
     LucideAngularModule.pick({ Download, Loader, Mail }),
+    SharedModule,
     PrescriptionRoutingModule
   ]
 })

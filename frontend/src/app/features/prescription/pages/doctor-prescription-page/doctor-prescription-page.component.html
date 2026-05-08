@@ -1,9 +1,10 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="doctor-rx-overview-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="doctor-rx-hero flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
+        <p class="hero-kicker">Prescription overview</p>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">Prescriptions</h1>
         <p class="text-[#6B5B8C] mt-1">
           Dr. {{ currentUser?.name }}
@@ -36,6 +37,25 @@
       </a>
 
     </div>
+
+    <section class="doctor-rx-guide" aria-label="Doctor prescription workflow">
+      <div class="guide-step is-active">
+        <span>1</span>
+        <strong>Review clinical context</strong>
+        <small>Patient, appointment, active medications, and measurements.</small>
+      </div>
+      <div class="guide-step">
+        <span>2</span>
+        <strong>Create treatment plan</strong>
+        <small>Choose medication, dose timing, duration, and notes.</small>
+      </div>
+      <div class="guide-step">
+        <span>3</span>
+        <strong>Issue and follow</strong>
+        <small>Track active, expired, renewable, and PDF-ready prescriptions.</small>
+      </div>
+      <i class="floating-cursor" aria-hidden="true"></i>
+    </section>
 
     <!-- Loading -->
     <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
@@ -147,5 +167,4 @@
   (onCancelled)="onPrescriptionCancelled($event)"
   (onPdfGenerated)="onPdfGenerated($event)">
 </app-prescription-details>
-
 

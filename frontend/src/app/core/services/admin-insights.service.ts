@@ -458,7 +458,7 @@ export class AdminInsightsService {
       .join(' ');
   }
 
-  private isWithinDays(value: string | Date | undefined, days: number): boolean {
+  private isWithinDays(value: string | Date | number[] | undefined, days: number): boolean {
     if (!value) {
       return false;
     }
@@ -472,27 +472,40 @@ export class AdminInsightsService {
     return diffMs <= days * 24 * 60 * 60 * 1000;
   }
 
-  private isSameMonth(value: string | Date | undefined, current: Date): boolean {
+  private isSameMonth(value: string | Date | number[] | undefined, current: Date): boolean {
     const date = this.toDate(value);
     return !!date && date.getMonth() === current.getMonth() && date.getFullYear() === current.getFullYear();
   }
 
-  private isBetween(value: string | Date | undefined, start: Date, end: Date): boolean {
+  private isBetween(value: string | Date | number[] | undefined, start: Date, end: Date): boolean {
     const date = this.toDate(value);
     return !!date && date >= start && date <= end;
   }
 
-  private isSameMoment(left?: string | Date, right?: string | Date): boolean {
+  private isSameMoment(left?: string | Date | number[], right?: string | Date | number[]): boolean {
     return this.getTime(left) === this.getTime(right);
   }
 
-  private getTime(value?: string | Date): number {
+  private getTime(value?: string | Date | number[]): number {
     return this.toDate(value)?.getTime() || 0;
   }
 
-  private toDate(value?: string | Date): Date | null {
+  private toDate(value?: string | Date | number[]): Date | null {
     if (!value) {
       return null;
+    }
+
+    if (Array.isArray(value)) {
+      const [year, month = 1, day = 1, hour = 0, minute = 0, second = 0, nano = 0] = value.map(Number);
+      if (!year) {
+        return null;
+      }
+      const arrayDate = new Date(year, month - 1, day, hour, minute, second, Math.floor(nano / 1000000));
+      return Number.isNaN(arrayDate.getTime()) ? null : arrayDate;
+    }
+
+    if (typeof value === 'string' && /^\d{4},\d{1,2},\d{1,2}/.test(value.trim())) {
+      return this.toDate(value.split(',').map(part => Number(part.trim())));
     }
 
     const date = value instanceof Date ? value : new Date(value);

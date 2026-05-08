@@ -1,17 +1,24 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="prescription-page min-h-screen p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- ========== HEADER ========== -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="prescription-hero flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-      <div>
-        <h1 class="text-3xl font-bold text-[#2D1B4E]">Prescriptions</h1>
-        <p class="text-[#6B5B8C] mt-1">Manage and track all medical prescriptions</p>
+      <div class="hero-copy">
+        <span class="hero-kicker">Medication care hub</span>
+        <h1>Prescriptions</h1>
+        <p>Manage active prescriptions, daily doses, renewals, and medication history from one calm clinical workspace.</p>
+
+        <div class="hero-metrics">
+          <span><strong>{{ activeCount }}</strong> active</span>
+          <span><strong>{{ expiringCount }}</strong> expiring soon</span>
+          <span><strong>{{ renewableCount }}</strong> renewable</span>
+        </div>
       </div>
 
       <!-- Tabs -->
-      <div class="flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
-        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+      <div class="prescription-tabs flex space-x-2 bg-white p-1 rounded-lg border border-[#C4B5FD]">
+        <button class="prescription-tab px-4 py-2 rounded-md text-sm transition-colors"
                 [class.bg-[#7C3AED]]="activeTab === 'my-prescriptions'"
                 [class.text-white]="activeTab === 'my-prescriptions'"
                 [class.text-[#2D1B4E]]="activeTab !== 'my-prescriptions'"
@@ -21,7 +28,7 @@
 
         <!-- New Prescription tab — doctors only -->
         <button *ngIf="isDoctor()"
-                class="px-4 py-2 rounded-md text-sm transition-colors"
+                class="prescription-tab px-4 py-2 rounded-md text-sm transition-colors"
                 [class.bg-[#7C3AED]]="activeTab === 'new-prescription'"
                 [class.text-white]="activeTab === 'new-prescription'"
                 [class.text-[#2D1B4E]]="activeTab !== 'new-prescription'"
@@ -29,7 +36,7 @@
           <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path></svg> New Prescription
         </button>
 
-        <button class="px-4 py-2 rounded-md text-sm transition-colors"
+        <button class="prescription-tab px-4 py-2 rounded-md text-sm transition-colors"
                 [class.bg-[#7C3AED]]="activeTab === 'medications'"
                 [class.text-white]="activeTab === 'medications'"
                 [class.text-[#2D1B4E]]="activeTab !== 'medications'"

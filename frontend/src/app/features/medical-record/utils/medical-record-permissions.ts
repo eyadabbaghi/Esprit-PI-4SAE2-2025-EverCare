@@ -13,7 +13,7 @@ export interface MedicalRecordPermissions {
 export function getMedicalRecordPermissions(roleInput: string | null | undefined): MedicalRecordPermissions {
   const role = resolveRole(roleInput);
 
-  if (role === 'DOCTOR') {
+  if (role === 'DOCTOR' || role === 'ADMIN') {
     return {
       canRead: true,
       canViewDetails: true,
@@ -25,19 +25,19 @@ export function getMedicalRecordPermissions(roleInput: string | null | undefined
     };
   }
 
-  if (role === 'ADMIN') {
+  if (role === 'PATIENT') {
     return {
       canRead: true,
       canViewDetails: true,
       canCreate: true,
       canUpdate: true,
-      canArchive: true,
-      canManageHistory: true,
+      canArchive: false,
+      canManageHistory: false,
       canManageDocuments: true,
     };
   }
 
-  if (role === 'CAREGIVER' || role === 'PATIENT') {
+  if (role === 'CAREGIVER') {
     return {
       canRead: true,
       canViewDetails: true,

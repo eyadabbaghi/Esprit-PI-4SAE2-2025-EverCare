@@ -7,6 +7,7 @@ import { AlertsComponent } from './pages/alerts/alerts.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { DoctorsComponent } from './pages/doctors/doctors.component';
 import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import { AppointmentsPageComponent } from '../appointments/pages/appointments-page/appointments-page.component';
@@ -23,6 +24,7 @@ const routes: Routes = [
       { path: 'activities', component: ActivitiesComponent, canActivate: [FrontOfficeAuthGuard] },
       { path: 'activities/:id', component: ActivityDetailsComponent, canActivate: [FrontOfficeAuthGuard] },
       { path: 'alerts', component: AlertsComponent, canActivate: [FrontOfficeAuthGuard] },
+      { path: 'doctors', component: DoctorsComponent, canActivate: [FrontOfficeAuthGuard] },
       { path: 'profile', component: ProfileComponent, canActivate: [FrontOfficeAuthGuard] },
       {
         path: 'appointments',

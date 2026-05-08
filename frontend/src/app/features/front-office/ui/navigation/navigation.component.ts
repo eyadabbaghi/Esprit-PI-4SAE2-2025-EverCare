@@ -19,6 +19,7 @@ import {
 import { DailyTask } from '../../../daily-me/models/daily-task.model';
 import { DailyTaskService } from '../../../daily-me/services/daily-task.service';
 import { AuthService, User } from '../../pages/login/auth.service';
+import { OnboardingTutorialService } from '../onboarding-tutorial/onboarding-tutorial.service';
 
 interface NavItem {
   id: string;
@@ -36,6 +37,8 @@ interface TaskNotification {
   severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   taskId?: number | string;
 }
+
+type NavbarNotificationKind = 'activity' | 'blog' | 'appointment' | 'alert';
 
 @Component({
   selector: 'app-front-office-navigation',
@@ -62,12 +65,15 @@ export class NavigationComponent implements OnInit, OnDestroy {
   private alertTimer: ReturnType<typeof setTimeout> | null = null;
   private clearedIds = new Set<string>();
   private readonly clearedKey = 'clearedNotificationIds';
+  private activityNotificationsInitialized = false;
+  private notificationAudioContext: AudioContext | null = null;
 
   constructor(
     private readonly router: Router,
     private readonly authService: AuthService,
     private readonly notificationService: NotificationService,
     private readonly dailyTaskService: DailyTaskService,
+    private readonly tutorialService: OnboardingTutorialService,
     private readonly cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {}
@@ -142,9 +148,16 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   get navItems(): NavItem[] {
+    const role = this.user?.role?.trim().toUpperCase();
+    const doctorDirectoryItems: NavItem[] =
+      role === 'PATIENT' || role === 'CAREGIVER'
+        ? [{ id: 'doctors', label: 'Doctors', route: '/doctors' }]
+        : [];
+
     return [
       { id: 'home', label: 'Home', route: '/' },
       { id: 'activities', label: 'Activities', route: '/activities' },
+      ...doctorDirectoryItems,
       { id: 'appointments', label: 'Appointments', route: '/appointments' },
       { id: 'prescriptions', label: 'Prescriptions', route: '/prescriptions' },
       { id: 'medical-record', label: 'Medical Record', route: '/medical-record' },
@@ -191,7 +204,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     ];
 
     const isProtectedRoute = protectedRoutes.some((protectedRoute) =>
-      route === protectedRoute || route.startsWith(`${protectedRoute}/`),
+      route === protectedRoute || route.startsWith(`${protectedRoute}/`) || route.startsWith(`${protectedRoute}?`),
     );
 
     if (isProtectedRoute && !this.user) {
@@ -251,7 +264,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
     this.activityNotifications = this.activityNotifications.map((n) =>
       n.id === notification.id ? { ...n, read: true } : n,
     );
-    this.navigate(`/activities/${notification.activityId}`);
+    this.navigate(this.getNotificationRoute(notification));
   }
 
   handleTaskNotificationClick(notification: TaskNotification): void {
@@ -273,24 +286,86 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   // ─── Display helpers ──────────────────────────────────────────────────────
 
-  getActivityIcon(action: string): string {
-    switch (action) {
-      case 'EVICARE_ALERT': return '<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3" stroke-width="2"></rect><path d="M12 4v4M9 13h.01M15 13h.01M10 17h4" stroke-width="2" stroke-linecap="round"></path></svg>';
-      case 'CREATED':       return '<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path></svg>';
-      case 'UPDATED':       return '<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4Z" stroke-width="2" stroke-linejoin="round"></path></svg>';
-      case 'DELETED':       return '<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
-      default:              return '<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 5h16v12H7l-3 3V5Z" stroke-width="2" stroke-linejoin="round"></path></svg>';
-    }
+  getNotificationIconClasses(notification: ActivityNotification): string {
+    const kind = this.getNotificationKind(notification);
+    const action = this.getNotificationAction(notification);
+
+    if (kind === 'blog') return 'text-[#7C3AED] bg-[#F3E8FF] border-[#DDD6FE]';
+    if (kind === 'appointment') return 'text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]';
+    if (kind === 'alert') return 'text-[#C06C84] bg-[#FDE2E7] border-[#F5C2CC]';
+    if (action === 'CREATED') return 'text-[#15803D] bg-[#DCFCE7] border-[#BBF7D0]';
+    if (action === 'UPDATED') return 'text-[#2563EB] bg-[#EFF6FF] border-[#BFDBFE]';
+    if (action === 'DELETED') return 'text-[#BE185D] bg-[#FCE7F3] border-[#FBCFE8]';
+    return 'text-[#7C3AED] bg-[#F3E8FF] border-[#DDD6FE]';
   }
 
-  getActivityTitle(action: string): string {
-    switch (action) {
-      case 'EVICARE_ALERT': return 'EviCare prevention alert';
-      case 'CREATED':       return 'New activity available';
-      case 'UPDATED':       return 'Activity updated';
-      case 'DELETED':       return 'Activity removed';
-      default:              return 'Activity notification';
+  getNotificationTitle(notification: ActivityNotification): string {
+    const kind = this.getNotificationKind(notification);
+    const action = this.getNotificationAction(notification);
+    const name = this.extractNotificationSubject(notification.details);
+
+    if (kind === 'blog') {
+      if (action === 'UPDATED') return `Blog updated${name ? `: ${name}` : ''}`;
+      if (action === 'DELETED') return `Blog removed${name ? `: ${name}` : ''}`;
+      return `New blog article${name ? `: ${name}` : ''}`;
     }
+
+    if (kind === 'appointment') {
+      if (action === 'UPCOMING_APPOINTMENT') return 'Upcoming appointment';
+      return 'Pre-consultation form reminder';
+    }
+
+    if (kind === 'alert') {
+      return 'EviCare prevention alert';
+    }
+
+    if (action === 'UPDATED') return `Activity updated${name ? `: ${name}` : ''}`;
+    if (action === 'DELETED') return `Activity removed${name ? `: ${name}` : ''}`;
+    if (action === 'CREATED') return `New activity${name ? `: ${name}` : ''}`;
+    return 'Activity notification';
+  }
+
+  getNotificationBody(notification: ActivityNotification): string {
+    const details = String(notification.details || '').trim();
+    const subject = this.extractNotificationSubject(details);
+
+    if (this.getNotificationKind(notification) === 'blog' && subject) {
+      return 'A new care article is available in the blog.';
+    }
+
+    return details || 'You have a new notification.';
+  }
+
+  getNotificationRoute(notification: ActivityNotification): string {
+    const kind = this.getNotificationKind(notification);
+
+    if (kind === 'blog') {
+      return notification.activityId ? `/blog?article=${notification.activityId}` : '/blog';
+    }
+
+    if (kind === 'appointment') {
+      return '/appointments';
+    }
+
+    if (kind === 'alert') {
+      return '/alerts';
+    }
+
+    return notification.activityId ? `/activities/${notification.activityId}` : '/activities';
+  }
+
+  getNotificationKind(notification: ActivityNotification): NavbarNotificationKind {
+    const action = this.getNotificationAction(notification);
+    const details = String(notification.details || '').toLowerCase();
+
+    if (action === 'PRE_CONSULTATION_FORM' || action === 'UPCOMING_APPOINTMENT') return 'appointment';
+    if (action === 'EVICARE_ALERT' || details.includes('evicare') || details.includes('alert')) return 'alert';
+    if (action.startsWith('BLOG_') || details.includes('article') || details.includes('blog') || details.includes('publi')) return 'blog';
+    return 'activity';
+  }
+
+  getNotificationAction(notification: ActivityNotification): string {
+    return String(notification.action || '').trim().toUpperCase();
   }
 
   getSeverityClasses(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): string {
@@ -324,6 +399,12 @@ export class NavigationComponent implements OnInit, OnDestroy {
   goToProfile(): void {
     this.profileOpen = false;
     this.navigate('/profile');
+  }
+
+  startTutorial(): void {
+    this.profileOpen = false;
+    this.isMobileMenuOpen = false;
+    this.tutorialService.restartForCurrentUser();
   }
 
   // ─── Click-outside handler ────────────────────────────────────────────────
@@ -376,7 +457,7 @@ export class NavigationComponent implements OnInit, OnDestroy {
   }
 
   private mergeActivityNotifications(notifications: ActivityNotification[]): void {
-    const filtered    = notifications.filter((n) => !this.clearedIds.has(n.id));
+    const filtered    = notifications.filter((n) => !this.clearedIds.has(n.id) && this.isNotificationForCurrentUser(n));
     const existingMap = new Map(this.activityNotifications.map((n) => [n.id, n.read]));
 
     const merged = filtered.map((n) => ({
@@ -388,8 +469,13 @@ export class NavigationComponent implements OnInit, OnDestroy {
     const hasNewItems = merged.some((n) => !previousIds.has(n.id));
 
     this.activityNotifications = merged;
+    if (!this.activityNotificationsInitialized) {
+      this.activityNotificationsInitialized = true;
+      return;
+    }
+
     if (hasNewItems) {
-      this.shakeBell();
+      this.triggerNotificationCue();
     }
   }
 
@@ -451,8 +537,53 @@ export class NavigationComponent implements OnInit, OnDestroy {
         ...this.taskNotifications,
       ];
 
-      this.shakeBell();
+      this.triggerNotificationCue();
     });
+  }
+
+  private extractNotificationSubject(details: string): string {
+    const value = String(details || '').trim();
+    if (!value) return '';
+
+    const quoted = value.match(/['"]([^'"]+)['"]/);
+    if (quoted?.[1]) return quoted[1].trim();
+
+    const colonIndex = value.indexOf(':');
+    if (colonIndex >= 0 && colonIndex < value.length - 1) {
+      return value.slice(colonIndex + 1).trim();
+    }
+
+    return '';
+  }
+
+  private isNotificationForCurrentUser(notification: ActivityNotification): boolean {
+    const targets = notification.targetUserIds || [];
+    if (targets.length === 0) return true;
+
+    const userIdentifiers = this.getCurrentUserIdentifiers();
+    if (userIdentifiers.size === 0) return false;
+
+    return targets.some((target) => userIdentifiers.has(String(target).trim()));
+  }
+
+  private getCurrentUserIdentifiers(): Set<string> {
+    const user = this.user || this.authService.getCurrentUserValue();
+    const identifiers = [
+      (user as (User & { id?: string }) | null)?.id,
+      user?.userId,
+      (user as (User & { keycloakId?: string }) | null)?.keycloakId,
+      (user as (User & { patientId?: string }) | null)?.patientId,
+      (user as (User & { doctorId?: string }) | null)?.doctorId,
+      (user as (User & { caregiverId?: string }) | null)?.caregiverId,
+      (user as (User & { _id?: string }) | null)?._id,
+      user?.email,
+    ];
+
+    return new Set(
+      identifiers
+        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+        .map((value) => value.trim()),
+    );
   }
 
   // Enhanced getTaskDueMs – handles multiple date fields (from tracking branch)
@@ -563,6 +694,51 @@ export class NavigationComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }, 800);
     }, 10);
+  }
+
+  private triggerNotificationCue(): void {
+    this.shakeBell();
+    this.playNotificationSound();
+  }
+
+  private playNotificationSound(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      const AudioContextCtor =
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+      if (!AudioContextCtor) return;
+
+      this.notificationAudioContext ??= new AudioContextCtor();
+      const context = this.notificationAudioContext;
+
+      if (context.state === 'suspended') {
+        context.resume()
+          .then(() => this.playNotificationSound())
+          .catch(() => undefined);
+        return;
+      }
+
+      const now = context.currentTime;
+      const gain = context.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.055, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+      gain.connect(context.destination);
+
+      [660, 880].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.1);
+        oscillator.connect(gain);
+        oscillator.start(now + index * 0.1);
+        oscillator.stop(now + 0.34 + index * 0.08);
+      });
+    } catch {
+      // Browsers may block audio until the user interacts with the page.
+    }
   }
 
   // ─── Patient ID resolution (enhanced from both) ───────────────────────────

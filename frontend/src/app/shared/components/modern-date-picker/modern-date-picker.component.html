@@ -1,0 +1,63 @@
+<div class="modern-date-picker" [class.is-disabled]="disabled">
+  <button type="button" class="date-picker-trigger" [disabled]="disabled" (click)="toggle()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      <path d="M16 2v4M8 2v4M3 10h18"></path>
+    </svg>
+    <span>{{ selectedDateLabel }}</span>
+    <svg class="date-picker-chevron" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </button>
+
+  <div *ngIf="isOpen" class="date-picker-panel" [class.align-right]="panelAlign === 'right'">
+    <div class="date-picker-head">
+      <button type="button" (click)="previousMonth()" aria-label="Previous month">
+        <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+      <strong>{{ currentCalendarLabel }}</strong>
+      <button type="button" (click)="nextMonth()" aria-label="Next month">
+        <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
+    </div>
+
+    <div class="date-picker-selectors">
+      <select
+        [ngModel]="currentCalendarDate.getMonth()"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="changeCalendarMonth($event)"
+      >
+        <option *ngFor="let month of monthNames; let i = index" [ngValue]="i">{{ month }}</option>
+      </select>
+      <select
+        [ngModel]="currentCalendarDate.getFullYear()"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="changeCalendarYear($event)"
+      >
+        <option *ngFor="let year of calendarYears" [ngValue]="year">{{ year }}</option>
+      </select>
+    </div>
+
+    <div class="date-picker-weekdays">
+      <span *ngFor="let day of weekDays">{{ day }}</span>
+    </div>
+
+    <div class="date-picker-grid">
+      <button
+        type="button"
+        *ngFor="let day of calendarDays"
+        [class.is-muted]="day.muted"
+        [class.is-selected]="day.selected"
+        [disabled]="day.disabled"
+        (click)="selectCalendarDay(day)"
+      >
+        {{ day.day }}
+      </button>
+    </div>
+
+    <div class="date-picker-footer">
+      <span *ngIf="min || max">{{ min || 'Any' }} to {{ max || 'Any' }}</span>
+      <button type="button" (click)="close()">Done</button>
+    </div>
+  </div>
+</div>

@@ -2,9 +2,39 @@
   <div class="form-shell">
     <div class="form-card">
       <div class="form-head">
+        <span class="eyebrow">Medical journal setup</span>
         <h2>{{ isEditMode ? 'Edit Medical Record' : 'Create Medical Record' }}</h2>
         <p>Complete the patient information and emergency contacts.</p>
       </div>
+
+      <section class="record-form-workflow" aria-label="Medical record workflow">
+        <div class="workflow-step">
+          <span class="step-number">1</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4Z"/>
+            <path d="M8 20a2 2 0 0 1 2-2h8M9 8h6"/>
+          </svg>
+          <strong>Identify patient</strong>
+          <p>Use the linked patient account for a reliable record.</p>
+        </div>
+        <div class="workflow-step">
+          <span class="step-number">2</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 12h4l2-5 4 10 2-5h4"/>
+            <path d="M12 21s-7-4.4-7-11a7 7 0 0 1 14 0c0 6.6-7 11-7 11Z"/>
+          </svg>
+          <strong>Fill health basics</strong>
+          <p>Add blood group, allergies, and chronic diseases.</p>
+        </div>
+        <div class="workflow-step">
+          <span class="step-number">3</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <strong>Save journal</strong>
+          <p>Update the record so care teams see the latest context.</p>
+        </div>
+      </section>
 
       <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
       <div *ngIf="isLoading" class="status-message info">Loading medical record...</div>
@@ -31,12 +61,13 @@
 
           <div class="field">
             <label for="bloodGroup">Blood Group</label>
-            <input
+            <select
               id="bloodGroup"
-              type="text"
               formControlName="bloodGroup"
-              placeholder="A+, O-, AB+"
-              [class.invalid]="form.controls.bloodGroup.touched && !!form.controls.bloodGroup.errors?.['pattern']" />
+              [class.invalid]="form.controls.bloodGroup.touched && !!form.controls.bloodGroup.errors?.['pattern']">
+              <option value="">Select blood group</option>
+              <option *ngFor="let group of bloodGroupOptions" [value]="group">{{ group }}</option>
+            </select>
             <div class="field-error" *ngIf="form.controls.bloodGroup.touched && form.controls.bloodGroup.errors?.['pattern']">
               Expected format: A+/A-/B+/B-/AB+/AB-/O+/O-.
             </div>

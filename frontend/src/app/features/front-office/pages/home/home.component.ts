@@ -128,6 +128,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/activities');
   }
 
+  scrollToVideo(): void {
+    document.getElementById('evercare-video')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
   // Called when Alzheimer assessment is completed with results
   onAlzheimerCompleted(result: AssessmentResult): void {
     this.showAlzheimerAssessment = false;
@@ -165,7 +172,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 onNewUserFlowFinished(): void {
   this.showNewUserFlow = false;
   localStorage.removeItem('showWelcomeFlow');
-  this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
 }
 
   private syncPatientOnboarding(user: User | null): void {

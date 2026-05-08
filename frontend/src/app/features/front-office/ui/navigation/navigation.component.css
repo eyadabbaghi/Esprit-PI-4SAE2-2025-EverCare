@@ -5,6 +5,244 @@
   overflow: hidden;
 }
 
+:host {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+:host nav {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 245, 255, 0.9)),
+    #ffffff;
+  border-bottom-color: rgba(196, 181, 253, 0.72);
+  box-shadow:
+    0 16px 36px rgba(76, 29, 149, 0.1),
+    0 4px 12px rgba(124, 58, 237, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(18px);
+}
+
+:host nav img {
+  box-shadow:
+    0 10px 22px rgba(124, 58, 237, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.navbar-container {
+  overflow: visible;
+}
+
+.navbar-row {
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: 0 0 auto;
+  min-width: max-content;
+  padding: 0.14rem 0.12rem 0.14rem 0;
+}
+
+.brand-logo {
+  flex: 0 0 auto;
+}
+
+.brand-title {
+  display: inline-flex;
+  align-items: baseline;
+  color: #2d1b4e;
+  font-size: 1.32rem;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: 0 6px 18px rgba(124, 58, 237, 0.13);
+}
+
+.brand-title span {
+  color: #7c3aed;
+  font-weight: 800;
+}
+
+.desktop-nav {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.12rem;
+  overflow: visible;
+  padding: 0.25rem 0;
+  justify-content: center;
+}
+
+.nav-link {
+  flex: 0 1 auto;
+  white-space: nowrap;
+  min-height: 2.2rem;
+  padding: 0.46rem 0.58rem;
+  font-size: clamp(0.66rem, 0.66vw, 0.84rem);
+  line-height: 1;
+}
+
+.nav-link svg {
+  flex: 0 0 auto;
+}
+
+.nav-actions {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+.profile-trigger {
+  max-width: 11.75rem;
+}
+
+.profile-avatar {
+  flex: 0 0 auto;
+}
+
+.profile-copy {
+  min-width: 0;
+}
+
+.profile-copy span {
+  max-width: 7.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:host nav button,
+:host nav a {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+:host nav button:hover,
+:host nav a:hover {
+  transform: translateY(-1px);
+}
+
+:host nav .hidden.md\:flex > button:hover,
+:host nav #profile-button:hover,
+:host nav #notifications-button:hover {
+  box-shadow:
+    0 12px 26px rgba(124, 58, 237, 0.13),
+    0 0 0 1px rgba(196, 181, 253, 0.28);
+}
+
+:host nav .hidden.md\:flex > button.bg-\[\#F3E8FF\] {
+  box-shadow:
+    0 10px 22px rgba(124, 58, 237, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+#notifications-dropdown,
+#profile-dropdown {
+  border-color: rgba(196, 181, 253, 0.42);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 24px 60px rgba(76, 29, 149, 0.16),
+    0 8px 20px rgba(124, 58, 237, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.notification-menu {
+  transform-origin: top right;
+  animation: dropdownIn 160ms ease-out;
+}
+
+.profile-menu {
+  transform-origin: top right;
+  animation: dropdownIn 160ms ease-out;
+}
+
+.notification-menu-header {
+  background:
+    linear-gradient(135deg, rgba(243, 232, 255, 0.76), rgba(255, 255, 255, 0.92)),
+    #ffffff;
+}
+
+.notification-list {
+  background: linear-gradient(180deg, rgba(250, 245, 255, 0.44), rgba(255, 255, 255, 0.96));
+}
+
+.notification-group-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(249, 250, 251, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.notification-row {
+  position: relative;
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.notification-row:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 3px 0 0 rgba(124, 58, 237, 0.24);
+}
+
+.notification-icon {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0.9rem;
+  box-shadow:
+    0 10px 18px rgba(76, 29, 149, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.notification-kind {
+  flex-shrink: 0;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.9);
+  color: #7c3aed;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bell-shake {
+  transform-origin: top center;
+  animation: bellShake 760ms ease-in-out;
+}
+
+@keyframes bellShake {
+  0% { transform: rotate(0); }
+  12% { transform: rotate(14deg); }
+  24% { transform: rotate(-12deg); }
+  36% { transform: rotate(10deg); }
+  48% { transform: rotate(-8deg); }
+  60% { transform: rotate(5deg); }
+  75% { transform: rotate(-3deg); }
+  100% { transform: rotate(0); }
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .card {
   transition: 0.3s ease;
 }
@@ -22,4 +260,92 @@
 nav button:hover svg {
   transform: scale(1.05);
   transition: 0.2s ease;
+}
+
+@media (max-width: 1480px) {
+  .brand-title {
+    font-size: 1.08rem;
+  }
+
+  .brand-logo {
+    width: 2.05rem;
+    height: 2.05rem;
+  }
+
+  .nav-link {
+    gap: 0.38rem;
+    padding: 0.44rem 0.48rem;
+    font-size: 0.72rem;
+  }
+
+  .nav-link svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .profile-trigger {
+    max-width: 8.2rem;
+    padding-inline: 0.25rem;
+  }
+
+  .profile-copy span {
+    max-width: 4.4rem;
+  }
+}
+
+@media (max-width: 1260px) {
+  .navbar-row {
+    gap: 0.32rem;
+  }
+
+  .brand-title {
+    font-size: 0.98rem;
+  }
+
+  .brand-logo {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .desktop-nav {
+    gap: 0.04rem;
+  }
+
+  .nav-link {
+    gap: 0.28rem;
+    padding: 0.4rem 0.36rem;
+    font-size: 0.64rem;
+  }
+
+  .nav-link svg {
+    width: 0.82rem;
+    height: 0.82rem;
+  }
+
+  .profile-copy {
+    display: none;
+  }
+
+  #notifications-button,
+  #profile-button {
+    width: 2.05rem;
+    height: 2.05rem;
+  }
+}
+
+@media (max-width: 1040px) {
+  .brand-title {
+    font-size: 0.88rem;
+  }
+
+  .nav-link {
+    gap: 0.2rem;
+    padding-inline: 0.28rem;
+    font-size: 0.58rem;
+  }
+
+  .nav-link svg {
+    width: 0.72rem;
+    height: 0.72rem;
+  }
 }

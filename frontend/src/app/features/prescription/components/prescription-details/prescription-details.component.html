@@ -251,11 +251,7 @@
         <p class="text-sm font-semibold text-blue-800">Renew Prescription</p>
         <div>
           <label class="block text-xs text-blue-600 mb-1">New End Date</label>
-          <input type="date"
-                 [(ngModel)]="newDateFin"
-                 [min]="prescription.dateFin"
-                 class="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm
-                        focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <app-modern-date-picker [(ngModel)]="newDateFin" [min]="prescription.dateFin" placeholder="New end date"></app-modern-date-picker>
         </div>
         <div class="flex space-x-2">
           <button (click)="confirmRenew()"

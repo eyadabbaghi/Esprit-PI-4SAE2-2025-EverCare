@@ -28,7 +28,7 @@ export class AiAssistantComponent implements OnInit, OnDestroy, AfterViewChecked
   messages: DisplayMessage[] = [
     {
       role: 'assistant',
-      content: "Hello! I'm your EverCare Assistant 💜 I'm here to help with daily activities, memory support, and Alzheimer's care guidance. How are you feeling today?",
+      content: "Hello! I'm your EverCare Assistant. I'm here to help with daily activities, memory support, and Alzheimer's care guidance. How are you feeling today?",
     },
   ];
 

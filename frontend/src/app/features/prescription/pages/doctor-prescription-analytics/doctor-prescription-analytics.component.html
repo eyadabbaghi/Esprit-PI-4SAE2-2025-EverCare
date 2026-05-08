@@ -1,9 +1,10 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="analytics-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="mx-auto max-w-7xl space-y-6">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <section class="analytics-hero flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
+        <p class="hero-kicker">Clinical analytics</p>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">Prescription Analytics</h1>
-        <p class="mt-1 text-[#6B5B8C]">Track your prescribing activity, treatment status and top medicaments.</p>
+        <p class="mt-1 text-[#6B5B8C]">Track prescribing activity, treatment status, and top medications.</p>
       </div>
 
       <div class="flex gap-3">
@@ -14,7 +15,7 @@
           New Prescription
         </button>
       </div>
-    </div>
+    </section>
 
     <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
       {{ errorMessage }}
@@ -26,26 +27,42 @@
 
     <ng-container *ngIf="!loading && summary">
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-          <p class="text-sm text-[#6B5B8C]">Total</p>
-          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.total }}</p>
+        <div class="analytics-stat stat-total">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke-width="2" stroke-linecap="round"></path></svg>
+          </div>
+          <p>Total</p>
+          <strong>{{ summary.total }}</strong>
+          <span>All issued prescriptions</span>
         </div>
-        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-          <p class="text-sm text-[#6B5B8C]">Active</p>
-          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.active }}</p>
+        <div class="analytics-stat stat-active">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <p>Active</p>
+          <strong>{{ summary.active }}</strong>
+          <span>Current treatments</span>
         </div>
-        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-          <p class="text-sm text-[#6B5B8C]">Expiring Soon</p>
-          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.expiringSoon }}</p>
+        <div class="analytics-stat stat-warning">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </div>
+          <p>Expiring Soon</p>
+          <strong>{{ summary.expiringSoon }}</strong>
+          <span>Need review in 7 days</span>
         </div>
-        <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
-          <p class="text-sm text-[#6B5B8C]">Expired</p>
-          <p class="mt-2 text-3xl font-bold text-[#2D1B4E]">{{ summary.expired }}</p>
+        <div class="analytics-stat stat-expired">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg>
+          </div>
+          <p>Expired</p>
+          <strong>{{ summary.expired }}</strong>
+          <span>Past end date</span>
         </div>
       </div>
 
       <div class="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
-        <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+        <div class="analytics-card">
           <div class="mb-4">
             <h2 class="text-lg font-semibold text-[#2D1B4E]">Status Breakdown</h2>
             <p class="text-sm text-[#6B5B8C]">Current distribution across your prescription lifecycle.</p>
@@ -54,25 +71,25 @@
           <div class="space-y-4">
             <div *ngFor="let item of statusBreakdown; trackBy: trackByStatus">
               <div class="mb-1 flex items-center justify-between text-sm">
-                <span class="font-medium text-[#2D1B4E]">{{ item.status }}</span>
+                <span class="status-label" [ngClass]="getStatusTone(item.status)">{{ getStatusLabel(item.status) }}</span>
                 <span class="text-[#6B5B8C]">{{ item.count }}</span>
               </div>
-              <div class="h-3 rounded-full bg-[#F3E8FF]">
-                <div class="h-3 rounded-full bg-[#7C3AED]" [style.width.%]="getStatusWidth(item.count)"></div>
+              <div class="analytics-bar">
+                <div class="analytics-bar-fill" [style.width.%]="getStatusWidth(item.count)"></div>
               </div>
             </div>
           </div>
 
           <div class="mt-6 grid gap-3 md:grid-cols-3">
-            <div class="rounded-lg bg-[#F8FAFC] p-3">
+            <div class="mini-metric">
               <p class="text-xs text-[#6B5B8C]">Renewed</p>
               <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.renewed }}</p>
             </div>
-            <div class="rounded-lg bg-[#F8FAFC] p-3">
-              <p class="text-xs text-[#6B5B8C]">Interrupted</p>
+            <div class="mini-metric">
+              <p class="text-xs text-[#6B5B8C]">Cancelled</p>
               <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.interrupted }}</p>
             </div>
-            <div class="rounded-lg bg-[#F8FAFC] p-3">
+            <div class="mini-metric">
               <p class="text-xs text-[#6B5B8C]">Completed</p>
               <p class="mt-1 text-xl font-semibold text-[#2D1B4E]">{{ summary.completed }}</p>
             </div>
@@ -80,19 +97,27 @@
         </div>
 
         <div class="space-y-6">
-          <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+          <div class="analytics-card top-medication-card">
             <div class="mb-4">
-              <h2 class="text-lg font-semibold text-[#2D1B4E]">Top Medicaments</h2>
-              <p class="text-sm text-[#6B5B8C]">Most prescribed medicaments in your current scope.</p>
+              <h2 class="text-lg font-semibold text-[#2D1B4E]">Top Medications</h2>
+              <p class="text-sm text-[#6B5B8C]">Most prescribed medications in your current scope.</p>
             </div>
 
-            <div *ngIf="topMedicaments.length === 0" class="text-sm text-[#6B5B8C]">No medicament analytics yet.</div>
+            <div *ngIf="topMedicaments.length === 0" class="text-sm text-[#6B5B8C]">No medication analytics yet.</div>
 
-            <div class="space-y-3" *ngIf="topMedicaments.length > 0">
-              <div *ngFor="let item of topMedicaments; let i = index; trackBy: trackByMedicament" class="flex items-center justify-between rounded-lg bg-[#FAF5FF] px-3 py-3">
-                <div class="min-w-0">
-                  <div class="text-xs font-semibold uppercase tracking-wide text-[#7C3AED]">#{{ i + 1 }}</div>
-                  <div class="truncate font-medium text-[#2D1B4E]">{{ item.nomCommercial }}</div>
+            <div class="top-medication-list" *ngIf="topMedicaments.length > 0">
+              <div *ngFor="let item of topMedicaments; let i = index; trackBy: trackByMedicament" class="top-medication-row">
+                <div class="rank-badge">#{{ i + 1 }}</div>
+                <img class="medication-photo" [src]="getMedicationImage(item)" [alt]="item.nomCommercial">
+                <div class="min-w-0 flex-1">
+                  <div class="truncate font-semibold text-[#2D1B4E]">{{ item.nomCommercial }}</div>
+                  <div class="truncate text-xs text-[#6B5B8C]">
+                    {{ item.denominationCommuneInternationale || item.forme || 'Medication' }}
+                    <span *ngIf="item.dosage"> · {{ item.dosage }}</span>
+                  </div>
+                  <div class="medication-usage-bar">
+                    <span [style.width.%]="getTopMedicationPercent(item.prescriptionCount)"></span>
+                  </div>
                 </div>
                 <div class="ml-4 text-right">
                   <div class="text-lg font-semibold text-[#2D1B4E]">{{ item.prescriptionCount }}</div>
@@ -102,7 +127,7 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-[#C4B5FD] bg-white p-5 shadow-sm">
+          <div class="analytics-card">
             <div class="mb-4">
               <h2 class="text-lg font-semibold text-[#2D1B4E]">Expiring Soon</h2>
               <p class="text-sm text-[#6B5B8C]">Treatments that need attention in the next 7 days.</p>
@@ -111,7 +136,7 @@
             <div *ngIf="expiringPrescriptions.length === 0" class="text-sm text-[#6B5B8C]">No prescriptions expiring soon.</div>
 
             <div class="space-y-3" *ngIf="expiringPrescriptions.length > 0">
-              <div *ngFor="let item of expiringPrescriptions; trackBy: trackByPrescription" class="rounded-lg border border-[#F3E8FF] p-3">
+              <div *ngFor="let item of expiringPrescriptions; trackBy: trackByPrescription" class="expiring-row">
                 <div class="font-medium text-[#2D1B4E]">{{ item.patient.name }}</div>
                 <div class="text-sm text-[#6B5B8C]">{{ item.medicament.nomCommercial }}</div>
                 <div class="mt-1 text-xs text-[#7C3AED]">Ends {{ item.dateFin | date:'mediumDate' }}</div>

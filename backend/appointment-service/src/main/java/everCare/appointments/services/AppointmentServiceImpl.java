@@ -81,15 +81,9 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .plusMinutes(type.getDefaultDurationMinutes()));
         }
 
-        // Generate video link
+        // Generate an in-app video room route. The frontend hosts the actual Jitsi room page.
         if (appointment.getVideoLink() == null) {
-            String patientId = appointment.getPatientId().length() >= 8
-                ? appointment.getPatientId().substring(0, 8)
-                : appointment.getPatientId();
-            String doctorId = appointment.getDoctorId().length() >= 8
-                ? appointment.getDoctorId().substring(0, 8)
-                : appointment.getDoctorId();
-            appointment.setVideoLink("https://consult.evercare.com/room/" + doctorId + "-" + patientId);
+            appointment.setVideoLink("/appointments/video/" + appointment.getAppointmentId());
         }
 
         // Set default status

@@ -1,0 +1,121 @@
+.caregiver-prescription-shell {
+  color: #2d1b4e;
+}
+
+.caregiver-rx-hero,
+.caregiver-rx-guide,
+.caregiver-prescription-shell .rounded-xl,
+.caregiver-prescription-shell .rounded-lg {
+  border-color: rgba(196, 181, 253, 0.68) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(18px);
+}
+
+.caregiver-rx-hero {
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 28px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.86);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.caregiver-rx-hero h1 {
+  margin-top: 0.65rem;
+}
+
+.caregiver-rx-guide {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 26px;
+  padding: 1rem;
+}
+
+.guide-step {
+  min-height: 122px;
+  border: 1px solid rgba(221, 214, 254, 0.9);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(250, 245, 255, 0.9));
+  padding: 1rem;
+}
+
+.guide-step span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 800;
+}
+
+.guide-step strong,
+.guide-step small {
+  display: block;
+}
+
+.guide-step small {
+  margin-top: 0.35rem;
+  color: #6b5b8c;
+  line-height: 1.35;
+}
+
+.floating-cursor {
+  position: absolute;
+  left: 10%;
+  bottom: -4px;
+  width: 18px;
+  height: 24px;
+  clip-path: polygon(0 0, 0 100%, 35% 74%, 56% 100%, 72% 91%, 52% 66%, 88% 66%);
+  background: #2d1b4e;
+  filter: drop-shadow(0 10px 18px rgba(45, 27, 78, 0.24));
+  animation: caregiverRxCursor 7s ease-in-out infinite;
+}
+
+.caregiver-prescription-shell .rounded-xl,
+.caregiver-prescription-shell .rounded-lg {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.caregiver-prescription-shell .rounded-xl:hover,
+.caregiver-prescription-shell .rounded-lg:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes caregiverRxCursor {
+  0%, 18% { transform: translateX(0) translateY(0) rotate(-8deg); }
+  30%, 44% { transform: translateX(22vw) translateY(-8px) rotate(-8deg); }
+  56%, 70% { transform: translateX(45vw) translateY(0) rotate(-8deg); }
+  84%, 100% { transform: translateX(68vw) translateY(-4px) rotate(-8deg); }
+}
+
+@media (max-width: 1000px) {
+  .caregiver-rx-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .floating-cursor {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .caregiver-rx-guide {
+    grid-template-columns: 1fr;
+  }
+}

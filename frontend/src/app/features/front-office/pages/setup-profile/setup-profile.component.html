@@ -1,8 +1,8 @@
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
-  <div class="w-full max-w-3xl">
-    <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6">
+<div class="setup-profile-page min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+  <div class="setup-profile-shell w-full max-w-3xl">
+    <div class="setup-profile-card bg-white rounded-xl border border-[#C4B5FD] shadow-2xl p-6">
       <div class="space-y-6">
-        <div class="text-center space-y-2">
+        <div class="setup-profile-header text-center space-y-2">
           <div class="flex items-center justify-center space-x-2 mb-2">
             <img src="/logo.png" alt="EverCare logo" class="h-10 w-10 rounded-xl object-contain" />
             <h1 class="text-2xl font-bold text-[#2D1B4E]">EverCare</h1>
@@ -16,10 +16,10 @@
           </div>
         </div>
 
-        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
-          <div class="flex flex-col items-center space-y-4">
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="setup-profile-form space-y-6">
+          <div class="setup-avatar-section flex flex-col items-center space-y-4">
             <div class="relative w-32 h-32">
-              <div class="w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
+              <div class="setup-avatar w-32 h-32 rounded-full bg-[#C4B5FD] flex items-center justify-center text-3xl text-[#7C3AED] overflow-hidden border-4 border-[#C4B5FD]">
                 <ng-container *ngIf="profileImage; else initials">
                   <img [src]="profileImage" alt="Profile" class="w-full h-full object-cover">
                 </ng-container>
@@ -49,24 +49,76 @@
             <p class="text-sm text-[#6B5B8C]">Recommended: square image, at least 200x200px</p>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="setup-grid grid md:grid-cols-2 gap-4">
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Date of Birth <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+              <div class="modern-date-picker">
+                <button
+                  type="button"
+                  class="date-picker-trigger"
+                  [class.border-red-500]="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched"
+                  (click)="toggleDatePicker()"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <path d="M16 2v4M8 2v4M3 10h18"/>
                   </svg>
-                </span>
-                <input
-                  type="date"
-                  formControlName="dateOfBirth"
-                  [attr.min]="minBirthDate"
-                  [attr.max]="maxBirthDate"
-                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
-                  [class.border-red-500]="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched"
-                />
+                  <span>{{ selectedDateLabel }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m6 9 6 6 6-6"/>
+                  </svg>
+                </button>
+
+                <div *ngIf="showDatePicker" class="date-picker-panel">
+                  <div class="date-picker-head">
+                    <button type="button" (click)="previousMonth()" aria-label="Previous month">
+                      <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <strong>{{ currentCalendarLabel }}</strong>
+                    <button type="button" (click)="nextMonth()" aria-label="Next month">
+                      <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </div>
+
+                  <div class="date-picker-selectors">
+                    <select
+                      [ngModel]="currentCalendarDate.getMonth()"
+                      [ngModelOptions]="{standalone: true}"
+                      (ngModelChange)="changeCalendarMonth($event)"
+                    >
+                      <option *ngFor="let month of monthNames; let i = index" [ngValue]="i">{{ month }}</option>
+                    </select>
+                    <select
+                      [ngModel]="currentCalendarDate.getFullYear()"
+                      [ngModelOptions]="{standalone: true}"
+                      (ngModelChange)="changeCalendarYear($event)"
+                    >
+                      <option *ngFor="let year of calendarYears" [ngValue]="year">{{ year }}</option>
+                    </select>
+                  </div>
+
+                  <div class="date-picker-weekdays">
+                    <span *ngFor="let day of weekDays">{{ day }}</span>
+                  </div>
+
+                  <div class="date-picker-grid">
+                    <button
+                      type="button"
+                      *ngFor="let day of calendarDays"
+                      [class.is-muted]="day.muted"
+                      [class.is-selected]="day.selected"
+                      [disabled]="day.disabled"
+                      (click)="selectCalendarDay(day)"
+                    >
+                      {{ day.day }}
+                    </button>
+                  </div>
+
+                  <div class="date-picker-footer">
+                    <span>{{ minBirthDate }} to {{ maxBirthDate }}</span>
+                    <button type="button" (click)="closeDatePicker()">Done</button>
+                  </div>
+                </div>
               </div>
               <div *ngIf="profileForm.get('dateOfBirth')?.invalid && profileForm.get('dateOfBirth')?.touched" class="text-red-500 text-xs">
                 {{ getDateOfBirthError() }}
@@ -74,18 +126,39 @@
             </div>
 
             <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Age</label>
+              <input
+                type="text"
+                formControlName="age"
+                placeholder="Auto-filled from date of birth"
+                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md bg-[#F9FAFB] text-[#6B5B8C]"
+              />
+            </div>
+
+            <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Phone Number <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
-                  </svg>
-                </span>
+              <div class="phone-input-row">
+                <div class="country-select">
+                  <button type="button" class="country-select-trigger" (click)="showPhoneCountryDropdown = !showPhoneCountryDropdown">
+                    <span>{{ flagFor(selectedPhoneCountry) }}</span>
+                    <strong>{{ selectedPhoneCountry.dialCode }}</strong>
+                  </button>
+                  <div *ngIf="showPhoneCountryDropdown" class="country-select-menu">
+                    <input type="text" [(ngModel)]="phoneCountrySearch" [ngModelOptions]="{standalone: true}" placeholder="Search country">
+                    <button type="button" *ngFor="let country of filteredPhoneCountries" (click)="selectCountry(country, 'phone')">
+                      <span>{{ flagFor(country) }}</span>
+                      <span>{{ country.name }}</span>
+                      <strong>{{ country.dialCode }}</strong>
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="tel"
                   formControlName="phoneNumber"
-                  placeholder="+1 (555) 123-4567"
-                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                  placeholder="555 123 4567"
+                  [attr.maxlength]="phoneMaxLength"
+                  (input)="trimPhoneInput('phoneNumber', phoneMaxLength)"
+                  class="flex-1 px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
                   [class.border-red-500]="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched"
                 />
               </div>
@@ -93,9 +166,44 @@
                 {{ getPhoneError('phoneNumber') }}
               </div>
             </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Country <span class="text-red-500">*</span></label>
+              <div class="country-select country-select-wide">
+                <button type="button" class="country-select-trigger" (click)="showCountryDropdown = !showCountryDropdown">
+                  <span>{{ flagFor(selectedProfileCountry) }}</span>
+                  <strong>{{ selectedProfileCountry.name }}</strong>
+                </button>
+                <div *ngIf="showCountryDropdown" class="country-select-menu">
+                  <input type="text" [(ngModel)]="countrySearch" [ngModelOptions]="{standalone: true}" placeholder="Search country">
+                  <button type="button" *ngFor="let country of filteredProfileCountries" (click)="selectProfileCountry(country)">
+                    <span>{{ flagFor(country) }}</span>
+                    <span>{{ country.name }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-[#1E293B]">Location</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  formControlName="address"
+                  placeholder="City, address, or care location"
+                  class="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                />
+              </div>
+            </div>
           </div>
 
-          <div *ngIf="role === 'CAREGIVER'" class="space-y-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+          <div *ngIf="role === 'CAREGIVER'" class="setup-section setup-section-caregiver space-y-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
             <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -135,17 +243,28 @@
             </div>
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
-                  </svg>
-                </span>
+              <div class="phone-input-row">
+                <div class="country-select">
+                  <button type="button" class="country-select-trigger" (click)="showEmergencyCountryDropdown = !showEmergencyCountryDropdown">
+                    <span>{{ flagFor(selectedEmergencyCountry) }}</span>
+                    <strong>{{ selectedEmergencyCountry.dialCode }}</strong>
+                  </button>
+                  <div *ngIf="showEmergencyCountryDropdown" class="country-select-menu">
+                    <input type="text" [(ngModel)]="emergencyCountrySearch" [ngModelOptions]="{standalone: true}" placeholder="Search country">
+                    <button type="button" *ngFor="let country of filteredEmergencyCountries" (click)="selectCountry(country, 'emergency')">
+                      <span>{{ flagFor(country) }}</span>
+                      <span>{{ country.name }}</span>
+                      <strong>{{ country.dialCode }}</strong>
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="tel"
                   formControlName="emergencyContact"
-                  placeholder="+1 (555) 987-6543"
-                  class="w-full pl-10 pr-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="555 987 6543"
+                  [attr.maxlength]="emergencyPhoneMaxLength"
+                  (input)="trimPhoneInput('emergencyContact', emergencyPhoneMaxLength)"
+                  class="flex-1 px-3 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
                 />
               </div>
@@ -155,7 +274,7 @@
             </div>
           </div>
 
-          <div *ngIf="role === 'PATIENT'" class="space-y-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+          <div *ngIf="role === 'PATIENT'" class="setup-section setup-section-patient space-y-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M20 21a8 8 0 0 0-16 0"/>
@@ -193,17 +312,28 @@
             </div>
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">Emergency Contact Phone <span class="text-red-500">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3 top-2.5 text-[#6B5B8C]" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8 9.72a16 16 0 0 0 6.28 6.28l1.28-1.28a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>
-                  </svg>
-                </span>
+              <div class="phone-input-row">
+                <div class="country-select">
+                  <button type="button" class="country-select-trigger" (click)="showEmergencyCountryDropdown = !showEmergencyCountryDropdown">
+                    <span>{{ flagFor(selectedEmergencyCountry) }}</span>
+                    <strong>{{ selectedEmergencyCountry.dialCode }}</strong>
+                  </button>
+                  <div *ngIf="showEmergencyCountryDropdown" class="country-select-menu">
+                    <input type="text" [(ngModel)]="emergencyCountrySearch" [ngModelOptions]="{standalone: true}" placeholder="Search country">
+                    <button type="button" *ngFor="let country of filteredEmergencyCountries" (click)="selectCountry(country, 'emergency')">
+                      <span>{{ flagFor(country) }}</span>
+                      <span>{{ country.name }}</span>
+                      <strong>{{ country.dialCode }}</strong>
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="tel"
                   formControlName="emergencyContact"
-                  placeholder="+1 (555) 987-6543"
-                  class="w-full pl-10 pr-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="555 987 6543"
+                  [attr.maxlength]="emergencyPhoneMaxLength"
+                  (input)="trimPhoneInput('emergencyContact', emergencyPhoneMaxLength)"
+                  class="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   [class.border-red-500]="profileForm.get('emergencyContact')?.invalid && profileForm.get('emergencyContact')?.touched"
                 />
               </div>
@@ -213,7 +343,7 @@
             </div>
           </div>
 
-          <div *ngIf="role === 'DOCTOR'" class="space-y-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+          <div *ngIf="role === 'DOCTOR'" class="setup-section setup-section-doctor space-y-4 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
             <h3 class="font-semibold text-[#2D1B4E] flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
@@ -306,7 +436,7 @@
             <button
               type="submit"
               [disabled]="isLoading"
-              class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50"
+              class="setup-submit w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-3 px-4 rounded-md transition-colors disabled:opacity-50"
             >
               {{ isLoading ? 'Setting up...' : 'Complete Profile Setup' }}
             </button>
@@ -317,6 +447,32 @@
           </p>
         </form>
       </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showCropper" class="image-cropper-backdrop">
+  <div class="image-cropper-card">
+    <div class="cropper-head">
+      <div>
+        <p>Profile photo</p>
+        <h3>Choose the best crop</h3>
+      </div>
+      <button type="button" (click)="cancelCrop()" aria-label="Close cropper">×</button>
+    </div>
+
+    <image-cropper
+      [imageChangedEvent]="imageChangedEvent"
+      [maintainAspectRatio]="true"
+      [aspectRatio]="1 / 1"
+      [resizeToWidth]="512"
+      format="png"
+      (imageCropped)="imageCropped($event)">
+    </image-cropper>
+
+    <div class="cropper-actions">
+      <button type="button" class="cropper-secondary" (click)="cancelCrop()">Cancel</button>
+      <button type="button" class="cropper-primary" (click)="confirmCrop()">Use this photo</button>
     </div>
   </div>
 </div>

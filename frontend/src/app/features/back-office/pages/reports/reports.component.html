@@ -57,23 +57,13 @@
         </label>
 
         <label class="space-y-1">
-          <span class="text-xs font-medium text-[#4B5563]">Du</span>
-          <input
-            type="date"
-            [(ngModel)]="fromDate"
-            [disabled]="alertsOnly"
-            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
-          />
+          <span class="text-xs font-medium text-[#4B5563]">From</span>
+          <app-modern-date-picker [(ngModel)]="fromDate" [disabled]="alertsOnly" placeholder="Start date"></app-modern-date-picker>
         </label>
 
         <label class="space-y-1">
-          <span class="text-xs font-medium text-[#4B5563]">Au</span>
-          <input
-            type="date"
-            [(ngModel)]="toDate"
-            [disabled]="alertsOnly"
-            class="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C4B5FD] disabled:bg-[#f8f6fd]"
-          />
+          <span class="text-xs font-medium text-[#4B5563]">To</span>
+          <app-modern-date-picker [(ngModel)]="toDate" [disabled]="alertsOnly" placeholder="End date"></app-modern-date-picker>
         </label>
       </div>
 

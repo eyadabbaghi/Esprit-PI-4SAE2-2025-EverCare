@@ -7,6 +7,7 @@ import { AuthService, User } from '../login/auth.service';
 @Component({
   selector: 'app-doctor-search-modal',
   templateUrl: './doctor-search-modal.component.html',
+  styleUrls: ['./doctor-search-modal.component.css'],
 })
 export class DoctorSearchModalComponent implements OnInit {
   @Input() open = false;

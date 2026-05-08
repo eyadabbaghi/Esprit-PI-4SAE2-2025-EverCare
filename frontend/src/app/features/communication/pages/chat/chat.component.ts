@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { Message, Conversation, Call } from '../../models/messages.model';
@@ -55,14 +56,38 @@ export class ChatComponent implements OnInit, OnDestroy {
   showEmojiPicker: boolean = false;
   emojiList: string[] = ['😊', '👍', '🙏', '❤️', '💬', '✅', '🌿', '💊', '🩺', '📅', '☕', '✨'];
   badWords: string[] = [];
+  emojiOptions: string[] = [
+    '\u{1F642}',
+    '\u{1F60A}',
+    '\u{1F44D}',
+    '\u{1F64F}',
+    '\u{2764}\u{FE0F}',
+    '\u{1F4AC}',
+    '\u{2705}',
+    '\u{1F33F}',
+    '\u{1F48A}',
+    '\u{1FA7A}',
+    '\u{1F4C5}',
+    '\u{2728}'
+  ];
 
   private messageSubscription: Subscription | null = null;
   private callSubscription: Subscription | null = null;
+  private pendingContactEmail: string | null = null;
+  private routeSubscription: Subscription | null = null;
 
-  constructor(private authService: AuthService, public chatService: ChatService) { }
+  constructor(
+    private authService: AuthService,
+    public chatService: ChatService,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
     this.loadForbiddenWords();
+    this.routeSubscription = this.route.queryParamMap.subscribe(params => {
+      this.pendingContactEmail = params.get('contact');
+      this.tryOpenPendingContact();
+    });
     this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
       if (user && user.email) {
@@ -74,6 +99,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.unsubscribeAll();
+    this.routeSubscription?.unsubscribe();
   }
 
   private unsubscribeAll(): void {
@@ -483,14 +509,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   messageRowClass(msg: ChatMessage): string {
     return this.isOwnMessage(msg)
-      ? 'flex justify-end group items-end gap-2'
-      : 'flex justify-start items-end gap-2';
+      ? 'message-row outgoing-row group'
+      : 'message-row incoming-row';
   }
 
   messageBubbleClass(msg: ChatMessage): string {
     return this.isOwnMessage(msg)
-      ? 'bg-purple-600 text-white rounded-3xl rounded-br-none shadow-lg'
-      : 'bg-white border-2 border-purple-50 text-gray-800 rounded-3xl rounded-bl-none shadow-sm';
+      ? 'message-bubble-own'
+      : 'message-bubble-incoming';
   }
 
   resolveProfilePictureUrl(profilePicture?: string | null): string | null {
@@ -536,6 +562,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: (data: any[]) => {
         this.conversations = data as ChatConversation[];
         this.conversations.forEach(conv => this.updateInterlocutorInfo(conv));
+        this.tryOpenPendingContact();
       }
     });
   }
@@ -571,6 +598,27 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.selectConversation(chatConv);
       }
     });
+  }
+
+  private tryOpenPendingContact(): void {
+    const currentEmail = this.normalizeEmail(this.currentUser?.email);
+    const targetEmail = this.normalizeEmail(this.pendingContactEmail);
+    if (!currentEmail || !targetEmail) return;
+
+    const existing = this.conversations.find(conv => {
+      const otherEmail = this.normalizeEmail(conv.user1Id) === currentEmail
+        ? this.normalizeEmail(conv.user2Id)
+        : this.normalizeEmail(conv.user1Id);
+      return otherEmail === targetEmail;
+    });
+
+    this.pendingContactEmail = null;
+    if (existing) {
+      this.selectConversation(existing);
+      return;
+    }
+
+    this.handleCreateConversation(targetEmail);
   }
 
   // --- UI ---

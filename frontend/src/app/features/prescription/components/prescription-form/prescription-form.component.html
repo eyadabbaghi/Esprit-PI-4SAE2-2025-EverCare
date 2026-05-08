@@ -55,18 +55,11 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-[#6B5B8C] mb-1">Start Date</label>
-          <input type="date"
-                 [(ngModel)]="form.dateDebut"
-                 class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
-                        focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+          <app-modern-date-picker [(ngModel)]="form.dateDebut" placeholder="Start date"></app-modern-date-picker>
         </div>
         <div>
           <label class="block text-xs text-[#6B5B8C] mb-1">End Date</label>
-          <input type="date"
-                 [(ngModel)]="form.dateFin"
-                 [min]="form.dateDebut"
-                 class="w-full px-3 py-2.5 border border-[#C4B5FD] rounded-lg text-sm text-[#2D1B4E]
-                        focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
+          <app-modern-date-picker [(ngModel)]="form.dateFin" [min]="form.dateDebut" placeholder="End date"></app-modern-date-picker>
         </div>
       </div>
     </div>

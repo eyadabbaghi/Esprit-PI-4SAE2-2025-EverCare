@@ -1,7 +1,8 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="doctor-prescription-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="prescription-hero flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
+        <p class="hero-kicker">Doctor prescription workspace</p>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">Manage Prescriptions</h1>
         <p class="mt-1 text-[#6B5B8C]">A single doctor workspace with a quick summary first, then the advanced management view.</p>
       </div>
@@ -15,6 +16,30 @@
         </a>
       </div>
     </div>
+
+    <section class="workflow-panel" aria-label="Doctor prescription workflow">
+      <div class="workflow-step is-active">
+        <span>1</span>
+        <strong>Review patient context</strong>
+        <small>Start from a patient profile or appointment.</small>
+      </div>
+      <div class="workflow-step">
+        <span>2</span>
+        <strong>Check measurements</strong>
+        <small>Use caregiver clinical measurements when available.</small>
+      </div>
+      <div class="workflow-step">
+        <span>3</span>
+        <strong>Build prescription</strong>
+        <small>Select medication, dosage, timing, and duration.</small>
+      </div>
+      <div class="workflow-step">
+        <span>4</span>
+        <strong>Issue and monitor</strong>
+        <small>Generate PDFs, renew, cancel, or complete later.</small>
+      </div>
+      <i class="floating-cursor" aria-hidden="true"></i>
+    </section>
 
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <div class="rounded-xl border border-[#C4B5FD] bg-white p-4 shadow-sm">
@@ -97,12 +122,12 @@
 
       <div>
         <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">From</label>
-        <input [(ngModel)]="filters.dateFrom" type="date" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+        <app-modern-date-picker [(ngModel)]="filters.dateFrom" placeholder="Start date"></app-modern-date-picker>
       </div>
 
       <div>
         <label class="mb-1 block text-xs font-medium text-[#6B5B8C]">To</label>
-        <input [(ngModel)]="filters.dateTo" type="date" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2 text-sm">
+        <app-modern-date-picker [(ngModel)]="filters.dateTo" placeholder="End date"></app-modern-date-picker>
       </div>
 
       <div>

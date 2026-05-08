@@ -5,35 +5,118 @@
   overflow: hidden;
 }
 
+.activity-detail-page {
+  background:
+    radial-gradient(circle at 12% 2%, rgba(196, 181, 253, 0.38), transparent 26rem),
+    radial-gradient(circle at 88% 8%, rgba(237, 233, 254, 0.92), transparent 24rem),
+    linear-gradient(180deg, #FAF8FC 0%, #F8F4FC 100%);
+}
+
+.activity-detail-page button,
+.activity-detail-page select {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.activity-detail-page button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.12);
+}
+
+.activity-detail-page select {
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.07);
+}
+
+.activity-detail-page select:focus {
+  border-color: #A78BFA;
+  box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.28);
+}
+
+.activity-detail-hero {
+  position: relative;
+  box-shadow: 0 28px 70px rgba(76, 29, 149, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.activity-detail-hero img {
+  transition: transform 0.7s ease, filter 0.35s ease;
+}
+
+.activity-detail-hero:hover img {
+  transform: scale(1.035);
+  filter: saturate(1.08);
+}
+
 /* Hover effects for main activity cards */
 .activity-card {
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 18px 45px rgba(76, 29, 149, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease,
     background-color 150ms ease;
 }
 
 .activity-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(45, 27, 78, 0.15);
+  transform: translateY(-4px);
+  border-color: #C4B5FD !important;
+  box-shadow: 0 28px 58px rgba(76, 29, 149, 0.16);
 }
 
 /* Hover effects for sidebar cards */
 .activity-sidebar-card {
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 18px 40px rgba(124, 58, 237, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease,
     background-color 150ms ease;
 }
 
 .activity-sidebar-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 52px rgba(124, 58, 237, 0.16);
 }
 
 /* Hover for quick info tiles */
 .activity-quick-card {
-  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  border: 1px solid rgba(196, 181, 253, 0.52);
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .activity-quick-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.16);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(124, 58, 237, 0.15);
 }
 
+.pin-routine-btn {
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.12);
+}
+
+.pin-routine-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+.pin-toast {
+  animation: detailToast 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-shadow: 0 20px 44px rgba(124, 58, 237, 0.24);
+}
+
+.benefit-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  color: #059669;
+  background: #ECFDF5;
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.12);
+}
+
+@keyframes detailToast {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

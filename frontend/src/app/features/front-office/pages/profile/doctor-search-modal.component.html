@@ -1,86 +1,107 @@
-<div *ngIf="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-  <div class="bg-white rounded-xl border border-[#C4B5FD] shadow-2xl w-full max-w-md">
-    <div class="p-6 space-y-4">
-      <!-- Header – dynamic title -->
-      <div class="flex items-center justify-between">
-        <h3 class="text-xl font-semibold text-[#2D1B4E]">
-          Find a 
-          {{ role === 'DOCTOR' ? 'Doctor' : role === 'CAREGIVER' ? 'Caregiver' : 'Patient' }}
-        </h3>
-        <button
-          type="button"
-          class="text-[#6B5B8C] hover:text-[#2D1B4E]"
-          (click)="close()"
-        >
-          ✕
-        </button>
-      </div>
+<div *ngIf="open" class="care-search-backdrop">
+  <div class="care-search-modal">
+    <div class="modal-glow" aria-hidden="true"></div>
 
-      <!-- Search input – dynamic placeholder -->
-      <div class="relative">
-        <span class="absolute left-3 top-2.5 text-[#6B5B8C]">🔍</span>
-        <input
-          type="text"
-          [placeholder]="'Search by name or email...'"
-          [formControl]="searchControl"
-          class="w-full pl-10 pr-3 py-2 border border-[#E5E7EB] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
-        />
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <span class="modal-icon" aria-hidden="true">
+          <svg *ngIf="role === 'DOCTOR'" viewBox="0 0 24 24">
+            <path d="M8 21V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16"/>
+            <path d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>
+            <path d="M10 12h4M12 10v4"/>
+          </svg>
+          <svg *ngIf="role === 'CAREGIVER'" viewBox="0 0 24 24">
+            <path d="M12 21s-7-4.4-7-11a7 7 0 0 1 14 0c0 6.6-7 11-7 11Z"/>
+            <path d="M12 8v5"/>
+            <path d="M9.5 10.5h5"/>
+          </svg>
+          <svg *ngIf="role === 'PATIENT'" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </span>
+        <div>
+          <span class="eyebrow">Care connection</span>
+          <h3>
+            Find a
+            {{ role === 'DOCTOR' ? 'Doctor' : role === 'CAREGIVER' ? 'Caregiver' : 'Patient' }}
+          </h3>
+        </div>
       </div>
+      <button type="button" class="close-button" (click)="close()" aria-label="Close search">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </button>
+    </div>
 
-      <!-- Loading indicator -->
-      <div *ngIf="isLoading" class="text-center py-4 text-[#6B5B8C]">
-        Searching...
-      </div>
+    <div class="search-field">
+      <span aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m20 20-3.5-3.5"/>
+        </svg>
+      </span>
+      <input
+        type="text"
+        placeholder="Search by name or email..."
+        [formControl]="searchControl"
+        autocomplete="off" />
+    </div>
 
-      <!-- Results list -->
-      <div *ngIf="!isLoading && searchResults.length > 0" class="max-h-64 overflow-y-auto space-y-2">
-        <button
-          *ngFor="let user of searchResults"
-          type="button"
-          class="w-full text-left p-3 flex items-center gap-3 hover:bg-[#F3E8FF] rounded-lg transition-colors"
-          (click)="selectUser(user)"
-        >
-          <div class="w-10 h-10 rounded-full bg-[#C4B5FD] flex items-center justify-center text-sm font-semibold text-[#7C3AED] overflow-hidden">
-            <ng-container *ngIf="user.profilePicture; else initials">
-              <img [src]="user.profilePicture" alt="" class="w-full h-full object-cover">
-            </ng-container>
-            <ng-template #initials>
-              <span>{{ getInitials(user.name) }}</span>
-            </ng-template>
-          </div>
-          <div class="flex-1">
-            <p class="font-medium text-[#2D1B4E]">{{ user.name }}</p>
-            <!-- Dynamic subtitle -->
-            <p class="text-xs text-[#6B5B8C]">
-              {{
-                role === 'DOCTOR'
-                  ? (user.specialization || 'Doctor')
-                  : role === 'CAREGIVER'
-                  ? 'Caregiver'
-                  : 'Patient'
-              }}
-            </p>
-          </div>
-        </button>
-      </div>
+    <div *ngIf="isLoading" class="modal-state">
+      <span class="spinner" aria-hidden="true"></span>
+      Searching...
+    </div>
 
-      <!-- No results -->
-      <div *ngIf="!isLoading && searchControl.value && searchResults.length === 0" class="text-center py-4 text-[#6B5B8C]">
-        No 
-        {{ role === 'DOCTOR' ? 'doctors' : role === 'CAREGIVER' ? 'caregivers' : 'patients' }} 
-        found.
-      </div>
+    <div *ngIf="!isLoading && searchResults.length > 0" class="results-list">
+      <button
+        *ngFor="let user of searchResults"
+        type="button"
+        class="result-card"
+        (click)="selectUser(user)">
+        <div class="avatar">
+          <ng-container *ngIf="user.profilePicture; else initials">
+            <img [src]="user.profilePicture" alt="" class="avatar-img">
+          </ng-container>
+          <ng-template #initials>
+            <span>{{ getInitials(user.name) }}</span>
+          </ng-template>
+        </div>
+        <div class="result-info">
+          <p>{{ user.name || user.email }}</p>
+          <span>
+            {{
+              role === 'DOCTOR'
+                ? (user.specialization || 'Doctor')
+                : role === 'CAREGIVER'
+                ? 'Caregiver'
+                : 'Patient'
+            }}
+          </span>
+          <small>{{ user.email }}</small>
+        </div>
+        <span class="select-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 12h14"/>
+            <path d="m13 6 6 6-6 6"/>
+          </svg>
+        </span>
+      </button>
+    </div>
 
-      <!-- Close button at bottom -->
-      <div class="pt-2">
-        <button
-          type="button"
-          class="w-full px-4 py-2 border border-[#C4B5FD] text-[#7C3AED] rounded-md hover:bg-[#F3E8FF] transition-colors"
-          (click)="close()"
-        >
-          Cancel
-        </button>
-      </div>
+    <div *ngIf="!isLoading && searchControl.value && searchResults.length === 0" class="modal-state empty">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m20 20-3.5-3.5"/>
+        <path d="M8 11h6"/>
+      </svg>
+      No {{ role === 'DOCTOR' ? 'doctors' : role === 'CAREGIVER' ? 'caregivers' : 'patients' }} found.
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="cancel-button" (click)="close()">Cancel</button>
     </div>
   </div>
 </div>

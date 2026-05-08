@@ -1,110 +1,136 @@
-<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-3">
+<div class="ai-assistant-shell">
+  <div *ngIf="isOpen" class="assistant-panel">
+    <div class="assistant-glow"></div>
 
-  <!-- Chat Panel -->
-  <div *ngIf="isOpen"
-    class="w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-purple-100 overflow-hidden flex flex-col"
-    style="height: 520px;">
-
-    <!-- Header -->
-    <div class="px-4 py-3 bg-gradient-to-r from-[#6D28D9] to-[#8B5CF6] flex items-center justify-between flex-shrink-0">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg">🧠</div>
+    <header class="assistant-header">
+      <div class="assistant-brand">
+        <div class="assistant-avatar assistant-avatar-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <rect x="5" y="8" width="14" height="11" rx="3" stroke-width="2"></rect>
+            <path d="M12 4v4M9 13h.01M15 13h.01M10 17h4" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </div>
         <div>
-          <p class="text-sm font-semibold text-white">EverCare Assistant</p>
-          <span class="flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span>
-            <p class="text-[10px] text-white/70">Alzheimer's Care Specialist</p>
+          <p class="assistant-title">EverCare Assistant</p>
+          <span class="assistant-specialty">
+            <span class="assistant-pulse-dot"></span>
+            Alzheimer's Care Specialist
           </span>
         </div>
       </div>
-      <button type="button" (click)="toggleAssistant()"
-        class="text-white/60 hover:text-white text-lg leading-none">✕</button>
-    </div>
 
-    <!-- Messages -->
-    <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-[#FAFAFA]" #messageContainer>
+      <button type="button" (click)="toggleAssistant()" class="assistant-close" aria-label="Close assistant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </header>
+
+    <div class="assistant-messages" #messageContainer>
       <ng-container *ngFor="let msg of messages">
+        <div *ngIf="msg.role === 'assistant'" class="message-row assistant-row">
+          <div class="assistant-avatar message-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M9 4h6M12 4v3" stroke-width="2" stroke-linecap="round"></path>
+              <rect x="5" y="7" width="14" height="12" rx="4" stroke-width="2"></rect>
+              <path d="M9 12h.01M15 12h.01M10 16h4" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </div>
 
-        <!-- Assistant bubble -->
-        <div *ngIf="msg.role === 'assistant'" class="flex items-end gap-2">
-          <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs flex-shrink-0">🧠</div>
-          <div class="max-w-[80%] bg-white border border-purple-100 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-gray-700 shadow-sm">
+          <div class="message-bubble assistant-bubble">
             <ng-container *ngIf="!msg.loading; else loadingDots">
               {{ msg.content }}
             </ng-container>
             <ng-template #loadingDots>
-              <div class="flex gap-1 py-1">
-                <span class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0s"></span>
-                <span class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:.15s"></span>
-                <span class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:.3s"></span>
+              <div class="typing-dots" aria-label="Assistant is typing">
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </ng-template>
           </div>
         </div>
 
-        <!-- User bubble -->
-        <div *ngIf="msg.role === 'user'" class="flex justify-end">
-          <div class="max-w-[80%] bg-[#7C3AED] text-white rounded-2xl rounded-br-sm px-3 py-2 text-sm shadow-sm">
+        <div *ngIf="msg.role === 'user'" class="message-row user-row">
+          <div class="message-bubble user-bubble">
             {{ msg.content }}
           </div>
         </div>
-
       </ng-container>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="px-4 py-2 bg-white border-t border-gray-100 flex-shrink-0">
-      <div class="flex gap-2 overflow-x-auto pb-1">
-        <button type="button"
-          class="whitespace-nowrap px-3 py-1 rounded-full bg-purple-50 text-[#7C3AED] text-xs font-medium hover:bg-purple-100"
-          (click)="sendQuickMessage('I want to take a memory assessment')">
-          🧩 Memory Test
-        </button>
-        <button type="button"
-          class="whitespace-nowrap px-3 py-1 rounded-full bg-purple-50 text-[#7C3AED] text-xs font-medium hover:bg-purple-100"
-          (click)="sendQuickMessage('What activities do you recommend for today?')">
-          📅 Today's Activities
-        </button>
-        <button type="button"
-          class="whitespace-nowrap px-3 py-1 rounded-full bg-purple-50 text-[#7C3AED] text-xs font-medium hover:bg-purple-100"
-          (click)="sendQuickMessage('Help me with my medication reminders')">
-          💊 Medications
-        </button>
-        <button type="button"
-          class="whitespace-nowrap px-3 py-1 rounded-full bg-red-50 text-red-500 text-xs font-medium hover:bg-red-100"
-          (click)="sendQuickMessage('I need to contact my caregiver')">
-          🆘 Caregiver
-        </button>
-      </div>
+    <div class="quick-actions">
+      <button type="button" class="quick-action" (click)="sendQuickMessage('I want to take a memory assessment')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M8 3h8v4H8zM6 7h12v14H6zM9 11h6M9 15h4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        Memory Test
+      </button>
+      <button type="button" class="quick-action" (click)="sendQuickMessage('What activities do you recommend for today?')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        Today's Activities
+      </button>
+      <button type="button" class="quick-action" (click)="sendQuickMessage('Help me with my medication reminders')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="m10 21 11-11a5 5 0 0 0-7-7L3 14a5 5 0 0 0 7 7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="m8 12 4 4" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        Medications
+      </button>
+      <button type="button" class="quick-action urgent" (click)="sendQuickMessage('I need to contact my caregiver')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" stroke-width="2" stroke-linejoin="round"></path>
+          <path d="M12 8v4M12 15h.01" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        Caregiver
+      </button>
     </div>
 
-    <!-- Input -->
-    <div class="px-4 py-3 bg-white border-t border-gray-100 flex gap-2 items-end flex-shrink-0">
+    <div class="assistant-input-row">
       <textarea
         [(ngModel)]="userInput"
         (keydown)="onKeyDown($event)"
-        placeholder="Ask me anything…"
+        placeholder="Ask me anything..."
         rows="1"
-        class="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder-gray-400">
+        class="assistant-input">
       </textarea>
-      <button type="button"
+      <button
+        type="button"
         (click)="sendMessage()"
         [disabled]="!userInput.trim() || isLoading"
-        class="w-9 h-9 rounded-full bg-[#7C3AED] text-white flex items-center justify-center hover:bg-[#6D28D9] disabled:opacity-40 disabled:cursor-not-allowed">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+        class="assistant-send"
+        aria-label="Send message">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
         </svg>
       </button>
     </div>
   </div>
 
-  <!-- FAB Button -->
-  <button type="button"
-    class="relative inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#A78BFA] shadow-xl text-white hover:scale-105 transition-transform focus:outline-none"
+  <button
+    type="button"
+    class="assistant-fab"
+    [class.assistant-fab-open]="isOpen"
     (click)="toggleAssistant()"
     aria-label="Open EverCare assistant">
-    <span class="text-2xl">{{ isOpen ? '✕' : '💬' }}</span>
-    <span class="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#EF4444] text-[9px] font-bold">AI</span>
+    <span class="assistant-fab-ring"></span>
+    <span class="assistant-fab-icon">
+      <svg *ngIf="!isOpen; else closeFabIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M12 3v3" stroke-width="2" stroke-linecap="round"></path>
+        <rect x="5" y="6" width="14" height="12" rx="4" stroke-width="2"></rect>
+        <path d="M8 10h.01M16 10h.01M9.5 14c1.4 1 3.6 1 5 0" stroke-width="2" stroke-linecap="round"></path>
+        <path d="M3 11v3M21 11v3" stroke-width="2" stroke-linecap="round"></path>
+        <path d="M9 21h6" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <ng-template #closeFabIcon>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" stroke-width="2.25" stroke-linecap="round"></path>
+        </svg>
+      </ng-template>
+    </span>
+    <span class="assistant-ai-badge">AI</span>
   </button>
 
   <app-welcome-popup
@@ -117,5 +143,4 @@
     *ngIf="showAssessment"
     (closed)="closeAssessment()">
   </app-alzheimers-assessment>
-
 </div>

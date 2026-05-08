@@ -6,6 +6,7 @@ import { User } from '../../models/user';
   selector: 'app-doctor-availability',
 
   templateUrl: './doctor-availability.component.html',
+  styleUrls: ['./doctor-availability.component.css'],
 })
 export class DoctorAvailabilityComponent implements OnInit {
   @Input() doctors: User[] = [];

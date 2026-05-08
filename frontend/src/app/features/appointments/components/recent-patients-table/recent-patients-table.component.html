@@ -17,7 +17,9 @@
         <tr *ngFor="let patient of patients" class="hover:bg-[#F9FAFB] transition-colors">
           <td class="px-4 py-3">
             <div class="flex items-center space-x-3">
-              <img [src]="patient.photo" class="w-8 h-8 rounded-full">
+              <img [src]="patient.photo || 'assets/default-avatar.png'"
+                   (error)="($any($event.target).src = 'assets/default-avatar.png')"
+                   class="w-8 h-8 rounded-full object-cover">
               <span class="font-medium text-[#2D1B4E]">{{ patient.name }}</span>
             </div>
           </td>

@@ -1,6 +1,8 @@
 .record-details-page {
   padding: 1.5rem 1rem 2rem;
-  background: #f6f2fc;
+  background:
+    radial-gradient(circle at top left, rgba(216, 180, 254, 0.34), transparent 34rem),
+    linear-gradient(180deg, #fbf8ff 0%, #f6f2fc 100%);
   min-height: calc(100vh - 76px);
 }
 
@@ -10,14 +12,29 @@
 }
 
 .panel {
-  background: #fff;
-  border: 1px solid #dccff6;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(220, 207, 246, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 18px 38px rgba(124, 58, 237, 0.08);
 }
 
 .details-card {
-  padding: 1.2rem;
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.25rem 1.25rem 2rem;
   margin-bottom: 1rem;
+  background:
+    linear-gradient(90deg, rgba(124, 58, 237, 0.13) 0 16px, transparent 16px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0) 0 34px, rgba(124,58,237,.045) 35px),
+    rgba(255,255,255,.94);
+  box-shadow: 0 28px 58px rgba(124, 58, 237, 0.14), inset 0 1px 0 rgba(255,255,255,.92);
+}
+
+.book-spine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+  background: linear-gradient(180deg, #7c3aed, #c4b5fd);
 }
 
 .details-head {
@@ -28,10 +45,32 @@
   margin-bottom: 0.95rem;
 }
 
+.record-book-cover {
+  border: 1px solid rgba(196, 181, 253, 0.58);
+  border-radius: 1.5rem;
+  padding: 1rem;
+  background: rgba(255,255,255,.75);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: max-content;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.88);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .details-head h2 {
-  margin: 0;
-  font-size: 1.85rem;
+  margin: 0.55rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
   color: #2d1b4e;
+  font-weight: 900;
 }
 
 .details-head p {
@@ -86,8 +125,9 @@
   border: 1px solid #ede4fb;
   border-radius: 10px;
   padding: 0.55rem 0.75rem;
-  background: #fcfafe;
+  background: rgba(255, 255, 255, 0.88);
   min-width: 0;
+  box-shadow: 0 10px 22px rgba(124,58,237,.05);
 }
 
 .info-item.full {
@@ -119,8 +159,9 @@
 .insight-card {
   border: 1px solid #ede4fb;
   border-radius: 12px;
-  background: #fcfafe;
+  background: rgba(255,255,255,.9);
   padding: 0.75rem;
+  box-shadow: 0 12px 26px rgba(124,58,237,.06);
 }
 
 .insight-card h4 {
@@ -213,6 +254,8 @@
 
 .content-card {
   padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.94), rgba(251,248,255,.94));
 }
 
 .content-card h3 {
@@ -329,11 +372,12 @@
   border: 1px solid #ede4fb;
   border-radius: 10px;
   padding: 0.62rem 0.75rem;
-  background: #fff;
+  background: rgba(255,255,255,.92);
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
   align-items: flex-start;
+  box-shadow: 0 10px 22px rgba(124,58,237,.05);
 }
 
 .list-item-main {

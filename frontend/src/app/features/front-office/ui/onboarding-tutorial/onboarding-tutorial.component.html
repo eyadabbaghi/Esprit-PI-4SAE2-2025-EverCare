@@ -1,0 +1,49 @@
+<ng-container *ngIf="session && currentStep as step">
+  <div class="tutorial-backdrop"></div>
+
+  <div
+    *ngIf="highlight"
+    class="tutorial-highlight"
+    [style.top.px]="highlight.top"
+    [style.left.px]="highlight.left"
+    [style.width.px]="highlight.width"
+    [style.height.px]="highlight.height">
+  </div>
+
+  <div
+    *ngIf="highlight"
+    class="tutorial-cursor"
+    [style.top.px]="highlight.top + highlight.height - 4"
+    [style.left.px]="highlight.left + highlight.width - 4">
+  </div>
+
+  <section class="tutorial-card" role="dialog" aria-live="polite">
+    <div class="tutorial-topline">
+      <span class="tutorial-role">{{ session.role | titlecase }} tour</span>
+      <button type="button" class="tutorial-skip" (click)="skip()">Skip</button>
+    </div>
+
+    <h2>{{ step.title }}</h2>
+    <p>{{ step.body }}</p>
+
+    <div class="tutorial-progress">
+      <div class="tutorial-progress-bar" [style.width.%]="progressPercent"></div>
+    </div>
+    <div class="tutorial-count">
+      Step {{ session.index + 1 }} of {{ session.steps.length }}
+    </div>
+
+    <div class="tutorial-actions">
+      <button
+        type="button"
+        class="tutorial-secondary"
+        [disabled]="session.index === 0"
+        (click)="back()">
+        Back
+      </button>
+      <button type="button" class="tutorial-primary" (click)="next()">
+        {{ isLastStep ? 'Finish' : 'Next' }}
+      </button>
+    </div>
+  </section>
+</ng-container>

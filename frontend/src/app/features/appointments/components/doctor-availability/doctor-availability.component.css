@@ -1,0 +1,217 @@
+:host {
+  display: block;
+}
+
+.doctor-picker {
+  overflow: hidden;
+  border-radius: 26px;
+}
+
+.picker-header {
+  padding: 1.1rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(250, 245, 255, 0.72));
+}
+
+.picker-eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  color: #8b5cf6;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.picker-header h3 {
+  margin: 0;
+  color: #26113d;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.picker-header p {
+  margin: 0.25rem 0 0;
+  color: #6b5b8c;
+}
+
+.specialty-filter {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.11);
+}
+
+.specialty-filter button {
+  flex: 0 0 auto;
+  padding: 0.48rem 0.78rem;
+  border: 1px solid rgba(168, 85, 247, 0.14);
+  border-radius: 999px;
+  color: #4c2a78;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 850;
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.specialty-filter button:hover,
+.specialty-active {
+  color: #fff !important;
+  background: linear-gradient(135deg, #a855f7, #7c3aed) !important;
+  box-shadow: 0 12px 22px rgba(124, 58, 237, 0.18);
+  transform: translateY(-1px);
+}
+
+.doctor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 34rem;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.doctor-list::-webkit-scrollbar,
+.specialty-filter::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.doctor-list::-webkit-scrollbar-thumb,
+.specialty-filter::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.25);
+}
+
+.doctor-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.9rem;
+  border: 1px solid rgba(168, 85, 247, 0.13);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  text-align: left;
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.07);
+  transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, background 170ms ease;
+  animation: doctorIn 260ms ease both;
+}
+
+.doctor-card:hover,
+.doctor-card-selected {
+  border-color: rgba(124, 58, 237, 0.38);
+  background: #fbfaff;
+  box-shadow: 0 18px 34px rgba(124, 58, 237, 0.13);
+  transform: translateY(-2px);
+}
+
+.doctor-card-selected {
+  outline: 3px solid rgba(168, 85, 247, 0.14);
+}
+
+.doctor-card img {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 18px;
+  object-fit: cover;
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.12);
+}
+
+.doctor-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.doctor-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.doctor-title-row h4 {
+  margin: 0;
+  color: #26113d;
+  font-weight: 950;
+}
+
+.doctor-title-row p {
+  margin: 0.12rem 0 0;
+  overflow: hidden;
+  color: #6b5b8c;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.availability-pill {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.availability-pill.high {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.availability-pill.medium {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.availability-pill.low {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.slot-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+}
+
+.slot-preview span {
+  padding: 0.32rem 0.5rem;
+  border-radius: 999px;
+  color: #7c3aed;
+  background: #f3e8ff;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.slot-preview .no-slot {
+  color: #6b5b8c;
+  background: #f8fafc;
+}
+
+.empty-doctors {
+  display: grid;
+  place-items: center;
+  padding: 3rem 1rem;
+  color: #6b5b8c;
+  text-align: center;
+}
+
+.empty-doctors svg {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.7rem;
+  color: #a78bfa;
+}
+
+@keyframes doctorIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

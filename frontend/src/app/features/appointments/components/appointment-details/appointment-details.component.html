@@ -3,9 +3,8 @@
 
   <div class="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full">
     <div class="p-6">
-      <!-- Header -->
       <div class="flex justify-between items-start mb-4">
-        <h2 class="text-xl font-semibold text-[#2D1B4E]">Détails du rendez-vous</h2>
+        <h2 class="text-xl font-semibold text-[#2D1B4E]">Appointment details</h2>
         <button class="p-1 hover:bg-[#F3E8FF] rounded-full" (click)="onClose.emit()">
           <svg class="w-5 h-5 text-[#6B5B8C]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 6L6 18M6 6l12 12"/>
@@ -14,11 +13,10 @@
       </div>
 
       <div class="space-y-4" *ngIf="appointment">
-        <!-- Main Info -->
         <div class="bg-[#F9FAFB] p-4 rounded-lg">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-[#6B5B8C]">Médecin</p>
+              <p class="text-xs text-[#6B5B8C]">Doctor</p>
               <p class="font-medium">{{ appointment.doctorName }}</p>
             </div>
             <div>
@@ -30,15 +28,15 @@
               <p class="font-medium">{{ appointment.startDateTime | date:'dd/MM/yyyy' }}</p>
             </div>
             <div>
-              <p class="text-xs text-[#6B5B8C]">Heure</p>
+              <p class="text-xs text-[#6B5B8C]">Time</p>
               <p class="font-medium">{{ appointment.startDateTime | date:'HH:mm' }}</p>
             </div>
             <div>
-              <p class="text-xs text-[#6B5B8C]">Durée</p>
+              <p class="text-xs text-[#6B5B8C]">Duration</p>
               <p class="font-medium">{{ getDuration() }} minutes</p>
             </div>
             <div>
-              <p class="text-xs text-[#6B5B8C]">Statut</p>
+              <p class="text-xs text-[#6B5B8C]">Status</p>
               <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
                     [class]="getStatusClass(appointment.status)">
                     {{ getStatusLabel(appointment.status) }}
@@ -47,28 +45,25 @@
           </div>
         </div>
 
-        <!-- Caregiver Info -->
         <div *ngIf="appointment.caregiverName" class="border-t pt-4">
-          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Aidant</p>
+          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Caregiver</p>
           <p>{{ appointment.caregiverName }} - {{ getPresenceLabel(appointment.caregiverPresence) }}</p>
         </div>
 
-        <!-- Replace the existing video link button with this: -->
         <div *ngIf="appointment.status === 'CONFIRMED_BY_PATIENT' ||
             appointment.status === 'CONFIRMED_BY_CAREGIVER' ||
             appointment.status === 'SCHEDULED'" class="border-t pt-4">
-          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Consultation vidéo</p>
+          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Video consultation</p>
           <button
             class="bg-[#7C3AED] hover:bg-[#6D28D9] text-white px-4 py-2 rounded-md flex items-center gap-2"
             (click)="joinVideoCall()">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M22 6l-6 4 6 4V6z"/><rect x="2" y="4" width="16" height="16" rx="2"/>
             </svg>
-            Rejoindre la consultation
+            Join consultation
           </button>
         </div>
 
-        <!-- Notes -->
         <div *ngIf="appointment.doctorNotes" class="border-t pt-4">
           <p class="text-sm font-medium text-[#2D1B4E] mb-2">Notes</p>
           <p class="text-sm text-[#6B5B8C] bg-[#F9FAFB] p-3 rounded">
@@ -76,27 +71,25 @@
           </p>
         </div>
 
-        <!-- Simple Summary -->
         <div *ngIf="appointment.simpleSummary" class="border-t pt-4">
-          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Résumé</p>
+          <p class="text-sm font-medium text-[#2D1B4E] mb-2">Summary</p>
           <p class="text-lg">{{ appointment.simpleSummary }}</p>
         </div>
 
-        <!-- Actions -->
         <div class="border-t pt-4 flex justify-end space-x-3">
           <button *ngIf="showConfirmButton()"
                   class="px-4 py-2 bg-[#7C3AED] text-white rounded-md hover:bg-[#6D28D9]"
                   (click)="onConfirm.emit(appointment.appointmentId)">
-            Confirmer ma présence
+            Confirm attendance
           </button>
           <button *ngIf="showCancelButton()"
                   class="px-4 py-2 border border-[#C06C84] text-[#C06C84] rounded-md hover:bg-[#FEF2F2]"
                   (click)="onCancel.emit(appointment.appointmentId)">
-            Annuler
+            Cancel
           </button>
           <button class="px-4 py-2 border border-[#E2E8F0] rounded-md hover:bg-[#F3E8FF]"
                   (click)="onClose.emit()">
-            Fermer
+            Close
           </button>
         </div>
       </div>

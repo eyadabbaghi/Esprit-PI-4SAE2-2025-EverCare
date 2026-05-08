@@ -88,6 +88,8 @@ public class UserService {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
+        dto.setAddress(user.getAddress());
+        dto.setCountry(user.getCountry());
         dto.setVerified(user.isVerified());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setDateOfBirth(user.getDateOfBirth());
@@ -137,6 +139,12 @@ public class UserService {
         }
         if (request.getPhone() != null) {
             user.setPhone(request.getPhone());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getCountry() != null) {
+            user.setCountry(request.getCountry());
         }
         if (request.getDateOfBirth() != null) {
             user.setDateOfBirth(request.getDateOfBirth());
@@ -220,6 +228,31 @@ public class UserService {
         }
 
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public User assignDoctorToCaregiverPatient(String caregiverEmail, String patientId, String doctorEmail) {
+        User caregiver = findByEmail(caregiverEmail);
+        if (caregiver.getRole() != UserRole.CAREGIVER) {
+            throw new RuntimeException("Only caregivers can assign doctors to patients");
+        }
+
+        User patient = findByUserId(patientId);
+        if (patient.getRole() != UserRole.PATIENT || !caregiver.getPatients().contains(patient)) {
+            throw new RuntimeException("Patient is not associated with this caregiver");
+        }
+
+        if (doctorEmail == null || doctorEmail.isBlank()) {
+            patient.setDoctorEmail(null);
+        } else {
+            User doctor = findByEmail(doctorEmail);
+            if (doctor.getRole() != UserRole.DOCTOR) {
+                throw new RuntimeException("Doctor email must belong to a doctor");
+            }
+            patient.setDoctorEmail(doctor.getEmail());
+        }
+
+        return userRepository.save(patient);
     }
 
     @Transactional

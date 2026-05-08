@@ -30,6 +30,8 @@ import { SelectItemComponent } from './components/select-item/select-item.compon
 import { SelectSeparatorComponent } from './components/select-separator/select-separator.component';
 import { SelectScrollUpButtonComponent } from './components/select-scroll-up-button/select-scroll-up-button.component';
 import { SelectScrollDownButtonComponent } from './components/select-scroll-down-button/select-scroll-down-button.component';
+import { FormsModule } from '@angular/forms';
+import { ModernDatePickerComponent } from './components/modern-date-picker/modern-date-picker.component';
 
 
 
@@ -65,11 +67,13 @@ import { SelectScrollDownButtonComponent } from './components/select-scroll-down
     SelectSeparatorComponent,
     SelectScrollUpButtonComponent,
     SelectScrollDownButtonComponent,
+    ModernDatePickerComponent,
 
 
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    FormsModule
   ],
   exports: [
     ButtonComponent,
@@ -102,6 +106,7 @@ import { SelectScrollDownButtonComponent } from './components/select-scroll-down
     SelectSeparatorComponent,
     SelectScrollUpButtonComponent,
     SelectScrollDownButtonComponent,
+    ModernDatePickerComponent,
 
 
   ]

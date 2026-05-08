@@ -1,149 +1,160 @@
-<h2 mat-dialog-title class="text-2xl flex items-center gap-2">
-    ⚠️
-  {{ data.incident ? 'Edit Incident' : 'Report New Incident' }}
-</h2>
-
-<form [formGroup]="form">
-
-  <mat-dialog-content class="space-y-6">
-
-    <!-- Progress -->
-    <div class="flex items-center justify-center gap-3 mb-6">
-      <div class="w-10 h-10 flex items-center justify-center rounded-full font-semibold"
-           [ngClass]="step === 'details' ? 'bg-[#7C3AED] text-white shadow-lg' : 'bg-[#DDD6FE] text-gray-600'">
-        1
-      </div>
-      <div class="h-1 w-16 bg-[#DDD6FE] rounded-full"></div>
-      <div class="w-10 h-10 flex items-center justify-center rounded-full font-semibold"
-           [ngClass]="step === 'review' ? 'bg-[#7C3AED] text-white shadow-lg' : 'bg-[#DDD6FE] text-gray-600'">
-        2
-      </div>
+<div class="incident-dialog-shell">
+  <div class="dialog-title-row" mat-dialog-title>
+    <span class="title-icon">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/>
+      </svg>
+    </span>
+    <div>
+      <h2>{{ data.incident ? 'Edit incident' : 'Report new incident' }}</h2>
+      <p>Capture what happened, who it affects, and how urgent it is.</p>
     </div>
+  </div>
 
-    <ng-container [ngSwitch]="step">
+  <form [formGroup]="form">
+    <mat-dialog-content>
+      <div class="stepper">
+        <div class="step-dot" [class.active]="step === 'details'">1</div>
+        <div class="step-line" [class.active]="step === 'review'"></div>
+        <div class="step-dot" [class.active]="step === 'review'">2</div>
+      </div>
 
-      <!-- ================= STEP 1 ================= -->
-      <div *ngSwitchCase="'details'" class="space-y-4">
+      <ng-container [ngSwitch]="step">
+        <div *ngSwitchCase="'details'" class="form-grid">
+          <section class="soft-section full">
+            <div class="section-head">
+              <div>
+                <p class="section-kicker">Severity</p>
+                <h3>How urgent is this?</h3>
+              </div>
+            </div>
 
-        <!-- SEVERITY -->
-        <div>
-          <label class="block text-sm font-medium mb-2">Severity</label>
-          <div class="grid grid-cols-4 gap-3">
-            <button
-              type="button"
-              *ngFor="let sev of severityOptions"
-              (click)="form.get('severity')?.setValue(sev)"
-              class="p-3 rounded-2xl border-2 transition-all flex flex-col items-center hover:scale-105"
-              [ngClass]="
-                form.get('severity')?.value === sev
-                  ? 'border-[#7C3AED] bg-gradient-to-br from-[#EDE9FE] to-[#F3E8FF] shadow-md'
-                  : 'border-[#DDD6FE] bg-white'
-              "
-            >
-              <span class="text-2xl">
-                {{ sev === 'LOW' ? '🙂' :
-                   sev === 'MEDIUM' ? '😐' :
-                   sev === 'HIGH' ? '⚠️' : '🚨' }}
-              </span>
-              <span class="text-xs font-semibold mt-1">{{ sev }}</span>
-            </button>
-          </div>
-          <mat-error *ngIf="form.get('severity')?.invalid && form.get('severity')?.touched">
-            Severity is required
-          </mat-error>
-        </div>
+            <div class="severity-grid">
+              <button
+                type="button"
+                *ngFor="let sev of severityOptions"
+                (click)="form.get('severity')?.setValue(sev)"
+                class="severity-option"
+                [class.selected]="form.get('severity')?.value === sev"
+                [class.low]="sev === 'LOW'"
+                [class.medium]="sev === 'MEDIUM'"
+                [class.high]="sev === 'HIGH'"
+                [class.critical]="sev === 'CRITICAL'">
+                <span class="severity-icon">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/>
+                  </svg>
+                </span>
+                <span>{{ sev }}</span>
+              </button>
+            </div>
 
-        <!-- TYPE + PATIENT -->
-        <div class="grid grid-cols-2 gap-4">
+            <mat-error *ngIf="form.get('severity')?.invalid && form.get('severity')?.touched">
+              Severity is required
+            </mat-error>
+          </section>
 
-          <mat-form-field class="w-full">
-            <mat-label>Type</mat-label>
-            <mat-select formControlName="type">
-              <mat-option *ngFor="let t of typeOptions" [value]="t">{{ t }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <ng-container *ngIf="userRole !== 'patient'; else readonlyPatient">
+          <section class="soft-section">
+            <p class="section-kicker">Classification</p>
             <mat-form-field class="w-full">
-              <mat-label>Patient</mat-label>
-              <mat-select formControlName="patientId">
-                <mat-option *ngFor="let p of patients" [value]="p.userId">{{ p.name }}</mat-option>
+              <mat-label>Type</mat-label>
+              <mat-select formControlName="type">
+                <mat-option *ngFor="let t of typeOptions" [value]="t">{{ t }}</mat-option>
               </mat-select>
             </mat-form-field>
-          </ng-container>
+          </section>
 
-          <ng-template #readonlyPatient>
+          <section class="soft-section">
+            <p class="section-kicker">Patient</p>
+            <ng-container *ngIf="userRole !== 'patient'; else readonlyPatient">
+              <mat-form-field class="w-full">
+                <mat-label>Patient</mat-label>
+                <mat-select formControlName="patientId">
+                  <mat-option *ngFor="let p of patients" [value]="p.userId">{{ p.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </ng-container>
+
+            <ng-template #readonlyPatient>
+              <mat-form-field class="w-full">
+                <mat-label>Patient</mat-label>
+                <input matInput [value]="currentUser?.name" disabled />
+              </mat-form-field>
+            </ng-template>
+          </section>
+
+          <section class="soft-section full">
+            <p class="section-kicker">Incident details</p>
             <mat-form-field class="w-full">
-              <mat-label>Patient</mat-label>
-              <input matInput [value]="currentUser?.name" disabled />
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title" placeholder="Short summary of the incident" />
             </mat-form-field>
-          </ng-template>
 
+            <mat-form-field class="w-full">
+              <mat-label>Description</mat-label>
+              <textarea matInput rows="4" formControlName="description" placeholder="Describe what happened and any immediate action taken"></textarea>
+            </mat-form-field>
+
+            <mat-form-field class="w-full">
+              <mat-label>Location</mat-label>
+              <input matInput formControlName="location" placeholder="Room, area, or address" />
+            </mat-form-field>
+          </section>
+
+          <section *ngIf="showAISuggestion" class="ai-suggestion full">
+            <span class="ai-icon">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7Z"/>
+              </svg>
+            </span>
+            <div>
+              <p class="ai-title">AI suggestion</p>
+              <p>{{ aiSuggestion }}</p>
+              <button mat-button color="primary" type="button" (click)="applyAISuggestion()">
+                Apply suggestion
+              </button>
+            </div>
+          </section>
         </div>
 
-        <!-- TITLE -->
-        <mat-form-field class="w-full">
-          <mat-label>Title</mat-label>
-          <input matInput formControlName="title" />
-        </mat-form-field>
-
-        <!-- DESCRIPTION -->
-        <mat-form-field class="w-full">
-          <mat-label>Description</mat-label>
-          <textarea matInput rows="4" formControlName="description"></textarea>
-        </mat-form-field>
-
-        <!-- LOCATION -->
-        <mat-form-field class="w-full">
-          <mat-label>Location</mat-label>
-          <input matInput formControlName="location" />
-        </mat-form-field>
-
-        <!-- AI SUGGESTION -->
-        <div *ngIf="showAISuggestion"
-             class="p-4 rounded-2xl border border-[#7C3AED] bg-gradient-to-br from-[#F3E8FF] to-[#EDE9FE] shadow-md">
-          <p class="font-semibold mb-2">✨ AI Suggestion</p>
-          <p class="text-sm mb-3">{{ aiSuggestion }}</p>
-          <button mat-button color="primary" type="button" (click)="applyAISuggestion()">
-            Apply Suggestion
-          </button>
+        <div *ngSwitchCase="'review'" class="review-card">
+          <div class="review-icon">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+          </div>
+          <h3>Review before submitting</h3>
+          <dl>
+            <div><dt>Severity</dt><dd>{{ form.value.severity }}</dd></div>
+            <div><dt>Type</dt><dd>{{ form.value.type }}</dd></div>
+            <div><dt>Patient</dt><dd>{{ getPatientName(form.getRawValue().patientId) }}</dd></div>
+            <div><dt>Title</dt><dd>{{ form.value.title }}</dd></div>
+            <div><dt>Description</dt><dd>{{ form.value.description }}</dd></div>
+            <div><dt>Location</dt><dd>{{ form.value.location }}</dd></div>
+          </dl>
         </div>
+      </ng-container>
+    </mat-dialog-content>
 
-      </div>
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
 
-      <!-- ================= STEP 2 ================= -->
-      <div *ngSwitchCase="'review'" class="space-y-4">
-        <div class="p-4 rounded-2xl border bg-gradient-to-br from-[#F9FAFB] to-[#EEEAFB] shadow-md space-y-1">
-          <p><strong>Severity:</strong> {{ form.value.severity }}</p>
-          <p><strong>Type:</strong> {{ form.value.type }}</p>
-          <p><strong>Patient:</strong> {{ getPatientName(form.getRawValue().patientId) }}</p>
-          <p><strong>Title:</strong> {{ form.value.title }}</p>
-          <p><strong>Description:</strong> {{ form.value.description }}</p>
-          <p><strong>Location:</strong> {{ form.value.location }}</p>
-        </div>
-      </div>
+      <button
+        *ngIf="step === 'details'"
+        mat-button
+        color="primary"
+        type="button"
+        (click)="nextStep()"
+        [disabled]="form.invalid">
+        Next
+      </button>
 
-    </ng-container>
-
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end" class="space-x-2">
-    <button mat-button type="button" (click)="cancel()">Cancel</button>
-
-    <button
-      *ngIf="step === 'details'"
-      mat-button
-      color="primary"
-      type="button"
-      (click)="nextStep()"
-      [disabled]="form.invalid">
-      Next
-    </button>
-
-    <ng-container *ngIf="step === 'review'">
-      <button mat-button type="button" (click)="previousStep()">Back</button>
-      <button mat-button color="primary" type="button" (click)="save()">Create</button>
-    </ng-container>
-  </mat-dialog-actions>
-
-</form>
+      <ng-container *ngIf="step === 'review'">
+        <button mat-button type="button" (click)="previousStep()">Back</button>
+        <button mat-button color="primary" type="button" (click)="save()">
+          {{ data.incident ? 'Update' : 'Create' }}
+        </button>
+      </ng-container>
+    </mat-dialog-actions>
+  </form>
+</div>

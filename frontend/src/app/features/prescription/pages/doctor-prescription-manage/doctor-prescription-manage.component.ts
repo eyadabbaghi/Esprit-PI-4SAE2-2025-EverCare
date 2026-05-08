@@ -8,7 +8,8 @@ import { PageResponse } from '../../models/page.model';
 
 @Component({
   selector: 'app-doctor-prescription-manage',
-  templateUrl: './doctor-prescription-manage.component.html'
+  templateUrl: './doctor-prescription-manage.component.html',
+  styleUrls: ['./doctor-prescription-manage.component.css']
 })
 export class DoctorPrescriptionManageComponent implements OnInit {
   currentUser: User | null = null;

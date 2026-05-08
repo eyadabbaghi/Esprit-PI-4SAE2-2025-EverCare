@@ -1,0 +1,123 @@
+.prescription-page {
+  background:
+    radial-gradient(circle at top left, rgba(216, 180, 254, 0.34), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(196, 181, 253, 0.28), transparent 30%),
+    linear-gradient(180deg, #faf7ff 0%, #f3e8ff 100%);
+}
+
+.prescription-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.84);
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.prescription-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(216, 180, 254, 0.36), transparent 36%),
+    radial-gradient(circle at 88% 10%, rgba(124, 58, 237, 0.12), transparent 34%);
+  pointer-events: none;
+}
+
+.prescription-hero > * {
+  position: relative;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: max-content;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.86);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hero-copy h1 {
+  margin: 0.7rem 0 0.55rem;
+  color: #2d1b4e;
+  font-size: clamp(2rem, 4vw, 3.55rem);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.hero-copy p {
+  max-width: 720px;
+  color: #6b5b8c;
+  line-height: 1.65;
+}
+
+.hero-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.15rem;
+}
+
+.hero-metrics span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(196, 181, 253, 0.72);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.42rem 0.78rem;
+  color: #6b5b8c;
+  font-size: 0.78rem;
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.08);
+}
+
+.hero-metrics strong {
+  color: #2d1b4e;
+  font-size: 0.95rem;
+}
+
+.prescription-tabs {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-color: rgba(196, 181, 253, 0.76) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 16px 34px rgba(124, 58, 237, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.prescription-tab {
+  border-radius: 0.8rem !important;
+  font-weight: 700;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.prescription-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.1);
+}
+
+.inline-svg-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.16rem;
+}
+
+@media (max-width: 768px) {
+  .prescription-hero {
+    align-items: stretch;
+  }
+
+  .prescription-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .prescription-tab {
+    white-space: nowrap;
+  }
+}

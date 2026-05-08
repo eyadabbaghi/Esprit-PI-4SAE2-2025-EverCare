@@ -176,6 +176,16 @@ export class CognitivePlanComponent implements OnInit {
     return this.gameTypeLabels[type] ?? type;
   }
 
+  labelForStage(stage: string | null | undefined): string {
+    const normalized = stage?.trim().toUpperCase();
+    const labels: Record<string, string> = {
+      EARLY: 'Early stage',
+      MIDDLE: 'Middle stage',
+      LATE: 'Late stage'
+    };
+    return normalized ? labels[normalized] || normalized : '-';
+  }
+
   imageForGame(game: CognitiveGame | null | undefined): string {
     return getGameMedia(game).imageUrl;
   }

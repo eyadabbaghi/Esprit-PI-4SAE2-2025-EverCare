@@ -3,13 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { PrescriptionRequest } from '../../models/prescription.model';
 import { PrescriptionService, ClinicalMeasurementResponse, SafetyCheckResult, SafetyCheckResponse } from '../../services/prescription.service';
 
 @Component({
   selector: 'app-doctor-prescription-create',
-  templateUrl: './doctor-prescription-create.component.html'
+  templateUrl: './doctor-prescription-create.component.html',
+  styleUrls: ['./doctor-prescription-create.component.css']
 })
 export class DoctorPrescriptionCreateComponent implements OnInit {
   currentUser: User | null = null;
@@ -17,6 +20,8 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
   appointmentId = '';
   loading = false;
   errorMessage = '';
+  associatedPatients: User[] = [];
+  patientsLoading = false;
 
   clinicalMeasurement: ClinicalMeasurementResponse | null = null;
   safetyWarning: SafetyCheckResult | null = null;
@@ -42,6 +47,9 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.patientId = params.get('patientId') || '';
       this.appointmentId = params.get('appointmentId') || '';
+      if (this.currentUser) {
+        this.refreshPatientContext();
+      }
     });
 
     this.authService.currentUser$.subscribe(user => {
@@ -57,9 +65,74 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
       }
 
       this.currentUser = user;
-      this.loadClinicalMeasurement();
-      this.loadPatientActiveMedications();
+      this.loadAssociatedPatients();
+      this.refreshPatientContext();
     });
+  }
+
+  loadAssociatedPatients(): void {
+    if (!this.currentUser?.email) {
+      this.associatedPatients = [];
+      return;
+    }
+
+    const patientEmails = this.currentUser.patientEmails || [];
+    this.patientsLoading = true;
+
+    if (patientEmails.length > 0) {
+      forkJoin(
+        patientEmails.map(email =>
+          this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
+        )
+      ).subscribe({
+        next: patients => {
+          this.associatedPatients = patients
+            .filter((patient): patient is User => !!patient && (patient.role || '').toUpperCase() === 'PATIENT');
+          this.patientsLoading = false;
+        },
+        error: () => {
+          this.associatedPatients = [];
+          this.patientsLoading = false;
+        }
+      });
+      return;
+    }
+
+    this.authService.searchUsersByRole('', 'PATIENT').pipe(
+      catchError(() => of([] as User[]))
+    ).subscribe(patients => {
+      this.associatedPatients = patients.filter(patient =>
+        (patient.doctorEmail || '').toLowerCase() === (this.currentUser?.email || '').toLowerCase()
+      );
+      this.patientsLoading = false;
+    });
+  }
+
+  selectPatientForPrescription(patient: User): void {
+    if (!patient.userId) {
+      this.toastr.warning('This patient profile is missing an ID.');
+      return;
+    }
+
+    this.patientId = patient.userId;
+    this.appointmentId = '';
+    this.checkDone = false;
+    this.checkPassed = false;
+    this.safetyWarning = null;
+    this.errorMessage = '';
+    this.router.navigate(['/prescriptions/doctor/prescribe', patient.userId], { replaceUrl: true });
+    this.refreshPatientContext();
+  }
+
+  isSelectedPatient(patient: User): boolean {
+    return !!patient.userId && patient.userId === this.patientId;
+  }
+
+  private refreshPatientContext(): void {
+    this.clinicalMeasurement = null;
+    this.patientActiveMedications = [];
+    this.loadClinicalMeasurement();
+    this.loadPatientActiveMedications();
   }
 
   loadClinicalMeasurement(): void {

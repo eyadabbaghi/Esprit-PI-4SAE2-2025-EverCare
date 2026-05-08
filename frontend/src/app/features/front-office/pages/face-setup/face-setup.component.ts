@@ -1,16 +1,17 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { take } from 'rxjs/operators';
 import { CameraService } from '../../services/camera/camera.service';
 import { FaceService } from '../../services/camera/face.service';
+import { OnboardingTutorialService } from '../../ui/onboarding-tutorial/onboarding-tutorial.service';
 import { AuthService } from '../login/auth.service';
-import { take } from 'rxjs/operators';
 
 type SetupState = 'instructions' | 'scanning' | 'processing' | 'success' | 'error';
 
 @Component({
   selector: 'app-face-setup',
   templateUrl: './face-setup.component.html',
-  styleUrls: ['./face-setup.component.scss']
+  styleUrls: ['./face-setup.component.scss'],
 })
 export class FaceSetupComponent implements OnInit, OnDestroy {
   @ViewChild('videoEl') videoRef!: ElementRef<HTMLVideoElement>;
@@ -25,58 +26,71 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
     'Look straight at the camera',
     'Slowly turn your head left',
     'Slowly turn your head right',
-    'Tilt your head slightly up'
+    'Tilt your head slightly up',
   ];
 
   private capturedImages: string[] = [];
-  private captureInterval: any;
+  private captureInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
-    private camera: CameraService,
-    private faceService: FaceService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef,   // ← inject this
-    private authService: AuthService   // ← ADD
-
+    private readonly camera: CameraService,
+    private readonly faceService: FaceService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly authService: AuthService,
+    private readonly tutorialService: OnboardingTutorialService,
   ) {}
 
   ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.camera.stopCamera();
-    clearInterval(this.captureInterval);
+    if (this.captureInterval) {
+      clearInterval(this.captureInterval);
+    }
   }
 
   async startSetup(): Promise<void> {
     this.capturedImages = [];
     this.capturedCount = 0;
     this.progressPercent = 0;
-
-    // Step 1: change state so *ngIf renders the video element
     this.state = 'scanning';
-
-    // Step 2: force change detection so DOM updates
     this.cdr.detectChanges();
 
-    // Step 3: wait one tick for the DOM to fully render
     await this.waitForElement();
 
-    // Step 4: now videoRef.nativeElement exists — start camera
     try {
       await this.camera.startCamera(this.videoRef.nativeElement);
       this.autoCaptureFrames();
-    } catch (err: any) {
+    } catch {
       this.errorMessage = 'Camera access denied. Please allow camera permissions.';
       this.state = 'error';
     }
   }
 
-  // Waits until videoRef is available in the DOM
+  retry(): void {
+    this.state = 'instructions';
+    this.capturedImages = [];
+    this.capturedCount = 0;
+    this.progressPercent = 0;
+    if (this.captureInterval) {
+      clearInterval(this.captureInterval);
+      this.captureInterval = null;
+    }
+  }
+
+  skip(): void {
+    this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
+      this.queueTutorialAfterOnboarding(user?.role);
+      this.router.navigate([this.resolveDestination(user?.role)]);
+    });
+  }
+
   private waitForElement(): Promise<void> {
     return new Promise((resolve) => {
       const check = () => {
-        if (this.videoRef && this.videoRef.nativeElement) {
+        if (this.videoRef?.nativeElement) {
           resolve();
         } else {
           setTimeout(check, 50);
@@ -87,62 +101,51 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
   }
 
   private autoCaptureFrames(): void {
-  let captureIndex = 0;
+    let captureIndex = 0;
 
-  // Wait 3 seconds before first capture so camera adjusts exposure
-  setTimeout(() => {
-    this.captureInterval = setInterval(() => {
-      if (captureIndex >= this.totalRequired) {
-        clearInterval(this.captureInterval);
-        this.submitEmbeddings();
-        return;
-      }
-      try {
-        const frame = this.camera.captureFrame(this.videoRef.nativeElement);
-        this.capturedImages.push(frame);
-        this.capturedCount++;
-        this.progressPercent = (this.capturedCount / this.totalRequired) * 100;
-        captureIndex++;
-      } catch (err) {
-        console.error('Capture error:', err);
-      }
-    }, 3000); // 3 seconds between each capture
-  }, 3000); // 3 second initial delay
-}
+    setTimeout(() => {
+      this.captureInterval = setInterval(() => {
+        if (captureIndex >= this.totalRequired) {
+          if (this.captureInterval) {
+            clearInterval(this.captureInterval);
+            this.captureInterval = null;
+          }
+          this.submitEmbeddings();
+          return;
+        }
 
- private submitEmbeddings(): void {
+        try {
+          const frame = this.camera.captureFrame(this.videoRef.nativeElement);
+          this.capturedImages.push(frame);
+          this.capturedCount++;
+          this.progressPercent = (this.capturedCount / this.totalRequired) * 100;
+          captureIndex++;
+        } catch (err) {
+          console.error('Capture error:', err);
+        }
+      }, 3000);
+    }, 3000);
+  }
+
+  private submitEmbeddings(): void {
     this.state = 'processing';
     this.camera.stopCamera();
 
     this.faceService.setupFaceId(this.capturedImages).subscribe({
       next: () => {
         this.state = 'success';
-        // ── Navigate based on role ──
-        this.authService.currentUser$.pipe(take(1)).subscribe(user => {  // ← ADD
+        this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
           const destination = this.resolveDestination(user?.role);
+          this.queueTutorialAfterOnboarding(user?.role);
           setTimeout(() => this.router.navigate([destination]), 2000);
         });
       },
       error: (err) => {
         this.errorMessage = err.error?.message || 'Face setup failed. Please try again.';
         this.state = 'error';
-      }
+      },
     });
   }
-
-  retry(): void {
-    this.state = 'instructions';
-    this.capturedImages = [];
-    this.capturedCount = 0;
-    this.progressPercent = 0;
-    clearInterval(this.captureInterval);
-  }
-
-  skip(): void {
-  this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-    this.router.navigate([this.resolveDestination(user?.role)]);
-  });
-}
 
   private resolveDestination(role?: string): string {
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
@@ -159,5 +162,12 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
     }
 
     return '/';
+  }
+
+  private queueTutorialAfterOnboarding(role?: string): void {
+    const isOnboarding = this.route.snapshot.queryParamMap.get('mode') === 'onboarding';
+    if (isOnboarding && (role === 'DOCTOR' || role === 'CAREGIVER')) {
+      this.tutorialService.queueForCurrentUser(role);
+    }
   }
 }

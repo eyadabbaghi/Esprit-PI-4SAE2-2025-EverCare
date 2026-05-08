@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Appointment } from '../../models/appointment';
-import {Router} from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-appointment-details',
@@ -13,6 +12,7 @@ export class AppointmentDetailsComponent {
   @Output() onConfirm = new EventEmitter<string>();
   @Output() onCancel = new EventEmitter<string>();
   @Output() onJoinCall = new EventEmitter<string>();
+
   constructor(private router: Router) {}
 
   joinVideoCall(): void {
@@ -20,7 +20,6 @@ export class AppointmentDetailsComponent {
       this.router.navigate(['/appointments/video', this.appointment.appointmentId]);
     }
   }
-
 
   getStatusClass(status: any): string {
     const classes = {
@@ -35,22 +34,22 @@ export class AppointmentDetailsComponent {
 
   getStatusLabel(status: any): string {
     const labels = {
-      'SCHEDULED': 'À confirmer',
-      'CONFIRMED_BY_PATIENT': 'Confirmé',
-      'CONFIRMED_BY_CAREGIVER': 'Confirmé',
-      'COMPLETED': 'Terminé',
-      'CANCELLED': 'Annulé'
+      'SCHEDULED': 'Pending confirmation',
+      'CONFIRMED_BY_PATIENT': 'Confirmed',
+      'CONFIRMED_BY_CAREGIVER': 'Confirmed',
+      'COMPLETED': 'Completed',
+      'CANCELLED': 'Cancelled'
     };
     return labels[status as keyof typeof labels] || status;
   }
 
   getPresenceLabel(presence?: string): string {
     const labels = {
-      'PHYSICAL': 'Aidant présent',
-      'REMOTE': 'Aidant en visio',
-      'NONE': 'Sans aidant'
+      'PHYSICAL': 'Caregiver present',
+      'REMOTE': 'Caregiver remote',
+      'NONE': 'No caregiver'
     };
-    return presence ? labels[presence as keyof typeof labels] : 'Sans aidant';
+    return presence ? labels[presence as keyof typeof labels] : 'No caregiver';
   }
 
   getDuration(): number {

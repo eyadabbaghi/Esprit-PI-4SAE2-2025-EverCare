@@ -1,19 +1,19 @@
-<div class="min-h-[90vh] bg-gradient-to-br from-gray-50 to-purple-50/30 p-4 lg:p-8">
-  <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-6 h-[800px] animate-in fade-in duration-500">
-
-    <div class="lg:col-span-4 bg-white/80 backdrop-blur-md border-2 border-purple-500/50 rounded-3xl shadow-xl flex flex-col overflow-hidden">
-      <div class="p-6 border-b border-gray-100">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">
-            {{ currentUser?.role === 'PATIENT' ? 'My Doctors' : 'My Patients' }}
-          </h2>
-          <span class="bg-purple-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-            {{ conversations.length }} chats
-          </span>
+<div class="chat-page">
+  <div class="chat-layout animate-in fade-in duration-500">
+    <aside class="chat-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title-row">
+          <div>
+            <p class="sidebar-kicker">EverCare messaging</p>
+            <h2 class="sidebar-title">
+              {{ currentUser?.role === 'PATIENT' ? 'My Doctors' : 'My Patients' }}
+            </h2>
+          </div>
+          <span class="chat-count-pill">{{ conversations.length }} chats</span>
         </div>
 
-        <div class="flex gap-2 mb-4">
-          <select #userSelect class="flex-1 p-3 border border-purple-200 rounded-2xl text-sm bg-gray-50/50 outline-none focus:ring-2 focus:ring-purple-500">
+        <div class="new-chat-row">
+          <select #userSelect class="contact-select">
             <option value="" disabled selected>
               {{ currentUser?.role === 'PATIENT' ? 'Contact a specialist...' : 'Contact a patient...' }}
             </option>
@@ -21,206 +21,222 @@
               {{ user.name }} ({{ user.role }})
             </option>
           </select>
-          <button (click)="handleCreateConversation(userSelect.value)" class="bg-purple-600 text-white p-3 rounded-2xl hover:bg-purple-700 active:scale-95 transition-all">
-            <span class="text-xl leading-none">+</span>
+          <button (click)="handleCreateConversation(userSelect.value)" class="new-chat-button" title="Start chat">
+            <span aria-hidden="true">+</span>
           </button>
         </div>
 
-        <div class="relative group">
-          <input type="text" [(ngModel)]="searchQuery"
-                 (input)="onSearchInput(searchQuery)"
-                 placeholder="Search all messages..."
-                 class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-purple-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-purple-500 transition-all outline-none">
-          <span class="absolute left-4 top-3.5 text-gray-400"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"></circle><path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path></svg></span>
+        <div class="search-field">
+          <svg class="inline-svg-icon search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
+            <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput(searchQuery)"
+            placeholder="Search all messages..."
+            class="message-search">
         </div>
       </div>
 
-      <div *ngIf="isGlobalSearching" class="flex-1 overflow-y-auto custom-scrollbar p-2 bg-purple-50/30">
-        <div class="px-4 py-2 text-[10px] font-black text-purple-400 uppercase tracking-widest flex justify-between">
-          <span>Résultats dans les messages</span>
-          <button (click)="isGlobalSearching = false; searchQuery = ''" class="hover:text-purple-700 underline">Cancel</button>
+      <div *ngIf="isGlobalSearching" class="search-results-panel custom-scrollbar">
+        <div class="search-results-title">
+          <span>Message results</span>
+          <button (click)="isGlobalSearching = false; searchQuery = ''">Cancel</button>
         </div>
 
-        <div *ngFor="let msg of searchResults"
-             (click)="selectConversationFromSearch(msg)"
-             class="m-2 p-4 bg-white rounded-2xl border border-purple-100 cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all group">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-purple-600">
-              {{ isOwnMessage(msg) ? 'Me' : 'Contact' }}
-            </span>
-            <span class="text-[10px] text-gray-400">{{ msg.sentAt | date:'dd/MM HH:mm' }}</span>
+        <button
+          *ngFor="let msg of searchResults"
+          type="button"
+          (click)="selectConversationFromSearch(msg)"
+          class="search-result-card group">
+          <div class="search-result-meta">
+            <span>{{ isOwnMessage(msg) ? 'Me' : 'Contact' }}</span>
+            <time>{{ msg.sentAt | date:'dd/MM HH:mm' }}</time>
           </div>
-          <p class="text-sm text-gray-700 truncate italic">
-            "{{ msg.content }}"
-          </p>
-          <div class="mt-2 text-[9px] text-gray-400 font-medium group-hover:text-purple-500 flex items-center gap-1">
-            <span>Open conversation</span> <span>→</span>
+          <p>"{{ msg.content }}"</p>
+          <div class="search-result-link">
+            <span>Open conversation</span>
+            <span>&rarr;</span>
           </div>
-        </div>
+        </button>
 
-        <div *ngIf="searchResults.length === 0" class="p-8 text-center">
-          <span class="text-3xl block mb-2"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"></circle><path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path></svg></span>
-          <p class="text-xs text-gray-400">Aucun message trouvé pour "{{searchQuery}}"</p>
+        <div *ngIf="searchResults.length === 0" class="empty-search">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
+            <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <p>No messages found for "{{ searchQuery }}"</p>
         </div>
       </div>
 
-      <div *ngIf="!isGlobalSearching" class="flex-1 overflow-y-auto custom-scrollbar p-2">
-        <div *ngFor="let conv of filteredConversations" (click)="selectConversation(conv)"
-             class="group m-2 p-4 flex items-center justify-between cursor-pointer rounded-2xl transition-all duration-300 border-2"
-             [class.border-purple-500]="selectedConversation?.id === conv.id"
-             [class.bg-purple-600]="selectedConversation?.id === conv.id"
-             [class.text-white]="selectedConversation?.id === conv.id"
-             [class.border-transparent]="selectedConversation?.id !== conv.id"
-             [class.hover:bg-purple-50]="selectedConversation?.id !== conv.id"
-             [class.hover:shadow-lg]="selectedConversation?.id !== conv.id"
-             [class.hover:-translate-y-1]="selectedConversation?.id !== conv.id"
-             [class.opacity-50]="conv.status === 'ARCHIVED'">
-
-          <div class="flex items-center gap-4 min-w-0">
-            <div class="relative">
-              <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm transition-transform group-hover:scale-105 overflow-hidden"
-                   [class]="selectedConversation?.id === conv.id ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700'">
-                <img *ngIf="resolveProfilePictureUrl(conv.interlocutorAvatar) as avatarUrl; else conversationInitial"
-                     [src]="avatarUrl"
-                     [alt]="conv.interlocutorName || 'Contact profile picture'"
-                     (error)="clearConversationAvatar(conv)"
-                     class="w-full h-full object-cover">
-                <ng-template #conversationInitial>
-                  {{ (conv.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
-                </ng-template>
-              </div>
-              <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+      <div *ngIf="!isGlobalSearching" class="conversation-list custom-scrollbar">
+        <button
+          *ngFor="let conv of filteredConversations"
+          type="button"
+          (click)="selectConversation(conv)"
+          class="conversation-card group"
+          [class.conversation-card-active]="selectedConversation?.id === conv.id"
+          [class.opacity-50]="conv.status === 'ARCHIVED'">
+          <div class="conversation-main">
+            <div class="conversation-avatar">
+              <img
+                *ngIf="resolveProfilePictureUrl(conv.interlocutorAvatar) as avatarUrl; else conversationInitial"
+                [src]="avatarUrl"
+                [alt]="conv.interlocutorName || 'Contact profile picture'"
+                (error)="clearConversationAvatar(conv)"
+                class="w-full h-full object-cover">
+              <ng-template #conversationInitial>
+                {{ (conv.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
+              </ng-template>
             </div>
-            <div class="flex-1 min-w-0">
-              <h4 class="font-bold truncate">{{ conv.interlocutorName }}</h4>
-              <p class="text-xs truncate opacity-70">Online</p>
+            <div class="conversation-copy">
+              <h4>{{ conv.interlocutorName }}</h4>
+              <p>Open conversation</p>
             </div>
           </div>
 
-          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform scale-90">
-            <button (click)="handleArchiveConversation(conv, $event)" class="p-2 hover:bg-white/20 rounded-xl" title="Archive"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
-            <button (click)="confirmDeleteConversation(conv.id, $event)" class="p-2 hover:bg-red-500 hover:text-white rounded-xl" title="Delete"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+          <div class="conversation-actions">
+            <button (click)="handleArchiveConversation(conv, $event)" title="Archive" type="button">
+              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+            <button (click)="confirmDeleteConversation(conv.id, $event)" title="Delete" type="button" class="danger-action">
+              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
           </div>
-        </div>
+        </button>
       </div>
-    </div>
+    </aside>
 
-    <div class="lg:col-span-8 bg-white/90 backdrop-blur-md border-2 border-purple-500/50 rounded-3xl shadow-xl flex flex-col overflow-hidden relative">
-
+    <section class="chat-panel">
       <ng-container *ngIf="selectedConversation; else noSelection">
-
-        <div class="p-5 border-b-2 border-purple-100 flex items-center justify-between bg-white/50 sticky top-0 z-10">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-purple-400 text-white flex items-center justify-center font-bold overflow-hidden shadow-sm">
-              <img *ngIf="resolveProfilePictureUrl(selectedConversation.interlocutorAvatar) as selectedAvatarUrl; else selectedInitial"
-                   [src]="selectedAvatarUrl"
-                   [alt]="selectedConversation.interlocutorName || 'Contact profile picture'"
-                   (error)="clearConversationAvatar(selectedConversation)"
-                   class="w-full h-full object-cover">
+        <header class="chat-header">
+          <div class="chat-header-person">
+            <div class="header-avatar">
+              <img
+                *ngIf="resolveProfilePictureUrl(selectedConversation.interlocutorAvatar) as selectedAvatarUrl; else selectedInitial"
+                [src]="selectedAvatarUrl"
+                [alt]="selectedConversation.interlocutorName || 'Contact profile picture'"
+                (error)="clearConversationAvatar(selectedConversation)"
+                class="w-full h-full object-cover">
               <ng-template #selectedInitial>
                 {{ (selectedConversation.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
               </ng-template>
             </div>
             <div>
-              <h3 class="font-bold text-gray-900 text-lg">{{ selectedConversation.interlocutorName }}</h3>
-              <p class="text-xs font-medium text-green-500 flex items-center gap-1">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Active
-              </p>
+              <h3>{{ selectedConversation.interlocutorName }}</h3>
+              <p>Private care conversation</p>
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <select [(ngModel)]="targetLang" class="text-[11px] font-bold uppercase border-2 border-purple-100 rounded-xl px-2 py-1.5 outline-none focus:ring-2 focus:ring-purple-400 bg-white shadow-sm transition-all">
-              <option value="en">English</option>
-              <option value="fr">French</option>
-              <option value="ar">Arabic</option>
-              <option value="es">Spanish</option>
-              <option value="de">German</option>
-            </select>
+          <select [(ngModel)]="targetLang" class="language-select" title="Translate messages to">
+            <option value="en">English</option>
+            <option value="fr">French</option>
+            <option value="ar">Arabic</option>
+            <option value="es">Spanish</option>
+            <option value="de">German</option>
+          </select>
+        </header>
 
-            <button (click)="handleStartCall()" class="p-3 bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-90">
-              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 2.8a2 2 0 0 1-.5 1.8L7.8 9.6a16 16 0 0 0 6.6 6.6l1.3-1.3a2 2 0 0 1 1.8-.5l2.8.5A2 2 0 0 1 22 16.9Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6 space-y-6 chat-container relative"
-             style="background-color: #fdfdff; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px;">
-
-          <div *ngFor="let msg of selectedConversation.messages"
-               [class]="messageRowClass(msg)">
-
-            <div *ngIf="!isOwnMessage(msg)"
-                 class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-bold overflow-hidden shrink-0 shadow-sm">
-              <img *ngIf="resolveProfilePictureUrl(selectedConversation.interlocutorAvatar) as messageAvatarUrl; else incomingMessageInitial"
-                   [src]="messageAvatarUrl"
-                   [alt]="selectedConversation.interlocutorName || 'Contact profile picture'"
-                   (error)="clearConversationAvatar(selectedConversation)"
-                   class="w-full h-full object-cover">
+        <div class="messages-thread custom-scrollbar chat-container">
+          <div
+            *ngFor="let msg of selectedConversation.messages"
+            [class]="messageRowClass(msg)">
+            <div *ngIf="!isOwnMessage(msg)" class="message-avatar">
+              <img
+                *ngIf="resolveProfilePictureUrl(selectedConversation.interlocutorAvatar) as messageAvatarUrl; else incomingMessageInitial"
+                [src]="messageAvatarUrl"
+                [alt]="selectedConversation.interlocutorName || 'Contact profile picture'"
+                (error)="clearConversationAvatar(selectedConversation)"
+                class="w-full h-full object-cover">
               <ng-template #incomingMessageInitial>
                 {{ (selectedConversation.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
               </ng-template>
             </div>
 
-            <div *ngIf="isOwnMessage(msg) && editingMessageId !== msg.id && msg.content" class="relative">
-              <button class="p-1.5 hover:bg-gray-200 rounded-lg text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      (click)="activeMenuId = (activeMenuId === msg.id ? null : msg.id); $event.stopPropagation()">
-                ⋮
+            <div *ngIf="isOwnMessage(msg) && editingMessageId !== msg.id && msg.content" class="message-menu-wrap">
+              <button
+                class="message-menu-button"
+                type="button"
+                (click)="activeMenuId = (activeMenuId === msg.id ? null : msg.id); $event.stopPropagation()"
+                title="Message options">
+                <span aria-hidden="true">...</span>
               </button>
-              <div *ngIf="activeMenuId === msg.id" class="absolute bottom-full right-0 mb-2 w-36 bg-white border border-purple-200 shadow-2xl rounded-2xl py-2 z-[100] animate-in fade-in zoom-in duration-200 text-gray-800">
-                <button (click)="startEdit(msg); activeMenuId = null" class="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M14 3H6v18h12V7zM14 3v4h4" stroke-width="2" stroke-linejoin="round"></path></svg> Edit</button>
-                <button (click)="confirmDeleteMessage(msg.id); activeMenuId = null" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> Delete</button>
+              <div *ngIf="activeMenuId === msg.id" class="message-menu">
+                <button (click)="startEdit(msg); activeMenuId = null" type="button">
+                  <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M14 3H6v18h12V7zM14 3v4h4" stroke-width="2" stroke-linejoin="round"></path>
+                  </svg>
+                  Edit
+                </button>
+                <button (click)="confirmDeleteMessage(msg.id); activeMenuId = null" type="button" class="text-red-600">
+                  <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  Delete
+                </button>
               </div>
             </div>
 
-            <div [class]="messageBubbleClass(msg)"
-                 class="max-w-[75%] p-4 relative transition-transform hover:scale-[1.01] group/bubble">
-
-              <button (click)="translateMessage(msg)"
-                      class="absolute -top-3 -right-3 bg-white border border-purple-200 shadow-md rounded-full w-8 h-8 flex items-center justify-center text-xs opacity-0 group-hover/bubble:opacity-100 transition-all hover:scale-110 z-20"
-                      title="Translate message">
-                <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M3 12h18M12 3c2.2 2.4 3.3 5.4 3.3 9S14.2 18.6 12 21c-2.2-2.4-3.3-5.4-3.3-9S9.8 5.4 12 3Z" stroke-width="2"></path></svg>
+            <article [class]="messageBubbleClass(msg)" class="message-bubble group/bubble">
+              <button
+                (click)="translateMessage(msg)"
+                class="translate-button"
+                title="Translate message"
+                type="button">
+                <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                  <path d="M3 12h18M12 3c2.2 2.4 3.3 5.4 3.3 9S14.2 18.6 12 21c-2.2-2.4-3.3-5.4-3.3-9S9.8 5.4 12 3Z" stroke-width="2"></path>
+                </svg>
               </button>
 
-              <p *ngIf="editingMessageId !== msg.id && msg.content" class="text-[15px] leading-relaxed whitespace-pre-wrap">
+              <p *ngIf="editingMessageId !== msg.id && msg.content" class="message-content">
                 {{ msg.translatedContent || msg.content }}
               </p>
 
-              <div *ngIf="msg.translatedContent" class="text-[9px] mt-1 italic opacity-60 flex justify-between border-t border-white/20 pt-1">
+              <div *ngIf="msg.translatedContent" class="translation-note">
                 <span>Translated to {{ targetLang | uppercase }}</span>
-                <span (click)="msg.translatedContent = null" class="cursor-pointer underline font-bold">Original</span>
+                <button (click)="msg.translatedContent = null" type="button">Original</button>
               </div>
 
-              <div *ngIf="editingMessageId === msg.id" class="flex flex-col gap-3 min-w-[250px]">
-                <textarea [(ngModel)]="editContent" class="w-full p-3 text-gray-900 rounded-xl text-sm border-2 focus:ring-0 bg-purple-50/50 outline-none"></textarea>
-                <div class="flex justify-end gap-2">
-                  <button (click)="cancelEdit()" class="text-xs font-bold text-white/80 hover:text-white">Cancel</button>
-                  <button (click)="saveEdit(msg)" class="bg-white text-purple-700 px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm">Save</button>
+              <div *ngIf="editingMessageId === msg.id" class="edit-message-box">
+                <textarea [(ngModel)]="editContent"></textarea>
+                <div>
+                  <button (click)="cancelEdit()" type="button">Cancel</button>
+                  <button (click)="saveEdit(msg)" type="button">Save</button>
                 </div>
               </div>
 
-              <div *ngIf="msg.fileUrl && !isImage(msg.fileType)" class="mt-2">
-                <a [href]="chatService.uploadUrl + msg.fileUrl" target="_blank" class="flex items-center gap-3 p-3 bg-black/5 hover:bg-black/10 rounded-2xl text-sm border border-white/20">
-                  <span class="text-2xl"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M14 3H6v18h12V7zM14 3v4h4" stroke-width="2" stroke-linejoin="round"></path></svg></span>
-                  <span class="font-bold truncate underline">{{ msg.fileUrl.split('_')[1] || 'File' }}</span>
-                </a>
-              </div>
-              <div *ngIf="msg.fileUrl && isImage(msg.fileType)" class="mt-2">
+              <div *ngIf="msg.fileUrl && !isImage(msg.fileType)" class="file-message">
                 <a [href]="chatService.uploadUrl + msg.fileUrl" target="_blank">
-                  <img [src]="chatService.uploadUrl + msg.fileUrl" class="rounded-xl max-w-full h-auto max-h-64 shadow-inner border border-purple-50">
+                  <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M14 3H6v18h12V7zM14 3v4h4" stroke-width="2" stroke-linejoin="round"></path>
+                  </svg>
+                  <span>{{ msg.fileUrl.split('_')[1] || 'File' }}</span>
                 </a>
               </div>
 
-              <div class="text-[10px] mt-2 flex justify-end opacity-60 font-medium">{{msg.sentAt | date:'HH:mm'}}</div>
-            </div>
+              <div *ngIf="msg.fileUrl && isImage(msg.fileType)" class="image-message">
+                <a [href]="chatService.uploadUrl + msg.fileUrl" target="_blank">
+                  <img [src]="chatService.uploadUrl + msg.fileUrl" alt="Message attachment">
+                </a>
+              </div>
 
-            <div *ngIf="isOwnMessage(msg)"
-                 class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm font-bold overflow-hidden shrink-0 shadow-sm">
-              <img *ngIf="resolveProfilePictureUrl(currentUser?.profilePicture) as currentAvatarUrl; else currentMessageInitial"
-                   [src]="currentAvatarUrl"
-                   [alt]="currentUser?.name || 'Your profile picture'"
-                   (error)="clearCurrentUserAvatar()"
-                   class="w-full h-full object-cover">
+              <time class="message-time">{{ msg.sentAt | date:'HH:mm' }}</time>
+            </article>
+
+            <div *ngIf="isOwnMessage(msg)" class="message-avatar own-avatar">
+              <img
+                *ngIf="resolveProfilePictureUrl(currentUser?.profilePicture) as currentAvatarUrl; else currentMessageInitial"
+                [src]="currentAvatarUrl"
+                [alt]="currentUser?.name || 'Your profile picture'"
+                (error)="clearCurrentUserAvatar()"
+                class="w-full h-full object-cover">
               <ng-template #currentMessageInitial>
                 {{ (currentUser?.name || currentUser?.email || '?').toString() | slice:0:1 | uppercase }}
               </ng-template>
@@ -228,115 +244,120 @@
           </div>
         </div>
 
-        <div class="p-6 bg-white border-t-2 border-purple-100 relative">
-
-          <div *ngIf="showEmojiPicker" (click)="$event.stopPropagation()"
-               class="absolute bottom-24 left-6 z-[100] bg-white border-2 border-purple-200 shadow-2xl rounded-3xl p-4 w-72 animate-in slide-in-from-bottom-5 duration-300">
-            <div class="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto custom-scrollbar">
-              <button *ngFor="let emoji of emojiList" type="button" (click)="addEmoji(emoji, $event)"
-                    class="text-2xl cursor-pointer hover:bg-purple-100 p-2 rounded-xl text-center transition-all active:scale-125 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    [attr.aria-label]="'Insert reaction ' + emoji">
-                {{emoji}}
-              </button>
-            </div>
-          </div>
-
-          <div *ngIf="isMessageTooLong()" class="mb-3 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl flex items-center gap-3 animate-in slide-in-from-left">
-            <span class="text-2xl"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-            <div class="flex flex-col text-left">
-              <span class="text-amber-800 font-bold text-sm">Message too long ({{ messageText.length }}/{{ MAX_MESSAGE_CHARS }})</span>
-              <p class="text-amber-700 text-xs">Prenez un rendez-vous pour une explication détaillée.</p>
-            </div>
-          </div>
-
-          <div *ngIf="messageText && containsBadWords(messageText)" class="mb-3 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex items-center gap-3">
-            <span class="text-red-800 font-bold text-xs italic"><svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg> Unauthorized content</span>
-          </div>
-
-          <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-3xl border-2 border-purple-100 relative shadow-sm focus-within:shadow-md transition-all"
-               [class.border-amber-400]="isMessageTooLong()">
-            <div class="flex items-center px-2 gap-1">
-              <button (click)="toggleEmojiPicker($event)" class="p-2 text-xl transition-colors" [class.text-purple-600]="showEmojiPicker" [class.text-gray-400]="!showEmojiPicker"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M8 10h.01M16 10h.01M8 15c1.1 1 2.4 1.5 4 1.5s2.9-.5 4-1.5" stroke-width="2" stroke-linecap="round"></path></svg></button>
-              <label class="p-2 text-gray-400 hover:text-purple-600 text-xl cursor-pointer transition-colors">
-                <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m21 11.5-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7L9.7 17.2a2 2 0 1 1-2.8-2.8l7.8-7.8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> <input type="file" class="hidden" (change)="onFileSelected($event)">
-              </label>
-            </div>
-
-            <input type="text" [(ngModel)]="messageText" (keyup.enter)="!isMessageTooLong() && !containsBadWords(messageText) && handleSendMessage()"
-                   placeholder="Écrire un message..." class="flex-1 bg-transparent border-none outline-none text-gray-700 py-2">
-
-            <button (click)="handleSendMessage()" [disabled]="!messageText.trim() || containsBadWords(messageText) || isMessageTooLong()"
-                    class="bg-purple-600 text-white px-6 py-3 rounded-2xl hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-lg flex items-center gap-2 transition-all active:scale-95">
-              <span class="font-bold">Send</span>
-              <span class="text-sm"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 2 11 13" stroke-width="2" stroke-linecap="round"></path><path d="m22 2-7 20-4-9-9-4z" stroke-width="2" stroke-linejoin="round"></path></svg></span>
+        <footer class="composer-panel">
+          <div
+            *ngIf="showEmojiPicker"
+            (click)="$event.stopPropagation()"
+            class="emoji-picker">
+            <button
+              *ngFor="let emoji of emojiOptions"
+              type="button"
+              (click)="addEmoji(emoji, $event)"
+              [attr.aria-label]="'Insert reaction ' + emoji">
+              {{ emoji }}
             </button>
           </div>
 
-          <div class="mt-1 px-4 flex justify-end">
-            <span class="text-[10px] font-bold" [class.text-red-500]="isMessageTooLong()" [class.text-gray-400]="!isMessageTooLong()">
-              {{ messageText.length }} / {{ MAX_MESSAGE_CHARS }}
-            </span>
+          <div *ngIf="isMessageTooLong()" class="composer-alert warning-alert">
+            <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <div>
+              <strong>Message too long ({{ messageText.length }}/{{ MAX_MESSAGE_CHARS }})</strong>
+              <p>Book an appointment for a detailed explanation.</p>
+            </div>
           </div>
-        </div>
+
+          <div *ngIf="messageText && containsBadWords(messageText)" class="composer-alert danger-alert">
+            <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path>
+              <path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+            <strong>Unauthorized content</strong>
+          </div>
+
+          <div class="composer-box" [class.composer-box-warning]="isMessageTooLong()">
+            <button (click)="toggleEmojiPicker($event)" class="composer-icon-button" [class.active]="showEmojiPicker" type="button" title="Emoji">
+              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+                <path d="M8 10h.01M16 10h.01M8 15c1.1 1 2.4 1.5 4 1.5s2.9-.5 4-1.5" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+
+            <label class="composer-icon-button" title="Attach file">
+              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="m21 11.5-8.5 8.5a6 6 0 0 1-8.5-8.5l8.5-8.5a4 4 0 0 1 5.7 5.7L9.7 17.2a2 2 0 1 1-2.8-2.8l7.8-7.8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <input type="file" class="hidden" (change)="onFileSelected($event)">
+            </label>
+
+            <input
+              type="text"
+              [(ngModel)]="messageText"
+              (keyup.enter)="!isMessageTooLong() && !containsBadWords(messageText) && handleSendMessage()"
+              placeholder="Write a message..."
+              class="composer-input">
+
+            <button
+              (click)="handleSendMessage()"
+              [disabled]="!messageText.trim() || containsBadWords(messageText) || isMessageTooLong()"
+              class="send-button"
+              type="button">
+              <span>Send</span>
+              <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M22 2 11 13" stroke-width="2" stroke-linecap="round"></path>
+                <path d="m22 2-7 20-4-9-9-4z" stroke-width="2" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="composer-count" [class.over-limit]="isMessageTooLong()">
+            {{ messageText.length }} / {{ MAX_MESSAGE_CHARS }}
+          </div>
+        </footer>
       </ng-container>
 
       <ng-template #noSelection>
-        <div class="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50/30">
-          <div class="w-32 h-32 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 shadow-inner"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.5-4A8 8 0 1 1 21 12Z" stroke-width="2" stroke-linejoin="round"></path></svg></div>
-          <h3 class="text-2xl font-bold text-purple-900 mt-8">Your messages</h3>
-          <p class="text-gray-500 max-w-xs mt-2">Sélectionnez une discussion pour commencer à échanger.</p>
+        <div class="empty-chat-state">
+          <div class="empty-chat-icon">
+            <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M21 12a8 8 0 0 1-8 8H7l-4 2 1.5-4A8 8 0 1 1 21 12Z" stroke-width="2" stroke-linejoin="round"></path>
+            </svg>
+          </div>
+          <h3>Your messages</h3>
+          <p>Select a conversation to start exchanging care updates.</p>
         </div>
       </ng-template>
-    </div>
+    </section>
   </div>
 
-  <div *ngIf="isCallModalOpen" class="fixed inset-0 z-[1000] flex items-center justify-center bg-gray-900/95 backdrop-blur-xl animate-in fade-in duration-300">
-    <div class="flex flex-col items-center text-center max-w-sm w-full p-6">
-      <div class="relative mb-12">
-        <div class="absolute inset-0 rounded-full bg-purple-500 animate-ping opacity-25"></div>
-        <div class="relative w-32 h-32 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 border-4 border-white/20 shadow-2xl flex items-center justify-center text-5xl text-white font-bold overflow-hidden">
-          <img *ngIf="resolveProfilePictureUrl(selectedConversation?.interlocutorAvatar) as callAvatarUrl; else callInitial"
-               [src]="callAvatarUrl"
-               [alt]="selectedConversation?.interlocutorName || 'Contact profile picture'"
-               class="w-full h-full object-cover">
-          <ng-template #callInitial>
-            {{ (selectedConversation?.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
+  <div *ngIf="showConfirmModal" class="confirm-backdrop">
+    <div class="confirm-card">
+      <div class="text-center">
+        <div
+          [class]="modalType === 'DELETE_CONV' || modalType === 'DELETE_MSG' ? 'bg-red-50 text-red-500' : 'bg-purple-50 text-purple-600'"
+          class="confirm-icon">
+          <ng-container *ngIf="modalType === 'ARCHIVE_CONV'; else deleteModalIcon">
+            <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </ng-container>
+          <ng-template #deleteModalIcon>
+            <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </ng-template>
         </div>
-      </div>
-      <h2 class="text-3xl font-black text-white mb-2">{{ selectedConversation?.interlocutorName }}</h2>
-      <p class="text-purple-300 font-bold uppercase tracking-widest text-xs animate-pulse mb-20">
-        {{ incomingCall ? 'Incoming call...' : 'Audio call in progress...' }}
-      </p>
-      <div class="flex items-center gap-10">
-        <button *ngIf="incomingCall" (click)="incomingCall = null; currentCall = incomingCall;"
-                class="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.4)] hover:bg-green-600 transition-all transform hover:scale-110 active:scale-90">
-          <span class="text-3xl"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 2.8a2 2 0 0 1-.5 1.8L7.8 9.6a16 16 0 0 0 6.6 6.6l1.3-1.3a2 2 0 0 1 1.8-.5l2.8.5A2 2 0 0 1 22 16.9Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-        </button>
-        <button (click)="handleEndCall()"
-                class="w-20 h-20 rounded-full bg-red-500 text-white flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:bg-red-600 transition-all transform hover:scale-110 active:scale-90">
-          <span class="text-3xl" [class.rotate-[135deg]]="!incomingCall"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 2.8a2 2 0 0 1-.5 1.8L7.8 9.6a16 16 0 0 0 6.6 6.6l1.3-1.3a2 2 0 0 1 1.8-.5l2.8.5A2 2 0 0 1 22 16.9Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div *ngIf="showConfirmModal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-    <div class="bg-white rounded-[2.5rem] shadow-2xl border-2 border-purple-100 p-8 max-w-sm w-full mx-4 transform animate-in zoom-in-95 duration-200">
-      <div class="text-center">
-        <div [class]="modalType === 'DELETE_CONV' || modalType === 'DELETE_MSG' ? 'bg-red-50 text-red-500' : 'bg-purple-50 text-purple-600'"
-             class="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm">
-          <ng-container *ngIf="modalType === 'ARCHIVE_CONV'; else deleteModalIcon"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></ng-container><ng-template #deleteModalIcon><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></ng-template>
-        </div>
-        <h3 class="text-2xl font-black text-gray-800 mb-2">{{ modalTitle }}</h3>
-        <p class="text-gray-500 text-sm leading-relaxed mb-8">{{ modalMessage }}</p>
-        <div class="flex flex-col gap-3">
-          <button (click)="executeConfirmedAction()"
-                  [class]="modalType === 'DELETE_CONV' || modalType === 'DELETE_MSG' ? 'bg-red-500 hover:bg-red-600 shadow-red-200' : 'bg-purple-600 hover:bg-purple-700 shadow-purple-200'"
-                  class="w-full py-4 rounded-2xl text-white font-bold transition-all active:scale-95 shadow-lg">
+        <h3>{{ modalTitle }}</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="confirm-actions">
+          <button
+            (click)="executeConfirmedAction()"
+            [class]="modalType === 'DELETE_CONV' || modalType === 'DELETE_MSG' ? 'confirm-danger' : 'confirm-primary'"
+            type="button">
             Confirm
           </button>
-          <button (click)="closeConfirmModal()" class="w-full py-4 rounded-2xl bg-gray-50 text-gray-500 font-bold hover:bg-gray-100 transition-all">Cancel</button>
+          <button (click)="closeConfirmModal()" class="confirm-cancel" type="button">Cancel</button>
         </div>
       </div>
     </div>

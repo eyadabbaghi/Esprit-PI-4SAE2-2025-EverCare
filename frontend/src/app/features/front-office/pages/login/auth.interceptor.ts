@@ -12,12 +12,17 @@ export class AuthInterceptor implements HttpInterceptor {
     if (
       req.url.includes('/auth/register') ||
       req.url.includes('/auth/face-login') ||
-      req.url.includes('/users/by-email') ||   // add this
+      req.url.includes('/users/by-email') ||
+      req.url.includes('/users/search') ||
       req.url.includes('/protocol/openid-connect/token') ||
       req.headers.has('skip-auth')
     ) {
       const cleanReq = req.clone({
-        headers: req.headers.delete('skip-auth')
+        headers: req.headers
+          .delete('skip-auth')
+          .delete('Authorization')
+          .delete('X-User-Id')
+          .delete('X-User-Role')
       });
       return next.handle(cleanReq);
     }

@@ -12,23 +12,61 @@
 }
 
 .panel {
-  background: #fff;
-  border: 1px solid #dccff6;
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(220, 207, 246, 0.9);
+  border-radius: 22px;
 }
 
 .assessment-card {
   max-width: 1080px;
   margin: 0 auto;
   padding: 1.35rem;
-  box-shadow: 0 20px 50px rgba(45, 27, 78, 0.08);
+  box-shadow: 0 28px 58px rgba(124, 58, 237, 0.14), inset 0 1px 0 rgba(255,255,255,.92);
+  backdrop-filter: blur(16px);
 }
 
 .head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.assessment-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(196, 181, 253, 0.6);
+  border-radius: 1.65rem;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(216, 180, 254, 0.32), transparent 38%),
+    rgba(255,255,255,.78);
+  padding: clamp(1rem, 2vw, 1.45rem);
+}
+
+.assessment-hero > * {
+  position: relative;
+}
+
+.assessment-book-mark {
+  width: 94px;
+  height: 94px;
+  display: grid;
+  place-items: center;
+  color: #7c3aed;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(243,232,255,.76));
+  border: 1px solid rgba(196, 181, 253, 0.58);
+  box-shadow: 0 18px 36px rgba(124,58,237,.14);
+}
+
+.assessment-book-mark svg {
+  width: 56px;
+  height: 56px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .eyebrow {
@@ -47,8 +85,11 @@
 
 .head h2 {
   margin: 0;
-  font-size: 1.85rem;
-  color: #2d1b4e;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.02;
+  color: #26113d;
+  font-weight: 950;
+  letter-spacing: 0;
 }
 
 .head p {
@@ -61,13 +102,15 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
   margin-bottom: 0.15rem;
+  min-width: min(480px, 100%);
 }
 
 .metric-chip {
   border: 1px solid #e6daf9;
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 0.45rem 0.6rem;
-  background: #fcfafe;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 10px 22px rgba(124,58,237,.06);
 }
 
 .metric-chip span {
@@ -82,6 +125,73 @@
 .metric-chip strong {
   color: #2d1b4e;
   font-size: 0.95rem;
+}
+
+.assessment-workflow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+}
+
+.workflow-step {
+  position: relative;
+  min-height: 142px;
+  border: 1px solid rgba(216, 202, 246, 0.95);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(250, 247, 255, 0.92));
+  padding: 1rem;
+  box-shadow: 0 16px 32px rgba(124, 58, 237, 0.09);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.workflow-step:hover {
+  transform: translateY(-3px);
+  border-color: #c4b5fd;
+  box-shadow: 0 24px 42px rgba(124, 58, 237, 0.14);
+}
+
+.workflow-step svg {
+  width: 32px;
+  height: 32px;
+  color: #7c3aed;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-bottom: 0.5rem;
+}
+
+.step-number {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccb5f6;
+  background: #f4edff;
+  color: #5c41a0;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.workflow-step strong {
+  display: block;
+  color: #26113d;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.workflow-step p {
+  margin: 0;
+  color: #6b5b8c;
+  font-size: 0.86rem;
+  line-height: 1.35;
 }
 
 .status-message {
@@ -245,9 +355,16 @@
 .question-field {
   border: 1px solid #eadffd;
   border-radius: 14px;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8ff 100%);
   padding: 0.75rem;
-  box-shadow: 0 8px 18px rgba(45, 27, 78, 0.035);
+  box-shadow: 0 14px 28px rgba(124,58,237,.07);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.question-field:hover {
+  transform: translateY(-2px);
+  border-color: #c4b5fd;
+  box-shadow: 0 20px 34px rgba(124,58,237,.12);
 }
 
 .question-index {
@@ -296,7 +413,7 @@
   padding: 0.85rem 0.9rem;
   position: sticky;
   top: 90px;
-  box-shadow: 0 14px 30px rgba(45, 27, 78, 0.06);
+  box-shadow: 0 22px 42px rgba(124,58,237,.12);
 }
 
 .preview-panel h3 {
@@ -439,6 +556,10 @@
     grid-template-columns: 1fr;
   }
 
+  .assessment-workflow {
+    grid-template-columns: 1fr;
+  }
+
   .identity-grid {
     grid-template-columns: 1fr;
   }
@@ -459,6 +580,15 @@
 
   .head h2 {
     font-size: 1.45rem;
+  }
+
+  .assessment-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .assessment-book-mark {
+    display: none;
   }
 
   .header-metrics {

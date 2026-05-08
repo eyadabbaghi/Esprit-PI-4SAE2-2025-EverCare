@@ -103,6 +103,8 @@ public class AuthController {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
+        dto.setAddress(user.getAddress());
+        dto.setCountry(user.getCountry());
         dto.setVerified(user.isVerified());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setDateOfBirth(user.getDateOfBirth());

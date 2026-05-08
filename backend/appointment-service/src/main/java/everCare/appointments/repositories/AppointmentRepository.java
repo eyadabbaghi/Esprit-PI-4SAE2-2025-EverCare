@@ -50,4 +50,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
     // Find appointments for tomorrow (pre-consultation form trigger)
     @Query("SELECT a FROM Appointment a WHERE a.startDateTime >= :startOfDay AND a.startDateTime < :endOfDay AND a.status IN ('SCHEDULED', 'CONFIRMED_BY_PATIENT')")
     List<Appointment> findTomorrowAppointments(@Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
+
+    // Find appointments entering the upcoming-reminder window
+    @Query("SELECT a FROM Appointment a WHERE a.startDateTime >= :windowStart AND a.startDateTime < :windowEnd AND a.status IN ('SCHEDULED', 'CONFIRMED_BY_PATIENT', 'CONFIRMED_BY_CAREGIVER', 'RESCHEDULED')")
+    List<Appointment> findUpcomingReminderAppointments(@Param("windowStart") LocalDateTime windowStart, @Param("windowEnd") LocalDateTime windowEnd);
 }

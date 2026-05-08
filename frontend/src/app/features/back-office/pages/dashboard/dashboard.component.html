@@ -32,11 +32,11 @@
             Live refresh every 15s
           </div>
           <div class="hero-metric">
-            <span class="hero-metric-label">Last refresh</span>
+            <span class="hero-metric-label">Last refresh   :  </span>
             <strong>{{ formatDateTime(data.refreshedAt.toISOString()) }}</strong>
           </div>
           <div class="hero-metric">
-            <span class="hero-metric-label">Recent admin actions</span>
+            <span class="hero-metric-label">Recent admin actions   :   </span>
             <strong>{{ data.recentChanges.length }}</strong>
           </div>
         </div>
@@ -205,7 +205,7 @@
               </article>
 
               <div *ngIf="majorityRole" class="majority-card">
-                <span>Largest group</span>
+                <span>Largest group  :  </span>
                 <strong>{{ majorityRole.label }}</strong>
                 <p>{{ formatNumber(majorityRole.count) }} users lead the distribution.</p>
               </div>
@@ -237,7 +237,7 @@
             </div>
           </div>
           <div class="spotlight-card" *ngIf="data.topCategory">
-            <span>Top category</span>
+            <span>Top category  :  </span>
             <strong>{{ data.topCategory.categoryName }}</strong>
             <p>{{ formatCompact(data.topCategory.totalViews) }} total views with {{ data.topCategory.articleCount }} articles.</p>
           </div>

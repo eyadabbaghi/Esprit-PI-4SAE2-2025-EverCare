@@ -4,10 +4,13 @@
     <div *ngIf="isLoading" class="status-message info">Loading medical record...</div>
 
     <ng-container *ngIf="record as currentRecord; else notFound">
-      <div class="panel details-card">
-        <div class="details-head">
+      <div class="panel details-card record-book">
+        <div class="book-spine"></div>
+        <div class="details-head record-book-cover">
           <div>
+            <span class="hero-kicker">Patient journal</span>
             <h2>Medical Record Details</h2>
+            <p>{{ patientDisplayName || 'Patient' }} care history, documents, and assessment insights.</p>
           </div>
           <span class="badge-state" [class.active]="currentRecord.active" [class.archived]="!currentRecord.active">
             {{ currentRecord.active ? 'Active' : 'Archived' }}
@@ -124,7 +127,13 @@
               </div>
               <div class="field">
                 <label for="historyDate">Date</label>
-                <input id="historyDate" type="date" formControlName="date" [max]="todayMaxDate" [disabled]="!canMutateRecord || !permissions.canManageHistory" />
+                <app-modern-date-picker
+                  id="historyDate"
+                  formControlName="date"
+                  [max]="todayMaxDate"
+                  [disabled]="!canMutateRecord || !permissions.canManageHistory"
+                  placeholder="History date">
+                </app-modern-date-picker>
                 <div class="field-error" *ngIf="hasHistoryError('date', 'required')">Date is required.</div>
                 <div class="field-error" *ngIf="hasHistoryError('date', 'futureDate')">Date cannot be in the future.</div>
               </div>

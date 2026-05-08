@@ -1,5 +1,18 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="caregiver-appointments-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
+
+    <section class="caregiver-hero">
+      <div>
+        <p class="hero-kicker">Caregiver appointment hub</p>
+        <h1>Prepare every visit with context.</h1>
+        <p>See linked patient appointments, record clinical measurements before visits, and help confirm or join the appointment when needed.</p>
+      </div>
+      <div class="patient-focus-card" *ngIf="patient">
+        <span>Active patient</span>
+        <strong>{{ patient.name }}</strong>
+        <small>{{ getUpcomingAppointments().length }} upcoming appointment{{ getUpcomingAppointments().length === 1 ? '' : 's' }}</small>
+      </div>
+    </section>
 
     <!-- Loading State -->
     <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
@@ -19,9 +32,30 @@
       {{ successMessage }}
     </div>
 
+    <section class="workflow-panel" aria-label="Caregiver appointment workflow">
+      <div class="workflow-steps">
+        <div class="workflow-step is-active">
+          <span>1</span>
+          <strong>Review patient schedule</strong>
+          <small>Start from the linked patient appointment list.</small>
+        </div>
+        <div class="workflow-step">
+          <span>2</span>
+          <strong>Record clinical measurements</strong>
+          <small>Add weight, kidney/liver notes, medications, and allergies.</small>
+        </div>
+        <div class="workflow-step">
+          <span>3</span>
+          <strong>Confirm and join</strong>
+          <small>Support the patient when the appointment is ready.</small>
+        </div>
+        <i class="floating-cursor" aria-hidden="true"></i>
+      </div>
+    </section>
+
     <!-- Submit Clinical Data Button (for upcoming appointments) -->
-    <div *ngIf="patient && getUpcomingAppointments().length > 0" class="bg-gradient-to-r from-[#7C3AED] to-[#9F7AEA] rounded-xl p-4 text-white">
-      <div class="flex items-center justify-between">
+    <div *ngIf="patient && getUpcomingAppointments().length > 0" class="measurement-banner">
+      <div class="flex items-center justify-between gap-4">
         <div>
           <h3 class="font-semibold text-lg"><svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-3" stroke-width="2" stroke-linecap="round"></path></svg> Submit Clinical Data</h3>
           <p class="text-white/80 text-sm">Help the doctor by providing patient measurements before appointments</p>
@@ -34,26 +68,41 @@
     </div>
 
     <!-- Simple Appointments Display -->
-    <div *ngIf="patient" class="space-y-4">
-      <div class="bg-white rounded-xl p-4 shadow-sm">
-        <h3 class="font-semibold text-[#2D1B4E] mb-4">Upcoming Appointments</h3>
+    <div *ngIf="patient" class="appointment-grid">
+      <div class="appointment-section">
+        <div class="section-heading">
+          <div>
+            <p>Next steps</p>
+            <h3>Upcoming Appointments</h3>
+          </div>
+          <span>{{ getUpcomingAppointments().length }}</span>
+        </div>
         <div *ngIf="getUpcomingAppointments().length === 0" class="text-gray-500 text-center py-4">
           No upcoming appointments
         </div>
-        <div *ngFor="let apt of getUpcomingAppointments()" class="border-b py-3 last:border-0">
-          <div class="flex justify-between items-center">
+        <div *ngFor="let apt of getUpcomingAppointments()" class="appointment-row">
+          <div class="flex justify-between items-center gap-4">
             <div>
               <p class="font-medium text-[#2D1B4E]">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>
               <p class="text-sm text-gray-500">{{ apt.status }}</p>
             </div>
-            <button (click)="viewAppointmentDetails(apt)" class="text-[#7C3AED] text-sm">View</button>
+            <div class="flex flex-wrap gap-2 justify-end">
+              <button (click)="openClinicalMeasurementModal(apt)" class="secondary-action">Measurements</button>
+              <button (click)="viewAppointmentDetails(apt)" class="primary-action">View</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="getPastAppointments().length > 0" class="bg-white rounded-xl p-4 shadow-sm">
-        <h3 class="font-semibold text-[#2D1B4E] mb-4">Past Appointments</h3>
-        <div *ngFor="let apt of getPastAppointments()" class="border-b py-3 last:border-0">
+      <div *ngIf="getPastAppointments().length > 0" class="appointment-section">
+        <div class="section-heading">
+          <div>
+            <p>History</p>
+            <h3>Past Appointments</h3>
+          </div>
+          <span>{{ getPastAppointments().length }}</span>
+        </div>
+        <div *ngFor="let apt of getPastAppointments()" class="appointment-row muted">
           <div class="flex justify-between items-center">
             <div>
               <p class="font-medium text-gray-600">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>

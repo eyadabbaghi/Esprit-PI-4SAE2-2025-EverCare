@@ -1,24 +1,35 @@
 <div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] px-6 py-8">
   <div class="max-w-6xl mx-auto space-y-6">
     <!-- Header -->
-    <header class="flex items-center justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-[#2D1B4E] mb-1">
-          Activities management
-        </h1>
-        <p class="text-sm text-[#6B5B8C]">
-          Create, edit, and curate the activities exactly as patients see them in the front office.
+    <header class="admin-page-hero">
+      <div class="hero-copy-block">
+        <p class="hero-label">EverCare Activity Studio</p>
+        <h1>Curate therapeutic activities for the care experience</h1>
+        <p class="hero-copy">
+          Create, edit, and organize the activity library exactly as patients and caregivers see it in the front office.
         </p>
       </div>
 
-      <button
-        type="button"
-        class="inline-flex items-center px-4 py-2 rounded-full bg-[#7C3AED] text-white text-sm font-medium shadow-sm hover:bg-[#6D28D9] transition-colors"
-        (click)="startCreate()"
-      >
-        <span class="mr-2 text-lg">＋</span>
-        New activity
-      </button>
+      <div class="hero-action-panel">
+        <div class="hero-metric">
+          <span>Total activities</span>
+          <strong>{{ activitiesWithDetails.length }}</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Editing mode</span>
+          <strong>{{ formMode === 'create' ? 'Create' : 'Update' }}</strong>
+        </div>
+        <button
+          type="button"
+          class="hero-primary-action"
+          (click)="startCreate()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          New activity
+        </button>
+      </div>
     </header>
 
     <!-- Content -->

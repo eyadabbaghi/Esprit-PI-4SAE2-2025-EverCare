@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { BlogService } from './services/blog.service';
 import { Article, Category } from '../../models/blog.model';
 import { AuthService } from '../../../front-office/pages/login/auth.service';
+import { ActivatedRoute } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import jsPDF from 'jspdf';
@@ -72,12 +73,15 @@ export class BlogComponent implements OnInit, OnDestroy {
 
   private pollingSubscription?: Subscription;
   private userSubscription?: Subscription;
+  private routeSubscription?: Subscription;
+  private pendingArticleId: number | null = null;
 
 
   
   constructor(
     private blogService: BlogService,
     private authService: AuthService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
@@ -90,6 +94,12 @@ export class BlogComponent implements OnInit, OnDestroy {
       });
       this.startRealTimeUpdate();
     }
+    this.routeSubscription = this.route.queryParamMap.subscribe(params => {
+      const articleParam = params.get('article') || params.get('articleId') || params.get('id');
+      const articleId = articleParam ? Number(articleParam) : NaN;
+      this.pendingArticleId = Number.isFinite(articleId) ? articleId : null;
+      this.openPendingArticleFromRoute();
+    });
     this.loadCategories();
     this.loadArticles();
   }
@@ -97,6 +107,7 @@ export class BlogComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.pollingSubscription) this.pollingSubscription.unsubscribe();
     if (this.userSubscription) this.userSubscription.unsubscribe();
+    if (this.routeSubscription) this.routeSubscription.unsubscribe();
     if (isPlatformBrowser(this.platformId)) {
       window.speechSynthesis.cancel();
     }
@@ -106,6 +117,7 @@ export class BlogComponent implements OnInit, OnDestroy {
     this.blogService.getAllArticles().subscribe(data => {
       this.articles = data;
       this.applyFilters();
+      this.openPendingArticleFromRoute();
     });
   }
 
@@ -284,15 +296,37 @@ export class BlogComponent implements OnInit, OnDestroy {
   }
 
   private syncData(serverData: Article[]): void {
+    const serverIds = new Set(serverData.map(article => article.id).filter((id): id is number => typeof id === 'number'));
+
     serverData.forEach(serverArt => {
       const localArt = this.articles.find(a => a.id === serverArt.id);
       if (localArt) {
         localArt.likeCount = serverArt.likeCount;
         localArt.viewCount = serverArt.viewCount;
         localArt.moods = serverArt.moods;
+        localArt.title = serverArt.title;
+        localArt.content = serverArt.content;
+        localArt.coverImageUrl = serverArt.coverImageUrl;
+        localArt.category = serverArt.category;
+        localArt.readingTime = serverArt.readingTime;
+        localArt.createdAt = serverArt.createdAt;
+      } else {
+        this.articles = [serverArt, ...this.articles];
       }
     });
+
+    this.articles = this.articles.filter(article => !article.id || serverIds.has(article.id));
     this.applyFilters();
+    this.openPendingArticleFromRoute();
+  }
+
+  private openPendingArticleFromRoute(): void {
+    if (!this.pendingArticleId || this.selectedArticle?.id === this.pendingArticleId) return;
+
+    const article = this.articles.find(item => item.id === this.pendingArticleId);
+    if (!article) return;
+
+    this.openDetail(article);
   }
 
   openDetail(article: Article): void {

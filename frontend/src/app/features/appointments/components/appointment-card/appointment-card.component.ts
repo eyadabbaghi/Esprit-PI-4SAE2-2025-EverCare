@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Appointment, AppointmentStatus, CaregiverPresence } from '../../models/appointment';
 
 @Component({
@@ -12,13 +11,11 @@ export class AppointmentCardComponent {
   @Output() onClick = new EventEmitter<Appointment>();
   @Output() onAction = new EventEmitter<Appointment>();
 
-  // Helper method to safely get Date object
   private getAppointmentDate(): Date | null {
     if (!this.appointment?.startDateTime) return null;
 
     try {
       const date = new Date(this.appointment.startDateTime);
-      // Check if date is valid
       return isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
@@ -33,12 +30,11 @@ export class AppointmentCardComponent {
   }
 
   getStatusClass(status: AppointmentStatus): string {
-    // Define with all possible statuses including IN_PROGRESS
     const classes: Record<AppointmentStatus, string> = {
       'SCHEDULED': 'bg-[#F3E8FF] text-[#7C3AED]',
       'CONFIRMED_BY_PATIENT': 'bg-[#E6F0FA] text-[#2D1B4E]',
       'CONFIRMED_BY_CAREGIVER': 'bg-[#E6F0FA] text-[#2D1B4E]',
-      'IN_PROGRESS': 'bg-[#DBEAFE] text-[#1E40AF]', // Add IN_PROGRESS style
+      'IN_PROGRESS': 'bg-[#DBEAFE] text-[#1E40AF]',
       'COMPLETED': 'bg-[#F1F5F9] text-[#6B5B8C]',
       'CANCELLED': 'bg-[#FEF2F2] text-[#C06C84]',
       'RESCHEDULED': 'bg-[#FFF3E0] text-[#F97316]',
@@ -49,16 +45,15 @@ export class AppointmentCardComponent {
   }
 
   getStatusLabel(status: AppointmentStatus): string {
-    // Define with all possible statuses including IN_PROGRESS
     const labels: Record<AppointmentStatus, string> = {
-      'SCHEDULED': 'À confirmer',
-      'CONFIRMED_BY_PATIENT': 'Confirmé',
-      'CONFIRMED_BY_CAREGIVER': 'Confirmé',
-      'IN_PROGRESS': 'En cours', // Add IN_PROGRESS label
-      'COMPLETED': 'Terminé',
-      'CANCELLED': 'Annulé',
-      'RESCHEDULED': 'Reporté',
-      'MISSED': 'Manqué'
+      'SCHEDULED': 'Pending confirmation',
+      'CONFIRMED_BY_PATIENT': 'Confirmed',
+      'CONFIRMED_BY_CAREGIVER': 'Confirmed',
+      'IN_PROGRESS': 'In progress',
+      'COMPLETED': 'Completed',
+      'CANCELLED': 'Cancelled',
+      'RESCHEDULED': 'Rescheduled',
+      'MISSED': 'Missed'
     };
 
     return labels[status] || status;
@@ -91,19 +86,17 @@ export class AppointmentCardComponent {
   getCaregiverLabel(appointment: Appointment): string {
     const presence = appointment.caregiverPresence;
     if (presence === 'PHYSICAL' && appointment.caregiverName) {
-      return `${appointment.caregiverName} présent`;
+      return `${appointment.caregiverName} present`;
     }
     if (presence === 'REMOTE' && appointment.caregiverName) {
-      return `${appointment.caregiverName} en visio`;
+      return `${appointment.caregiverName} remote`;
     }
-    return appointment.caregiverName || 'Aucun aidant';
+    return appointment.caregiverName || 'No caregiver';
   }
 
   canJoinCall(): boolean {
-    // Check if appointment exists
     if (!this.appointment) return false;
 
-    // Check status - allow joining for IN_PROGRESS as well
     if (this.appointment.status !== 'CONFIRMED_BY_PATIENT' &&
       this.appointment.status !== 'CONFIRMED_BY_CAREGIVER' &&
       this.appointment.status !== 'IN_PROGRESS') {
@@ -111,14 +104,12 @@ export class AppointmentCardComponent {
     }
 
     try {
-      // Safely convert to Date
       const appointmentDate = this.getAppointmentDate();
       if (!appointmentDate) return false;
 
       const now = new Date();
       const diffMinutes = (appointmentDate.getTime() - now.getTime()) / 60000;
 
-      // Allow joining 5 minutes before and up to 30 minutes after
       return diffMinutes <= 15 && diffMinutes >= -30;
     } catch {
       return false;
@@ -137,15 +128,14 @@ export class AppointmentCardComponent {
 
   getActionButtonText(): string {
     if (this.appointment.status === 'SCHEDULED') {
-      return 'Confirmer';
+      return 'Confirm';
     }
     if (this.canJoinCall()) {
-      return 'Rejoindre';
+      return 'Join';
     }
     return '';
   }
 
-  // Optional: Add helper method for formatted time display
   getFormattedTime(): string {
     const appointmentDate = this.getAppointmentDate();
     if (!appointmentDate) return '';
@@ -156,7 +146,6 @@ export class AppointmentCardComponent {
     });
   }
 
-  // Optional: Add helper to check if appointment is today
   isToday(): boolean {
     const appointmentDate = this.getAppointmentDate();
     if (!appointmentDate) return false;
@@ -165,12 +154,10 @@ export class AppointmentCardComponent {
     return appointmentDate.toDateString() === today.toDateString();
   }
 
-  // Optional: Add helper to check if appointment needs action
   needsAction(): boolean {
     return this.appointment.status === 'SCHEDULED' || this.canJoinCall();
   }
 
-  // Optional: Check if appointment is in progress
   isInProgress(): boolean {
     return this.appointment.status === 'IN_PROGRESS';
   }

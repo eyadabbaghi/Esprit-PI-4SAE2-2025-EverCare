@@ -37,6 +37,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { LucideAngularModule } from 'lucide-angular';
 import { NewUserFlowComponent } from './pages/login/new-user-flow.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
+import { DoctorsComponent } from './pages/doctors/doctors.component';
 import { AlertAlarmComponent } from '../../alert-alarm/alert-alarm.component';
 import { FrontOfficeLayoutComponent } from '../../layouts/front-office-layout/front-office-layout.component';
 
@@ -50,6 +51,8 @@ import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
 import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog.component';
 import { FaceRecoveryComponent } from './pages/face-recovery/face-recovery.component';
 import { AssessmentPageComponent } from './pages/assessment-page/assessment-page.component';
+import { OnboardingTutorialComponent } from './ui/onboarding-tutorial/onboarding-tutorial.component';
+import { ImageCropperComponent } from 'ngx-image-cropper';
 
 @NgModule({
   declarations: [
@@ -76,6 +79,7 @@ import { AssessmentPageComponent } from './pages/assessment-page/assessment-page
     ProfileComponent,
     NewUserFlowComponent,
     SetupProfileComponent,
+    DoctorsComponent,
     DoctorSearchModalComponent,
     AlertAlarmComponent,
     CaregiverCheckComponent,
@@ -85,6 +89,7 @@ import { AssessmentPageComponent } from './pages/assessment-page/assessment-page
     ConfirmDialogComponent,
     FaceRecoveryComponent,
     AssessmentPageComponent, 
+    OnboardingTutorialComponent,
   ],
   imports: [
     CommonModule,
@@ -94,6 +99,7 @@ import { AssessmentPageComponent } from './pages/assessment-page/assessment-page
     SharedModule,
     FrontOfficeRoutingModule,
     LucideAngularModule,
+    ImageCropperComponent,
   ],
   exports: [
     NavigationComponent,

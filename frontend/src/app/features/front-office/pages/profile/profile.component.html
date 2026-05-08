@@ -1,14 +1,27 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
-  <div class="max-w-6xl mx-auto space-y-6">
+<div class="profile-page min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+  <div *ngIf="showProfileUpdatedPopup" class="profile-updated-popup" role="status" aria-live="polite">
+    <span class="popup-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M20 6 9 17l-5-5"/>
+      </svg>
+    </span>
+    <div>
+      <strong>Profile updated</strong>
+      <p>Your changes were saved successfully.</p>
+    </div>
+  </div>
+
+  <div class="profile-shell max-w-6xl mx-auto space-y-6">
 
     <!-- Header -->
-    <div class="mb-8">
+    <div class="profile-page-header mb-8">
+      <span class="profile-eyebrow">Care identity</span>
       <h1 class="text-4xl font-bold text-[#2D1B4E] mb-2">My Profile</h1>
       <p class="text-lg text-[#6B5B8C]">Manage your personal information and care connections</p>
     </div>
 
     <!-- Profile Header Card -->
-    <div *ngIf="user" class="border-2 border-[#C4B5FD] bg-white rounded-2xl shadow-lg p-6 md:p-8">
+    <div *ngIf="user" class="profile-summary-card border-2 border-[#C4B5FD] bg-white rounded-2xl shadow-lg p-6 md:p-8">
       <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
         <!-- Avatar with dropdown -->
         <div class="relative">
@@ -98,7 +111,7 @@
     </div>
 
     <!-- Tabs -->
-    <div class="grid grid-cols-2 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB] shadow-sm">
+    <div class="profile-tabs grid grid-cols-2 gap-2 mb-6 bg-white rounded-full p-1 border border-[#E5E7EB] shadow-sm">
       <button
         type="button"
         class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
@@ -130,7 +143,10 @@
 
       <!-- Left Column – Personal Information (including doctor fields) -->
       <div class="lg:col-span-2 space-y-6">
-        <div class="border-2 border-[#DDD6FE] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          id="profile-personal-info-section"
+          class="profile-section-card personal-info-card border-2 border-[#DDD6FE] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow scroll-mt-24"
+          [class.editing-mode]="isEditing">
           <h3 class="text-xl font-semibold text-[#2D1B4E] flex items-center gap-2 mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -204,21 +220,43 @@
               <!-- Phone with country code -->
               <div class="space-y-1">
                 <label class="text-sm font-medium text-[#374151]">Phone Number *</label>
-                <div class="flex gap-2">
-                  <select
-                    [(ngModel)]="phoneCountryCode"
-                    [ngModelOptions]="{standalone: true}"
-                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white focus:ring-2 focus:ring-[#7C3AED] transition-all"
-                    [disabled]="!isEditing"
-                  >
-                    <option *ngFor="let c of countries" [value]="c.code">{{ c.name }} {{ c.code }}</option>
-                  </select>
+                <div class="phone-input-row">
+                  <div class="country-select">
+                    <button
+                      type="button"
+                      class="country-select-trigger"
+                      [disabled]="!isEditing"
+                      (click)="showPhoneCountryDropdown = isEditing && !showPhoneCountryDropdown"
+                    >
+                      <span>{{ flagFor(selectedPhoneCountry) }}</span>
+                      <strong>{{ selectedPhoneCountry.dialCode }}</strong>
+                    </button>
+                    <div *ngIf="showPhoneCountryDropdown" class="country-select-menu">
+                      <input
+                        type="text"
+                        [(ngModel)]="phoneCountrySearch"
+                        [ngModelOptions]="{standalone: true}"
+                        placeholder="Search country"
+                      />
+                      <button
+                        type="button"
+                        *ngFor="let country of filteredPhoneCountries"
+                        (click)="selectCountry(country, 'phone')"
+                      >
+                        <span>{{ flagFor(country) }}</span>
+                        <span>{{ country.name }}</span>
+                        <strong>{{ country.dialCode }}</strong>
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="tel"
                     formControlName="phone"
                     class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
                     [class.border-red-500]="isInvalid('phone')"
                     [disabled]="!isEditing"
+                    [attr.maxlength]="phoneMaxLength"
+                    (input)="trimPhoneInput('phone', phoneMaxLength)"
                     placeholder="123456789"
                   />
                 </div>
@@ -245,15 +283,14 @@
                       <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
                   </div>
-                  <input
-                    type="date"
+                  <app-modern-date-picker
                     formControlName="dateOfBirth"
-                    [attr.min]="minBirthDate"
-                    [attr.max]="maxBirthDate"
-                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
-                    [class.border-red-500]="isInvalid('dateOfBirth')"
+                    [min]="minBirthDate"
+                    [max]="maxBirthDate"
                     [disabled]="!isEditing"
-                  />
+                    placeholder="Select date of birth"
+                    (dateChange)="onDateOfBirthChange()">
+                  </app-modern-date-picker>
                 </div>
                 <div *ngIf="isInvalid('dateOfBirth')" class="text-red-500 text-xs flex items-center gap-1 mt-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -268,24 +305,67 @@
                 </div>
               </div>
 
+              <!-- Age -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Age</label>
+                <div class="relative">
+                  <div class="absolute left-3 top-2.5 text-[#6B5B8C]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M8 7V3m8 4V3"/>
+                      <rect x="3" y="7" width="18" height="14" rx="2"/>
+                      <path d="M7 12h10M7 16h6"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    formControlName="age"
+                    class="w-full pl-9 pr-3 py-2 border border-[#E5E7EB] rounded-lg bg-[#F9F5FF] text-[#2D1B4E] transition-all"
+                    placeholder="Auto-filled from date of birth"
+                    readonly
+                  />
+                </div>
+              </div>
+
               <!-- Emergency Contact -->
               <div class="space-y-1">
                 <label class="text-sm font-medium text-[#374151]">Emergency Contact *</label>
-                <div class="flex gap-2">
-                  <select
-                    [(ngModel)]="emergencyCountryCode"
-                    [ngModelOptions]="{standalone: true}"
-                    class="w-24 px-2 py-2 border border-[#E5E7EB] rounded-lg bg-white focus:ring-2 focus:ring-[#7C3AED] transition-all"
-                    [disabled]="!isEditing"
-                  >
-                    <option *ngFor="let c of countries" [value]="c.code">{{ c.name }} {{ c.code }}</option>
-                  </select>
+                <div class="phone-input-row">
+                  <div class="country-select">
+                    <button
+                      type="button"
+                      class="country-select-trigger"
+                      [disabled]="!isEditing"
+                      (click)="showEmergencyCountryDropdown = isEditing && !showEmergencyCountryDropdown"
+                    >
+                      <span>{{ flagFor(selectedEmergencyCountry) }}</span>
+                      <strong>{{ selectedEmergencyCountry.dialCode }}</strong>
+                    </button>
+                    <div *ngIf="showEmergencyCountryDropdown" class="country-select-menu">
+                      <input
+                        type="text"
+                        [(ngModel)]="emergencyCountrySearch"
+                        [ngModelOptions]="{standalone: true}"
+                        placeholder="Search country"
+                      />
+                      <button
+                        type="button"
+                        *ngFor="let country of filteredEmergencyCountries"
+                        (click)="selectCountry(country, 'emergency')"
+                      >
+                        <span>{{ flagFor(country) }}</span>
+                        <span>{{ country.name }}</span>
+                        <strong>{{ country.dialCode }}</strong>
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="tel"
                     formControlName="emergencyContact"
                     class="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent transition-all"
                     [class.border-red-500]="isInvalid('emergencyContact')"
                     [disabled]="!isEditing"
+                    [attr.maxlength]="emergencyPhoneMaxLength"
+                    (input)="trimPhoneInput('emergencyContact', emergencyPhoneMaxLength)"
                     placeholder="123456789"
                   />
                 </div>
@@ -297,6 +377,38 @@
                   </svg>
                   <span *ngIf="personalForm.get('emergencyContact')?.errors?.['required']">Required.</span>
                   <span *ngIf="personalForm.get('emergencyContact')?.errors?.['invalidPhone'] || personalForm.get('emergencyContact')?.errors?.['invalidPhoneLength']">{{ getPhoneError('emergencyContact') }}</span>
+                </div>
+              </div>
+
+              <!-- Country -->
+              <div class="space-y-1">
+                <label class="text-sm font-medium text-[#374151]">Country</label>
+                <div class="country-select country-select-wide">
+                  <button
+                    type="button"
+                    class="country-select-trigger"
+                    [disabled]="!isEditing"
+                    (click)="showCountryDropdown = isEditing && !showCountryDropdown"
+                  >
+                    <span>{{ flagFor(selectedProfileCountry) }}</span>
+                    <strong>{{ selectedProfileCountry.name }}</strong>
+                  </button>
+                  <div *ngIf="showCountryDropdown" class="country-select-menu">
+                    <input
+                      type="text"
+                      [(ngModel)]="countrySearch"
+                      [ngModelOptions]="{standalone: true}"
+                      placeholder="Search country"
+                    />
+                    <button
+                      type="button"
+                      *ngFor="let country of filteredProfileCountries"
+                      (click)="selectProfileCountry(country)"
+                    >
+                      <span>{{ flagFor(country) }}</span>
+                      <span>{{ country.name }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -394,7 +506,7 @@
         <!-- PATIENT VIEW -->
         <ng-container *ngIf="user?.role === 'PATIENT'">
           <!-- Caregivers List -->
-          <div class="border-2 border-green-200 bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+          <div class="profile-section-card care-card caregiver-card border-2 border-green-200 bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -444,7 +556,7 @@
           </div>
 
           <!-- Doctor Card -->
-          <div class="border-2 border-purple-200 bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+          <div class="profile-section-card care-card doctor-card border-2 border-purple-200 bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -517,7 +629,7 @@
 
         <!-- CAREGIVER VIEW -->
         <ng-container *ngIf="user?.role === 'CAREGIVER'">
-          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+          <div class="profile-section-card care-card patient-card border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -569,7 +681,7 @@
 
         <!-- DOCTOR VIEW – Patients List -->
         <ng-container *ngIf="user?.role === 'DOCTOR'">
-          <div class="border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+          <div class="profile-section-card care-card patient-card border-2 border-blue-200 bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
             <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -608,7 +720,7 @@
 
   <!-- No assessment yet -->
   <div *ngIf="!assessmentResult"
-       class="border-2 border-dashed border-[#C4B5FD] rounded-2xl p-8 text-center bg-white">
+       class="profile-section-card border-2 border-dashed border-[#C4B5FD] rounded-2xl p-8 text-center bg-white">
     <svg class="mx-auto mb-3" width="56" height="56" viewBox="0 0 56 56" fill="none">
       <circle cx="28" cy="28" r="27" stroke="#DDD6FE" stroke-width="1.5"/>
       <path d="M20 30c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="#7C3AED" stroke-width="1.8" stroke-linecap="round"/>
@@ -630,7 +742,7 @@
 
   <!-- Assessment results -->
   <div *ngIf="assessmentResult"
-       class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm
+       class="profile-section-card border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm
               animate-[fadeSlide_0.4s_ease_both]">
 
     <!-- Header -->
@@ -816,7 +928,7 @@
 
 <!-- ── Medical Record (PATIENT only) ── -->
 <div *ngIf="user?.role === 'PATIENT'" class="mt-6">
-  <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+  <div class="profile-section-card border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
     
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-xl font-bold text-[#2D1B4E] flex items-center gap-2">
@@ -911,7 +1023,7 @@
     <!-- Settings Tab (Password Change + Danger Zone) -->
     <div id="profile-settings-section" *ngIf="activeTab === 'settings'" class="space-y-4 scroll-mt-24">
       <!-- Password change card -->
-      <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+      <div class="profile-section-card border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
         <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -972,7 +1084,7 @@
       </div>
 
       <!-- Face ID Card -->
-      <div class="border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+      <div class="profile-section-card border-2 border-[#C4B5FD] bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
         <h3 class="text-lg font-semibold text-[#2D1B4E] flex items-center gap-2 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M2 15v3c0 1.1.9 2 2 2h3"/>
@@ -1002,7 +1114,7 @@
       </div>
 
       <!-- Danger zone -->
-      <div class="border-2 border-red-200 bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+      <div class="profile-section-card danger-card border-2 border-red-200 bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
         <h3 class="text-lg font-semibold text-red-600 flex items-center gap-2 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
@@ -1052,3 +1164,34 @@
   (closed)="showPatientSearch = false"
   (userSelected)="onPatientSelected($event)"
 ></app-doctor-search-modal>
+
+<div *ngIf="showCropper" class="image-cropper-backdrop">
+  <div class="image-cropper-card">
+    <div class="cropper-head">
+      <div>
+        <span class="cropper-eyebrow">Profile photo</span>
+        <h3>Crop your picture</h3>
+        <p>Resize and choose the part of the photo you want to use.</p>
+      </div>
+      <button type="button" class="cropper-close" (click)="cancelCrop()" aria-label="Close cropper">
+        <svg viewBox="0 0 24 24">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <image-cropper
+      [imageChangedEvent]="imageChangedEvent"
+      [maintainAspectRatio]="true"
+      [aspectRatio]="1 / 1"
+      [resizeToWidth]="512"
+      format="png"
+      (imageCropped)="imageCropped($event)">
+    </image-cropper>
+
+    <div class="cropper-actions">
+      <button type="button" class="cropper-secondary" (click)="cancelCrop()">Cancel</button>
+      <button type="button" class="cropper-primary" (click)="confirmCrop()">Use Photo</button>
+    </div>
+  </div>
+</div>

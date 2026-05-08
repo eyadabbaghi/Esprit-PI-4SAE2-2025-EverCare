@@ -1,0 +1,152 @@
+.tutorial-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(17, 24, 39, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+.tutorial-highlight {
+  position: fixed;
+  z-index: 72;
+  border: 2px solid #c4b5fd;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(17, 24, 39, 0.1), 0 0 24px rgba(124, 58, 237, 0.55);
+  pointer-events: none;
+  transition: all 220ms ease;
+}
+
+.tutorial-cursor {
+  position: fixed;
+  z-index: 73;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #7c3aed;
+  box-shadow: 0 0 0 8px rgba(124, 58, 237, 0.18);
+  pointer-events: none;
+  animation: tutorialCursorPulse 1.1s ease-in-out infinite;
+}
+
+.tutorial-card {
+  position: fixed;
+  z-index: 74;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid #ddd6fe;
+  border-radius: 18px;
+  background: #fff;
+  color: #2d1b4e;
+  box-shadow: 0 24px 60px rgba(45, 27, 78, 0.24);
+  padding: 22px;
+}
+
+.tutorial-topline,
+.tutorial-actions,
+.tutorial-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutorial-role {
+  border-radius: 999px;
+  background: #f3e8ff;
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+}
+
+.tutorial-skip {
+  color: #6b5b8c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tutorial-card h2 {
+  margin: 16px 0 8px;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.tutorial-card p {
+  margin: 0;
+  color: #6b5b8c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tutorial-progress {
+  height: 8px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ede9fe;
+}
+
+.tutorial-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  transition: width 180ms ease;
+}
+
+.tutorial-count {
+  margin-top: 8px;
+  color: #6b5b8c;
+  font-size: 12px;
+}
+
+.tutorial-actions {
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tutorial-primary,
+.tutorial-secondary {
+  min-width: 92px;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 160ms ease, background-color 160ms ease, opacity 160ms ease;
+}
+
+.tutorial-primary {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.tutorial-secondary {
+  border: 1px solid #c4b5fd;
+  color: #2d1b4e;
+}
+
+.tutorial-primary:hover,
+.tutorial-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.tutorial-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@keyframes tutorialCursorPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.16);
+  }
+}
+
+@media (max-width: 640px) {
+  .tutorial-card {
+    right: 16px;
+    bottom: 16px;
+  }
+}

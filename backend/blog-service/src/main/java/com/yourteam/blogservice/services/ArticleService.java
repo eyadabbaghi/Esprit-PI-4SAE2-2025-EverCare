@@ -75,12 +75,12 @@ public class ArticleService {
         article.setLastModifiedByEmail(authorEmail);
         Article savedArticle = articleRepository.save(article);
 
-        // Envoyer une notification in-app via notification-service
+        // Send an explicit blog notification so the frontend can route it correctly.
         try {
             NotificationRequest notif = new NotificationRequest();
             notif.setActivityId(String.valueOf(savedArticle.getId()));
-            notif.setAction("CREATED");
-            notif.setDetails("Nouvel article publié : " + savedArticle.getTitle());
+            notif.setAction("BLOG_CREATED");
+            notif.setDetails("New blog article: " + savedArticle.getTitle());
             // notif.setTargetUserIds(null); // null = tous les utilisateurs
             notificationServiceClient.sendNotification(notif);
             log.info("Notification in-app envoyée pour l'article ID {}", savedArticle.getId());

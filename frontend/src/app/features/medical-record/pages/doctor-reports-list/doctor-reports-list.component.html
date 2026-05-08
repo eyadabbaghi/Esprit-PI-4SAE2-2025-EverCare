@@ -41,12 +41,12 @@
 
         <div class="field">
           <label for="fromDate">Start Date</label>
-          <input id="fromDate" type="date" [formControl]="fromDateControl" [disabled]="alertsOnly" />
+          <app-modern-date-picker id="fromDate" [formControl]="fromDateControl" [disabled]="alertsOnly" placeholder="Start date"></app-modern-date-picker>
         </div>
 
         <div class="field">
           <label for="toDate">End Date</label>
-          <input id="toDate" type="date" [formControl]="toDateControl" [disabled]="alertsOnly" />
+          <app-modern-date-picker id="toDate" [formControl]="toDateControl" [disabled]="alertsOnly" placeholder="End date"></app-modern-date-picker>
         </div>
 
         <div class="actions">

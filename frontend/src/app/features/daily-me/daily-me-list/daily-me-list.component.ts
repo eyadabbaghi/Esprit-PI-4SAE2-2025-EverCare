@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
-import { Observable, Subscription, of } from 'rxjs';
+import { Observable, Subscription, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { DailyMeService } from '../services/daily-me.service';
 import { DailyEntry } from '../models/daily-entry.model';
 import { AuthService } from '../../front-office/pages/login/auth.service';
-import { HttpClient } from '@angular/common/http';
 import * as faceapi from 'face-api.js';
 
 // ✅ ng2-charts / chart.js
@@ -89,14 +89,14 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
   };
 
   moods: MoodUI[] = [
-    { key: 'Happy', label: 'Happy', emoji: '😊', badgeText: 'Feeling Happy', message: "I'm so glad you're feeling happy today! 💖", bgClass: 'bg-[#DCFCE7]' },
-    { key: 'Excited', label: 'Excited', emoji: '🤩', badgeText: 'Feeling Excited', message: "Love that energy! Use it for one small win today. ✨", bgClass: 'bg-[#DCFCE7]' },
-    { key: 'Calm', label: 'Calm', emoji: '😌', badgeText: 'Feeling Calm', message: "That calm feeling is precious. Keep it going. 🍃", bgClass: 'bg-[#DBEAFE]' },
-    { key: 'Neutral', label: 'Okay', emoji: '😐', badgeText: 'Feeling Okay', message: "It's okay to feel neutral. Small steps still count. 🌿", bgClass: 'bg-[#F3E8FF]' },
-    { key: 'Anxious', label: 'Anxious', emoji: '😰', badgeText: 'Feeling Anxious', message: "Take deep breaths — you're stronger than you know. 🫶", bgClass: 'bg-[#FEF3C7]' },
-    { key: 'Sad', label: 'Sad', emoji: '😔', badgeText: 'Feeling Sad', message: "Be gentle with yourself today. 🤍", bgClass: 'bg-[#FEE2E2]' },
-    { key: 'Angry', label: 'Angry', emoji: '😠', badgeText: 'Feeling Angry', message: "Anger is valid. Pause + slow breathing. 🧘", bgClass: 'bg-[#FFE4E6]' },
-    { key: 'Tired', label: 'Tired', emoji: '🥱', badgeText: 'Feeling Tired', message: "Rest is productive. Even a small break helps. 💤", bgClass: 'bg-[#E0E7FF]' }
+    { key: 'Happy', label: 'Happy', emoji: '😊', badgeText: 'Feeling Happy', message: "I'm so glad you're feeling happy today.", bgClass: 'bg-[#DCFCE7]' },
+    { key: 'Excited', label: 'Excited', emoji: '🤩', badgeText: 'Feeling Excited', message: 'Love that energy! Use it for one small win today.', bgClass: 'bg-[#DCFCE7]' },
+    { key: 'Calm', label: 'Calm', emoji: '😌', badgeText: 'Feeling Calm', message: 'That calm feeling is precious. Keep it going.', bgClass: 'bg-[#DBEAFE]' },
+    { key: 'Neutral', label: 'Okay', emoji: '😐', badgeText: 'Feeling Okay', message: "It's okay to feel neutral. Small steps still count.", bgClass: 'bg-[#F3E8FF]' },
+    { key: 'Anxious', label: 'Anxious', emoji: '😰', badgeText: 'Feeling Anxious', message: "Take deep breaths - you're stronger than you know.", bgClass: 'bg-[#FEF3C7]' },
+    { key: 'Sad', label: 'Sad', emoji: '😔', badgeText: 'Feeling Sad', message: 'Be gentle with yourself today.', bgClass: 'bg-[#FEE2E2]' },
+    { key: 'Angry', label: 'Angry', emoji: '😠', badgeText: 'Feeling Angry', message: 'Anger is valid. Pause and breathe slowly.', bgClass: 'bg-[#FFE4E6]' },
+    { key: 'Tired', label: 'Tired', emoji: '🥱', badgeText: 'Feeling Tired', message: 'Rest is productive. Even a small break helps.', bgClass: 'bg-[#E0E7FF]' }
   ];
 
   currentEntry: DailyEntry = {
@@ -138,8 +138,7 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
 
   constructor(
     private dailyService: DailyMeService,
-    private authService: AuthService,
-    private http: HttpClient
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -148,7 +147,7 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
         this.user = u;
         this.myUserId = u?.userId || '';
 
-        const role = (u?.role || '').toLowerCase();
+        const role = this.normalizeRole(u?.role);
 
         if (role === 'patient') {
           this.entries$ = this.dailyService.entries$;
@@ -187,7 +186,7 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
         this.resetFilters();
         this.resetWeeklyAnalysis();
 
-        this.loadPatients();
+        this.loadPatientsWithFreshUser();
       })
     );
   }
@@ -525,43 +524,136 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Patients for doctor
+  // ✅ Patients assigned to the logged-in doctor/caregiver
   loadPatients(): void {
-    const url = 'http://localhost:8096/EverCare/users/patients';
+    const role = this.normalizeRole(this.user?.role);
+    const canViewAssociatedPatients = role === 'doctor' || role === 'caregiver';
+    const emails = this.normalizeEmailList(this.user?.patientEmails || []);
 
-    const token =
-      localStorage.getItem('token') ||
-      localStorage.getItem('access_token') ||
-      localStorage.getItem('jwt') ||
-      '';
+    this.patients = [];
 
-    const headers: any = token ? { Authorization: `Bearer ${token}` } : {};
+    if (!canViewAssociatedPatients) {
+      return;
+    }
 
-    this.http.get<any>(url, { headers }).subscribe({
-      next: (res: any) => {
-        const list: any[] =
-          Array.isArray(res) ? res :
-          Array.isArray(res?.data) ? res.data :
-          Array.isArray(res?.patients) ? res.patients :
-          [];
+    if (emails.length > 0) {
+      this.loadPatientsByEmails(emails);
+      return;
+    }
 
-        this.patients = list.map((p: any) => {
-          const id = String(p.userId || p.id || p.patientId || p._id || '');
-          const name =
-            (p.name && String(p.name).trim()) ||
-            `${p.firstName || ''} ${p.lastName || ''}`.trim() ||
-            (p.username ? String(p.username) : '') ||
-            (p.email ? String(p.email).split('@')[0] : 'Patient');
+    this.loadAssociatedPatientsFallback(role);
+  }
 
-          const email = String(p.email || '');
-          return { userId: id, name, email };
-        }).filter((p: any) => p.userId !== '');
-      },
-      error: (err: any) => {
-        console.error('FAILED loading patients:', err.status, err.error);
-        this.patients = [];
+  private loadPatientsWithFreshUser(): void {
+    const email = String(this.user?.email || '').trim();
+
+    if (!email) {
+      this.loadPatients();
+      return;
+    }
+
+    this.authService.getUserByEmail(email).pipe(
+      catchError((err: any) => {
+        console.error('FAILED refreshing Daily Me user:', err.status, err.error);
+        return of(this.user);
+      })
+    ).subscribe((freshUser: any) => {
+      this.user = { ...(this.user || {}), ...(freshUser || {}) };
+      this.loadPatients();
+    });
+  }
+
+  private loadPatientsByEmails(emails: string[]): void {
+    const normalizedEmails = this.normalizeEmailList(emails);
+
+    if (normalizedEmails.length === 0) {
+      this.patients = [];
+      return;
+    }
+
+    forkJoin(
+      normalizedEmails.map(email =>
+        this.authService.getUserByEmail(email).pipe(
+          catchError((err: any) => {
+            console.error('FAILED loading associated patient:', email, err.status, err.error);
+            return of(null);
+          })
+        )
+      )
+    ).subscribe((users: any[]) => {
+      const count = this.setPatients(users);
+      if (count === 0) {
+        this.loadAssociatedPatientsFallback(this.normalizeRole(this.user?.role));
       }
     });
+  }
+
+  private loadAssociatedPatientsFallback(role: string): void {
+    const currentEmail = String(this.user?.email || '').trim().toLowerCase();
+
+    if (!currentEmail) {
+      this.patients = [];
+      return;
+    }
+
+    this.authService.searchUsersByRole('', 'PATIENT').pipe(
+      catchError((err: any) => {
+        console.error('FAILED loading patients fallback:', err.status, err.error);
+        return of([]);
+      })
+    ).subscribe((patients: any[]) => {
+      const associatedPatients = (patients || []).filter((patient: any) => {
+        if (role === 'doctor') {
+          return String(patient?.doctorEmail || '').trim().toLowerCase() === currentEmail;
+        }
+
+        const caregiverEmails = this.normalizeEmailList(patient?.caregiverEmails || []);
+        return caregiverEmails.some(email => email.toLowerCase() === currentEmail);
+      });
+
+      this.setPatients(associatedPatients);
+    });
+  }
+
+  private setPatients(users: any[]): number {
+    this.patients = (users || [])
+      .filter((patient: any) => !!patient)
+      .map((patient: any) => this.toSimplePatient(patient))
+      .filter((patient: SimplePatient) => !!patient.userId);
+
+    return this.patients.length;
+  }
+
+  private normalizeRole(role: any): string {
+    return String(role || '').trim().toLowerCase().replace(/^role_/, '');
+  }
+
+  private normalizeEmailList(emails: string[]): string[] {
+    const seen = new Set<string>();
+
+    return (emails || [])
+      .map(email => String(email || '').trim())
+      .filter(email => {
+        const key = email.toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
+
+  private toSimplePatient(patient: any): SimplePatient {
+    const id = String(patient?.userId || patient?.id || patient?.patientId || patient?._id || '');
+    const name =
+      (patient?.name && String(patient.name).trim()) ||
+      `${patient?.firstName || ''} ${patient?.lastName || ''}`.trim() ||
+      (patient?.username ? String(patient.username) : '') ||
+      (patient?.email ? String(patient.email).split('@')[0] : 'Patient');
+
+    return {
+      userId: id,
+      name,
+      email: String(patient?.email || '')
+    };
   }
 
   onSelectPatient(): void {

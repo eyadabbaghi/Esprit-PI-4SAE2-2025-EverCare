@@ -20,15 +20,14 @@ export interface RoutineGoal {
   type: string;
   target: number;
   label: string;
-  emoji: string;
 }
 
 const DEFAULT_GOALS: RoutineGoal[] = [
-  { type: 'Cognitive',   target: 3, label: 'Train your mind',   emoji: '🧠' },
-  { type: 'Physical',    target: 3, label: 'Move your body',    emoji: '💪' },
-  { type: 'Relaxation',  target: 2, label: 'Find your calm',    emoji: '🧘' },
-  { type: 'Social',      target: 2, label: 'Connect with others', emoji: '🤝' },
-  { type: 'Creative',    target: 2, label: 'Express yourself',  emoji: '🎨' },
+  { type: 'Cognitive',   target: 3, label: 'Train your mind' },
+  { type: 'Physical',    target: 3, label: 'Move your body' },
+  { type: 'Relaxation',  target: 2, label: 'Find your calm' },
+  { type: 'Social',      target: 2, label: 'Connect with others' },
+  { type: 'Creative',    target: 2, label: 'Express yourself' },
 ];
 
 @Component({
@@ -78,11 +77,11 @@ export class ActivitiesComponent implements OnInit {
   translating: { [key: string]: boolean } = {};
 
   languages = [
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+    { code: 'fr', name: 'French', label: 'FR' },
+    { code: 'ar', name: 'Arabic', label: 'AR' },
+    { code: 'de', name: 'German', label: 'DE' },
+    { code: 'zh', name: 'Chinese', label: 'ZH' },
+    { code: 'ru', name: 'Russian', label: 'RU' }
   ];
   selectedLang: { [key: string]: string } = {};
   currentTranslationLang: { [key: string]: string } = {};
@@ -173,7 +172,7 @@ export class ActivitiesComponent implements OnInit {
     };
     this.routineActivities = [routineItem, ...this.routineActivities];
     this.saveRoutine();
-    this.toastr.success(`"${activity.name}" added to your routine! 📌`);
+    this.toastr.success(`"${activity.name}" added to your routine.`);
   }
 
   unpinFromRoutine(activityId: string, event?: Event): void {

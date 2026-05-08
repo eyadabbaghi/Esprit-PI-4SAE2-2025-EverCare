@@ -3,6 +3,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
+import { OnboardingTutorialService } from '../../../front-office/ui/onboarding-tutorial/onboarding-tutorial.service';
 import { AssessmentCreateRequest, AssessmentReport } from '../../models/assessment.model';
 import { AssessmentService } from '../../services/assessment.service';
 
@@ -67,7 +68,8 @@ export class AssessmentFormComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly assessmentService: AssessmentService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly tutorialService: OnboardingTutorialService
   ) {}
 
   ngOnInit(): void {
@@ -121,6 +123,7 @@ export class AssessmentFormComponent implements OnInit {
         if (source === 'onboarding') {
           localStorage.removeItem('showAlzheimerAssessment');
           localStorage.removeItem('showWelcomeFlow');
+          this.tutorialService.queueForCurrentUser('PATIENT');
           this.router.navigate(['/']);
         } else if (returnTo === 'profile') {
           this.router.navigate(['/profile']);

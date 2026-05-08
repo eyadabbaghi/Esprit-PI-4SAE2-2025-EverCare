@@ -1,61 +1,121 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="doctor-appointments-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto flex flex-col gap-5">
 
     <!-- Header Component -->
-    <app-doctor-header [doctor]="currentDoctor"></app-doctor-header>
+    <section class="doctor-page-hero">
+      <div>
+        <p class="hero-kicker">Doctor scheduling workspace</p>
+        <h1>Appointments</h1>
+        <p>Build consultation types, open weekly availability, then follow each patient visit from check-in to consultation.</p>
+      </div>
+      <div class="hero-orbit" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </section>
+
+    <div class="elevated-surface">
+      <app-doctor-header [doctor]="currentDoctor"></app-doctor-header>
+    </div>
+
+    <section class="workflow-panel" aria-label="Doctor appointment workflow">
+      <div class="workflow-heading">
+        <span class="workflow-badge">Workflow</span>
+        <h2>Set up your appointment flow</h2>
+      </div>
+      <div class="workflow-steps">
+        <button type="button" class="workflow-step" [class.is-active]="activeTab === 'consultation-types'" (click)="onTabChange('consultation-types')">
+          <span class="step-number">1</span>
+          <span>
+            <strong>Create Consultation Type</strong>
+            <small>Define the appointment purpose and duration.</small>
+          </span>
+        </button>
+        <button type="button" class="workflow-step" [class.is-active]="activeTab === 'availability'" (click)="onTabChange('availability')">
+          <span class="step-number">2</span>
+          <span>
+            <strong>Set Availability</strong>
+            <small>Open recurring slots patients can book.</small>
+          </span>
+        </button>
+        <button type="button" class="workflow-step" [class.is-active]="activeTab === 'dashboard'" (click)="onTabChange('dashboard')">
+          <span class="step-number">3</span>
+          <span>
+            <strong>Review Schedule</strong>
+            <small>Start calls, prescribe, and follow up.</small>
+          </span>
+        </button>
+        <span class="floating-cursor" aria-hidden="true"></span>
+      </div>
+    </section>
 
     <!-- Tabs Component -->
-    <app-doctor-tabs [activeTab]="activeTab" (tabChange)="onTabChange($event)"></app-doctor-tabs>
+    <div class="elevated-surface tabs-surface">
+      <app-doctor-tabs [activeTab]="activeTab" (tabChange)="onTabChange($event)"></app-doctor-tabs>
+    </div>
 
     <!-- ========== TAB 1: DASHBOARD ========== -->
     <div *ngIf="activeTab === 'dashboard'" class="space-y-5">
       <!-- Stats Cards Component -->
-      <app-stats-cards [stats]="doctorStats"></app-stats-cards>
+      <div class="content-panel">
+        <app-stats-cards [stats]="doctorStats"></app-stats-cards>
+      </div>
 
       <!-- Today's Schedule Component -->
-      <app-today-schedule
-        [appointments]="todayAppointments"
-        (onCardClick)="viewAppointmentDetails($event)"
-        (onStart)="startConsultation($event)"
-        (onJoin)="joinVideoCall($event)"
-        (onViewProfile)="viewPatientProfile($event)">
-      </app-today-schedule>
+      <div class="content-panel">
+        <app-today-schedule
+          [appointments]="todayAppointments"
+          (onCardClick)="viewAppointmentDetails($event)"
+          (onStart)="startConsultation($event)"
+          (onJoin)="joinVideoCall($event)"
+          (onViewProfile)="viewPatientProfile($event)">
+        </app-today-schedule>
+      </div>
 
       <!-- Upcoming Appointments Component -->
-      <app-upcoming-appointments
-        [appointments]="upcomingAppointments"
-        (onCardClick)="viewAppointmentDetails($event)"
-        (onDateSelected)="onDateSelected($event)">
-      </app-upcoming-appointments>
+      <div class="content-panel">
+        <app-upcoming-appointments
+          [appointments]="upcomingAppointments"
+          (onCardClick)="viewAppointmentDetails($event)"
+          (onDateSelected)="onDateSelected($event)">
+        </app-upcoming-appointments>
+      </div>
 
       <!-- Recent Patients Table Component -->
-      <app-recent-patients-table
-        [patients]="recentPatients"
-        (onViewHistory)="viewPatientHistory($event)">
-      </app-recent-patients-table>
+      <div class="content-panel">
+        <app-recent-patients-table
+          [patients]="recentPatients"
+          (onViewHistory)="viewPatientHistory($event)">
+        </app-recent-patients-table>
+      </div>
     </div>
 
     <!-- ========== TAB 2: AVAILABILITY ========== -->
     <div *ngIf="activeTab === 'availability'" class="space-y-5">
-      <app-availability-manager
-        [availabilities]="availabilities"
-        [stats]="availabilityStats"
-        [appointments]="appointments"
-        [doctorId]="currentDoctor.userId || ''"
-        (addAvailability)="addAvailability($event)"
-        (editAvailability)="editAvailability($event)"
-        (deleteAvailability)="deleteAvailability($event)"
-      >
-      </app-availability-manager>
+      <div class="content-panel active-work-panel">
+        <app-availability-manager
+          [availabilities]="availabilities"
+          [stats]="availabilityStats"
+          [appointments]="appointments"
+          [doctorId]="currentDoctor.userId || ''"
+          (addAvailability)="addAvailability($event)"
+          (editAvailability)="editAvailability($event)"
+          (deleteAvailability)="deleteAvailability($event)"
+        >
+        </app-availability-manager>
+      </div>
     </div>
 
     <!-- ========== TAB 3: CONSULTATION TYPES ========== -->
     <div *ngIf="activeTab === 'consultation-types'" class="space-y-5">
-      <app-consultation-type-manager
-        [types]="consultationTypesList"
-        (addType)="addConsultationType($event)"
-        >
-      </app-consultation-type-manager>
+      <div class="content-panel active-work-panel">
+        <app-consultation-type-manager
+          [types]="consultationTypesList"
+          (addType)="addConsultationType($event)"
+          >
+        </app-consultation-type-manager>
+      </div>
     </div>
 
 

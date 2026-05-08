@@ -14,6 +14,7 @@ import { finalize } from 'rxjs/operators';
 @Component({
   selector: 'app-appointments-page',
   templateUrl: './appointments-page.component.html',
+  styleUrls: ['./appointments-page.component.css'],
 })
 export class AppointmentsPageComponent implements OnInit {
   // ========== PROPERTIES ==========
@@ -341,8 +342,8 @@ export class AppointmentsPageComponent implements OnInit {
   handleAppointmentAction(appointment: Appointment): void {
     if (appointment.status === 'SCHEDULED') {
       this.confirmAppointment(appointment.appointmentId);
-    } else if (appointment.videoLink && this.canJoinCall(appointment)) {
-      this.joinVideoCall(appointment.videoLink);
+    } else if (this.canJoinCall(appointment)) {
+      this.joinVideoCall(appointment);
     }
   }
 
@@ -387,9 +388,13 @@ export class AppointmentsPageComponent implements OnInit {
     }
   }
 
-  joinVideoCall(videoLink: string | undefined): void {
-    if (videoLink) {
-      window.open(videoLink, '_blank');
+  joinVideoCall(appointment: Appointment | string | undefined): void {
+    const appointmentId = typeof appointment === 'string'
+      ? this.appointments.find(apt => apt.videoLink === appointment)?.appointmentId
+      : appointment?.appointmentId;
+
+    if (appointmentId) {
+      this.router.navigate(['/appointments/video', appointmentId]);
     }
   }
 
@@ -495,7 +500,6 @@ export class AppointmentsPageComponent implements OnInit {
       endDateTime: this.toLocalDateTimeString(endDateTime),
       status: 'SCHEDULED',
       caregiverPresence: formData.caregiverPresence,
-      videoLink: `https://consult.evercare.com/room/${formData.doctorId}-${this.currentPatient.userId}`,
       simpleSummary: formData.notes || undefined
     };
 

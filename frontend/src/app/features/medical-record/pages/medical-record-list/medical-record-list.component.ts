@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { MedicalRecord } from '../../models/medical-record.model';
 import { MedicalRecordService } from '../../services/medical-record.service';
@@ -27,6 +28,7 @@ export class MedicalRecordListComponent implements OnInit {
   patientIdentifierCandidates: string[] = [];
   private readonly patientNameById = new Map<string, string>();
   private readonly patientNameLoading = new Set<string>();
+  private associatedRecords: MedicalRecord[] = [];
 
   isLoading = false;
   errorMessage = '';
@@ -64,6 +66,11 @@ export class MedicalRecordListComponent implements OnInit {
       }
 
       if (this.permissions.canRead) {
+        if (this.isCareTeamRole) {
+          this.loadAssociatedRecords();
+          return;
+        }
+
         this.refreshStats();
         this.loadPage(0);
       }
@@ -78,6 +85,12 @@ export class MedicalRecordListComponent implements OnInit {
     const patientId = this.searchControl.value.trim();
     if (!patientId) {
       this.resetSearch();
+      return;
+    }
+
+    if (this.isCareTeamRole) {
+      this.isSearchMode = true;
+      this.applyCareTeamFilters();
       return;
     }
 
@@ -115,6 +128,10 @@ export class MedicalRecordListComponent implements OnInit {
 
     this.searchControl.setValue('');
     this.isSearchMode = false;
+    if (this.isCareTeamRole) {
+      this.applyCareTeamFilters();
+      return;
+    }
     this.loadPage(0);
   }
 
@@ -124,6 +141,11 @@ export class MedicalRecordListComponent implements OnInit {
       this.totalElements = 0;
       this.totalPages = 0;
       this.errorMessage = '';
+      return;
+    }
+
+    if (this.isCareTeamRole) {
+      this.loadAssociatedRecords();
       return;
     }
 
@@ -152,6 +174,11 @@ export class MedicalRecordListComponent implements OnInit {
     }
 
     this.activeFilter = filter;
+    if (this.isCareTeamRole) {
+      this.applyCareTeamFilters();
+      return;
+    }
+
     if (!this.isSearchMode) {
       this.loadPage(0);
     }
@@ -223,6 +250,10 @@ export class MedicalRecordListComponent implements OnInit {
 
   get isPatientRole(): boolean {
     return this.currentRole === 'PATIENT';
+  }
+
+  get isCareTeamRole(): boolean {
+    return this.currentRole === 'DOCTOR' || this.currentRole === 'CAREGIVER';
   }
 
   private loadOwnRecord(): void {
@@ -361,7 +392,7 @@ export class MedicalRecordListComponent implements OnInit {
   }
 
   private refreshStats(): void {
-    if (!this.permissions.canRead || this.isPatientRole) {
+    if (!this.permissions.canRead || this.isPatientRole || this.isCareTeamRole) {
       return;
     }
 
@@ -384,6 +415,199 @@ export class MedicalRecordListComponent implements OnInit {
         this.isStatsLoading = false;
       }
     });
+  }
+
+  private loadAssociatedRecords(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.isSearchMode = !!this.searchControl.value.trim();
+
+    this.loadAssociatedPatients().subscribe({
+      next: (patients) => {
+        if (patients.length === 0) {
+          this.associatedRecords = [];
+          this.records = [];
+          this.totalElements = 0;
+          this.totalPages = 0;
+          this.resetCareTeamStats([]);
+          this.isLoading = false;
+          return;
+        }
+
+        const requests = patients.map((patient) => this.loadRecordForPatient(patient));
+        forkJoin(requests).subscribe({
+          next: (records) => {
+            this.associatedRecords = records.filter((record): record is MedicalRecord => !!record);
+            this.hydratePatientNames(this.associatedRecords);
+            this.applyCareTeamFilters();
+            this.refreshCareTeamStats(this.associatedRecords);
+            this.isLoading = false;
+          },
+          error: () => {
+            this.associatedRecords = [];
+            this.records = [];
+            this.resetCareTeamStats([]);
+            this.errorMessage = 'Unable to load associated patient medical records.';
+            this.isLoading = false;
+          }
+        });
+      },
+      error: () => {
+        this.associatedRecords = [];
+        this.records = [];
+        this.resetCareTeamStats([]);
+        this.errorMessage = 'Unable to load associated patients.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private applyCareTeamFilters(): void {
+    const query = this.searchControl.value.trim().toLowerCase();
+    let filtered = this.associatedRecords.slice();
+
+    if (this.activeFilter === 'active') {
+      filtered = filtered.filter((record) => record.active);
+    } else if (this.activeFilter === 'archived') {
+      filtered = filtered.filter((record) => !record.active);
+    }
+
+    if (query) {
+      filtered = filtered.filter((record) => {
+        const patientName = this.getPatientDisplayName(record).toLowerCase();
+        return patientName.includes(query) || record.patientId.toLowerCase().includes(query);
+      });
+    }
+
+    this.records = filtered;
+    this.page = 0;
+    this.totalElements = filtered.length;
+    this.totalPages = filtered.length > 0 ? 1 : 0;
+  }
+
+  private loadAssociatedPatients(): Observable<User[]> {
+    const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const directRequests = directEmails.map((email) =>
+      this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
+    );
+
+    const direct$ = directRequests.length > 0 ? forkJoin(directRequests) : of([]);
+    const fallback$ = this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([])));
+
+    return forkJoin({ direct: direct$, fallback: fallback$ }).pipe(
+      map(({ direct, fallback }) => {
+        const associated = new Map<string, User>();
+
+        for (const patient of direct) {
+          if (patient) {
+            associated.set(this.patientAssociationKey(patient), patient);
+          }
+        }
+
+        for (const patient of fallback || []) {
+          if (this.isAssociatedPatientUser(patient, currentEmail)) {
+            associated.set(this.patientAssociationKey(patient), patient);
+          }
+        }
+
+        return Array.from(associated.values());
+      })
+    );
+  }
+
+  private loadRecordForPatient(patient: User): Observable<MedicalRecord | null> {
+    const candidates = this.resolveRecordCandidates(patient);
+    return this.tryLoadRecordCandidate(candidates, 0);
+  }
+
+  private tryLoadRecordCandidate(candidates: string[], index: number): Observable<MedicalRecord | null> {
+    if (index >= candidates.length) {
+      return of(null);
+    }
+
+    return this.medicalRecordService.getByPatientId(candidates[index]).pipe(
+      catchError(() => this.tryLoadRecordCandidate(candidates, index + 1))
+    );
+  }
+
+  private resolveRecordCandidates(patient: User): string[] {
+    const candidates = [
+      patient.userId,
+      patient.email,
+      patient.name
+    ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+
+    return this.uniqueNormalized(candidates);
+  }
+
+  private isAssociatedPatientUser(patient: User, currentEmail: string): boolean {
+    if (!currentEmail) {
+      return false;
+    }
+
+    if (this.currentRole === 'DOCTOR') {
+      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+    }
+
+    const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
+    return caregiverEmails.some((email) => email.toLowerCase() === currentEmail);
+  }
+
+  private refreshCareTeamStats(records: MedicalRecord[]): void {
+    this.resetCareTeamStats(records);
+
+    if (records.length === 0) {
+      return;
+    }
+
+    this.isStatsLoading = true;
+    const requests = records.map((record) =>
+      this.assessmentService.getByPatient(record.patientId).pipe(
+        map((reports) => (reports || []).some((report) => report.needsAttention) ? 1 : 0),
+        catchError(() => of(0))
+      )
+    );
+
+    forkJoin(requests).subscribe({
+      next: (counts) => {
+        this.criticalCount = counts.reduce((sum, count) => sum + count, 0);
+        this.isStatsLoading = false;
+      },
+      error: () => {
+        this.criticalCount = 0;
+        this.isStatsLoading = false;
+      }
+    });
+  }
+
+  private resetCareTeamStats(records: MedicalRecord[]): void {
+    this.totalCount = records.length;
+    this.activeCount = records.filter((record) => record.active).length;
+    this.archivedCount = records.filter((record) => !record.active).length;
+    this.criticalCount = 0;
+  }
+
+  private patientAssociationKey(patient: User): string {
+    return String(patient.userId || patient.email || patient.name || '').trim().toLowerCase();
+  }
+
+  private normalizeEmailList(emails: string[]): string[] {
+    return this.uniqueNormalized(emails);
+  }
+
+  private uniqueNormalized(values: string[]): string[] {
+    const seen = new Set<string>();
+    return values
+      .map((value) => String(value || '').trim())
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (!key || seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
   }
 
   private hydratePatientNames(records: MedicalRecord[]): void {

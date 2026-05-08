@@ -371,7 +371,7 @@ export class DailyTaskListComponent implements OnInit, OnDestroy, OnChanges {
       this.taskService.resolveDailyMeAlert(id).subscribe({
         next: () => {
           this.loadAlerts();
-          this.openAlert('Resolved', 'Alert resolved ✅', 'success');
+          this.openAlert('Resolved', 'Alert resolved.', 'success');
         },
         error: () => this.openAlert('Error', 'Could not resolve alert.', 'error')
       })
@@ -809,7 +809,7 @@ save(form?: NgForm): void {
             if (form) form.resetForm(); // ✅ reset modal inputs
             this.loadActive();
             this.loadHistory();
-            this.openAlert('Saved', 'Task updated ✅', 'success');
+            this.openAlert('Saved', 'Task updated.', 'success');
           },
           error: (err) => {
             console.error('Update failed:', err);
@@ -825,7 +825,7 @@ save(form?: NgForm): void {
             if (form) form.resetForm(); // ✅ reset modal inputs
             this.loadActive();
             this.loadHistory();
-            this.openAlert('Saved', 'Task added ✅', 'success');
+            this.openAlert('Saved', 'Task added.', 'success');
           },
           error: (err) => {
             console.error('Add failed:', err);
@@ -850,7 +850,7 @@ save(form?: NgForm): void {
         next: () => {
           this.loadActive();
           this.loadHistory();
-          this.openAlert('Deleted', 'Task deleted ✅', 'success');
+          this.openAlert('Deleted', 'Task deleted.', 'success');
         },
         error: (err) => {
           console.error('Delete error:', err);

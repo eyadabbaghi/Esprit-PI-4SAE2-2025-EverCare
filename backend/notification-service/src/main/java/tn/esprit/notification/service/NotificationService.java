@@ -21,6 +21,7 @@ public class NotificationService {
         notification.setActivityId(request.getActivityId());
         notification.setAction(request.getAction());
         notification.setDetails(request.getDetails());
+        notification.setTargetUserIds(request.getTargetUserIds());
         // timestamp is auto-set by @PrePersist
 
         notificationRepository.save(notification);

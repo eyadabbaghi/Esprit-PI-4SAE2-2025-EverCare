@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 export interface Notification {
   id: string;
   activityId: string;
-  action: 'CREATED' | 'UPDATED' | 'DELETED' | 'PRE_CONSULTATION_FORM';
+  action: 'CREATED' | 'UPDATED' | 'DELETED' | 'PRE_CONSULTATION_FORM' | string;
   details: string;
   timestamp: string;
   read?: boolean;

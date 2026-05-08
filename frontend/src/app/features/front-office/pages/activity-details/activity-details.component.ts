@@ -18,11 +18,11 @@ export class ActivityDetailsComponent implements OnInit {
 
   // Translation and summarization
   languages = [
-    { code: 'fr', name: 'French', flag: '🇫🇷' },
-    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-    { code: 'de', name: 'German', flag: '🇩🇪' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-    { code: 'ru', name: 'Russian', flag: '🇷🇺' }
+    { code: 'fr', name: 'French', label: 'FR' },
+    { code: 'ar', name: 'Arabic', label: 'AR' },
+    { code: 'de', name: 'German', label: 'DE' },
+    { code: 'zh', name: 'Chinese', label: 'ZH' },
+    { code: 'ru', name: 'Russian', label: 'RU' }
   ];
   selectedLang: string = 'fr';
   translatedActivity: any = null;

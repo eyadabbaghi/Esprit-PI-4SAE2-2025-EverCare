@@ -1,74 +1,52 @@
-<div class="bg-white rounded-xl border border-[#C4B5FD] shadow-sm overflow-hidden">
-  <div class="p-4 border-b border-[#C4B5FD] bg-[#F9FAFB]">
-    <h3 class="font-semibold text-[#2D1B4E]">Available Time Slots</h3>
-    <p class="text-sm text-[#6B5B8C]">Select a time for your appointment</p>
-  </div>
+<section class="weekly-scheduler">
+  <header class="schedule-header">
+    <div>
+      <span class="schedule-eyebrow">Step 2</span>
+      <h3>Available time slots</h3>
+      <p>Select a time for your appointment.</p>
+    </div>
+  </header>
 
-  <!-- Week navigation -->
-  <div class="p-4 flex items-center justify-between border-b border-[#E5E7EB]">
-    <button class="p-2 hover:bg-[#F3E8FF] rounded-md transition-colors"
-            (click)="previousWeek()">
-      ← Previous week
+  <div class="week-nav">
+    <button type="button" (click)="previousWeek()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M15 18 9 12l6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      Previous week
     </button>
-    <span class="font-medium text-[#2D1B4E]">
-          {{ weekStart | date:'dd MMM' }} - {{ weekEnd | date:'dd MMM yyyy' }}
-        </span>
-    <button class="p-2 hover:bg-[#F3E8FF] rounded-md transition-colors"
-            (click)="nextWeek()">
-      Next week →
+    <strong>{{ weekStart | date:'dd MMM' }} - {{ weekEnd | date:'dd MMM yyyy' }}</strong>
+    <button type="button" (click)="nextWeek()">
+      Next week
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="m9 18 6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
     </button>
   </div>
 
-  <!-- Days grid -->
-  <div class="p-4">
-    <div class="grid grid-cols-7 gap-2 mb-2">
-      <div *ngFor="let day of weekDays"
-           class="text-center font-medium text-[#2D1B4E]">
-        {{ day }}
-      </div>
+  <div class="calendar-board">
+    <div class="day-header" *ngFor="let day of weekDays; let i = index">
+      <strong>{{ day }}</strong>
+      <span>{{ weekDates[i] | date:'dd' }}</span>
     </div>
 
-    <div class="grid grid-cols-7 gap-2 mb-4">
-      <div *ngFor="let date of weekDates"
-           class="text-center text-sm text-[#6B5B8C]">
-        {{ date | date:'dd' }}
-      </div>
-    </div>
-
-    <!-- Time slots grid -->
-    <div class="space-y-2">
-      <div *ngFor="let timeSlot of timeSlots" class="grid grid-cols-7 gap-2">
-        <div *ngFor="let slot of timeSlot.slots"
-             class="p-2 text-center rounded-md cursor-pointer transition-colors text-sm"
-             [class.bg-[#7C3AED]]="slot.selected"
-             [class.text-white]="slot.selected"
-             [class.bg-[#F3E8FF]]="slot.available && !slot.selected"
-             [class.text-[#7C3AED]]="slot.available && !slot.selected"
-             [class.bg-gray-100]="!slot.available"
-             [class.text-gray-400]="!slot.available"
-             [class.cursor-not-allowed]="!slot.available"
-             [class.hover:bg-[#7C3AED]]="slot.available && !slot.selected"
-             [class.hover:text-white]="slot.available && !slot.selected"
-             (click)="slot.available && selectSlot(slot)">
-          {{ slot.time }}
-        </div>
-      </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="mt-4 flex items-center space-x-4 text-xs text-[#6B5B8C]">
-      <div class="flex items-center">
-        <span class="w-3 h-3 bg-[#7C3AED] rounded-full mr-1"></span>
-        Selected
-      </div>
-      <div class="flex items-center">
-        <span class="w-3 h-3 bg-[#F3E8FF] rounded-full mr-1"></span>
-        Available
-      </div>
-      <div class="flex items-center">
-        <span class="w-3 h-3 bg-gray-100 rounded-full mr-1"></span>
-        Booked
-      </div>
-    </div>
+    <ng-container *ngFor="let timeSlot of timeSlots">
+      <button
+        *ngFor="let slot of timeSlot.slots"
+        type="button"
+        class="time-cell"
+        [class.time-cell-selected]="slot.selected"
+        [class.time-cell-available]="slot.available && !slot.selected"
+        [class.time-cell-unavailable]="!slot.available"
+        [disabled]="!slot.available"
+        (click)="slot.available && selectSlot(slot)">
+        {{ slot.time }}
+      </button>
+    </ng-container>
   </div>
-</div>
+
+  <div class="schedule-legend">
+    <span><i class="legend-selected"></i>Selected</span>
+    <span><i class="legend-available"></i>Available</span>
+    <span><i class="legend-booked"></i>Booked</span>
+  </div>
+</section>

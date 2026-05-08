@@ -1,12 +1,13 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="patient-prescription-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="patient-hero flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
+        <p class="hero-kicker">Medication plan</p>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">My Prescriptions</h1>
         <p class="text-[#6B5B8C] mt-1">
-          Welcome, {{ currentUser?.name }} — here are your active medications
+          Welcome, {{ currentUser?.name }}. Here are your active medications.
         </p>
       </div>
 
@@ -35,6 +36,25 @@
         </button>
       </div>
     </div>
+
+    <section class="patient-guide" aria-label="Patient prescription guide">
+      <div class="guide-step is-active">
+        <span>1</span>
+        <strong>Review active medication</strong>
+        <small>Open details to see dosage and doctor notes.</small>
+      </div>
+      <div class="guide-step">
+        <span>2</span>
+        <strong>Check today's schedule</strong>
+        <small>Morning, noon, and evening doses are grouped for quick scanning.</small>
+      </div>
+      <div class="guide-step">
+        <span>3</span>
+        <strong>Save or request help</strong>
+        <small>Download PDFs and keep renewal information visible.</small>
+      </div>
+      <i class="floating-cursor" aria-hidden="true"></i>
+    </section>
 
     <!-- Loading -->
     <div *ngIf="loading" class="fixed inset-0 bg-black/20 z-50 flex items-center justify-center">

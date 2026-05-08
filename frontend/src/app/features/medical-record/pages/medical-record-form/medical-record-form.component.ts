@@ -16,6 +16,7 @@ export class MedicalRecordFormComponent implements OnInit {
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
   readonly stageOptions: AlzheimerStage[] = ['EARLY', 'MIDDLE', 'LATE'];
+  readonly bloodGroupOptions = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   readonly form = this.formBuilder.group({
     patientId: this.formBuilder.control('', [Validators.required, Validators.maxLength(100)]),
     bloodGroup: this.formBuilder.control('', [Validators.pattern(/^(A|B|AB|O)[+-]$/)]),
@@ -49,6 +50,7 @@ export class MedicalRecordFormComponent implements OnInit {
       this.currentRole = resolveRole(user?.role);
       this.permissions = getMedicalRecordPermissions(this.currentRole);
       this.updateStageEditPermission();
+      this.prefillPatientForOwnRecord(user);
     });
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -63,6 +65,12 @@ export class MedicalRecordFormComponent implements OnInit {
 
     this.medicalRecordService.getById(this.recordId).subscribe({
       next: (record) => {
+        if (this.currentRole === 'PATIENT' && !this.isOwnRecord(record)) {
+          this.errorMessage = 'You can only edit your own medical record.';
+          this.isLoading = false;
+          return;
+        }
+
         this.form.patchValue(this.toForm(record));
         this.isLoading = false;
       },
@@ -185,5 +193,56 @@ export class MedicalRecordFormComponent implements OnInit {
     if (this.form.controls.alzheimerStage.disabled) {
       this.form.controls.alzheimerStage.enable();
     }
+  }
+
+  private prefillPatientForOwnRecord(user: User | null): void {
+    if (this.isEditMode || this.currentRole !== 'PATIENT') {
+      return;
+    }
+
+    const patientId = this.resolveOwnPatientId(user);
+    if (patientId) {
+      this.form.controls.patientId.setValue(patientId);
+      this.form.controls.patientId.disable();
+    }
+  }
+
+  private isOwnRecord(record: MedicalRecord): boolean {
+    const ownIds = this.uniqueNormalized([
+      this.resolveOwnPatientId(this.currentUser),
+      this.currentUser?.email || '',
+      this.currentUser?.name || ''
+    ]);
+    const recordPatientId = record.patientId.trim().toLowerCase();
+    return ownIds.some((id) => id.toLowerCase() === recordPatientId);
+  }
+
+  private resolveOwnPatientId(user: User | null): string {
+    if (user?.userId && user.userId.trim()) {
+      return user.userId.trim();
+    }
+
+    if (typeof window !== 'undefined') {
+      const localPatientId = window.localStorage.getItem('patientId');
+      if (localPatientId && localPatientId.trim()) {
+        return localPatientId.trim();
+      }
+    }
+
+    return user?.email?.trim() || '';
+  }
+
+  private uniqueNormalized(values: string[]): string[] {
+    const seen = new Set<string>();
+    return values
+      .map((value) => String(value || '').trim())
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (!key || seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
   }
 }

@@ -1,11 +1,30 @@
 <section class="cognitive-page">
   <div class="cognitive-shell">
-    <div class="page-header">
+    <div class="catalog-hero">
       <div>
-        <h2>Cognitive Stimulation Catalog</h2>
-        <p>Browse and manage therapeutic games proposed to patients based on their cognitive level.</p>
+        <span class="hero-kicker">Cognitive care library</span>
+        <h1>Cognitive Stimulation Catalog</h1>
+        <p>Browse therapeutic games, manage clinical exercises, and launch activities connected to a medical record.</p>
       </div>
       <a routerLink="/cognitive-stimulation" class="btn-muted">My Plan</a>
+    </div>
+
+    <div class="catalog-stats">
+      <article class="stat-card">
+        <span>Total Games</span>
+        <strong>{{ games.length }}</strong>
+        <p>Exercises available in the catalog.</p>
+      </article>
+      <article class="stat-card">
+        <span>Active Games</span>
+        <strong>{{ activeGamesCount }}</strong>
+        <p>Ready for patient sessions.</p>
+      </article>
+      <article class="stat-card">
+        <span>Average Duration</span>
+        <strong>{{ averageDuration }} min</strong>
+        <p>Typical activity length.</p>
+      </article>
     </div>
 
     <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
@@ -79,6 +98,10 @@
     </div>
 
     <div class="panel filter-panel">
+      <div class="filter-title">
+        <span class="hero-kicker">Filters</span>
+        <h2>Find the right activity</h2>
+      </div>
       <div class="filter-grid">
         <div class="field">
           <label for="searchTerm">Search</label>

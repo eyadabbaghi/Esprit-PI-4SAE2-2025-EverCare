@@ -1,8 +1,8 @@
-<div class="min-h-screen bg-[#FAF8FC] p-6">
+<div class="activities-page min-h-screen bg-[#FAF8FC] p-6">
   <div class="max-w-7xl mx-auto space-y-10">
 
     <!-- Header with background image -->
-    <section class="relative w-full h-80 md:h-96 lg:h-[28rem] rounded-2xl overflow-hidden flex items-center justify-center mb-10">
+    <section class="activities-hero relative w-full h-80 md:h-96 lg:h-[28rem] rounded-2xl overflow-hidden flex items-center justify-center mb-10">
       <img src="https://images.squarespace-cdn.com/content/v1/6724e6570e85b53ca15db261/1739939343403-PY5GVOARWL9HV4N889U6/10+Best+Activities+to+Keep+Your+Elderly+Loved+One+Active+1.jpg?format=2500w"
            alt="Activities header"
            class="absolute inset-0 w-full h-full object-cover brightness-75" />
@@ -15,7 +15,7 @@
     </section>
 
     <!-- Filter Bar -->
-    <div class="flex flex-wrap gap-4 items-center">
+    <div class="activities-filter-bar flex flex-wrap gap-4 items-center">
       <div class="flex-1 min-w-[200px]">
         <div class="relative group">
           <span class="absolute left-3 top-2.5 text-[#7C3AED] transition-all duration-300 group-focus-within:scale-110">
@@ -64,21 +64,23 @@
     <div *ngIf="userRole === 'DOCTOR'" class="space-y-6">
       <h2 class="text-2xl font-bold text-[#2D1B4E]">Recommend Activities to Your Patients</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div *ngFor="let activity of doctorActivities" class="border rounded-lg p-4 bg-white">
+        <div *ngFor="let activity of doctorActivities" class="doctor-activity-card border rounded-lg p-4 bg-white">
           <img [src]="getImageUrl(activity.imageUrl)" alt="" class="w-full h-40 object-cover rounded mb-2">
           <h3 class="font-semibold">{{ activity.name }}</h3>
           <p class="text-sm text-gray-600">{{ activity.description | slice:0:100 }}...</p>
           <div class="mt-2 flex gap-2">
             <div class="relative flex-1">
               <button type="button"
-                      class="border rounded p-1 text-sm flex items-center justify-between w-full bg-white"
+                      class="patient-select-btn border rounded p-1 text-sm flex items-center justify-between w-full bg-white"
                       (click)="togglePatientDropdown(activity.id)">
                 <span *ngIf="selectedPatient[activity.id]" class="flex items-center gap-2">
                   <img [src]="selectedPatient[activity.id].profilePicture || '/assets/default-avatar.png'" class="w-5 h-5 rounded-full object-cover">
                   {{ selectedPatient[activity.id].name }}
                 </span>
                 <span *ngIf="!selectedPatient[activity.id]" class="text-gray-500">Select patient</span>
-                <span class="ml-auto">▼</span>
+                <svg class="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
               </button>
               <div *ngIf="patientDropdownOpen === activity.id"
                    class="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
@@ -121,15 +123,15 @@
         <section *ngIf="recommendedActivities.length">
           <h2 class="text-3xl text-[#2D1B4E] mb-6 flex items-center gap-2">
             <span class="text-2xl">
-              <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.47 122.88" width="32" height="32" fill="currentColor">
-                <path d="M84.58,103.47a4.09,4.09,0,1,1-4.08,4.09,4.08,4.08,0,0,1,4.08-4.09Zm3.61-60.62a3.89,3.89,0,0,1,2.2,1.48c1.08,1.39,1.38,3.64,1.08,6a15.16,15.16,0,0,1-2.21,6.2c-1.31,2-3,3.29-5,3.16-.14,6.51-3.33,9.5-7.49,13.41l-1.59,1.51-.54.51.13.09a14.67,14.67,0,0,1-1.58,1.1,17.71,17.71,0,0,1-4.61,2.47,20.48,20.48,0,0,1-6.84,1.12,21.4,21.4,0,0,1-7.11-1.1l-1-.36a16.18,16.18,0,0,1-3.74-1.66l-.5-.31a21.59,21.59,0,0,1-2.26,4.77L62.65,92.05,77.23,79.9A22.93,22.93,0,0,1,75,75.38c6.43,4.57,7.82,14.11,7.61,21.81,0,1-.06,1.26-.08,1.59a8.91,8.91,0,0,0-4.36,15,8.49,8.49,0,0,0,11.77.7,8.9,8.9,0,0,0,3.42-7,7.94,7.94,0,0,0-1.08-4c-1.5-2.6-3.13-3.36-5.62-4.6-.17-.09,0-.47,0-1.53a47.43,47.43,0,0,0-1.46-14.08,21,21,0,0,0,3.4,1.41c8.9,2.1,19.84,3,23.76,5.2a16,16,0,0,1,5,4.26c3.47,4.58,3.76,17.76,5,23.36-.31,3.28-2.16,5.16-5.82,5.44H5.82C2.17,122.6.31,120.71,0,117.44c1.26-5.6,1.56-18.79,5-23.36a15.58,15.58,0,0,1,5.05-4.26c5.57-3.1,19.22-3.94,28.3-6.46a33.06,33.06,0,0,0-1.58,8c-1,.77-3.64,1.67-4.47,2.66a38.55,38.55,0,0,0-3.86,5.53,2,2,0,0,0-.27,1c0,.28.29.57.17.81l-.19.37c-2.6,5-4.29,10.61-3.49,13A3.64,3.64,0,0,0,27.3,117a12.43,12.43,0,0,0,3.15.41c.31,0,.63,0,.94,0a3.07,3.07,0,0,0,.52.39,4.12,4.12,0,0,0,.67.32,2.58,2.58,0,0,0,.91.17A2.51,2.51,0,0,0,36,115.75a2.54,2.54,0,0,0-.23-1,2.58,2.58,0,0,0-2.38-1.61c-.92,0-2.23.46-2.23,1.38v0l0,.06-.64,0a9.17,9.17,0,0,1-2.33-.28c-.45-.12-.71-.29-.77-.48-.58-1.68,1-6.33,3.29-10.83l.29-.55a2,2,0,0,0,1-.88,34,34,0,0,1,3.41-4.92,7.09,7.09,0,0,1,3.38-1.72H39a10.53,10.53,0,0,1,1.72,1.55,30.64,30.64,0,0,1,3.6,5c.23.41.79.5,1,.89,2.65,4.28,4.14,9.19,3.78,11.06-.08.44-.44.7-1,.88a10.49,10.49,0,0,1-2.62.37,1.74,1.74,0,0,0-.1-.19v0c0-.92-1.32-1.35-2.24-1.38a2.58,2.58,0,0,0-2.38,1.61,2.71,2.71,0,0,0-.23,1,2.51,2.51,0,0,0,2.51,2.51,2.63,2.63,0,0,0,.92-.17,4,4,0,0,0,.66-.32,3.27,3.27,0,0,0,.36-.25h.36A12.22,12.22,0,0,0,49,117a3.88,3.88,0,0,0,2.9-3.05c.44-2.44-1.33-7.82-3.94-12.7a2,2,0,0,0,.16-.81,2.13,2.13,0,0,0-.28-1,36,36,0,0,0-4.1-5.7c-.83-.93-2.66-1.2-2.85-2.44-.5-3.23.9-7.23,3-10.71a15.15,15.15,0,0,0,1.46-2.19l.32-.44a8.32,8.32,0,0,1,3.41-2.08q-.73-.55-1.47-1.2L46.07,73.3l-.1-.09c-4-3.48-7.41-6.43-8-13.56-2.78-.24-4.75-2.88-5.72-6a15.2,15.2,0,0,1-.65-5.14,7.82,7.82,0,0,1,1.51-4.56,4.31,4.31,0,0,1,.63-.65l-.14-.09c-.64-8,1.23-21.82-7.43-24.44C42.51-1.55,60.51-5.27,75.6,7.13,91.28,8,98.85,30.64,88.19,42.85Zm-46-5a14,14,0,0,0-.2,7.6,1.67,1.67,0,0,1-2.67,1.77c-2-1.7-3.21-1.86-3.73-1.24a4.7,4.7,0,0,0-.75,2.6,11.77,11.77,0,0,0,.51,4c.68,2.23,2,4.06,3.58,3.6a1.51,1.51,0,0,1,.48-.08,1.67,1.67,0,0,1,1.71,1.63c.17,7,3.24,9.67,7,12.9l.1.08,1.6,1.4a16.87,16.87,0,0,0,5.82,3.46,17.29,17.29,0,0,0,4.44.87,25,25,0,0,0,3.35-.16,23.69,23.69,0,0,0,4.45-.91,15,15,0,0,0,4.91-3.23l1.62-1.54c4-3.74,6.92-6.5,6.36-13.21a1.67,1.67,0,0,1,2.59-1.53c1.13.75,2.25,0,3.08-1.24a11.63,11.63,0,0,0,1.69-4.78,5.27,5.27,0,0,0-.41-3.52c-.4-.52-1.47-.31-3.53,1.26a1.67,1.67,0,0,1-2.73-1.55c1.46-8.54.73-13.82-1.14-17.34-1.63-3-4.23-4.85-7-6.32-6.15,4.7-10.49,5.23-14.81,5.77-3.57.44-7.12.88-11.83,4.13a11.37,11.37,0,0,0-4.47,5.58Z"/>
+              <svg class="section-heading-icon" width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM16.5 10.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4ZM3 20c.8-4.1 2.5-6 5-6s4.2 1.9 5 6M12.5 19.5c.7-3.2 2.1-4.9 4-4.9 2.1 0 3.5 1.7 4.2 4.9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
             Doctor's Recommendations
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div *ngFor="let activity of recommendedActivities" class="cursor-pointer" (click)="viewDetails(activity)">
-              <div class="border-2 border-[#DDD6FE] bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300">
+              <div class="activity-list-card border-2 border-[#DDD6FE] bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300">
                 <div class="relative h-52 overflow-hidden">
                   <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
                   <div class="absolute top-3 left-3">
@@ -140,8 +142,8 @@
                             class="pin-activity-btn flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border transition-all"
                             [ngClass]="isInRoutine(activity.id) ? 'bg-[#7C3AED] text-white border-[#7C3AED] pinned' : 'bg-white/95 text-[#7C3AED] border-[#C4B5FD] hover:bg-[#F3E8FF]'"
                             (click)="isInRoutine(activity.id) ? unpinFromRoutine(activity.id, $event) : pinToRoutine(activity, $event)">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 4h6a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                       </svg>
                       {{ isInRoutine(activity.id) ? 'Pinned' : 'Pin' }}
                     </button>
@@ -175,13 +177,15 @@
                     </div>
                     <div class="flex items-center gap-2">
                       <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="px-1 py-1 rounded-full text-[10px] border border-[#E5E7EB] bg-white focus:outline-none" (click)="$event.stopPropagation()">
-                        <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.flag }} {{ lang.name }}</option>
+                        <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }} - {{ lang.name }}</option>
                       </select>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] flex items-center gap-1"
                               [ngClass]="translations[activity.id] && !showOriginal[activity.id] ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE]'"
                               (click)="translateActivity(activity, selectedLang[activity.id] || 'fr'); $event.stopPropagation()"
                               [disabled]="translating[activity.id]">
-                        <svg width="14" height="14" viewBox="0 0 117.17 122.88" fill="currentColor"><path fill-rule="evenodd" d="M23.46,98.8l24-7.22-4.24,7.8c8.69,7.36,17.64,9.33,27.58,5.08-9.36,14.77-23.85,16.47-36,10.47l-4.33,7.95-7-24.08ZM23,35.33h9.93V32.77a.33.33,0,0,1,.33-.33H37.8a.33.33,0,0,1,.33.33v2.56h10a.33.33,0,0,1,.33.33v4.75a.32.32,0,0,1-.33.32H46.27a21.5,21.5,0,0,1-.91,4,25,25,0,0,1-1.73,4A32,32,0,0,1,41.55,52c-.72,1-1.51,2-2.35,3a40.33,40.33,0,0,0,4.63,4.61l0,0a55.4,55.4,0,0,0,5.82,4.28.32.32,0,0,1,.1.45l-2.35,3.68a.35.35,0,0,1-.46.1,60.53,60.53,0,0,1-6.24-4.58,44.58,44.58,0,0,1-5-4.9c-1.29,1.23-2.65,2.43-4.07,3.58-1.61,1.29-3.29,2.54-5,3.73a.33.33,0,0,1-.46-.08l-2.47-3.59a.31.31,0,0,1,.08-.45c1.69-1.17,3.34-2.4,4.91-3.68,1.39-1.13,2.72-2.3,3.95-3.51a39.71,39.71,0,0,1-3.15-5.61,44.72,44.72,0,0,1-2.43-6.63.34.34,0,0,1,.23-.4l4.21-1.18a.32.32,0,0,1,.4.23,39.2,39.2,0,0,0,1.92,5.38,37.33,37.33,0,0,0,2.32,4.39c.55-.69,1.07-1.37,1.55-2.06s1.06-1.64,1.51-2.48a19.68,19.68,0,0,0,1.29-2.91,18.87,18.87,0,0,0,.69-2.69H23a.32.32,0,0,1-.33-.32V35.66a.33.33,0,0,1,.33-.33Zm49.5,4.26h32.38a12.38,12.38,0,0,1,12.33,12.34V78a12.38,12.38,0,0,1-12.33,12.34h-1l-.66,9.89a2.62,2.62,0,0,1-4.19,2L83.25,90.35H63.18A12.38,12.38,0,0,1,50.86,78.53H38.67L20.35,93A4.57,4.57,0,0,1,13,89l.8-10.55a14.92,14.92,0,0,1-9.38-4.35l-.28-.3A14.94,14.94,0,0,1,0,63.56V35.71a15,15,0,0,1,15-15H57.49a14.91,14.91,0,0,1,10.57,4.39l.28.29a15,15,0,0,1,4.12,10.28v3.88Zm31.69-14.72L79.31,28.23l5.41-7c-7.42-8.63-16-12-26.43-9.35C69.85-1.26,84.43-.67,95.52,7.17L101,0l3.11,24.87ZM91.58,70.09h-8l-1.48,5H74.89c2.4-6.37,5.18-14,7.59-20.4.87-2.3,1.86-6.12,5-6.12s4.36,3.5,5.27,5.92l7.71,20.71H93.1l-1.52-5.14Zm-1.21-4.9-2.79-8.78-2.8,8.78ZM15,25.32H57.49A10.43,10.43,0,0,1,67.88,35.71V63.56A10.42,10.42,0,0,1,57.49,74H37.09L17.53,89.37,18.69,74H15A10.41,10.41,0,0,1,4.58,63.56V35.71A10.42,10.42,0,0,1,15,25.32Z"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M4 5h7M8 3v2m3 0c-.7 2.1-2 3.9-4 5.4M6.5 8.4c.7.9 1.6 1.7 2.6 2.4M13 21l1.5-4h4L20 21M15.1 15.3 16.5 11l1.4 4.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <span>{{ translating[activity.id] ? '...' : (translations[activity.id] && !showOriginal[activity.id] ? 'Original' : 'Translate') }}</span>
                       </button>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE]"
@@ -215,7 +219,7 @@
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div *ngFor="let activity of todayActivities" class="cursor-pointer" (click)="viewDetails(activity)">
-              <div class="border-2 rounded-2xl overflow-hidden transition-all duration-300"
+              <div class="activity-list-card border-2 rounded-2xl overflow-hidden transition-all duration-300"
                    [ngClass]="activity.completed ? 'bg-green-50 border-green-200' : 'bg-white border-[#DDD6FE] hover:shadow-2xl'">
                 <div class="relative h-52 overflow-hidden">
                   <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
@@ -225,7 +229,7 @@
                             class="pin-activity-btn flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border transition-all"
                             [ngClass]="isInRoutine(activity.id) ? 'bg-[#7C3AED] text-white border-[#7C3AED] pinned' : 'bg-white/95 text-[#7C3AED] border-[#C4B5FD] hover:bg-[#F3E8FF]'"
                             (click)="isInRoutine(activity.id) ? unpinFromRoutine(activity.id, $event) : pinToRoutine(activity, $event)">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                       {{ isInRoutine(activity.id) ? 'Pinned' : 'Pin' }}
                     </button>
                     <span *ngIf="activity.favorite"
@@ -279,12 +283,14 @@
                     </div>
                     <div class="flex items-center gap-2">
                       <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="px-1 py-1 rounded-full text-[10px] border border-[#E5E7EB] bg-white focus:outline-none" (click)="$event.stopPropagation()">
-                        <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.flag }} {{ lang.name }}</option>
+                        <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }} - {{ lang.name }}</option>
                       </select>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] flex items-center gap-1"
                               [ngClass]="translations[activity.id] && !showOriginal[activity.id] ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE]'"
                               (click)="translateActivity(activity, selectedLang[activity.id] || 'fr'); $event.stopPropagation()" [disabled]="translating[activity.id]">
-                        <svg width="14" height="14" viewBox="0 0 117.17 122.88" fill="currentColor"><path fill-rule="evenodd" d="M23.46,98.8l24-7.22-4.24,7.8c8.69,7.36,17.64,9.33,27.58,5.08-9.36,14.77-23.85,16.47-36,10.47l-4.33,7.95-7-24.08ZM23,35.33h9.93V32.77a.33.33,0,0,1,.33-.33H37.8a.33.33,0,0,1,.33.33v2.56h10a.33.33,0,0,1,.33.33v4.75a.32.32,0,0,1-.33.32H46.27a21.5,21.5,0,0,1-.91,4,25,25,0,0,1-1.73,4A32,32,0,0,1,41.55,52c-.72,1-1.51,2-2.35,3a40.33,40.33,0,0,0,4.63,4.61l0,0a55.4,55.4,0,0,0,5.82,4.28.32.32,0,0,1,.1.45l-2.35,3.68a.35.35,0,0,1-.46.1,60.53,60.53,0,0,1-6.24-4.58,44.58,44.58,0,0,1-5-4.9c-1.29,1.23-2.65,2.43-4.07,3.58-1.61,1.29-3.29,2.54-5,3.73a.33.33,0,0,1-.46-.08l-2.47-3.59a.31.31,0,0,1,.08-.45c1.69-1.17,3.34-2.4,4.91-3.68,1.39-1.13,2.72-2.3,3.95-3.51a39.71,39.71,0,0,1-3.15-5.61,44.72,44.72,0,0,1-2.43-6.63.34.34,0,0,1,.23-.4l4.21-1.18a.32.32,0,0,1,.4.23,39.2,39.2,0,0,0,1.92,5.38,37.33,37.33,0,0,0,2.32,4.39c.55-.69,1.07-1.37,1.55-2.06s1.06-1.64,1.51-2.48a19.68,19.68,0,0,0,1.29-2.91,18.87,18.87,0,0,0,.69-2.69H23a.32.32,0,0,1-.33-.32V35.66a.33.33,0,0,1,.33-.33Zm49.5,4.26h32.38a12.38,12.38,0,0,1,12.33,12.34V78a12.38,12.38,0,0,1-12.33,12.34h-1l-.66,9.89a2.62,2.62,0,0,1-4.19,2L83.25,90.35H63.18A12.38,12.38,0,0,1,50.86,78.53H38.67L20.35,93A4.57,4.57,0,0,1,13,89l.8-10.55a14.92,14.92,0,0,1-9.38-4.35l-.28-.3A14.94,14.94,0,0,1,0,63.56V35.71a15,15,0,0,1,15-15H57.49a14.91,14.91,0,0,1,10.57,4.39l.28.29a15,15,0,0,1,4.12,10.28v3.88Zm31.69-14.72L79.31,28.23l5.41-7c-7.42-8.63-16-12-26.43-9.35C69.85-1.26,84.43-.67,95.52,7.17L101,0l3.11,24.87ZM91.58,70.09h-8l-1.48,5H74.89c2.4-6.37,5.18-14,7.59-20.4.87-2.3,1.86-6.12,5-6.12s4.36,3.5,5.27,5.92l7.71,20.71H93.1l-1.52-5.14Zm-1.21-4.9-2.79-8.78-2.8,8.78ZM15,25.32H57.49A10.43,10.43,0,0,1,67.88,35.71V63.56A10.42,10.42,0,0,1,57.49,74H37.09L17.53,89.37,18.69,74H15A10.41,10.41,0,0,1,4.58,63.56V35.71A10.42,10.42,0,0,1,15,25.32Z"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M4 5h7M8 3v2m3 0c-.7 2.1-2 3.9-4 5.4M6.5 8.4c.7.9 1.6 1.7 2.6 2.4M13 21l1.5-4h4L20 21M15.1 15.3 16.5 11l1.4 4.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         <span>{{ translating[activity.id] ? '...' : (translations[activity.id] && !showOriginal[activity.id] ? 'Original' : 'Translate') }}</span>
                       </button>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#EDE9FE]"
@@ -335,7 +341,7 @@
           <!-- Caregiver cards (same structure as patient, omitted for brevity — keep your existing caregiver card HTML here) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div *ngFor="let activity of todayActivities" class="cursor-pointer" (click)="viewDetails(activity)">
-              <div class="border-2 rounded-2xl overflow-hidden transition-all duration-300 bg-white border-[#DDD6FE] hover:shadow-2xl">
+              <div class="activity-list-card border-2 rounded-2xl overflow-hidden transition-all duration-300 bg-white border-[#DDD6FE] hover:shadow-2xl">
                 <div class="relative h-52 overflow-hidden">
                   <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
                   <div class="absolute top-3 right-3 flex gap-2">
@@ -343,7 +349,7 @@
                             class="pin-activity-btn flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border"
                             [ngClass]="isInRoutine(activity.id) ? 'bg-[#7C3AED] text-white border-[#7C3AED] pinned' : 'bg-white/95 text-[#7C3AED] border-[#C4B5FD] hover:bg-[#F3E8FF]'"
                             (click)="isInRoutine(activity.id) ? unpinFromRoutine(activity.id, $event) : pinToRoutine(activity, $event)">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                       {{ isInRoutine(activity.id) ? 'Pinned' : 'Pin' }}
                     </button>
                   </div>
@@ -352,7 +358,11 @@
                   <h3 class="text-xl text-[#2D1B4E] mb-1">{{ activity.name }}</h3>
                   <p class="text-sm text-[#6B5B8C] line-clamp-2 mb-3">{{ activity.description }}</p>
                   <button appButton class="w-full bg-[#7C3AED] hover:bg-[#6D28D9]" (click)="completeActivity(activity, $event)" [disabled]="activity.completed">
-                    {{ activity.completed ? 'Completed ✓' : 'View details & start →' }}
+                    <span *ngIf="activity.completed; else caregiverStartLabel" class="flex items-center justify-center gap-1">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      Completed
+                    </span>
+                    <ng-template #caregiverStartLabel>View details &amp; start</ng-template>
                   </button>
                 </div>
               </div>
@@ -386,22 +396,26 @@
        (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
-    <div class="bg-gradient-to-r from-[#7C3AED] to-[#9B59B6] p-6 text-white relative overflow-hidden flex-shrink-0">
+    <div class="routine-modal-header bg-gradient-to-r from-[#7C3AED] to-[#9B59B6] p-6 text-white relative overflow-hidden flex-shrink-0">
       <!-- Decorative circles -->
-      <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10"></div>
-      <div class="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/10"></div>
+      <div class="routine-orbit routine-orbit-lg"></div>
+      <div class="routine-orbit routine-orbit-sm"></div>
 
       <div class="relative flex items-start justify-between">
         <div>
           <h2 class="text-2xl font-bold flex items-center gap-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <svg class="routine-title-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 5.55228 9.44772 6 10 6H14C14.5523 6 15 5.55228 15 5M9 5C9 4.44772 9.44772 4 10 4H14C14.5523 4 15 4.44772 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
             My Routine
           </h2>
           <p class="text-white/80 text-sm mt-1">Track your personal wellness journey</p>
         </div>
-        <button (click)="closeRoutineModal()" class="text-white/80 hover:text-white text-2xl leading-none p-1 hover:bg-white/20 rounded-full transition-colors">&times;</button>
+        <button (click)="closeRoutineModal()" class="routine-close text-white/80 hover:text-white leading-none p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Close routine">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <!-- Overall progress ring + stats -->
@@ -421,15 +435,15 @@
           </div>
         </div>
         <div class="grid grid-cols-3 gap-3 flex-1">
-          <div class="bg-white/20 rounded-xl p-2 text-center">
+          <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
             <div class="text-xl font-bold text-white">{{ routineActivities.length }}</div>
             <div class="text-[10px] text-white/70">Pinned</div>
           </div>
-          <div class="bg-white/20 rounded-xl p-2 text-center">
+          <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
             <div class="text-xl font-bold text-white">{{ getRoutineCompletedCount() }}</div>
             <div class="text-[10px] text-white/70">Done</div>
           </div>
-          <div class="bg-white/20 rounded-xl p-2 text-center">
+          <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
             <div class="text-xl font-bold text-white">{{ routineActivities.length - getRoutineCompletedCount() }}</div>
             <div class="text-[10px] text-white/70">Left</div>
           </div>
@@ -442,7 +456,7 @@
 
       <!-- EMPTY STATE -->
       <div *ngIf="routineActivities.length === 0" class="flex flex-col items-center justify-center py-16 px-6 text-center">
-        <div class="empty-routine text-7xl mb-4">📌</div>
+        <div class="empty-routine text-7xl mb-4"></div>
         <h3 class="text-xl font-semibold text-[#2D1B4E] mb-2">Your routine is empty</h3>
         <p class="text-[#6B5B8C] text-sm max-w-xs">Browse activities and tap the <strong>Pin</strong> button or <strong>Pin to My Routine</strong> on any activity to add it here.</p>
         <button (click)="closeRoutineModal()"
@@ -464,7 +478,26 @@
                  [ngClass]="isGoalMet(goal) ? 'goal-met border-green-200' : 'border-[#EDE9FE] bg-[#FAFAFA]'">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-lg">{{ goal.emoji }}</span>
+                  <span class="goal-svg-icon" [ngClass]="'goal-' + goal.type">
+                    <svg *ngIf="goal.type === 'Cognitive'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                      <path d="M9 4.5a3 3 0 0 0-3 3v.25A3.5 3.5 0 0 0 4 11a3.5 3.5 0 0 0 2 3.16V16a3 3 0 0 0 4.5 2.6M15 4.5a3 3 0 0 1 3 3v.25A3.5 3.5 0 0 1 20 11a3.5 3.5 0 0 1-2 3.16V16a3 3 0 0 1-4.5 2.6M12 5v14M9 9h2M13 9h2M8.5 13H11M13 13h2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg *ngIf="goal.type === 'Physical'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                      <path d="M6 14v-4m12 4v-4M4 12h16M8 9v6m8-6v6" stroke-linecap="round"/>
+                      <path d="M3 10h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H3v-4Zm16 0h2v4h-2a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Z" stroke-linejoin="round"/>
+                    </svg>
+                    <svg *ngIf="goal.type === 'Relaxation'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                      <path d="M12 4c3 2.2 4.5 4.6 4.5 7.2A4.5 4.5 0 0 1 12 15.7a4.5 4.5 0 0 1-4.5-4.5C7.5 8.6 9 6.2 12 4Z" stroke-linejoin="round"/>
+                      <path d="M5 20c2.2-2 4.5-3 7-3s4.8 1 7 3M12 9v4" stroke-linecap="round"/>
+                    </svg>
+                    <svg *ngIf="goal.type === 'Social'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                      <path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5M10.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg *ngIf="goal.type === 'Creative'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                      <path d="M12 20a8 8 0 1 1 7.7-5.8c-.3 1.1-1.4 1.8-2.5 1.8h-1.4a1.3 1.3 0 0 0-1.2 1.8l.2.5A1.3 1.3 0 0 1 13.6 20H12Z" stroke-linejoin="round"/>
+                      <path d="M7.5 10h.01M10.5 7.5h.01M14 7.5h.01M16.5 10h.01" stroke-linecap="round"/>
+                    </svg>
+                  </span>
                   <div>
                     <div class="text-sm font-semibold text-[#2D1B4E]">{{ goal.type }}</div>
                     <div class="text-xs text-[#6B5B8C]">{{ goal.label }}</div>
@@ -558,7 +591,7 @@
     </div>
 
     <!-- Modal Footer -->
-    <div *ngIf="routineActivities.length > 0" class="border-t border-[#EDE9FE] px-5 py-4 bg-white flex-shrink-0">
+    <div *ngIf="routineActivities.length > 0" class="routine-footer border-t border-[#EDE9FE] px-5 py-4 bg-white flex-shrink-0">
       <div class="progress-bar-track" style="height:8px; margin-bottom:8px;">
         <div class="progress-bar-fill"
              [style.width.%]="getOverallProgress()"
@@ -567,7 +600,7 @@
       </div>
       <div class="flex items-center justify-between text-xs text-[#6B5B8C]">
         <span>{{ getRoutineCompletedCount() }} of {{ routineActivities.length }} activities completed</span>
-        <span *ngIf="getOverallProgress() === 100" class="text-green-600 font-semibold">🎉 All done!</span>
+        <span *ngIf="getOverallProgress() === 100" class="text-green-600 font-semibold">All done!</span>
         <span *ngIf="getOverallProgress() < 100">{{ getOverallProgress() }}% complete</span>
       </div>
     </div>
@@ -584,20 +617,27 @@
   <!-- Trophy / star burst -->
   <div class="relative inline-block mb-4">
     <div class="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#9B59B6] flex items-center justify-center mx-auto shadow-lg">
-      <span class="text-4xl">🏆</span>
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
+        <path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z" stroke-linejoin="round"/>
+        <path d="M8 6H5a2 2 0 0 0 0 4h3M16 6h3a2 2 0 0 1 0 4h-3M12 12v4M9 20h6M10 16h4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
     <!-- flying stars -->
     <div class="stars-burst absolute inset-0 pointer-events-none">
-      <span style="--tx:-40px; --ty:-30px; top:50%; left:50%;">⭐</span>
-      <span style="--tx:40px;  --ty:-35px; top:50%; left:50%; animation-delay:0.1s">✨</span>
-      <span style="--tx:-35px; --ty:30px;  top:50%; left:50%; animation-delay:0.15s">🌟</span>
-      <span style="--tx:35px;  --ty:25px;  top:50%; left:50%; animation-delay:0.05s">⭐</span>
-      <span style="--tx:0px;   --ty:-45px; top:50%; left:50%; animation-delay:0.2s">✨</span>
+      <span class="burst-dot" style="--tx:-40px; --ty:-30px; top:50%; left:50%;"></span>
+      <span class="burst-dot sparkle" style="--tx:40px;  --ty:-35px; top:50%; left:50%; animation-delay:0.1s"></span>
+      <span class="burst-dot" style="--tx:-35px; --ty:30px;  top:50%; left:50%; animation-delay:0.15s"></span>
+      <span class="burst-dot sparkle" style="--tx:35px;  --ty:25px;  top:50%; left:50%; animation-delay:0.05s"></span>
+      <span class="burst-dot" style="--tx:0px;   --ty:-45px; top:50%; left:50%; animation-delay:0.2s"></span>
     </div>
   </div>
 
   <h3 class="text-xl font-bold text-[#2D1B4E] mb-1">Activity Complete!</h3>
   <p class="text-sm text-[#6B5B8C] mb-3">Great job finishing</p>
   <p class="font-semibold text-[#7C3AED] text-base leading-snug">"{{ completedActivityName }}"</p>
-  <div class="mt-4 flex justify-center gap-1 text-2xl">🎊🎉🎊</div>
+  <div class="completion-sparkline mt-4 flex justify-center gap-2" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
 </div>

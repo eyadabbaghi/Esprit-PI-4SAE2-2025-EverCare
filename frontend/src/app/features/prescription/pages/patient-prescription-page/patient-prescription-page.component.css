@@ -1,0 +1,119 @@
+.patient-prescription-shell {
+  color: #2d1b4e;
+}
+
+.patient-hero,
+.patient-guide,
+.patient-prescription-shell .rounded-xl {
+  border-color: rgba(196, 181, 253, 0.68) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(18px);
+}
+
+.patient-hero {
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 28px;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.86);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.patient-hero h1 {
+  margin-top: 0.65rem;
+}
+
+.patient-guide {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 26px;
+  padding: 1rem;
+}
+
+.guide-step {
+  min-height: 112px;
+  border: 1px solid rgba(221, 214, 254, 0.9);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(250, 245, 255, 0.9));
+  padding: 1rem;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.guide-step:hover,
+.guide-step.is-active {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(124, 58, 237, 0.14);
+}
+
+.guide-step span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.75rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 800;
+}
+
+.guide-step strong,
+.guide-step small {
+  display: block;
+}
+
+.guide-step small {
+  margin-top: 0.35rem;
+  color: #6b5b8c;
+  line-height: 1.35;
+}
+
+.floating-cursor {
+  position: absolute;
+  left: 14%;
+  bottom: -4px;
+  width: 18px;
+  height: 24px;
+  clip-path: polygon(0 0, 0 100%, 35% 74%, 56% 100%, 72% 91%, 52% 66%, 88% 66%);
+  background: #2d1b4e;
+  filter: drop-shadow(0 10px 18px rgba(45, 27, 78, 0.24));
+  animation: patientCursor 5.8s ease-in-out infinite;
+}
+
+.patient-prescription-shell .rounded-xl {
+  border-radius: 24px !important;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.patient-prescription-shell .rounded-xl:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes patientCursor {
+  0%, 24% { transform: translateX(0) translateY(0) rotate(-8deg); }
+  46%, 66% { transform: translateX(32vw) translateY(-8px) rotate(-8deg); }
+  84%, 100% { transform: translateX(64vw) translateY(0) rotate(-8deg); }
+}
+
+@media (max-width: 900px) {
+  .patient-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .floating-cursor {
+    display: none;
+  }
+}

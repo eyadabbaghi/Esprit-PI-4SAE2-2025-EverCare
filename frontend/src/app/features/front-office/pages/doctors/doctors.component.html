@@ -1,0 +1,181 @@
+<section class="doctors-page">
+  <header class="doctors-hero">
+    <div class="hero-copy">
+      <span class="hero-kicker">Care network</span>
+      <h1>Explore EverCare Doctors</h1>
+      <p>Search trusted doctors, review their public care profile, and connect them to your care circle.</p>
+      <div class="hero-stats">
+        <span><strong>{{ doctors.length }}</strong> doctors</span>
+        <span><strong>{{ visibleDoctors.length }}</strong> matching</span>
+        <span><strong>{{ pinnedDoctors.length }}</strong> pinned</span>
+      </div>
+    </div>
+    <div class="hero-illustration" aria-hidden="true">
+      <svg viewBox="0 0 180 180" fill="none">
+        <circle cx="90" cy="90" r="78" fill="#F3E8FF"/>
+        <path d="M54 74a36 36 0 0 1 72 0v12a36 36 0 0 1-72 0V74Z" fill="#fff" stroke="#7C3AED" stroke-width="5"/>
+        <path d="M66 122c11 13 37 13 48 0" stroke="#7C3AED" stroke-width="6" stroke-linecap="round"/>
+        <path d="M76 62h28M90 48v28" stroke="#C06C84" stroke-width="7" stroke-linecap="round"/>
+        <path d="M39 130c18 24 84 28 108 0" stroke="#A78BFA" stroke-width="8" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </header>
+
+  <section class="doctors-toolbar">
+    <div class="toolbar-copy">
+      <span>Find care</span>
+      <p>{{ selectedCountry || currentUser?.country || 'All countries' }} doctor directory</p>
+    </div>
+
+    <div class="toolbar-controls">
+      <label class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
+          <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        <input [(ngModel)]="searchTerm" placeholder="Search by name, specialty, or workplace" />
+      </label>
+
+      <div class="country-filter">
+        <button type="button" class="country-trigger" (click)="showCountryMenu = !showCountryMenu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+            <path d="M3 12h18M12 3c2.2 2.5 3.3 5.5 3.3 9S14.2 18.5 12 21M12 3C9.8 5.5 8.7 8.5 8.7 12S9.8 18.5 12 21" stroke-width="1.7" stroke-linecap="round"></path>
+          </svg>
+          <strong>{{ selectedCountry || 'All countries' }}</strong>
+        </button>
+        <div *ngIf="showCountryMenu" class="country-menu">
+          <input [(ngModel)]="countrySearch" placeholder="Search country" />
+          <button type="button" (click)="selectCountry(null)">
+            <span class="country-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="8" stroke-width="2"></circle>
+              </svg>
+            </span>
+            <span>All countries</span>
+          </button>
+          <button type="button" *ngFor="let country of filteredCountries" (click)="selectCountry(country)">
+            <span>{{ flagForCountryName(country.name) }}</span>
+            <span>{{ country.name }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="isCaregiver" class="patient-selector">
+    <div>
+      <span>Caregiver mode</span>
+      <p>Choose the patient who should be associated with the selected doctor.</p>
+    </div>
+    <select [(ngModel)]="selectedPatientId">
+      <option value="" disabled>Choose patient</option>
+      <option *ngFor="let patient of associatedPatients" [value]="patient.userId">{{ patient.name }}</option>
+    </select>
+  </section>
+
+  <section *ngIf="pinnedDoctors.length" class="pinned-strip">
+    <div class="section-heading">
+      <span>Pinned</span>
+      <h2>Your saved doctors</h2>
+    </div>
+    <div class="pinned-list">
+      <button type="button" *ngFor="let doctor of pinnedDoctors" (click)="searchTerm = doctor.name">
+        <ng-container *ngIf="doctor.profilePicture; else pinnedInitial">
+          <img [src]="doctor.profilePicture" alt="" (error)="handleImageError(doctor)" />
+        </ng-container>
+        <ng-template #pinnedInitial><span>{{ initials(doctor.name) }}</span></ng-template>
+        <span class="pinned-copy">
+          <strong>{{ doctor.name }}</strong>
+          <small>{{ doctor.specialization || 'Care specialist' }}</small>
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <div *ngIf="isLoading" class="loading-card">
+    <span class="loading-orbit"></span>
+    Loading doctors...
+  </div>
+
+  <section class="doctor-grid" *ngIf="!isLoading">
+    <article class="doctor-card" *ngFor="let doctor of visibleDoctors">
+      <div class="doctor-cover" aria-hidden="true"></div>
+
+      <button type="button" class="pin-button" [class.is-pinned]="isPinned(doctor)" (click)="togglePin(doctor)" [attr.aria-label]="isPinned(doctor) ? 'Unpin doctor' : 'Pin doctor'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1L12 17.75l-5.25 3.1V4.75Z" stroke-width="1.9" stroke-linejoin="round"/>
+          <path d="M12 6.9v4.4M9.8 9.1h4.4" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <div class="doctor-profile-head">
+        <div class="doctor-avatar">
+          <ng-container *ngIf="doctor.profilePicture; else doctorInitials">
+            <img [src]="doctor.profilePicture" alt="" (error)="handleImageError(doctor)" />
+          </ng-container>
+          <ng-template #doctorInitials>{{ initials(doctor.name) }}</ng-template>
+        </div>
+        <span class="status-pill" [class.is-associated]="isDoctorAssociated(doctor)">
+          {{ isDoctorAssociated(doctor) ? 'In your care team' : 'Available to connect' }}
+        </span>
+      </div>
+
+      <div class="doctor-card-body">
+        <span class="doctor-country">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" stroke-width="2" stroke-linejoin="round"></path>
+            <circle cx="12" cy="10" r="2.5" stroke-width="2"></circle>
+          </svg>
+          {{ doctor.country || 'Country not set' }}
+        </span>
+        <h2>Dr. {{ doctor.name }}</h2>
+        <p class="specialty-line">{{ doctor.specialization || 'General care specialist' }}</p>
+
+        <div class="doctor-meta">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 6v6l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            {{ doctor.yearsExperience || 0 }} years experience
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-7h6v7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            {{ doctor.workplaceName || 'EverCare provider' }}
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 8v8M8 12h8M4 6h16v14H4V6ZM9 6V4h6v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            {{ doctor.workplaceType || 'Care practice' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="doctor-actions">
+        <button type="button" class="associate-btn" [disabled]="isDoctorAssociated(doctor)" (click)="associateDoctor(doctor)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9.5" cy="7" r="4" stroke-width="2"/>
+            <path d="M18 8v6M15 11h6" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>{{ isDoctorAssociated(doctor) ? 'Associated' : 'Associate' }}</span>
+        </button>
+        <button type="button" class="contact-btn" [disabled]="!isDoctorAssociated(doctor)" (click)="contactDoctor(doctor)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12Z" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M8 12h.01M12 12h.01M16 12h.01" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+          <span>Contact</span>
+        </button>
+      </div>
+    </article>
+
+    <div *ngIf="!visibleDoctors.length" class="empty-state">
+      <h2>No doctors found</h2>
+      <p>Try another search term or clear the country filter.</p>
+    </div>
+  </section>
+</section>

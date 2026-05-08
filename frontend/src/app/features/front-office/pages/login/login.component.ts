@@ -25,12 +25,26 @@ export function strongPasswordValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const password = control.value;
     if (!password) return null;
+    const hasLowerCase = /[a-z]/.test(password);
     const hasUpperCase = /[A-Z]/.test(password);
     const hasDigit = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*()]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
     const isValidLength = password.length >= 8;
-    const valid = hasUpperCase && hasDigit && hasSpecial && isValidLength;
+    const valid = hasLowerCase && hasUpperCase && hasDigit && hasSpecial && isValidLength;
     return !valid ? { weakPassword: true } : null;
+  };
+}
+
+export function passwordMatchValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+
+    if (!password || !confirmPassword) {
+      return null;
+    }
+
+    return password === confirmPassword ? null : { passwordMismatch: true };
   };
 }
 
@@ -45,7 +59,7 @@ type RecoveryState = 'scanning' | 'processing' | 'success';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  styleUrls: ['./login.component.css'],
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule]
 })
@@ -66,6 +80,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private scanLoopActive = false;
   private audioCtx: AudioContext | null = null;
   private beepIntervalId: any = null;
+  private readonly rememberedLoginKey = 'evercare_remembered_login';
 
   userRoles = [
     { value: 'PATIENT', label: 'Patient' },
@@ -91,10 +106,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.initForms();
 
     if (isPlatformBrowser(this.platformId)) {
-      window.handleGoogleResponse = (response) => {
-        this.ngZone.run(() => this.handleGoogleCredential(response.credential));
-      };
-
       // Check if we should show face recovery panel
       const isRecoveryActive = localStorage.getItem('face_recovery_active') === 'true';
       this.keycloakId = localStorage.getItem('face_recovery_keycloakId') || '';
@@ -237,15 +248,22 @@ export class LoginComponent implements OnInit, OnDestroy {
   private initForms(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      rememberMe: [false]
     });
 
-    this.registerForm = this.fb.group({
-      name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, strongPasswordValidator()]],
-      role: ['PATIENT', Validators.required]
-    });
+    this.registerForm = this.fb.group(
+      {
+        name: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required, strongPasswordValidator()]],
+        confirmPassword: ['', Validators.required],
+        role: ['PATIENT', Validators.required]
+      },
+      { validators: passwordMatchValidator() }
+    );
+
+    this.loadRememberedLogin();
   }
 
   onTabChange(tab: 'login' | 'register'): void {
@@ -255,9 +273,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   handleLogin(): void {
     if (this.loginForm.invalid) { this.loginForm.markAllAsTouched(); return; }
     this.isLoading = true;
-    const credentials: LoginRequest = this.loginForm.value;
+    const { email, password, rememberMe } = this.loginForm.value;
+    const credentials: LoginRequest = { email, password };
     this.authService.login(credentials).subscribe({
       next: (user) => {
+        this.saveRememberedLogin(email, password, rememberMe);
         this.toastr.success('Login successful!', 'Welcome');
         this.navigateAfterLogin(user);
       },
@@ -279,7 +299,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   localStorage.removeItem('showWelcomeFlow');
   localStorage.removeItem('alzAssessmentReturnTo');
 
-  const userData: RegisterRequest = this.registerForm.value;
+  const { name, email, password, role } = this.registerForm.value;
+  const userData: RegisterRequest = { name, email, password, role };
   this.authService.register(userData).subscribe({
     next: () => {
       this.router.navigate(['/setup-profile'], {
@@ -314,29 +335,96 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.router.navigate([user?.role === 'ADMIN' ? '/admin' : '/']);
   }
 
+  private loadRememberedLogin(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    const rawCredentials = localStorage.getItem(this.rememberedLoginKey);
+    if (!rawCredentials) {
+      return;
+    }
+
+    try {
+      const credentials = JSON.parse(rawCredentials) as Partial<LoginRequest>;
+      if (credentials.email && credentials.password) {
+        this.loginForm.patchValue({
+          email: credentials.email,
+          password: credentials.password,
+          rememberMe: true
+        });
+      }
+    } catch {
+      localStorage.removeItem(this.rememberedLoginKey);
+    }
+  }
+
+  private saveRememberedLogin(email: string, password: string, rememberMe: boolean): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    if (!rememberMe) {
+      localStorage.removeItem(this.rememberedLoginKey);
+      return;
+    }
+
+    localStorage.setItem(this.rememberedLoginKey, JSON.stringify({ email, password }));
+  }
+
   getPasswordStrength(): { level: number, message: string } {
     const password = this.registerForm?.get('password')?.value || '';
-    const checks = [password.length >= 8, /[A-Z]/.test(password), /\d/.test(password), /[!@#$%^&*()]/.test(password)];
+    const checks = [
+      password.length >= 8,
+      /[a-z]/.test(password),
+      /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[^A-Za-z0-9]/.test(password)
+    ];
     const strengthLevel = checks.filter(Boolean).length;
-    const messages = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    const messages = ['Very weak', 'Weak', 'Fair', 'Good', 'Almost strong', 'Strong'];
     return { level: strengthLevel, message: messages[strengthLevel] };
   }
 
-  getStrengthPercentage(): number { return (this.getPasswordStrength().level / 4) * 100; }
+  getStrengthPercentage(): number { return (this.getPasswordStrength().level / 5) * 100; }
 
-  getStrengthColor(): string {
+  getStrengthClass(): string {
     const level = this.getPasswordStrength().level;
-    if (level === 0) return 'bg-red-500';
-    if (level === 1) return 'bg-orange-500';
-    if (level === 2) return 'bg-yellow-500';
-    if (level === 3) return 'bg-green-400';
-    return 'bg-green-600';
+    if (level <= 2) return 'strength-weak';
+    if (level <= 4) return 'strength-good';
+    return 'strength-strong';
   }
 
   hasMinLength(): boolean { const p = this.registerForm?.get('password')?.value; return p && p.length >= 8; }
+  hasLowerCase(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[a-z]/.test(p); }
   hasUpperCase(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[A-Z]/.test(p); }
   hasDigit(): boolean { const p = this.registerForm?.get('password')?.value; return p && /\d/.test(p); }
-  hasSpecialChar(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[!@#$%^&*()]/.test(p); }
+  hasSpecialChar(): boolean { const p = this.registerForm?.get('password')?.value; return p && /[^A-Za-z0-9]/.test(p); }
+
+  get passwordConfirmationState(): 'idle' | 'match' | 'mismatch' {
+    const password = this.registerForm?.get('password')?.value;
+    const confirmPassword = this.registerForm?.get('confirmPassword')?.value;
+
+    if (!password || !confirmPassword) {
+      return 'idle';
+    }
+
+    return password === confirmPassword ? 'match' : 'mismatch';
+  }
+
+  get passwordConfirmationProgress(): number {
+    if (this.passwordConfirmationState === 'idle') {
+      return 0;
+    }
+
+    if (this.passwordConfirmationState === 'match') {
+      return 100;
+    }
+
+    const passwordLength = Math.max((this.registerForm?.get('password')?.value || '').length, 1);
+    const confirmLength = (this.registerForm?.get('confirmPassword')?.value || '').length;
+    return Math.min(100, Math.max(18, (confirmLength / passwordLength) * 100));
+  }
 
   get lf() { return this.loginForm.controls; }
   get rf() { return this.registerForm.controls; }

@@ -53,6 +53,15 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/patients/{patientId}/doctor")
+    public ResponseEntity<?> assignDoctorToCaregiverPatient(@PathVariable String patientId,
+                                                            @RequestBody Map<String, String> request,
+                                                            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User patient = userService.assignDoctorToCaregiverPatient(email, patientId, request.get("doctorEmail"));
+        return ResponseEntity.ok(Map.of("user", mapToDto(patient)));
+    }
+
     @DeleteMapping("/profile")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -74,6 +83,8 @@ public class UserController {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
+        dto.setAddress(user.getAddress());
+        dto.setCountry(user.getCountry());
         dto.setVerified(user.isVerified());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setDateOfBirth(user.getDateOfBirth());

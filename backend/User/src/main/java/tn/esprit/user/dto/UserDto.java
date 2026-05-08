@@ -13,6 +13,8 @@ public class UserDto {
     private String email;
     private UserRole role;
     private String phone;
+    private String address;
+    private String country;
     private boolean isVerified;
     private LocalDateTime createdAt;
 

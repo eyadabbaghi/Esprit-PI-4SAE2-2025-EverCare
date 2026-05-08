@@ -22,9 +22,10 @@ import { MedicamentsAnalyticsComponent } from './pages/medicaments-analytics/med
 
 import { MedicamentDetailsComponent } from './pages/medicament-details/medicament-details.component';
 import { BlogAdminComponent } from './pages/blog-admin/blog-admin.component';
-import { LucideAngularModule, FileText, Plus, Trash2, Edit, Eye } from 'lucide-angular';
+import { LucideAngularModule, FileText, Plus, Trash2, Edit, Eye, PieChart } from 'lucide-angular';
 // Import the image cropper standalone component
 import { ImageCropperComponent } from 'ngx-image-cropper';
+import { SharedModule } from '../../shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -51,9 +52,10 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    SharedModule,
     BackOfficeRoutingModule,
     ImageCropperComponent ,// standalone component (Angular >=14+),
-   LucideAngularModule.pick({ FileText, Plus, Trash2, Edit, Eye })
+   LucideAngularModule.pick({ FileText, Plus, Trash2, Edit, Eye, PieChart })
   ]
 })
 export class BackOfficeModule { }

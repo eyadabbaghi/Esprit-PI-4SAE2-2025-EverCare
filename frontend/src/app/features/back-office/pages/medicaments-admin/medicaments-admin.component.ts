@@ -8,7 +8,8 @@ import { PageResponse } from '../../../prescription/models/page.model';
 
 @Component({
   selector: 'app-medicaments-admin',
-  templateUrl: './medicaments-admin.component.html'
+  templateUrl: './medicaments-admin.component.html',
+  styleUrls: ['./medicaments-admin.component.css']
 })
 export class MedicamentsAdminComponent implements OnInit {
   medicaments: Medicament[] = [];

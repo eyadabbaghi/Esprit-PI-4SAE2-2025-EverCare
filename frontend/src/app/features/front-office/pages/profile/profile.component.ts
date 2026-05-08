@@ -6,6 +6,8 @@ import { catchError } from 'rxjs/operators';
 import { AuthService, User, UpdateUserRequest, ChangePasswordRequest } from '../login/auth.service';
 import { Router } from '@angular/router';
 import { FaceService } from '../../services/camera/face.service';
+import { ImageCroppedEvent } from 'ngx-image-cropper';
+import { COUNTRY_PHONE_CODES, CountryPhoneCode, countryFlag } from '../../../../shared/utils/country-phone-codes';
 
 // Custom validators
 function pastDateValidator(control: AbstractControl): ValidationErrors | null {
@@ -43,7 +45,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   isChangingPassword = false;
   isLoading = false;
   showPictureMenu = false;
+  showProfileUpdatedPopup = false;
   selectedFile: File | null = null;
+  imageChangedEvent: Event | null = null;
+  croppedImageBlob: Blob | null = null;
+  showCropper = false;
+  private profilePopupTimeout: ReturnType<typeof setTimeout> | null = null;
 
   user: User | null = null;
   private userSub!: Subscription;
@@ -77,6 +84,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ];
   phoneCountryCode = '+1';
   emergencyCountryCode = '+1';
+  countryOptions = COUNTRY_PHONE_CODES;
+  phoneCountrySearch = '';
+  emergencyCountrySearch = '';
+  countrySearch = '';
+  showPhoneCountryDropdown = false;
+  showEmergencyCountryDropdown = false;
+  showCountryDropdown = false;
+  selectedCountryIso = 'US';
 
   // Role‑specific connected users (full User objects)
   caregivers: User[] = [];
@@ -100,8 +115,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required, phoneValidator]],
+      country: ['United States'],
       address: [''],
       dateOfBirth: ['', [Validators.required, pastDateValidator]],
+      age: [{ value: '', disabled: true }],
       emergencyContact: ['', [Validators.required, phoneValidator]],
       yearsExperience: [''],
       specialization: [''],
@@ -134,6 +151,51 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.userSub) this.userSub.unsubscribe();
+    if (this.profilePopupTimeout) clearTimeout(this.profilePopupTimeout);
+  }
+
+  get selectedPhoneCountry(): CountryPhoneCode {
+    return this.countryOptions.find(country => country.dialCode === this.phoneCountryCode && country.iso2 === 'US') ||
+      this.countryOptions.find(country => country.dialCode === this.phoneCountryCode) ||
+      this.countryOptions[0];
+  }
+
+  get selectedEmergencyCountry(): CountryPhoneCode {
+    return this.countryOptions.find(country => country.dialCode === this.emergencyCountryCode && country.iso2 === 'US') ||
+      this.countryOptions.find(country => country.dialCode === this.emergencyCountryCode) ||
+      this.countryOptions[0];
+  }
+
+  get filteredPhoneCountries(): CountryPhoneCode[] {
+    return this.filterCountries(this.phoneCountrySearch);
+  }
+
+  get filteredEmergencyCountries(): CountryPhoneCode[] {
+    return this.filterCountries(this.emergencyCountrySearch);
+  }
+
+  get filteredProfileCountries(): CountryPhoneCode[] {
+    return this.filterCountries(this.countrySearch);
+  }
+
+  get selectedProfileCountry(): CountryPhoneCode {
+    return this.countryOptions.find(country => country.iso2 === this.selectedCountryIso) || this.countryOptions[0];
+  }
+
+  get phoneMaxLength(): number {
+    return this.localPhoneMaxLength(this.phoneCountryCode);
+  }
+
+  get emergencyPhoneMaxLength(): number {
+    return this.localPhoneMaxLength(this.emergencyCountryCode);
+  }
+
+  get profileAge(): number | null {
+    return this.calculateAge(this.personalForm.get('dateOfBirth')?.value || this.user?.dateOfBirth);
+  }
+
+  flagFor(country: CountryPhoneCode): string {
+    return countryFlag(country.iso2);
   }
 
   getSeverityColor(level: string): string {
@@ -166,11 +228,15 @@ retakeAssessment(): void {
 
   private populateForm(): void {
     if (!this.user) return;
+    const normalizedBirthDate = this.normalizeDateForInput(this.user.dateOfBirth);
     this.personalForm.patchValue({
       name: this.user.name,
       email: this.user.email,
       phone: this.stripKnownCountryCode(this.user.phone, 'phone') || '',
-      dateOfBirth: this.user.dateOfBirth || '',
+      country: this.user.country || 'United States',
+      address: this.user.address || '',
+      dateOfBirth: normalizedBirthDate,
+      age: this.calculateAge(normalizedBirthDate) ?? '',
       emergencyContact: this.stripKnownCountryCode(this.user.emergencyContact, 'emergency') || '',
       yearsExperience: this.user.yearsExperience,
       specialization: this.user.specialization,
@@ -178,6 +244,7 @@ retakeAssessment(): void {
       workplaceType: this.user.workplaceType,
       workplaceName: this.user.workplaceName,
     });
+    this.selectedCountryIso = this.findCountryIso(this.user.country) || 'US';
   }
 
   private loadConnectedUsers(): void {
@@ -239,7 +306,11 @@ retakeAssessment(): void {
 
   toggleEdit(): void {
     if (this.isEditing) this.handleSaveProfile();
-    else this.isEditing = true;
+    else {
+      this.activeTab = 'personal';
+      this.isEditing = true;
+      setTimeout(() => this.scrollToPersonalInfoSection(), 80);
+    }
   }
 
   handleSaveProfile(): void {
@@ -256,6 +327,8 @@ retakeAssessment(): void {
       name: formValue.name,
       email: formValue.email,
       phone: this.composePhoneNumber(this.phoneCountryCode, formValue.phone),
+      country: formValue.country || this.selectedProfileCountry.name,
+      address: formValue.address,
       dateOfBirth: formValue.dateOfBirth,
       emergencyContact: this.composePhoneNumber(this.emergencyCountryCode, formValue.emergencyContact),
     };
@@ -274,12 +347,17 @@ retakeAssessment(): void {
         this.toastr.success('Profile updated successfully');
         this.isEditing = false;
         this.isLoading = false;
+        this.showProfileUpdatedNotice();
         if (response.token) localStorage.setItem('auth_token', response.token);
         if (response.user) this.authService.fetchCurrentUser().subscribe();
       },
       error: (err) => {
-        console.error(err);
-        this.toastr.error('Failed to update profile');
+        if (err?.status === 401) {
+          this.toastr.error('Your session expired. Please log in again.');
+        } else {
+          console.error(err);
+          this.toastr.error('Failed to update profile');
+        }
         this.isLoading = false;
       }
     });
@@ -325,10 +403,39 @@ retakeAssessment(): void {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
-      this.uploadPicture();
+      this.imageChangedEvent = event;
+      this.croppedImageBlob = null;
+      this.showCropper = true;
     }
   }
+
+  imageCropped(event: ImageCroppedEvent): void {
+    this.croppedImageBlob = event.blob || null;
+  }
+
+  cancelCrop(): void {
+    this.showCropper = false;
+    this.imageChangedEvent = null;
+    this.croppedImageBlob = null;
+    this.selectedFile = null;
+  }
+
+  confirmCrop(): void {
+    if (!this.croppedImageBlob) {
+      this.toastr.warning('Please crop the image first');
+      return;
+    }
+
+    const originalFile = (this.imageChangedEvent as any)?.target?.files?.[0];
+    const fileType = originalFile?.type || 'image/png';
+    const fileName = originalFile?.name || 'profile-picture.png';
+    this.selectedFile = new File([this.croppedImageBlob], fileName, { type: fileType });
+    this.showCropper = false;
+    this.imageChangedEvent = null;
+    this.croppedImageBlob = null;
+    this.uploadPicture();
+  }
+
   uploadPicture(): void {
     if (!this.selectedFile) return;
     this.isLoading = true;
@@ -484,26 +591,124 @@ retakeAssessment(): void {
     return 'Invalid date.';
   }
 
+  private normalizeDateForInput(value: unknown): string {
+    if (!value) return '';
+
+    if (Array.isArray(value) && value.length >= 3) {
+      const [year, month, day] = value;
+      return [
+        String(year).padStart(4, '0'),
+        String(month).padStart(2, '0'),
+        String(day).padStart(2, '0')
+      ].join('-');
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return '';
+      const dateOnly = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (dateOnly) return dateOnly[1];
+
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+      }
+    }
+
+    return '';
+  }
+
   private stripKnownCountryCode(value: string | undefined, target: 'phone' | 'emergency'): string {
     const raw = value?.trim() ?? '';
     if (!raw.startsWith('+')) return raw;
 
-    const match = this.countries.find(country => raw.startsWith(country.code));
+    const sortedCountries = [...this.countryOptions].sort((a, b) => b.dialCode.length - a.dialCode.length);
+    const match = sortedCountries.find(country => raw.startsWith(country.dialCode));
     if (!match) return raw;
 
     if (target === 'phone') {
-      this.phoneCountryCode = match.code;
+      this.phoneCountryCode = match.dialCode;
     } else {
-      this.emergencyCountryCode = match.code;
+      this.emergencyCountryCode = match.dialCode;
     }
 
-    return raw.slice(match.code.length).trim();
+    return raw.slice(match.dialCode.length).trim();
   }
 
   private composePhoneNumber(countryCode: string, value: string): string {
     const phone = String(value ?? '').trim();
     if (!phone) return '';
     return phone.startsWith('+') ? phone : `${countryCode} ${phone}`;
+  }
+
+  onDateOfBirthChange(): void {
+    this.personalForm.get('age')?.setValue(this.profileAge ?? '');
+  }
+
+  selectCountry(country: CountryPhoneCode, target: 'phone' | 'emergency'): void {
+    if (target === 'phone') {
+      this.phoneCountryCode = country.dialCode;
+      this.phoneCountrySearch = '';
+      this.showPhoneCountryDropdown = false;
+    } else {
+      this.emergencyCountryCode = country.dialCode;
+      this.emergencyCountrySearch = '';
+      this.showEmergencyCountryDropdown = false;
+    }
+  }
+
+  selectProfileCountry(country: CountryPhoneCode): void {
+    this.selectedCountryIso = country.iso2;
+    this.countrySearch = '';
+    this.showCountryDropdown = false;
+    this.personalForm.get('country')?.setValue(country.name);
+  }
+
+  trimPhoneInput(controlName: 'phone' | 'emergencyContact', maxLength: number): void {
+    const control = this.personalForm.get(controlName);
+    const digits = String(control?.value ?? '').replace(/\D/g, '').slice(0, maxLength);
+    if (control?.value !== digits) {
+      control?.setValue(digits, { emitEvent: false });
+    }
+  }
+
+  private filterCountries(search: string): CountryPhoneCode[] {
+    const query = search.trim().toLowerCase();
+    if (!query) return this.countryOptions;
+
+    return this.countryOptions.filter(country =>
+      country.name.toLowerCase().startsWith(query) ||
+      country.name.toLowerCase().includes(query) ||
+      country.dialCode.includes(query) ||
+      country.iso2.toLowerCase().startsWith(query)
+    );
+  }
+
+  private calculateAge(value: unknown): number | null {
+    const normalized = this.normalizeDateForInput(value);
+    if (!normalized) return null;
+    const birthDate = new Date(`${normalized}T00:00:00`);
+    if (Number.isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : null;
+  }
+
+  private localPhoneMaxLength(countryCode: string): number {
+    const dialDigits = countryCode.replace(/\D/g, '').length;
+    return Math.max(4, 15 - dialDigits);
+  }
+
+  private findCountryIso(countryName?: string): string | null {
+    if (!countryName) return null;
+    const normalized = countryName.trim().toLowerCase();
+    return this.countryOptions.find(country =>
+      country.name.toLowerCase() === normalized || country.iso2.toLowerCase() === normalized
+    )?.iso2 || null;
   }
 
   getRoleBadgeColor(): string {
@@ -526,6 +731,20 @@ retakeAssessment(): void {
 private scrollToSettingsSection(): void {
   const settingsSection = document.getElementById('profile-settings-section');
   settingsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+private scrollToPersonalInfoSection(): void {
+  const personalSection = document.getElementById('profile-personal-info-section');
+  personalSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+private showProfileUpdatedNotice(): void {
+  this.showProfileUpdatedPopup = true;
+  if (this.profilePopupTimeout) clearTimeout(this.profilePopupTimeout);
+  this.profilePopupTimeout = setTimeout(() => {
+    this.showProfileUpdatedPopup = false;
+    this.profilePopupTimeout = null;
+  }, 2200);
 }
 
 private loadAssessmentResult(user: User): void {

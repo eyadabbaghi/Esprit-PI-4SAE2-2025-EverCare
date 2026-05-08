@@ -1,8 +1,9 @@
 <section class="cognitive-page">
   <div class="cognitive-shell">
-    <div class="page-header">
+    <div class="plan-hero">
       <div>
-        <h2>Cognitive Stimulation Tracking</h2>
+        <span class="hero-kicker">Cognitive follow-up</span>
+        <h1>Cognitive Stimulation Tracking</h1>
         <p>Review recommended activities, recent progress, and therapeutic sessions linked to the medical record.</p>
       </div>
       <div class="header-actions">
@@ -26,7 +27,7 @@
         <article class="summary-card highlighted">
           <span class="summary-label">Patient</span>
           <strong>{{ patientDisplayName || record.patientId }}</strong>
-          <p>Record {{ record.active ? 'active' : 'archived' }} | Stage {{ progress?.alzheimerStage || record.alzheimerStage || '-' }}</p>
+          <p>Record {{ record.active ? 'active' : 'archived' }} | {{ labelForStage(progress?.alzheimerStage || record.alzheimerStage) }}</p>
         </article>
         <article class="summary-card">
           <span class="summary-label">Recorded Sessions</span>
@@ -176,7 +177,7 @@
               </div>
 
               <div class="session-meta">
-                <span>Stage: {{ session.stageAtPlay }}</span>
+                <span>Stage: {{ labelForStage(session.stageAtPlay) }}</span>
                 <span>Difficulty: {{ session.difficultyAtPlay }}</span>
                 <span>Assistance: {{ session.assistanceNeeded ? 'Yes' : 'No' }}</span>
                 <span>Frustration: {{ session.frustrationLevel }}/5</span>

@@ -1,4 +1,174 @@
 /* =========================
+   DAILY ME PAGE POLISH
+   ========================= */
+
+.daily-me-page{
+  background:
+    radial-gradient(circle at top left, rgba(216, 180, 254, 0.34), transparent 34%),
+    linear-gradient(180deg, #faf7ff 0%, #f7f1ff 100%) !important;
+}
+
+.daily-me-hero{
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.86);
+  padding: clamp(1.35rem, 3vw, 2.35rem);
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.daily-me-hero::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(216, 180, 254, 0.38), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.daily-me-hero > *{
+  position: relative;
+}
+
+.hero-kicker{
+  display: inline-flex;
+  width: max-content;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.88);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.daily-me-hero h1{
+  margin: 0.7rem 0 0.55rem;
+  color: #2d1b4e;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.daily-me-hero p{
+  max-width: 680px;
+  color: #6b5b8c;
+}
+
+.hero-orbit{
+  width: 142px;
+  height: 142px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 34px;
+  color: #7c3aed;
+  background: linear-gradient(145deg, rgba(255,255,255,.92), rgba(243,232,255,.72));
+  border: 1px solid rgba(196, 181, 253, 0.58);
+  box-shadow: 0 22px 42px rgba(124, 58, 237, 0.16);
+}
+
+.hero-orbit svg{
+  width: 70px;
+  height: 70px;
+  z-index: 1;
+}
+
+.orbit-dot{
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #c4b5fd;
+  animation: daily-float 3s ease-in-out infinite;
+}
+
+.dot-one{ right: 138px; top: 28px; }
+.dot-two{ right: 36px; bottom: 28px; animation-delay: .45s; background: #f0abfc; }
+.dot-three{ right: 112px; bottom: 26px; animation-delay: .85s; background: #a78bfa; }
+
+@keyframes daily-float{
+  0%, 100%{ transform: translateY(0); opacity: .75; }
+  50%{ transform: translateY(-8px); opacity: 1; }
+}
+
+.daily-me-container > .flex.bg-\[\#F3E8FF\]{
+  border: 1px solid rgba(196, 181, 253, 0.5);
+  box-shadow: 0 16px 34px rgba(124, 58, 237, 0.1);
+}
+
+.daily-me-container > .bg-white.rounded-\[2rem\]{
+  border-color: rgba(196, 181, 253, 0.64) !important;
+  background: rgba(255,255,255,.9) !important;
+  box-shadow: 0 24px 54px rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255,255,255,.88);
+}
+
+.daily-me-container input,
+.daily-me-container select,
+.daily-me-container textarea{
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.daily-me-container input:focus,
+.daily-me-container select:focus,
+.daily-me-container textarea:focus{
+  border-color: #b9a7f0 !important;
+  box-shadow: 0 0 0 4px rgba(185, 167, 240, .22) !important;
+}
+
+.daily-svg{
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  color: #7c3aed;
+  background: #f3e8ff;
+  border: 1px solid #e9d5ff;
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.12);
+}
+
+.daily-svg svg{
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.daily-svg.mini{
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.daily-svg.mini svg{
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 720px){
+  .daily-me-hero{
+    align-items: flex-start;
+  }
+
+  .hero-orbit{
+    display: none;
+  }
+}
+
+/* =========================
    MOOD WHEEL + RINGS
    ========================= */
 

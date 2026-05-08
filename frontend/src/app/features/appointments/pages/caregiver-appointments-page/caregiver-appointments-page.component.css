@@ -1,0 +1,242 @@
+.caregiver-appointments-shell {
+  color: #2d1b4e;
+}
+
+.caregiver-hero,
+.workflow-panel,
+.appointment-section {
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.caregiver-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 1.5rem;
+  align-items: center;
+  border-radius: 28px;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.86);
+  padding: 0.28rem 0.72rem;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.caregiver-hero h1 {
+  margin: 0.8rem 0 0.55rem;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.caregiver-hero p:not(.hero-kicker) {
+  max-width: 640px;
+  color: #6b5b8c;
+}
+
+.patient-focus-card {
+  border-radius: 24px;
+  background: linear-gradient(145deg, #ffffff, #f3e8ff);
+  padding: 1.2rem;
+  box-shadow: 14px 16px 34px rgba(124, 58, 237, 0.14);
+}
+
+.patient-focus-card span,
+.patient-focus-card small {
+  display: block;
+  color: #6b5b8c;
+  font-size: 0.78rem;
+}
+
+.patient-focus-card strong {
+  display: block;
+  margin: 0.35rem 0;
+  color: #2d1b4e;
+  font-size: 1.45rem;
+}
+
+.workflow-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 1rem;
+}
+
+.workflow-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.workflow-step {
+  min-height: 118px;
+  border: 1px solid rgba(221, 214, 254, 0.9);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(250, 245, 255, 0.9));
+  padding: 1rem;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.workflow-step:hover,
+.workflow-step.is-active {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(124, 58, 237, 0.14);
+}
+
+.workflow-step span {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.7rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 800;
+}
+
+.workflow-step strong,
+.workflow-step small {
+  display: block;
+}
+
+.workflow-step small {
+  margin-top: 0.3rem;
+  color: #6b5b8c;
+}
+
+.floating-cursor {
+  position: absolute;
+  left: 16%;
+  bottom: -4px;
+  width: 18px;
+  height: 24px;
+  clip-path: polygon(0 0, 0 100%, 35% 74%, 56% 100%, 72% 91%, 52% 66%, 88% 66%);
+  background: #2d1b4e;
+  filter: drop-shadow(0 10px 18px rgba(45, 27, 78, 0.24));
+  animation: caregiverCursor 5.8s ease-in-out infinite;
+}
+
+.measurement-banner {
+  overflow: hidden;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #7c3aed, #9f7aea);
+  padding: 1.2rem;
+  color: #fff;
+  box-shadow: 0 22px 46px rgba(124, 58, 237, 0.22);
+}
+
+.appointment-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.appointment-section {
+  border-radius: 24px;
+  padding: 1rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.section-heading h3 {
+  margin: 0.15rem 0 0;
+  color: #2d1b4e;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.section-heading span {
+  display: grid;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #f3e8ff;
+  color: #7c3aed;
+  font-weight: 800;
+}
+
+.appointment-row {
+  border: 1px solid rgba(233, 213, 255, 0.8);
+  border-radius: 18px;
+  background: rgba(250, 245, 255, 0.62);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.appointment-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(124, 58, 237, 0.1);
+}
+
+.appointment-row.muted {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.primary-action,
+.secondary-action {
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.primary-action {
+  background: #7c3aed;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(124, 58, 237, 0.18);
+}
+
+.secondary-action {
+  border: 1px solid #ddd6fe;
+  background: #fff;
+  color: #7c3aed;
+}
+
+.primary-action:hover,
+.secondary-action:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes caregiverCursor {
+  0%, 22% { transform: translateX(0) translateY(0) rotate(-8deg); }
+  42%, 62% { transform: translateX(32vw) translateY(-7px) rotate(-8deg); }
+  82%, 100% { transform: translateX(64vw) translateY(0) rotate(-8deg); }
+}
+
+@media (max-width: 900px) {
+  .caregiver-hero,
+  .workflow-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .floating-cursor {
+    display: none;
+  }
+}

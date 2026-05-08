@@ -12,6 +12,6 @@ export class TodayScheduleComponent {
 
   @Output() onCardClick = new EventEmitter<Appointment>();
   @Output() onStart = new EventEmitter<Appointment>();
-  @Output() onJoin = new EventEmitter<string>();
+  @Output() onJoin = new EventEmitter<Appointment>();
   @Output() onViewProfile = new EventEmitter<string>();
 }

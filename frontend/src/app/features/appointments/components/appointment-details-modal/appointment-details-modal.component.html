@@ -19,6 +19,7 @@
         <div class="bg-[#F9FAFB] p-4 rounded-lg">
           <div class="flex items-center space-x-4 mb-4">
             <img [src]="appointment.patientPhoto || 'assets/default-avatar.png'"
+                 (error)="($any($event.target).src = 'assets/default-avatar.png')"
                  class="w-16 h-16 rounded-full object-cover border-2 border-[#E9D5FF]">
             <div>
               <h3 class="font-semibold text-lg text-[#2D1B4E]">{{ appointment.patientName }}</h3>

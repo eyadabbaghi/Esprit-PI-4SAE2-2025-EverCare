@@ -90,6 +90,19 @@ export class CognitiveGamesCatalogComponent implements OnInit {
     return (this.currentRole === 'PATIENT' || this.currentRole === 'CAREGIVER') && !!this.currentMedicalRecordId;
   }
 
+  get activeGamesCount(): number {
+    return this.games.filter((game) => game.active).length;
+  }
+
+  get averageDuration(): number {
+    if (!this.games.length) {
+      return 0;
+    }
+
+    const total = this.games.reduce((sum, game) => sum + game.estimatedDuration, 0);
+    return Math.round(total / this.games.length);
+  }
+
   loadGames(): void {
     this.isLoading = true;
     this.errorMessage = '';

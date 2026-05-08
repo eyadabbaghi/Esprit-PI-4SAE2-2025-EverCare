@@ -5,3 +5,132 @@
   overflow: hidden;
 }
 
+.admin-page-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.72fr);
+  gap: 1.4rem;
+  padding: 1.65rem;
+  border: 1px solid rgba(196, 181, 253, 0.74);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(196, 181, 253, 0.42), transparent 15rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(250, 245, 255, 0.84));
+  box-shadow: 0 24px 62px rgba(76, 29, 149, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+}
+
+.admin-page-hero::after {
+  content: "";
+  position: absolute;
+  right: -4.5rem;
+  top: -4.5rem;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
+  pointer-events: none;
+}
+
+.hero-copy-block,
+.hero-action-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-label {
+  margin: 0 0 0.55rem;
+  color: #7C3AED;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-page-hero h1 {
+  max-width: 14ch;
+  margin: 0;
+  color: #2D1B4E;
+  font-size: clamp(2rem, 2.6vw, 3.15rem);
+  line-height: 1.02;
+}
+
+.hero-copy {
+  max-width: 62ch;
+  margin: 1rem 0 0;
+  color: #6B5B8C;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
+.hero-action-panel {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.hero-metric {
+  padding: 0.95rem 1.05rem;
+  border: 1px solid rgba(221, 214, 254, 0.75);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 14px 32px rgba(124, 58, 237, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+.hero-metric span {
+  display: block;
+  color: #6B5B8C;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero-metric strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: #2D1B4E;
+  font-size: 1.25rem;
+}
+
+.hero-primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1.1rem;
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  box-shadow: 0 18px 38px rgba(124, 58, 237, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-primary-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(124, 58, 237, 0.36);
+}
+
+.hero-primary-action svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.3;
+  stroke-linecap: round;
+}
+
+@media (max-width: 900px) {
+  .admin-page-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page-hero h1 {
+    max-width: 100%;
+  }
+}

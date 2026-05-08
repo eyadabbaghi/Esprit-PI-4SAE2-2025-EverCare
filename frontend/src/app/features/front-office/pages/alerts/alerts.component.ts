@@ -39,6 +39,9 @@ interface AlertUI extends Alert {
   senderAvatar?: string;
   targetName?: string;
   label?: string;   // <-- add this
+  immediate?: boolean;
+  scheduledTime?: string;
+  repeatDays?: string[];
 }
 
 @Component({
@@ -91,6 +94,30 @@ private disconnectCheckInterval?: any;
   }
   get isCaregiver(): boolean {
     return this.userRole === 'caregiver' || this.userRole === 'admin';
+  }
+
+  get alertHeroKicker(): string {
+    if (this.isDoctor) return 'Clinical alert center';
+    if (this.isPatient) return 'Personal safety hub';
+    return 'Care monitoring center';
+  }
+
+  get alertHeroTitle(): string {
+    if (this.isDoctor) return 'Patient Alerts & Incidents';
+    if (this.isPatient) return 'Alerts & Incidents';
+    return 'Care Monitoring Dashboard';
+  }
+
+  get alertHeroDescription(): string {
+    if (this.isDoctor) {
+      return 'Review patient incidents, prioritize clinical risk, and coordinate follow-up from one focused workspace.';
+    }
+
+    if (this.isPatient) {
+      return 'Track your safety reports, view active alerts, and request help quickly when something feels wrong.';
+    }
+
+    return 'Monitor associated patients, manage incidents, and respond quickly with live activity context.';
   }
 
   // Filters
@@ -329,6 +356,7 @@ loadData(): void {
 
   return {
     ...incident,
+    incidentDate: (this.normalizeBackendDate(incident.incidentDate) ?? null) as any,
     patientName,
     patientAvatar,
     patientEmail,
@@ -341,6 +369,65 @@ loadData(): void {
   private enrichAlert(alert: Alert): AlertUI {
     return {
       ...alert,
+      sentAt: (this.normalizeBackendDate(alert.sentAt) ?? null) as any,
+      acknowledgedAt: (this.normalizeBackendDate(alert.acknowledgedAt) ?? null) as any,
+    };
+  }
+
+  private normalizeBackendDate(value: unknown): Date | null {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    if (Array.isArray(value) && value.length >= 3) {
+      const [year, month, day, hour = 0, minute = 0, second = 0, nano = 0] = value;
+      const millis = Math.floor(Number(nano) / 1_000_000);
+      const date = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hour),
+        Number(minute),
+        Number(second),
+        millis
+      );
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+
+      if (/^\d{4},\d{1,2},\d{1,2}/.test(trimmed)) {
+        return this.normalizeBackendDate(trimmed.split(',').map(part => Number(part.trim())));
+      }
+
+      const parsed = new Date(trimmed);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    if (typeof value === 'number') {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    return null;
+  }
+
+  private normalizeActivityStatus(status: any): any {
+    if (!status) return status;
+
+    return {
+      ...status,
+      lastLogin: this.normalizeBackendDate(status.lastLogin),
+      recentLogins: Array.isArray(status.recentLogins)
+        ? status.recentLogins.map((login: any) => ({
+            ...login,
+            loginAt: this.normalizeBackendDate(login.loginAt)
+          }))
+        : status.recentLogins
     };
   }
 
@@ -544,10 +631,35 @@ loadData(): void {
   }
 
   // ---------- Filtering and pagination ----------
+  get visibleAlerts(): AlertUI[] {
+    const incidentIds = new Set((this.incidents ?? []).map(i => i.incidentId));
+    const currentUserId = this.currentUser?.userId;
+
+    if (this.isPatient && currentUserId) {
+      return (this.alerts ?? []).filter(alert =>
+        alert.targetId === currentUserId ||
+        alert.senderId === currentUserId ||
+        incidentIds.has(alert.incidentId)
+      );
+    }
+
+    if (this.isDoctor && currentUserId) {
+      return (this.alerts ?? []).filter(alert =>
+        alert.targetId === currentUserId ||
+        alert.senderId === currentUserId ||
+        incidentIds.has(alert.incidentId)
+      );
+    }
+
+    if (this.isCaregiver) {
+      return (this.alerts ?? []).filter(alert => incidentIds.has(alert.incidentId));
+    }
+
+    return this.alerts ?? [];
+  }
+
   get stats() {
-  const alertsForStats = this.isDoctor
-    ? this.alerts.filter(a => a.targetId === this.currentUser?.userId)
-    : this.alerts;
+  const alertsForStats = this.visibleAlerts;
 
   const incidentsForStats = this.isDoctor
     ? this.incidents.filter(i =>
@@ -622,7 +734,7 @@ loadData(): void {
 
   get alertsForSelectedIncident(): AlertUI[] {
     if (!this.selectedIncident) return [];
-    return this.alerts.filter(a => a.incidentId === this.selectedIncident!.incidentId);
+    return this.visibleAlerts.filter(a => a.incidentId === this.selectedIncident!.incidentId);
   }
 
   get totalAlertPages(): number {
@@ -635,7 +747,7 @@ loadData(): void {
   }
 
   getFirstAlert(incidentId: string): AlertUI | undefined {
-    return this.alerts.find(a => a.incidentId === incidentId);
+    return this.visibleAlerts.find(a => a.incidentId === incidentId);
   }
 
   selectIncident(incident: IncidentUI): void {
@@ -696,12 +808,17 @@ loadData(): void {
   }
 
   getSeverityIcon(severity: Severity): string {
-    switch (severity) {
-      case 'LOW': return '🙂';
-      case 'MEDIUM': return '😐';
-      case 'HIGH': return '⚠️';
-      case 'CRITICAL': return '🚨';
-      default: return '';
+    return '';
+  }
+
+  getActivityLabel(status?: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'Active';
+      case 'INACTIVE': return 'Inactive';
+      case 'AT_RISK': return 'At Risk';
+      case 'RECOVERED': return 'Recovered';
+      case 'UNUSUAL': return 'Unusual';
+      default: return 'Unknown';
     }
   }
 
@@ -787,7 +904,7 @@ private startScheduler(): void {
 
   const doStart = (phone: string) => {
     this.alertScheduler.start(
-      () => this.alerts,
+      () => this.visibleAlerts,
       (incidentId: string) => {
         const inc = this.incidents.find(i => i.incidentId === incidentId);
         return inc?.title || 'Unknown incident';
@@ -847,7 +964,7 @@ triggerSOS(): void {
         patientId: this.currentUser!.userId ?? ''
       }).subscribe({
         next: () => {
-          this.toastr.success('🚨 SOS call triggered — caregiver is being called now');
+          this.toastr.success('SOS call triggered. Caregiver is being called now');
         },
         error: () => {
           this.toastr.error('Failed to trigger SOS call');
@@ -932,7 +1049,9 @@ loadPatientActivityStatuses(): void {
   this.activityLoading = true;
   this.alertsService.getBatchActivityStatus(patientIds).subscribe({
     next: (statuses) => {
-      statuses.forEach(s => this.patientActivityStatuses.set(s.userId, s));
+      statuses
+        .map(status => this.normalizeActivityStatus(status))
+        .forEach(s => this.patientActivityStatuses.set(s.userId, s));
       this.activityLoading = false;
     },
     error: () => this.activityLoading = false
@@ -969,7 +1088,7 @@ private startDisconnectCheck(): void {
 
     this.alertsService.getBatchActivityStatus(patientIds).subscribe({
       next: (statuses) => {
-        statuses.forEach(s => {
+        statuses.map(status => this.normalizeActivityStatus(status)).forEach(s => {
           this.patientActivityStatuses.set(s.userId, s);
           const wasOnline = this.disconnectedPatients.has(s.userId) === false;
           const isOffline = !s.onlineNow;

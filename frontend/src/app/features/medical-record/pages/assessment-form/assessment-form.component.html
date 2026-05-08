@@ -1,11 +1,17 @@
 <section class="assessment-page">
   <div class="assessment-shell">
     <div class="panel assessment-card">
-      <div class="head">
+      <div class="head assessment-hero">
         <div>
           <span class="eyebrow">Medical Record Assessment</span>
           <h2>Care baseline screening</h2>
           <p>Answer a short set of questions to create a structured report for your medical record.</p>
+        </div>
+        <div class="assessment-book-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path d="M14 12h24a10 10 0 0 1 10 10v30H24a10 10 0 0 1-10-10V12Z"/>
+            <path d="M24 24h16M24 32h12M24 40h16"/>
+          </svg>
         </div>
         <div class="header-metrics">
           <div class="metric-chip">
@@ -22,6 +28,39 @@
           </div>
         </div>
       </div>
+
+      <section class="assessment-workflow" aria-label="Medical record assessment guide">
+        <div class="workflow-step">
+          <span class="step-number">1</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-8 0v2"/>
+            <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+            <path d="M4 21h16"/>
+          </svg>
+          <strong>Confirm patient</strong>
+          <p>Start with the linked patient and caregiver context.</p>
+        </div>
+        <div class="workflow-step">
+          <span class="step-number">2</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 11h6"/>
+            <path d="M9 15h4"/>
+            <path d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/>
+            <path d="M15 3v5h5"/>
+          </svg>
+          <strong>Answer symptoms</strong>
+          <p>Use the scale to describe memory, behavior, and daily function.</p>
+        </div>
+        <div class="workflow-step">
+          <span class="step-number">3</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5Z"/>
+            <path d="M8 7h6M8 11h6M8 15h4"/>
+          </svg>
+          <strong>Save report</strong>
+          <p>The report is stored in the medical record journal.</p>
+        </div>
+      </section>
 
       <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
       <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>

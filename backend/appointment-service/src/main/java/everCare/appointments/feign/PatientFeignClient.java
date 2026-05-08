@@ -10,11 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "user-service", configuration = everCare.appointments.config.FeignClientConfig.class)
 public interface PatientFeignClient {
 
-    @GetMapping("/EverCare/users/{id}")
+    @GetMapping("/EverCare/internal/users/{id}")
     UserSimpleDTO getUserById(@PathVariable String id);
 
-    @GetMapping("/EverCare/users/{id}/patients")
+    @GetMapping("/EverCare/internal/users/{id}/patients")
     CaregiverPatientsResponseDTO getPatientsByCaregiverId(@PathVariable String id);
 
 }
-

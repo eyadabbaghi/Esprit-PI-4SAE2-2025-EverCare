@@ -4,7 +4,8 @@ import { PrescriptionService } from '../../services/prescription.service';
 
 @Component({
   selector: 'app-prescription-page',
-  templateUrl: './prescription-page.component.html'
+  templateUrl: './prescription-page.component.html',
+  styleUrls: ['./prescription-page.component.css']
 })
 export class PrescriptionPageComponent implements OnInit {
 

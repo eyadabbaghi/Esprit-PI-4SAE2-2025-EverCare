@@ -31,11 +31,37 @@
           <label>
             <span>New password</span>
             <input type="password" [(ngModel)]="passwordForm.newPassword" placeholder="Minimum 8 characters">
+            <div
+              class="password-strength-meter"
+              [ngClass]="passwordStrengthClass"
+              aria-hidden="true">
+              <span [style.width.%]="passwordStrengthPercent"></span>
+            </div>
+            <p
+              *ngIf="passwordForm.newPassword"
+              class="password-strength-hint"
+              [ngClass]="passwordStrengthClass">
+              {{ passwordStrengthLabel }} · Use uppercase, lowercase, number, and symbol.
+            </p>
           </label>
 
           <label class="full-width">
             <span>Confirm new password</span>
             <input type="password" [(ngModel)]="passwordForm.confirmPassword" placeholder="Repeat the new password">
+            <div
+              class="password-match-meter"
+              [class.meter-match]="passwordConfirmationState === 'match'"
+              [class.meter-mismatch]="passwordConfirmationState === 'mismatch'"
+              aria-hidden="true">
+              <span [style.width.%]="passwordConfirmationProgress"></span>
+            </div>
+            <p
+              *ngIf="passwordConfirmationState !== 'idle'"
+              class="password-match-hint"
+              [class.hint-match]="passwordConfirmationState === 'match'"
+              [class.hint-mismatch]="passwordConfirmationState === 'mismatch'">
+              {{ passwordConfirmationState === 'match' ? 'Passwords match.' : 'Passwords do not match yet.' }}
+            </p>
           </label>
         </div>
 
@@ -59,7 +85,7 @@
         </p>
 
         <label class="full-width">
-          <span>Type <strong>DELETE</strong> to confirm</span>
+          <span>Type <strong>DELETE</strong> to confirm  :  </span>
           <input type="text" [(ngModel)]="deleteConfirmation" placeholder="DELETE">
         </label>
 

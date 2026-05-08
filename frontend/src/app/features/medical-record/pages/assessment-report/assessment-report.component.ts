@@ -1,10 +1,13 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { AssessmentReport } from '../../models/assessment.model';
 import { AssessmentService } from '../../services/assessment.service';
 import { MedicalRecordService } from '../../services/medical-record.service';
+import { resolveRole } from '../../utils/medical-record-permissions';
 
 @Component({
   selector: 'app-assessment-report',
@@ -17,6 +20,7 @@ export class AssessmentReportComponent implements OnInit {
   report: AssessmentReport | null = null;
   previousReports: AssessmentReport[] = [];
   currentUser: User | null = null;
+  currentRole: string | undefined;
   isLoading = false;
   errorMessage = '';
   infoMessage = '';
@@ -38,6 +42,7 @@ export class AssessmentReportComponent implements OnInit {
 
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser = user;
+      this.currentRole = resolveRole(user?.role);
     });
 
     this.loadReport(id);
@@ -84,7 +89,7 @@ export class AssessmentReportComponent implements OnInit {
         this.router.navigate(['/medical-record', record.id]);
       },
       error: () => {
-        this.errorMessage = 'Medical Record introuvable pour ce patient.';
+        this.errorMessage = 'Medical record not found for this patient.';
       }
     });
   }
@@ -96,15 +101,40 @@ export class AssessmentReportComponent implements OnInit {
 
     this.assessmentService.getById(id).subscribe({
       next: (report) => {
-        this.report = report;
-        this.isLoading = false;
-        this.loadPreviousReports(report.patientId);
+        if (this.isPatientRole() && !this.isOwnPatient(report.patientId)) {
+          this.report = null;
+          this.errorMessage = 'You can only view your own assessment reports.';
+          this.isLoading = false;
+          return;
+        }
+
+        if (this.isCareTeamRole()) {
+          this.verifyAssociatedPatient(report.patientId).subscribe((allowed) => {
+            if (!allowed) {
+              this.report = null;
+              this.errorMessage = 'You can only view reports for your associated patients.';
+              this.isLoading = false;
+              return;
+            }
+
+            this.acceptReport(report);
+          });
+          return;
+        }
+
+        this.acceptReport(report);
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = this.extractError(error, 'Report not found.');
         this.isLoading = false;
       }
     });
+  }
+
+  private acceptReport(report: AssessmentReport): void {
+    this.report = report;
+    this.isLoading = false;
+    this.loadPreviousReports(report.patientId);
   }
 
   private loadPreviousReports(patientId: string): void {
@@ -134,5 +164,88 @@ export class AssessmentReportComponent implements OnInit {
       return message;
     }
     return fallback;
+  }
+
+  private isPatientRole(): boolean {
+    return this.currentRole === 'PATIENT';
+  }
+
+  private isCareTeamRole(): boolean {
+    return this.currentRole === 'DOCTOR' || this.currentRole === 'CAREGIVER';
+  }
+
+  private isOwnPatient(patientId: string): boolean {
+    const candidates = this.uniqueNormalized([
+      this.currentUser?.userId || '',
+      this.currentUser?.email || '',
+      this.currentUser?.name || ''
+    ]);
+    const normalizedPatientId = patientId.trim().toLowerCase();
+    return candidates.some((candidate) => candidate.toLowerCase() === normalizedPatientId);
+  }
+
+  private verifyAssociatedPatient(patientId: string): Observable<boolean> {
+    const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const directRequests = directEmails.map((email) =>
+      this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
+    );
+
+    const direct$ = directRequests.length > 0 ? forkJoin(directRequests) : of([]);
+    const fallback$ = this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([])));
+    const normalizedPatientId = patientId.trim().toLowerCase();
+
+    return forkJoin({ direct: direct$, fallback: fallback$ }).pipe(
+      map(({ direct, fallback }) => {
+        const patients = [
+          ...direct.filter((patient): patient is User => !!patient),
+          ...(fallback || []).filter((patient) => this.isAssociatedPatientUser(patient, currentEmail))
+        ];
+
+        return patients.some((patient) =>
+          this.resolvePatientCandidates(patient).some((candidate) => candidate.toLowerCase() === normalizedPatientId)
+        );
+      }),
+      catchError(() => of(false))
+    );
+  }
+
+  private isAssociatedPatientUser(patient: User, currentEmail: string): boolean {
+    if (!currentEmail) {
+      return false;
+    }
+
+    if (this.currentRole === 'DOCTOR') {
+      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+    }
+
+    const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
+    return caregiverEmails.some((email) => email.toLowerCase() === currentEmail);
+  }
+
+  private resolvePatientCandidates(patient: User): string[] {
+    return this.uniqueNormalized([
+      patient.userId || '',
+      patient.email || '',
+      patient.name || ''
+    ]);
+  }
+
+  private normalizeEmailList(emails: string[]): string[] {
+    return this.uniqueNormalized(emails || []);
+  }
+
+  private uniqueNormalized(values: string[]): string[] {
+    const seen = new Set<string>();
+    return values
+      .map((value) => String(value || '').trim())
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (!key || seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
   }
 }

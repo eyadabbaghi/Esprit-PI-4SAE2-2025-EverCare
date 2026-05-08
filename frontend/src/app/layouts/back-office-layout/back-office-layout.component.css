@@ -2,7 +2,9 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
-  background: #f8fafc;
+  background:
+    radial-gradient(circle at 5% 2%, rgba(196, 181, 253, 0.28), transparent 26rem),
+    linear-gradient(135deg, #faf8fc 0%, #f8fafc 48%, #f3effb 100%);
 }
 
 .admin-sidebar {
@@ -14,9 +16,31 @@
   gap: 1.1rem;
   padding: 1.25rem;
   background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 32%),
-    linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.82), transparent 12rem),
+    radial-gradient(circle at 100% 12%, rgba(196, 181, 253, 0.42), transparent 14rem),
+    linear-gradient(180deg, rgba(250, 245, 255, 0.96) 0%, rgba(237, 233, 254, 0.94) 100%);
   color: #312e81;
+  border-right: 1px solid rgba(196, 181, 253, 0.78);
+  box-shadow:
+    22px 0 58px rgba(76, 29, 149, 0.16),
+    8px 0 24px rgba(124, 58, 237, 0.1),
+    inset -1px 0 0 rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(18px);
+  transform-style: preserve-3d;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.admin-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0.75rem;
+  z-index: -1;
+  border-radius: 1.75rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  pointer-events: none;
 }
 
 .sidebar-brand,
@@ -32,6 +56,7 @@
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  min-width: 0;
 }
 
 .brand-mark,
@@ -42,12 +67,16 @@
   display: grid;
   place-items: center;
   background: rgba(124, 58, 237, 0.12);
+  box-shadow:
+    0 14px 28px rgba(124, 58, 237, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .brand-mark {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(196, 181, 253, 0.85);
+  transform: translateZ(14px);
 }
 
 .brand-mark img {
@@ -70,11 +99,47 @@
   color: #2d1b4e;
 }
 
+.sidebar-brand > div:last-child,
+.sidebar-user-card > div:last-child {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sidebar-brand strong,
+.sidebar-user-card strong,
+.sidebar-user-card p,
+.support-card strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sidebar-user-card {
   padding: 0.95rem;
-  background: rgba(255, 255, 255, 0.68);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(243, 232, 255, 0.72));
   border: 1px solid rgba(196, 181, 253, 0.85);
   cursor: pointer;
+  box-shadow:
+    0 18px 36px rgba(76, 29, 149, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  max-width: 100%;
+}
+
+.sidebar-brand {
+  padding: 0.6rem;
+  transform: translateZ(10px);
+}
+
+.sidebar-user-card:hover {
+  transform: translateY(-3px) translateZ(12px);
+  border-color: rgba(167, 139, 250, 0.95);
+  box-shadow:
+    0 24px 48px rgba(76, 29, 149, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
 .sidebar-user-card p,
@@ -98,7 +163,8 @@
 .sidebar-nav {
   display: grid;
   align-content: start;
-  gap: 0.45rem;
+  gap: 0.58rem;
+  padding: 0.2rem 0;
 }
 
 .nav-link {
@@ -108,7 +174,25 @@
   padding: 0.9rem 1rem;
   color: #4c1d95;
   text-decoration: none;
-  transition: 0.2s ease;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.36);
+  box-shadow:
+    0 10px 24px rgba(76, 29, 149, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  transform: translateZ(0);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease,
+    border-color 0.22s ease, color 0.22s ease;
+}
+
+.nav-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-link svg,
@@ -124,8 +208,27 @@
 
 .nav-link:hover,
 .nav-active {
-  background: rgba(124, 58, 237, 0.14);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(243, 232, 255, 0.88));
+  border-color: rgba(196, 181, 253, 0.82);
   color: #5b21b6;
+  transform: translateY(-2px) translateZ(14px);
+  box-shadow:
+    0 18px 36px rgba(76, 29, 149, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.nav-active {
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow:
+    0 20px 42px rgba(124, 58, 237, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.nav-active svg {
+  filter: drop-shadow(0 6px 10px rgba(45, 27, 78, 0.2));
 }
 
 .sidebar-footer {
@@ -135,8 +238,15 @@
 
 .support-card {
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.68);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(243, 232, 255, 0.72));
   border: 1px solid rgba(196, 181, 253, 0.85);
+  box-shadow:
+    0 16px 34px rgba(76, 29, 149, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .logout-button {
@@ -151,10 +261,26 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  box-shadow:
+    0 18px 36px rgba(124, 58, 237, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.logout-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 46px rgba(124, 58, 237, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .back-office-main {
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 1024px) {

@@ -8,7 +8,8 @@ import { PrescriptionService } from '../../services/prescription.service';
 
 @Component({
   selector: 'app-caregiver-patient-prescriptions',
-  templateUrl: './caregiver-patient-prescriptions.component.html'
+  templateUrl: './caregiver-patient-prescriptions.component.html',
+  styleUrls: ['./caregiver-patient-prescriptions.component.css']
 })
 export class CaregiverPatientPrescriptionsComponent implements OnInit {
   currentUser: User | null = null;

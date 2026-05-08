@@ -17,4 +17,8 @@ export interface TopMedicament {
   medicamentId: string;
   nomCommercial: string;
   prescriptionCount: number;
+  photoUrl?: string;
+  dosage?: string;
+  forme?: string;
+  denominationCommuneInternationale?: string;
 }

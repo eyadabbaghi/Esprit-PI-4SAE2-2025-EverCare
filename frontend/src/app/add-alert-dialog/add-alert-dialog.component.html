@@ -1,127 +1,159 @@
-<h2 mat-dialog-title class="text-2xl flex items-center gap-2">
-    🔔
-  {{ data.alert ? 'Edit Alert' : 'Create New Alert' }}
-</h2>
+<div class="alert-dialog-shell">
+  <div class="dialog-title-row" mat-dialog-title>
+    <span class="title-icon">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.7 21a2 2 0 0 1-3.4 0"/>
+      </svg>
+    </span>
+    <div>
+      <h2>{{ data.alert ? 'Edit alert' : 'Create new alert' }}</h2>
+      <p>Notify the right person at the right time.</p>
+    </div>
+  </div>
 
-<form [formGroup]="form">
-  <mat-dialog-content class="max-w-2xl max-h-[70vh] overflow-y-auto">
-    <div class="space-y-6">
-      <!-- Incident info -->
-      <div class="p-4 bg-[#F3E8FF] rounded-lg">
-        <p class="text-sm text-[#6B5B8C] mb-1">Alert for incident:</p>
-        <p class="font-semibold text-[#2D1B4E]">{{ data.incident.title }}</p>
-      </div>
-
-      <!-- Recipient selection -->
-      <div>
-        <label class="text-base font-semibold text-[#2D1B4E] mb-3 block">Select Recipient</label>
-        <div *ngIf="loading" class="text-center py-4 text-[#6B5B8C]">Loading contacts...</div>
-        <div *ngIf="!loading && contacts.length === 0" class="text-center py-4 text-[#6B5B8C]">No caregivers or doctors associated with this patient.</div>
-        <div class="space-y-2">
-          <div *ngFor="let contact of contacts"
-               class="flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
-               [ngClass]="form.get('targetId')?.value === contact.userId ? 'border-[#7C3AED] bg-[#F3E8FF]' : 'border-[#DDD6FE]'"
-               (click)="form.patchValue({ targetId: contact.userId })">
-            <div class="w-10 h-10 rounded-full bg-[#C4B5FD] flex items-center justify-center text-xs font-semibold overflow-hidden">
-              <ng-container *ngIf="contact.profilePicture; else initials">
-                <img [src]="contact.profilePicture" alt="" class="w-full h-full object-cover">
-              </ng-container>
-              <ng-template #initials>
-                <span class="text-[#7C3AED]">{{ getInitials(contact.name) }}</span>
-              </ng-template>
-            </div>
-            <div class="flex-1">
-              <p class="font-medium text-[#2D1B4E]">{{ contact.name }}</p>
-              <p class="text-xs text-[#6B5B8C]">{{ contact.role }}</p>
-            </div>
-            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center"
-                 [ngClass]="form.get('targetId')?.value === contact.userId ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#DDD6FE]'">
-              <span *ngIf="form.get('targetId')?.value === contact.userId" class="text-white text-xs">✓</span>
-            </div>
-          </div>
+  <form [formGroup]="form">
+    <mat-dialog-content>
+      <section class="incident-summary">
+        <span class="summary-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+          </svg>
+        </span>
+        <div>
+          <p>Alert for incident</p>
+          <h3>{{ data.incident.title }}</h3>
         </div>
-      </div>
+      </section>
 
-      <!-- Alert Label -->
-      <div>
-        <label class="text-base font-semibold text-[#2D1B4E] mb-2 block">Alert Label (optional)</label>
+      <section class="form-section">
+        <div class="section-title">
+          <p>Select recipient</p>
+          <span>{{ contacts.length }} available</span>
+        </div>
+
+        <div *ngIf="loading" class="empty-line">Loading contacts...</div>
+        <div *ngIf="!loading && contacts.length === 0" class="empty-line">
+          No caregivers or doctors associated with this patient.
+        </div>
+
+        <div class="contacts-list">
+          <button
+            *ngFor="let contact of contacts"
+            type="button"
+            class="contact-card"
+            [class.selected]="form.get('targetId')?.value === contact.userId"
+            (click)="form.patchValue({ targetId: contact.userId })">
+            <span class="contact-avatar">
+              <img *ngIf="contact.profilePicture; else initials" [src]="contact.profilePicture" alt="">
+              <ng-template #initials>{{ getInitials(contact.name) }}</ng-template>
+            </span>
+            <span class="contact-copy">
+              <strong>{{ contact.name }}</strong>
+              <small>{{ contact.role }}</small>
+            </span>
+            <span class="select-ring">
+              <svg *ngIf="form.get('targetId')?.value === contact.userId" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <p class="field-label">Alert label</p>
         <mat-form-field class="w-full">
-          <input matInput placeholder="e.g., Medication reminder" formControlName="label">
+          <input matInput placeholder="e.g. Medication reminder" formControlName="label">
         </mat-form-field>
-      </div>
+      </section>
 
-      <!-- Schedule -->
-      <div>
-        <label class="text-base font-semibold text-[#2D1B4E] mb-2 block">Schedule</label>
-        <div class="flex items-center gap-4 mb-3">
-          <mat-checkbox formControlName="immediate">Send immediately</mat-checkbox>
-        </div>
-        <div *ngIf="!form.get('immediate')?.value" class="space-y-4">
-          <!-- Time picker (24h format) -->
-          <div>
-            <label class="text-sm font-medium text-[#374151] mb-1 block">Time (24h)</label>
-            <mat-form-field class="w-40">
-              <input matInput type="time" formControlName="scheduledTime">
-            </mat-form-field>
+      <section class="form-section schedule-section" [class.scheduled]="!form.get('immediate')?.value">
+        <div class="schedule-head">
+          <div class="clock-widget" [class.clock-active]="!form.get('immediate')?.value">
+            <span class="clock-hand hour"></span>
+            <span class="clock-hand minute"></span>
+            <span class="clock-dot"></span>
           </div>
-          <!-- Repeat days -->
           <div>
-            <label class="text-sm font-medium text-[#374151] mb-2 block">Repeat on</label>
-            <div class="flex flex-wrap gap-2">
-              <button *ngFor="let day of daysOfWeek" type="button"
-                      class="px-3 py-1 rounded-full border text-sm transition"
-                      [ngClass]="form.get('repeatDays')?.value.includes(day.value) ? 'bg-[#7C3AED] text-white border-[#7C3AED]' : 'bg-white border-[#DDD6FE] text-[#6B5B8C]'"
-                      (click)="toggleRepeatDay(day.value)">
+            <p class="section-kicker">Schedule</p>
+            <h3>{{ form.get('immediate')?.value ? 'Send now' : 'Scheduled alert' }}</h3>
+            <span>{{ form.get('immediate')?.value ? 'The alert is sent immediately after creation.' : 'Pick a time and optional repeat days.' }}</span>
+          </div>
+        </div>
+
+        <mat-checkbox formControlName="immediate">Send immediately</mat-checkbox>
+
+        <div *ngIf="!form.get('immediate')?.value" class="schedule-controls">
+          <mat-form-field class="time-field">
+            <mat-label>Time</mat-label>
+            <input matInput type="time" formControlName="scheduledTime">
+          </mat-form-field>
+
+          <div>
+            <p class="field-label">Repeat on</p>
+            <div class="days-grid">
+              <button
+                *ngFor="let day of daysOfWeek"
+                type="button"
+                class="day-pill"
+                [class.selected]="form.get('repeatDays')?.value.includes(day.value)"
+                (click)="toggleRepeatDay(day.value)">
                 {{ day.label }}
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Notification channels -->
-      <div>
-        <label class="text-base font-semibold text-[#2D1B4E] mb-3 block">Notification Channels</label>
-        <div class="grid grid-cols-3 gap-3">
-          <div *ngFor="let ch of notificationChannels"
-               class="flex flex-col items-center p-3 border-2 rounded-xl cursor-pointer transition-all"
-               [ngClass]="form.get('notificationChannels')?.value.includes(ch.id) ? 'border-[#7C3AED] bg-[#F3E8FF]' : 'border-[#DDD6FE]'"
-               (click)="toggleChannel(ch.id, !form.get('notificationChannels')?.value.includes(ch.id))">
-            <span class="text-2xl mb-1">🔔</span>
-            <span class="text-xs font-medium">{{ ch.label }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview -->
-      <div *ngIf="form.get('targetId')?.value && form.get('notificationChannels')?.value.length"
-           class="p-4 bg-gradient-to-r from-[#F3E8FF] to-white rounded-lg border border-[#C4B5FD]">
-        <h4 class="font-semibold text-[#2D1B4E] mb-2">Alert Preview</h4>
-        <p class="text-sm text-[#6B5B8C]">
-          Alert will be sent to <span class="font-semibold text-[#7C3AED]">{{ getSelectedContactName() }}</span>
-          via <span class="font-semibold text-[#7C3AED]">{{ notificationChannelsDisplay }}</span>
-        </p>
-        <p *ngIf="form.get('label')?.value" class="text-sm text-[#6B5B8C] mt-2">
-          Label: <span class="font-semibold">{{ form.get('label')?.value }}</span>
-        </p>
-        <div *ngIf="!form.get('immediate')?.value">
-          <p class="text-sm text-[#6B5B8C] mt-1">
-            Scheduled at {{ form.get('scheduledTime')?.value }} on
-            <span *ngIf="form.get('repeatDays')?.value.length; else once">
-              {{ form.get('repeatDays')?.value.join(', ') }}
+      <section class="form-section">
+        <p class="field-label">Notification channels</p>
+        <div class="channels-grid">
+          <button
+            *ngFor="let ch of notificationChannels"
+            type="button"
+            class="channel-card"
+            [class.selected]="form.get('notificationChannels')?.value.includes(ch.id)"
+            (click)="toggleChannel(ch.id, !form.get('notificationChannels')?.value.includes(ch.id))">
+            <span class="channel-icon" [ngSwitch]="ch.id">
+              <svg *ngSwitchCase="'sms'" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 2h4m-5 0h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm2 17h2"/>
+              </svg>
+              <svg *ngSwitchCase="'email'" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16v12H4z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6"/>
+              </svg>
+              <svg *ngSwitchDefault width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.7 21a2 2 0 0 1-3.4 0"/>
+              </svg>
             </span>
-            <ng-template #once>next occurrence</ng-template>
-          </p>
+            <span>{{ ch.label }}</span>
+          </button>
         </div>
-      </div>
-    </div>
-  </mat-dialog-content>
+      </section>
 
-  <mat-dialog-actions align="end" class="p-4 border-t border-[#C4B5FD]">
-  <button mat-button type="button" (click)="cancel()" class="border border-[#C4B5FD] rounded-full px-4 py-2">Cancel</button>
-  <button mat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid"
-          class="bg-[#7C3AED] text-white rounded-full px-6 py-2 hover:bg-[#6D28D9] disabled:opacity-50">
-    {{ data.alert ? 'Update' : 'Create' }} Alert
-  </button>
-</mat-dialog-actions>
-</form>
+      <section *ngIf="form.get('targetId')?.value && form.get('notificationChannels')?.value.length" class="preview-card">
+        <p>Preview</p>
+        <h3>{{ form.get('label')?.value || 'Care alert' }}</h3>
+        <span>
+          Sent to <strong>{{ getSelectedContactName() }}</strong>
+          via <strong>{{ notificationChannelsDisplay }}</strong>
+        </span>
+        <span *ngIf="!form.get('immediate')?.value">
+          Scheduled at <strong>{{ form.get('scheduledTime')?.value || 'selected time' }}</strong>
+          <ng-container *ngIf="form.get('repeatDays')?.value.length">
+            on <strong>{{ form.get('repeatDays')?.value.join(', ') }}</strong>
+          </ng-container>
+        </span>
+      </section>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-button color="primary" type="button" (click)="save()" [disabled]="form.invalid">
+        {{ data.alert ? 'Update' : 'Create' }} alert
+      </button>
+    </mat-dialog-actions>
+  </form>
+</div>

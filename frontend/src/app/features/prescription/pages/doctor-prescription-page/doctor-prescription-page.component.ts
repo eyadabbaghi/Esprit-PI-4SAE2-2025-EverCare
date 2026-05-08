@@ -7,7 +7,8 @@ import { Prescription, PrescriptionRequest } from '../../models/prescription.mod
 
 @Component({
   selector: 'app-doctor-prescription-page',
-  templateUrl: './doctor-prescription-page.component.html'
+  templateUrl: './doctor-prescription-page.component.html',
+  styleUrls: ['./doctor-prescription-page.component.css']
 })
 export class DoctorPrescriptionPageComponent implements OnInit {
 

@@ -29,6 +29,7 @@ import { CaregiverAppointmentsPageComponent } from './pages/caregiver-appointmen
 import { RouterModule } from '@angular/router';
 import { ToastrModule } from 'ngx-toastr';
 import { LucideAngularModule } from 'lucide-angular';
+import { SharedModule } from '../../shared/shared.module';
 
 // NEW: Video consultation
 import { VideoConsultationPageComponent } from './pages/video-consultation-page/video-consultation-page.component';
@@ -73,6 +74,7 @@ import { UserAppointmentsComponent } from './pages/user-appointments/user-appoin
     RouterModule,
     ToastrModule.forRoot(),
     LucideAngularModule,
+    SharedModule,
     
   ]
 })

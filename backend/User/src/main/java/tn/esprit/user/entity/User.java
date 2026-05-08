@@ -45,6 +45,8 @@ public class User {
     private UserRole role;
 
     private String phone;
+    private String address;
+    private String country;
 
     private boolean isVerified;
 

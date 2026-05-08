@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -28,6 +29,21 @@ public class SecurityConfig {
     private final FaceLoginTokenService faceLoginTokenService;
 
     @Bean
+    @Order(1)
+    public SecurityFilterChain internalUsersSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/internal/users/**", "/EverCare/internal/users/**")
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -45,6 +61,8 @@ public class SecurityConfig {
                                 "/EverCare/users/search",
                                 "/users/activity/**",
                                 "/EverCare/users/activity/**",
+                                "/internal/users/**",
+                                "/EverCare/internal/users/**",
                                 "/uploads/**"
                         ).permitAll()
                         .anyRequest().authenticated()

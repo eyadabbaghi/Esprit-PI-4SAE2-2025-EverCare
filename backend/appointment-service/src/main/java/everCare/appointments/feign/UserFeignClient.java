@@ -30,24 +30,24 @@ public interface UserFeignClient {
     /**
      * Get user by ID
      */
-    @GetMapping("/EverCare/users/{id}")
+    @GetMapping("/EverCare/internal/users/{id}")
     UserSimpleDTO getUserById(@PathVariable("id") String id);
 
     /**
      * Get user by email
      */
-    @GetMapping("/EverCare/users/by-email")
+    @GetMapping("/EverCare/internal/users/by-email")
     UserSimpleDTO getUserByEmail(@RequestParam("email") String email);
 
     /**
      * Search users by role
      */
-    @GetMapping("/EverCare/users/search")
+    @GetMapping("/EverCare/internal/users/search")
     List<UserSimpleDTO> searchUsersByRole(@RequestParam("q") String term, @RequestParam("role") String role);
 
     /**
      * Get caregivers for a patient
      */
-    @GetMapping("/users/{patientId}/caregivers")
+    @GetMapping("/EverCare/internal/users/{patientId}/caregivers")
     List<UserSimpleDTO> getCaregiversByPatientId(@PathVariable("patientId") String patientId);
 }

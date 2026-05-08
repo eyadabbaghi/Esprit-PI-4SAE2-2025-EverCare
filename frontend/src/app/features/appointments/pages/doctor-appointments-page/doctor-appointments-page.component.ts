@@ -14,8 +14,10 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-doctor-appointments-page',
   templateUrl: './doctor-appointments-page.component.html',
+  styleUrls: ['./doctor-appointments-page.component.css']
 })
 export class DoctorAppointmentsPageComponent implements OnInit {
+  private readonly defaultAvatar = 'assets/default-avatar.png';
 
   // Current doctor (from auth service)
   currentDoctor: User = {
@@ -156,8 +158,21 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       // Fix: handle both nested object and flat structure
       patientId: item.patient?.userId || item.patientId || '',
       patientName: item.patient?.name || item.patientName || '',
+      patientPhoto: this.resolveProfilePicture(
+        item.patient?.profilePicture,
+        item.patient?.patientPhoto,
+        item.patientPhoto,
+        item.patientProfilePicture,
+        item.profilePicture
+      ),
       doctorId: item.doctor?.userId || item.doctorId || '',
       doctorName: item.doctor?.name || item.doctorName || '',
+      doctorPhoto: this.resolveProfilePicture(
+        item.doctor?.profilePicture,
+        item.doctor?.doctorPhoto,
+        item.doctorPhoto,
+        item.doctorProfilePicture
+      ),
       caregiverId: item.caregiver?.userId || item.caregiverId,
       caregiverName: item.caregiver?.name || item.caregiverName,
       consultationTypeId: item.consultationType?.typeId || item.consultationTypeId || '',
@@ -173,6 +188,11 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     }));
   }
 
+  private resolveProfilePicture(...candidates: Array<string | null | undefined>): string {
+    const picture = candidates.find(value => typeof value === 'string' && value.trim().length > 0);
+    return picture ? picture.trim() : this.defaultAvatar;
+  }
+
   loadRecentPatients(): void {
     // Get unique patients from appointments
     const patientMap = new Map();
@@ -182,7 +202,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
         patientMap.set(apt.patientId, {
           id: apt.patientId,
           name: apt.patientName,
-          photo: '', // You would need to get this from somewhere
+          photo: apt.patientPhoto || this.defaultAvatar,
           lastVisit: this.getMostRecentAppointmentDate(apt.patientId),
           nextVisit: this.getNextAppointmentDate(apt.patientId),
           alzheimerStage: 'MODERE' // You would need to get this from patient data
@@ -566,14 +586,14 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   }
 
   startConsultation(appointment: Appointment): void {
-    if (appointment.videoLink) {
-      window.open(appointment.videoLink, '_blank');
+    if (appointment?.appointmentId) {
+      this.router.navigate(['/appointments/video', appointment.appointmentId]);
     }
   }
 
-  joinVideoCall(videoLink: string | undefined): void {
-    if (videoLink) {
-      window.open(videoLink, '_blank');
+  joinVideoCall(appointment: Appointment | undefined): void {
+    if (appointment?.appointmentId) {
+      this.router.navigate(['/appointments/video', appointment.appointmentId]);
     }
   }
 

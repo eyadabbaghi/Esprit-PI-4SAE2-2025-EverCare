@@ -1,11 +1,36 @@
-<div class="min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
+<div class="caregiver-prescription-shell min-h-screen bg-gradient-to-br from-[#FAF8FC] to-[#F3E8FF] p-4 md:p-8">
   <div class="mx-auto max-w-7xl space-y-6">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="caregiver-rx-hero flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
+        <p class="hero-kicker">Caregiver medication support</p>
         <h1 class="text-3xl font-bold text-[#2D1B4E]">Caregiver Prescription View</h1>
         <p class="mt-1 text-[#6B5B8C]">Select a linked patient, then review active, today and history sections in one place.</p>
       </div>
     </div>
+
+    <section class="caregiver-rx-guide" aria-label="Caregiver prescription workflow">
+      <div class="guide-step is-active">
+        <span>1</span>
+        <strong>Select linked patient</strong>
+        <small>Switch between associated patients quickly.</small>
+      </div>
+      <div class="guide-step">
+        <span>2</span>
+        <strong>Record clinical measurements</strong>
+        <small>Use the appointment page before visits so doctors see fresh data.</small>
+      </div>
+      <div class="guide-step">
+        <span>3</span>
+        <strong>Review today's doses</strong>
+        <small>Confirm active medication and daily timing.</small>
+      </div>
+      <div class="guide-step">
+        <span>4</span>
+        <strong>Open details</strong>
+        <small>Read notes, PDFs, renewal status, and history.</small>
+      </div>
+      <i class="floating-cursor" aria-hidden="true"></i>
+    </section>
 
     <div *ngIf="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{{ errorMessage }}</div>
     <div *ngIf="loading" class="rounded-xl border border-[#C4B5FD] bg-white p-8 text-center text-sm text-[#6B5B8C] shadow-sm">Loading caregiver workspace...</div>

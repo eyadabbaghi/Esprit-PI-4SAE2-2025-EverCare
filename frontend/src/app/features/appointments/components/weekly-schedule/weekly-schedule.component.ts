@@ -16,7 +16,8 @@ export interface TimeSlot {
   selector: 'app-weekly-schedule',
   standalone: true,
   imports: [CommonModule],
-  templateUrl:"weekly-schedule.component.html"
+  templateUrl: 'weekly-schedule.component.html',
+  styleUrls: ['weekly-schedule.component.css']
 })
 export class WeeklyScheduleComponent implements OnInit {
   @Input() doctorId: string | null = null;

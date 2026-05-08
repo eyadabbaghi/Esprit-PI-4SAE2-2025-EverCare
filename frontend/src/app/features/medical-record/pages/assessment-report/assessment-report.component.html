@@ -1,10 +1,18 @@
 <section class="assessment-report-page">
   <div class="report-shell">
     <div class="panel report-card">
-      <div class="report-head">
+      <div class="report-head report-hero">
         <div>
+          <span class="hero-kicker">Assessment journal</span>
           <h2>Assessment Report</h2>
           <p>Result of the preliminary Alzheimer disease screening.</p>
+        </div>
+        <div class="report-seal" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path d="M18 10h28a4 4 0 0 1 4 4v40H18a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4Z"/>
+            <path d="M24 24h16M24 32h16M24 40h10"/>
+            <path d="m42 42 4 4 8-10"/>
+          </svg>
         </div>
       </div>
 
@@ -40,7 +48,7 @@
           </div>
         </div>
 
-        <div class="recommendation-box">
+        <div class="recommendation-box journal-note">
           <h3>Recommendation</h3>
           <p>{{ currentReport.recommendation }}</p>
         </div>

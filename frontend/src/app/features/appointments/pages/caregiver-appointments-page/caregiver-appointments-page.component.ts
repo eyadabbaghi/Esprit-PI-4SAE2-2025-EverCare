@@ -13,7 +13,8 @@ import { ClinicalMeasurementModalComponent } from '../../components/clinical-mea
   selector: 'app-caregiver-appointments-page',
   standalone: true,
   imports: [CommonModule, ClinicalMeasurementModalComponent],
-  templateUrl: './caregiver-appointments-page.component.html'
+  templateUrl: './caregiver-appointments-page.component.html',
+  styleUrls: ['./caregiver-appointments-page.component.css']
 })
 export class CaregiverAppointmentsPageComponent implements OnInit {
   currentCaregiver: User | null = null;
@@ -188,11 +189,15 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
   /**
    * Join a video call
    */
-  joinVideoCall(videoLink: string | undefined): void {
-    if (videoLink) {
-      window.open(videoLink, '_blank');
+  joinVideoCall(appointment: Appointment | string | undefined): void {
+    const appointmentId = typeof appointment === 'string'
+      ? this.appointments.find(apt => apt.videoLink === appointment)?.appointmentId
+      : appointment?.appointmentId;
+
+    if (appointmentId) {
+      this.router.navigate(['/appointments/video', appointmentId]);
     } else {
-      this.toastr.warning('No video link available for this appointment');
+      this.toastr.warning('No video consultation room available for this appointment');
     }
   }
 

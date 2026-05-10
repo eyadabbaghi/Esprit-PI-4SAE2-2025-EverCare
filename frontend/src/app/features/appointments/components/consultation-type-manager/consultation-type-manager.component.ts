@@ -3,13 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConsultationType } from '../../models/consultation-type.model';
 import {ConsultationTypeService} from '../../services/consultation-type.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-consultation-type-manager',
   templateUrl:"consultation-type-manager.component.html"
 })
 export class ConsultationTypeManagerComponent {
- constructor(private consultationTypeService: ConsultationTypeService) {
+ constructor(
+   private consultationTypeService: ConsultationTypeService,
+   private feedback: AppFeedbackService
+ ) {
  }
   @Input() types: ConsultationType[] = [];
   @Output() addType = new EventEmitter<any>();
@@ -49,8 +53,15 @@ export class ConsultationTypeManagerComponent {
 
   }
 
-  onDeleteType(id: string): void {
-    if (confirm('Are you sure you want to delete this consultation type?')) {
+  async onDeleteType(id: string): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete consultation type?',
+      message: 'Remove this consultation type from the appointment workflow?',
+      confirmText: 'Delete type',
+      tone: 'danger'
+    });
+
+    if (confirmed) {
 
         console.log(`Deleting consultation type with ID: ${id}`);
         if (!id) return;

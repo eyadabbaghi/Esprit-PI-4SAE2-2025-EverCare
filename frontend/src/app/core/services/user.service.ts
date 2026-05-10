@@ -13,6 +13,7 @@ export interface Patient {
   // Relationship fields (for patients)
   caregiverEmails?: string[];
   doctorEmail?: string;
+  doctorEmails?: string[];
   // For caregivers/doctors
   patientEmails?: string[];
 }

@@ -14,6 +14,8 @@ public class AlertResponse {
     private LocalDateTime sentAt;
     private LocalDateTime acknowledgedAt;
     private String label;
+    private Boolean immediate;
     private String scheduledTime;        // as string "HH:mm"
     private List<String> repeatDays;
+    private List<String> notificationChannels;
 }

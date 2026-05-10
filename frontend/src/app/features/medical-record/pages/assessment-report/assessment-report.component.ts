@@ -187,13 +187,17 @@ export class AssessmentReportComponent implements OnInit {
   private verifyAssociatedPatient(patientId: string): Observable<boolean> {
     const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
     const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const normalizedPatientId = patientId.trim().toLowerCase();
+    if (directEmails.some((email) => email.toLowerCase() === normalizedPatientId)) {
+      return of(true);
+    }
+
     const directRequests = directEmails.map((email) =>
       this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
     );
 
     const direct$ = directRequests.length > 0 ? forkJoin(directRequests) : of([]);
     const fallback$ = this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([])));
-    const normalizedPatientId = patientId.trim().toLowerCase();
 
     return forkJoin({ direct: direct$, fallback: fallback$ }).pipe(
       map(({ direct, fallback }) => {
@@ -215,8 +219,17 @@ export class AssessmentReportComponent implements OnInit {
       return false;
     }
 
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const patientCandidates = this.resolvePatientCandidates(patient).map((candidate) => candidate.toLowerCase());
+    if (directEmails.some((email) => patientCandidates.includes(email.toLowerCase()))) {
+      return true;
+    }
+
     if (this.currentRole === 'DOCTOR') {
-      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+      return this.normalizeEmailList([
+        patient.doctorEmail || '',
+        ...(patient.doctorEmails || [])
+      ]).includes(currentEmail);
     }
 
     const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
@@ -226,6 +239,7 @@ export class AssessmentReportComponent implements OnInit {
   private resolvePatientCandidates(patient: User): string[] {
     return this.uniqueNormalized([
       patient.userId || '',
+      patient.keycloakId || '',
       patient.email || '',
       patient.name || ''
     ]);

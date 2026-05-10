@@ -15,6 +15,7 @@ import tn.esprit.user.dto.RegisterRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -125,6 +126,10 @@ public class KeycloakAdminClient {
     }
 
     public void changePassword(String userId, ChangePasswordRequest request) {
+        resetPassword(userId, request.getNewPassword());
+    }
+
+    public void resetPassword(String userId, String newPassword) {
         String token = getAdminAccessToken();
         String url = authServerUrl + "/admin/realms/" + realm + "/users/" + userId + "/reset-password";
 
@@ -134,12 +139,29 @@ public class KeycloakAdminClient {
 
         Map<String, Object> credential = Map.of(
                 "type", "password",
-                "value", request.getNewPassword(),
+                "value", newPassword,
                 "temporary", false
         );
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(credential, headers);
         restTemplate.put(url, entity);
+    }
+
+    public void updateEmail(String userId, String email, boolean emailVerified) {
+        String token = getAdminAccessToken();
+        String url = authServerUrl + "/admin/realms/" + realm + "/users/" + userId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> userRep = new LinkedHashMap<>();
+        userRep.put("username", email);
+        userRep.put("email", email);
+        userRep.put("emailVerified", emailVerified);
+        userRep.put("enabled", true);
+
+        restTemplate.put(url, new HttpEntity<>(userRep, headers));
     }
 
     public boolean verifyUserPassword(String email, String currentPassword) {

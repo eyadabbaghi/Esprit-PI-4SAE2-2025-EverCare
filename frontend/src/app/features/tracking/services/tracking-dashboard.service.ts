@@ -81,7 +81,11 @@ export class TrackingDashboardService {
                 new Date(b.timestamp ?? 0).getTime() -
                 new Date(a.timestamp ?? 0).getTime()
             )
-        )
+        ),
+        catchError((error) => {
+          console.error('[DoctorDashboard] latest patients error', error);
+          return of([]);
+        })
       );
   }
 
@@ -130,7 +134,11 @@ export class TrackingDashboardService {
             'latest riskScore=',
             data?.[0]?.riskScore
           )
-        )
+        ),
+        catchError((error) => {
+          console.error(`[DoctorDashboard] history error ${patientId}`, error);
+          return of([]);
+        })
       );
   }
 
@@ -171,8 +179,9 @@ export class TrackingDashboardService {
 
   getStatus(ping: Partial<TrackingPingDto> | null | undefined): TrackingStatus {
     if (!ping) return 'SAFE';
-    if (ping.insideSafeZone) return 'SAFE';
+    if (ping.insideSafeZone === true) return 'SAFE';
     if ((ping.riskScore ?? 0) >= 70) return 'DANGER';
+    if (ping.insideSafeZone === false) return 'WARNING';
     if ((ping.riskScore ?? 0) > 0) return 'WARNING';
     return 'SAFE';
   }

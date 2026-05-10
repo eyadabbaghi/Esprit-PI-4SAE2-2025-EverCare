@@ -75,6 +75,49 @@
           </div>
         </div>
 
+        <!-- Clinical Measurements -->
+        <div class="border-t pt-4">
+          <h4 class="font-medium text-[#2D1B4E] mb-3">Clinical Measurements</h4>
+          <div *ngIf="clinicalMeasurements.length; else noMeasurements" class="space-y-3">
+            <div *ngFor="let measurement of clinicalMeasurements" class="rounded-lg border border-[#E9D5FF] bg-[#FAF8FC] p-4">
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p class="text-sm font-semibold text-[#2D1B4E]">{{ measurement.measuredAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                  <p class="text-xs text-[#6B5B8C]">Submitted by {{ measurement.measuredBy || 'care team' }}</p>
+                </div>
+                <span class="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-[#7C3AED]">
+                  {{ measurement.weight }} kg
+                </span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p class="text-xs text-[#6B5B8C]">Kidney Test Result</p>
+                  <p class="font-medium text-[#2D1B4E]">{{ measurement.kidneyTestResult || 'Not provided' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-[#6B5B8C]">Severe Liver Problem</p>
+                  <p class="font-medium" [class.text-red-600]="measurement.severeLiverProblem" [class.text-green-700]="!measurement.severeLiverProblem">
+                    {{ measurement.severeLiverProblem ? 'Yes' : 'No' }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs text-[#6B5B8C]">Current Medications</p>
+                  <p class="font-medium text-[#2D1B4E]">{{ measurement.currentMedications || 'None listed' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-[#6B5B8C]">Allergies</p>
+                  <p class="font-medium text-[#2D1B4E]">{{ measurement.allergies || 'None listed' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ng-template #noMeasurements>
+            <div class="rounded-lg border border-dashed border-[#E9D5FF] bg-[#FAF8FC] p-4 text-sm text-[#6B5B8C]">
+              No caregiver measurements have been submitted for this appointment yet.
+            </div>
+          </ng-template>
+        </div>
+
         <!-- <svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> VIDEO CONSULTATION SECTION -->
         <div *ngIf="canStartVideoCall()" class="border-t pt-4">
           <h4 class="font-medium text-[#2D1B4E] mb-3">Video Consultation</h4>

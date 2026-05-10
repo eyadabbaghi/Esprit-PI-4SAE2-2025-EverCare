@@ -2,6 +2,8 @@ package org.example.trackingservice.controllers;
 
 import org.example.trackingservice.entities.Alert;
 import org.example.trackingservice.services.AlertService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
 @RequestMapping("/alerts")
 
 public class AlertController {
+
+    private static final Logger log = LoggerFactory.getLogger(AlertController.class);
 
     private final AlertService service;
 
@@ -24,6 +28,11 @@ public class AlertController {
 
     @GetMapping("/patient/{patientId}")
     public List<Alert> getAlerts(@PathVariable String patientId) {
-        return service.getPatientAlerts(patientId);
+        try {
+            return service.getPatientAlerts(patientId);
+        } catch (RuntimeException ex) {
+            log.warn("Could not load tracking alerts for patient {}", patientId, ex);
+            return List.of();
+        }
     }
 }

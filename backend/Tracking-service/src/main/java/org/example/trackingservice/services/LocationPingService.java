@@ -13,13 +13,16 @@ public class LocationPingService {
     private final LocationPingRepository repo;
     private final TrackingLogicService logic;
     private final PatientValidationService patientValidationService;
+    private final AlertService alertService;
 
     public LocationPingService(LocationPingRepository repo,
                                TrackingLogicService logic,
-                               PatientValidationService patientValidationService) {
+                               PatientValidationService patientValidationService,
+                               AlertService alertService) {
         this.repo = repo;
         this.logic = logic;
         this.patientValidationService = patientValidationService;
+        this.alertService = alertService;
     }
 
     // ================= GET ALL =================
@@ -43,7 +46,9 @@ public class LocationPingService {
         }
         ping = logic.processPing(ping);
 
-        return repo.save(ping);
+        LocationPing saved = repo.save(ping);
+        alertService.checkAndCreateAlert(saved);
+        return saved;
     }
 
     // ================= HISTORY =================

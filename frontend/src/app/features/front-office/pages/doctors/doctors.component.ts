@@ -117,7 +117,7 @@ export class DoctorsComponent implements OnInit {
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: () => {
-            patient.doctorEmail = doctor.email;
+            this.addDoctorEmail(patient, doctor.email);
             this.toastr.success(`Dr. ${doctor.name} associated with ${patient.name}`);
           },
           error: () => this.toastr.error('Could not associate this doctor.'),
@@ -133,11 +133,11 @@ export class DoctorsComponent implements OnInit {
   isDoctorAssociated(doctor: User): boolean {
     if (!doctor.email) return false;
     if (this.isPatient) {
-      return this.currentUser?.doctorEmail === doctor.email;
+      return this.userDoctorEmails(this.currentUser).includes(this.normalizeEmail(doctor.email));
     }
     if (this.isCaregiver) {
       const patient = this.selectedPatient;
-      return !!patient && patient.doctorEmail === doctor.email;
+      return this.userDoctorEmails(patient).includes(this.normalizeEmail(doctor.email));
     }
     return false;
   }
@@ -176,7 +176,7 @@ export class DoctorsComponent implements OnInit {
       .subscribe({
         next: () => {
           if (this.currentUser) {
-            this.currentUser.doctorEmail = doctor.email;
+            this.addDoctorEmail(this.currentUser, doctor.email);
             this.authService.setCurrentUser(this.currentUser);
           }
           this.authService.fetchCurrentUser().subscribe();
@@ -208,6 +208,29 @@ export class DoctorsComponent implements OnInit {
       this.associatedPatients = patients.filter((patient): patient is User => !!patient);
       this.selectedPatientId = this.associatedPatients[0]?.userId || '';
     });
+  }
+
+  private userDoctorEmails(user: User | null): string[] {
+    if (!user) return [];
+    return [
+      user.doctorEmail,
+      ...(Array.isArray(user.doctorEmails) ? user.doctorEmails : [])
+    ]
+      .map(email => this.normalizeEmail(email))
+      .filter(Boolean)
+      .filter((email, index, all) => all.indexOf(email) === index);
+  }
+
+  private addDoctorEmail(user: User, email: string): void {
+    const doctorEmails = [...this.userDoctorEmails(user), this.normalizeEmail(email)]
+      .filter(Boolean)
+      .filter((value, index, all) => all.indexOf(value) === index);
+    user.doctorEmails = doctorEmails;
+    user.doctorEmail = doctorEmails[0] || '';
+  }
+
+  private normalizeEmail(email?: string | null): string {
+    return String(email || '').trim().toLowerCase();
   }
 
   private pinnedStorageKey(): string {

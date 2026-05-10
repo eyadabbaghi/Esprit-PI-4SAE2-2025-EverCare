@@ -19,5 +19,6 @@ public class AlertRequest {
     private Boolean immediate;           // if true, send immediately
     private String scheduledTime;        // format "HH:mm" (24-hour)
     private List<String> repeatDays;     // e.g., ["MON", "WED", "FRI"]
+    private List<String> notificationChannels; // e.g., ["in-app", "sms", "email"]
     private String status;               // optional, e.g., "SENT", "ACKNOWLEDGED", "RESOLVED"
 }

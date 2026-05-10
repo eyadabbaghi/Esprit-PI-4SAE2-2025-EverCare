@@ -1,0 +1,28 @@
+<div
+  *ngIf="visible"
+  class="sos-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-live="assertive"
+  (click)="close()">
+  <div class="sos-modal" (click)="$event.stopPropagation()">
+    <div class="sos-ring-wrap">
+      <span class="sos-ping"></span>
+      <div class="sos-circle">
+        <svg width="34" height="34" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/>
+        </svg>
+      </div>
+    </div>
+
+    <h2 class="sos-title">Help is on the way!</h2>
+    <p class="sos-sub">Hold tight. Your caregiver is being contacted right now.</p>
+
+    <div class="sos-bar-track" aria-hidden="true">
+      <div class="sos-bar-fill" [style.width.%]="countdown * 10"></div>
+    </div>
+
+    <p class="sos-countdown">Closing in {{ countdown }}s</p>
+    <button type="button" class="sos-action" (click)="close()">Got it</button>
+  </div>
+</div>

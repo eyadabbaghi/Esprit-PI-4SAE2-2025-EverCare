@@ -34,6 +34,11 @@ public class ConversationController {
         return ResponseEntity.ok(conversationService.getConversationsByUserId(email));
     }
 
+    @GetMapping("/archived")
+    public ResponseEntity<List<Conversation>> getArchivedConversations(@RequestParam String email) {
+        return ResponseEntity.ok(conversationService.getArchivedConversationsByUserId(email));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Conversation> getConversationById(@PathVariable Long id) {
         return conversationService.getConversationById(id)

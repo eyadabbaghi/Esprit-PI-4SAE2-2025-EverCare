@@ -2,6 +2,7 @@ import {
   Component, Input, Output, EventEmitter,
   OnInit, OnDestroy, ChangeDetectorRef
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AlertSchedulerService, ScheduledAlertFire } from '../core/services/alert-scheduler.service';
 
 @Component({
@@ -21,6 +22,7 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   private audioCtx: AudioContext | null = null;
   private alarmNodes: { oscillator: OscillatorNode; gain: GainNode }[] = [];
   private queue: ScheduledAlertFire[] = [];
+  private schedulerSub?: Subscription;
 
   constructor(
     private schedulerService: AlertSchedulerService,
@@ -28,7 +30,10 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.schedulerService.alertFired$.subscribe(fire => {
+    this.schedulerSub = this.schedulerService.alertFired$.subscribe(fire => {
+      if (this.currentFire?.alertId === fire.alertId || this.queue.some(item => item.alertId === fire.alertId)) {
+        return;
+      }
       this.queue.push(fire);
       if (!this.visible) {
         this.showNext();
@@ -47,6 +52,7 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   }
 
   private startAlarmSound(): void {
+    this.stopAlarmSound();
     try {
       this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.playBeepCycle();
@@ -84,10 +90,20 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   }
 
   private stopAlarmSound(): void {
+    for (const node of this.alarmNodes) {
+      try {
+        node.gain.gain.cancelScheduledValues(0);
+        node.gain.gain.setValueAtTime(0, this.audioCtx?.currentTime ?? 0);
+      } catch (e) {}
+      try { node.oscillator.stop(); } catch (e) {}
+      try { node.oscillator.disconnect(); } catch (e) {}
+      try { node.gain.disconnect(); } catch (e) {}
+    }
+    this.alarmNodes = [];
+
     if (this.audioCtx) {
-      this.audioCtx.close();
+      this.audioCtx.close().catch(() => {});
       this.audioCtx = null;
-      this.alarmNodes = [];
     }
   }
 
@@ -136,11 +152,13 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   }
 
   complete(): void {
+    const completedAlertId = this.currentFire?.alertId;
     this.stopAlarmSound();
     this.stopCountdown();
 
-    if (this.currentFire) {
-      this.dismissed.emit(this.currentFire.alertId);
+    if (completedAlertId) {
+      this.queue = this.queue.filter(item => item.alertId !== completedAlertId);
+      this.dismissed.emit(completedAlertId);
     }
 
     this.visible = false;
@@ -149,6 +167,7 @@ export class AlertAlarmComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.schedulerSub?.unsubscribe();
     this.stopAlarmSound();
     this.stopCountdown();
   }

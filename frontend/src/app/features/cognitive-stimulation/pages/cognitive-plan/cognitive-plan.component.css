@@ -202,6 +202,229 @@
   margin-bottom: 1.5rem;
 }
 
+.doctor-cognitive-panel {
+  margin-bottom: 1.5rem;
+}
+
+.doctor-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.3rem;
+  border-radius: 999px;
+  background: #f6f1ff;
+  border: 1px solid #dcc7ff;
+  color: #5f4c8a;
+  padding: 0.4rem 0.85rem;
+  font-weight: 800;
+}
+
+.doctor-patient-review {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+.doctor-patient-list {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 470px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.doctor-patient-option {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid #eadfff;
+  border-radius: 1.15rem;
+  background: #fcfbff;
+  padding: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.doctor-patient-option:hover,
+.doctor-patient-option.selected {
+  transform: translateY(-1px);
+  border-color: #a78bfa;
+  background: #f6f1ff;
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.12);
+}
+
+.doctor-patient-option img,
+.patient-initials {
+  width: 48px;
+  height: 48px;
+  border-radius: 1rem;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.16);
+}
+
+.patient-initials {
+  display: grid;
+  place-items: center;
+  color: #5b21b6;
+  background: #ede9fe;
+  font-weight: 900;
+}
+
+.doctor-patient-option span {
+  min-width: 0;
+}
+
+.doctor-patient-option strong,
+.doctor-patient-option small {
+  display: block;
+}
+
+.doctor-patient-option strong {
+  overflow: hidden;
+  color: #2d1b4e;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doctor-patient-option small {
+  margin-top: 0.2rem;
+  color: #6b5b8c;
+  font-weight: 650;
+}
+
+.result-dot {
+  max-width: 9.5rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.result-dot.strong {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.result-dot.stable {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.result-dot.support {
+  color: #be123c;
+  background: #ffe4e6;
+}
+
+.result-dot.empty {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.doctor-analysis-card {
+  min-height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  border: 1px solid #eadfff;
+  border-radius: 1.25rem;
+  background: #fcfbff;
+  padding: 1.25rem;
+}
+
+.doctor-analysis-card span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.doctor-analysis-card h3 {
+  margin: 0;
+  color: #2d1b4e;
+  font-size: 1.45rem;
+}
+
+.doctor-analysis-card p {
+  margin: 0;
+  color: #6b5b8c;
+  line-height: 1.6;
+}
+
+.doctor-analysis-card.analysis-strong {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+}
+
+.doctor-analysis-card.analysis-strong span {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.doctor-analysis-card.analysis-stable {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.doctor-analysis-card.analysis-stable span {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.doctor-analysis-card.analysis-support {
+  border-color: #fecdd3;
+  background: linear-gradient(135deg, #fff1f2, #ffffff);
+}
+
+.doctor-analysis-card.analysis-support span {
+  color: #be123c;
+  background: #ffe4e6;
+}
+
+.doctor-analysis-card.analysis-empty span {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.analysis-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.analysis-metrics div {
+  border: 1px solid rgba(220, 199, 255, 0.76);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.9rem;
+}
+
+.analysis-metrics small,
+.analysis-metrics strong {
+  display: block;
+}
+
+.analysis-metrics small {
+  color: #6b5b8c;
+  font-weight: 800;
+}
+
+.analysis-metrics strong {
+  margin-top: 0.35rem;
+  color: #2d1b4e;
+  font-size: 1.35rem;
+}
+
+.analysis-warning {
+  color: #be123c !important;
+  font-weight: 750;
+}
+
 .recommended-list,
 .session-list,
 .session-form,
@@ -500,9 +723,14 @@
   }
 
   .content-grid,
+  .doctor-patient-review,
   .form-grid,
   .recommended-item,
   .play-ready-card {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-metrics {
     grid-template-columns: 1fr;
   }
 }

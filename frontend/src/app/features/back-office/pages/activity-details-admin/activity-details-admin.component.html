@@ -342,7 +342,7 @@
       <div class="space-y-6">
         <!-- Rating (read-only) -->
         <div class="border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
-          <h3 class="text-xl text-[#2D1B4E]">Rate this activity</h3>
+          <h3 class="text-xl text-[#2D1B4E]">Rating insights</h3>
           <div class="flex justify-center gap-2 mb-2">
             <button *ngFor="let star of [1,2,3,4,5]" type="button" class="text-2xl focus:outline-none">
               <svg class="w-5 h-5" [ngClass]="star <= Math.round(activity.rating) ? 'text-yellow-400' : 'text-gray-300'" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path></svg>
@@ -353,7 +353,12 @@
               <span class="text-3xl font-bold text-[#2D1B4E]">{{ activity.rating | number : '1.1-1' }}</span>
               <span class="text-sm text-[#6B5B8C]">/ 5</span>
             </div>
-            <p class="text-xs text-[#6B5B8C]">Based on {{ activity.totalRatings }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</p>
+            <p class="text-xs text-[#6B5B8C]" *ngIf="activity.totalRatings; else noRatingDetails">
+              Based on {{ activity.totalRatings }} rating{{ activity.totalRatings !== 1 ? 's' : '' }} from front-office users.
+            </p>
+            <ng-template #noRatingDetails>
+              <p class="text-xs text-[#6B5B8C]">No patient or caregiver ratings yet.</p>
+            </ng-template>
           </div>
         </div>
 

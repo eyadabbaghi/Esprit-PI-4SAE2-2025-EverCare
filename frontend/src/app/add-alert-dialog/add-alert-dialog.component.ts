@@ -25,6 +25,7 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
   loading = false;
   currentUserId: string | null = null;
   private userSub?: Subscription;
+  private scheduleSub?: Subscription;
 
   notificationChannels = [
     { id: 'in-app', label: 'In-App', icon: 'bell' },
@@ -61,8 +62,21 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.data?.alert) {
-      this.form.patchValue(this.data.alert);
+      const alert = this.data.alert;
+      const scheduledTime = this.normalizeScheduledTime(alert.scheduledTime);
+      this.form.patchValue({
+        ...alert,
+        immediate: alert.immediate ?? !scheduledTime,
+        scheduledTime,
+        repeatDays: alert.repeatDays || [],
+        notificationChannels: alert.notificationChannels || []
+      });
     }
+
+    this.syncScheduleValidators(this.form.get('immediate')?.value);
+    this.scheduleSub = this.form.get('immediate')?.valueChanges.subscribe((immediate: boolean) => {
+      this.syncScheduleValidators(immediate);
+    });
 
     this.userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUserId = user?.userId || null;
@@ -77,6 +91,7 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userSub?.unsubscribe();
+    this.scheduleSub?.unsubscribe();
   }
 
   loadContactsForPatient(patientId: string): void {
@@ -97,6 +112,9 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
         }
         if (patientUser.doctorEmail) {
           emails.push(patientUser.doctorEmail);
+        }
+        if (patientUser.doctorEmails?.length) {
+          emails.push(...patientUser.doctorEmails);
         }
 
         if (emails.length === 0) {
@@ -138,6 +156,14 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
     return channels.map(c => c.toUpperCase()).join(', ');
   }
 
+  get scheduledTimeDisplay(): string {
+    return this.formatTime(this.form.get('scheduledTime')?.value);
+  }
+
+  get scheduleModeLabel(): string {
+    return this.form.get('immediate')?.value ? 'Immediate delivery' : 'Scheduled delivery';
+  }
+
   toggleChannel(channelId: string, checked: boolean): void {
     const channels = this.form.get('notificationChannels')?.value as string[];
     if (checked) {
@@ -158,10 +184,26 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
     }
   }
 
+  setImmediate(value: boolean): void {
+    this.form.patchValue({ immediate: value });
+  }
+
   save(): void {
+    const immediate = this.form.get('immediate')?.value === true;
+
+    if (!immediate && !this.form.get('scheduledTime')?.value) {
+      this.form.get('scheduledTime')?.markAsTouched();
+      this.form.updateValueAndValidity();
+      return;
+    }
+
     if (this.form.valid) {
+      const formValue = this.form.value;
       const alertData = {
-        ...this.form.value,
+        ...formValue,
+        immediate,
+        scheduledTime: immediate ? null : this.normalizeScheduledTime(formValue.scheduledTime),
+        repeatDays: immediate ? [] : formValue.repeatDays,
         incidentId: this.data.incident.incidentId,
         senderId: this.currentUserId || 'unknown',
       };
@@ -181,5 +223,35 @@ export class AddAlertDialogComponent implements OnInit, OnDestroy {
 
   getInitials(name: string): string {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+
+  private syncScheduleValidators(immediate: boolean): void {
+    const scheduledTime = this.form.get('scheduledTime');
+
+    if (immediate) {
+      scheduledTime?.clearValidators();
+      this.form.patchValue({ scheduledTime: '', repeatDays: [] }, { emitEvent: false });
+    } else {
+      scheduledTime?.setValidators([Validators.required]);
+    }
+
+    scheduledTime?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private normalizeScheduledTime(value: string | null | undefined): string {
+    if (!value) return '';
+    const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return '';
+    return `${match[1].padStart(2, '0')}:${match[2]}`;
+  }
+
+  private formatTime(value: string | null | undefined): string {
+    const normalized = this.normalizeScheduledTime(value);
+    if (!normalized) return 'Choose time';
+
+    const [hourValue, minute] = normalized.split(':').map(Number);
+    const period = hourValue >= 12 ? 'PM' : 'AM';
+    const hour = hourValue % 12 || 12;
+    return `${hour}:${String(minute).padStart(2, '0')} ${period}`;
   }
 }

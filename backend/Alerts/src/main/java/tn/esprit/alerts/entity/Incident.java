@@ -33,6 +33,9 @@ public class Incident {
     @Column(nullable = false, length = 1000)
     private String description;
 
+    @Column(length = 4000)
+    private String aiSuggestion;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Severity severity;              // LOW, MEDIUM, HIGH
@@ -53,11 +56,28 @@ public class Incident {
 
     // One Incident -> many Alerts
     @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Alert> alerts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt DESC")
+    @Builder.Default
+    private List<DoctorRecommendation> doctorRecommendations = new ArrayList<>();
 
     // helper
     public void addAlert(Alert alert) {
+        if (alerts == null) {
+            alerts = new ArrayList<>();
+        }
         alerts.add(alert);
         alert.setIncident(this);
+    }
+
+    public void addDoctorRecommendation(DoctorRecommendation recommendation) {
+        if (doctorRecommendations == null) {
+            doctorRecommendations = new ArrayList<>();
+        }
+        doctorRecommendations.add(recommendation);
+        recommendation.setIncident(this);
     }
 }

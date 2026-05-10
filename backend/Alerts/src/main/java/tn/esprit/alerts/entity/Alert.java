@@ -49,4 +49,9 @@ public class Alert {
     @CollectionTable(name = "alert_repeat_days", joinColumns = @JoinColumn(name = "alert_id"))
     @Column(name = "day")
     private Set<String> repeatDays = new HashSet<>(); // e.g., "MON", "TUE", ...
+
+    @ElementCollection
+    @CollectionTable(name = "alert_notification_channels", joinColumns = @JoinColumn(name = "alert_id"))
+    @Column(name = "channel")
+    private Set<String> notificationChannels = new HashSet<>();
 }

@@ -177,8 +177,78 @@
   color: #8a450d;
 }
 
+.patient-filter-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #d9c8f5;
+  background: #fff;
+  color: #2d1b4e;
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.08);
+}
+
+.patient-filter-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #22c1c3);
+  font-weight: 800;
+}
+
+.patient-filter-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.patient-filter-card span {
+  display: block;
+  color: #6b5b8c;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.patient-filter-card strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 1.05rem;
+}
+
 .table-panel {
   overflow: hidden;
+}
+
+.alzheimer-panel {
+  margin-top: 1rem;
+}
+
+.panel-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid #efe7fb;
+}
+
+.panel-title h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #2d1b4e;
+}
+
+.panel-title p {
+  margin: 0.25rem 0 0;
+  color: #6b5b8c;
+  font-size: 0.9rem;
 }
 
 .table-wrap {
@@ -301,6 +371,18 @@ tbody tr:last-child td {
   color: #6b5b8c;
 }
 
+.alz-diagnosis {
+  display: block;
+  font-weight: 700;
+  color: #2d1b4e;
+}
+
+.alz-recommendation {
+  display: block;
+  margin-top: 0.2rem;
+  color: #6b5b8c;
+}
+
 .empty-row {
   text-align: center;
   color: #6b7280;
@@ -321,6 +403,121 @@ tbody tr:last-child td {
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(39, 23, 69, 0.42);
+}
+
+.alz-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(86vh, 820px);
+  overflow: auto;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #dbc9f8;
+  box-shadow: 0 22px 60px rgba(45, 27, 78, 0.24);
+  padding: 1.25rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #ddcff4;
+  border-radius: 999px;
+  background: #faf7ff;
+  color: #4c3d71;
+  cursor: pointer;
+}
+
+.alz-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-right: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.alz-modal-header h3 {
+  margin: 0;
+  color: #2d1b4e;
+}
+
+.alz-modal-header p {
+  margin: 0.2rem 0 0;
+  color: #6b5b8c;
+}
+
+.alz-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #7c3aed, #22c1c3);
+}
+
+.alz-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.alz-summary-grid div,
+.alz-detail {
+  border: 1px solid #eadffb;
+  border-radius: 14px;
+  background: #fcfaff;
+  padding: 0.85rem;
+}
+
+.alz-summary-grid span {
+  display: block;
+  color: #6b5b8c;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.alz-summary-grid strong {
+  color: #2d1b4e;
+}
+
+.alz-detail {
+  margin-top: 0.75rem;
+  color: #4c3d71;
+}
+
+.alz-detail h4 {
+  margin: 0 0 0.45rem;
+  color: #2d1b4e;
+}
+
+.alz-detail p {
+  margin: 0.25rem 0;
+}
+
+.alz-detail ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.alz-detail li {
+  margin: 0.25rem 0;
 }
 
 @media (max-width: 1100px) {
@@ -363,5 +560,9 @@ tbody tr:last-child td {
   .pager {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .alz-summary-grid {
+    grid-template-columns: 1fr;
   }
 }

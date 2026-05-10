@@ -45,6 +45,7 @@ public class User {
     private UserRole role;
 
     private String phone;
+    private String recoveryEmail;
     private String address;
     private String country;
 
@@ -65,6 +66,16 @@ public class User {
     private String workplaceName;
 
     private String doctorEmail;
+
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "patient_doctor_emails",
+            joinColumns = @JoinColumn(name = "patient_id", referencedColumnName = "user_id")
+    )
+    @Column(name = "doctor_email")
+    private Set<String> doctorEmails = new HashSet<>();
+
     // Many-to-many between patients and caregivers
     @ManyToMany
     @JoinTable(

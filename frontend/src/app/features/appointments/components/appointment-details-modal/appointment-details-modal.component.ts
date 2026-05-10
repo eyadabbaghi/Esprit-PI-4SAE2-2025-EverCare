@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Appointment } from '../../models/appointment';
+import { ClinicalMeasurementResponse } from '../../models/clinical-measurement.model';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../../front-office/pages/login/auth.service';
@@ -16,6 +17,7 @@ export class AppointmentDetailsModalComponent {
   @Input() patientAlzheimerStage?: string;
   @Input() emergencyContact?: string;
   @Input() previousVisits?: number;
+  @Input() clinicalMeasurements: ClinicalMeasurementResponse[] = [];
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onStart = new EventEmitter<Appointment>();

@@ -3,26 +3,58 @@
     {{ toastMessage }}
   </div>
 
+  <div *ngIf="isMonitoringLoading" class="monitoring-overlay" aria-live="polite" aria-busy="true">
+    <div class="monitoring-loader">
+      <div class="loader-ring" aria-hidden="true"></div>
+      <div>
+        <strong>Refreshing live monitoring</strong>
+        <span>Updating location, alerts, and safety zones</span>
+      </div>
+    </div>
+  </div>
+
   <header class="summary-card">
     <div class="summary-left">
-      <p class="eyebrow">Caregiver Dashboard</p>
-      <h1>{{ getPatientName(selectedPatient) }}</h1>
-      <p class="patient-id">ID: {{ getPatientIdShort(selectedPatient) }}</p>
+      <img class="patient-avatar" [src]="getPatientAvatar(selectedPatient)" alt="Associated patient" (error)="handlePatientAvatarError()">
+      <div>
+        <p class="eyebrow">Caregiver Dashboard</p>
+        <h1>{{ getPatientName(selectedPatient) }}</h1>
+        <p class="patient-id">{{ selectedPatient ? 'Associated patient live tracking' : 'Choose a patient to monitor' }}</p>
+        <div *ngIf="associatedPatients.length > 1" class="patient-switcher">
+          <label for="patientSwitch">Switch patient</label>
+          <select id="patientSwitch" (change)="selectAssociatedPatientProfile(associatedPatients[$any($event.target).selectedIndex])">
+            <option *ngFor="let patient of associatedPatients" [selected]="getPatientName(selectedPatient) === (patient.name || patient.email)">
+              {{ patient.name || patient.email }}
+            </option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="summary-right">
+      <button
+        *ngIf="associatedPatients.length > 0"
+        type="button"
+        class="monitor-btn"
+        [disabled]="isMonitoringLoading"
+        (click)="startMonitoring()">
+        <span *ngIf="isMonitoringLoading" class="button-spinner" aria-hidden="true"></span>
+        {{ isMonitoringLoading ? 'Refreshing...' : 'Start monitoring' }}
+      </button>
       <div class="summary-pill" [ngClass]="getStatusClass(selectedPatient)">
-        {{ getStatus(selectedPatient) }}
+        {{ getStatusLabel(selectedPatient) }}
       </div>
-      <div class="summary-metric">
+      <div class="summary-metric stat-tile risk-tile">
         <span>Risk score</span>
-        <strong>{{ selectedPatient?.riskScore ?? 0 }}</strong>
+        <strong>{{ getRiskScoreLabel() }}</strong>
+        <small>Live safety score</small>
       </div>
-      <div class="summary-metric">
+      <div class="summary-metric stat-tile seen-tile">
         <span>Last seen</span>
-        <strong>{{ selectedPatient?.timestamp | date:'medium' }}</strong>
+        <strong>{{ getLastSeenLabel() }}</strong>
+        <small>Latest patient ping</small>
       </div>
-      <div class="summary-metric">
+      <div class="summary-metric stat-tile danger-tile">
         <span>Danger duration</span>
         <strong>{{ getDangerDurationLabel() }}</strong>
         <small class="danger-duration-pill" [ngClass]="getDangerDurationLevelClass()">
@@ -32,14 +64,29 @@
     </div>
   </header>
 
-  <section class="main-grid">
+  <section *ngIf="associatedPatients.length === 0" class="empty-association-card">
+    <div class="empty-association-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="9" cy="7" r="4" stroke-width="2"></circle>
+        <path d="M19 8v6M16 11h6" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </div>
+    <div>
+      <h2>Associate a patient first</h2>
+      <p>Connect a patient account to start tracking safe zones, alerts, and guide-back actions.</p>
+    </div>
+    <button type="button" class="action-btn" (click)="openAssociatePatientModal()">Associate patient first</button>
+  </section>
+
+  <section class="main-grid" *ngIf="associatedPatients.length > 0">
     <article class="card map-card">
       <div class="panel-head">
         <div>
           <p class="eyebrow">Live Map</p>
           <h2>Current patient location</h2>
         </div>
-        <span class="chip">{{ selectedPatient?.lat | number:'1.3-3' }}, {{ selectedPatient?.lng | number:'1.3-3' }}</span>
+        <span class="chip">{{ getLocationChipLabel() }}</span>
       </div>
 
       <div class="map-shell">
@@ -61,7 +108,13 @@
           <span class="chip">{{ alerts.length }}</span>
         </div>
 
-        <div *ngIf="alerts.length === 0" class="empty">No alerts yet.</div>
+        <div *ngIf="alerts.length === 0" class="empty rich-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M10 21h4" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <span>No tracking alerts for this patient yet.</span>
+        </div>
 
         <div *ngFor="let alert of alerts" class="alert-row" [ngClass]="getAlertSeverityClass(alert.severity)">
           <div>
@@ -80,10 +133,20 @@
         </div>
 
         <div class="movement-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
           {{ getMovementStatus() }}
         </div>
 
         <div class="history-list">
+            <div *ngIf="history.length === 0" class="empty rich-empty compact">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M12 8v5l3 2" stroke-width="2" stroke-linecap="round"></path>
+                <circle cx="12" cy="12" r="9" stroke-width="2"></circle>
+              </svg>
+              <span>Waiting for live movement history.</span>
+            </div>
             <div class="history-row" *ngFor="let h of history">
               <div>
                 <strong>{{ h.timestamp | date:'shortTime' }}</strong>
@@ -105,8 +168,18 @@
         </div>
 
         <div class="action-grid">
-          <button type="button" class="action-btn warning" (click)="triggerGuidance('Follow the path to reach your safe zone')">
+          <button type="button" class="action-btn small-action warning" (click)="beginGuideBack()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M12 19V5M5 12l7-7 7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
             Guide back
+          </button>
+          <button type="button" class="action-btn small-action" (click)="startVoiceGuide()" [disabled]="isListeningForGuidance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke-width="2"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+            {{ isListeningForGuidance ? 'Listening...' : 'Voice guide' }}
           </button>
         </div>
       </section>
@@ -124,4 +197,49 @@
     [currentLng]="selectedPatient?.lng || 0"
     (actionSelected)="handleAssistantAction($event)">
   </app-tracking-assistant>
+
+  <div *ngIf="showAssociatePatientModal" class="modal-backdrop">
+    <section class="associate-modal">
+      <button type="button" class="modal-close" (click)="closeAssociatePatientModal()" aria-label="Close association modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round"></path>
+          <circle cx="9" cy="7" r="4" stroke-width="2"></circle>
+          <path d="M19 8v6M16 11h6" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <h2>Associate patient</h2>
+      <p>Add the patient email linked to their EverCare account.</p>
+      <input type="email" [(ngModel)]="patientEmailToAssociate" placeholder="patient@email.com">
+      <div *ngIf="associationMessage" class="association-message">{{ associationMessage }}</div>
+      <button type="button" class="action-btn" (click)="associatePatient()" [disabled]="isAssociatingPatient">
+        {{ isAssociatingPatient ? 'Associating...' : 'Associate patient' }}
+      </button>
+    </section>
+  </div>
+
+  <div *ngIf="checkStatus !== 'idle'" class="modal-backdrop">
+    <section class="check-modal">
+      <button type="button" class="modal-close" (click)="stopCheckIn()" aria-label="Close check in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <div class="modal-icon pulse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M15 10 20 7v10l-5-3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <rect x="3" y="6" width="12" height="12" rx="2" stroke-width="2"></rect>
+        </svg>
+      </div>
+      <h2>Patient camera check-in</h2>
+      <p *ngIf="checkStatus === 'waiting'">Waiting for the patient camera stream...</p>
+      <p *ngIf="checkStatus === 'cancelled'">The patient did not respond. A snapshot will be requested if possible.</p>
+      <video #remoteVideo class="remote-video" autoplay playsinline></video>
+      <img *ngIf="snapshotImage" [src]="snapshotImage" class="snapshot-image" alt="Patient snapshot">
+    </section>
+  </div>
 </div>

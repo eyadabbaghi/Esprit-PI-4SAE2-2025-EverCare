@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Appointment } from '../../../appointments/models/appointment';
 import { User } from '../../models/user';
 import { AppointmentService } from '../../services/appointments.service';
@@ -8,33 +9,60 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import {CaregiverPatientService} from '../../services/patient-caregiver-relation.service';
 import { ClinicalMeasurementModalComponent } from '../../components/clinical-measurement-modal/clinical-measurement-modal.component';
+import { AvailabilityService } from '../../services/availability.service';
+import { ConsultationTypeService } from '../../services/consultation-type.service';
+import { ConsultationType } from '../../models/consultation-type.model';
+import { CreateAppointmentRequest } from '../../models/appointment-request';
+import { ClinicalMeasurementResponse } from '../../models/clinical-measurement.model';
+import { ClinicalMeasurementService } from '../../services/clinical-measurement.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-caregiver-appointments-page',
   standalone: true,
-  imports: [CommonModule, ClinicalMeasurementModalComponent],
+  imports: [CommonModule, FormsModule, ClinicalMeasurementModalComponent],
   templateUrl: './caregiver-appointments-page.component.html',
   styleUrls: ['./caregiver-appointments-page.component.css']
 })
 export class CaregiverAppointmentsPageComponent implements OnInit {
   currentCaregiver: User | null = null;
+  patients: User[] = [];
   patient: User | null = null;
   appointments: Appointment[] = [];
   selectedAppointment: Appointment | null = null;
+  doctors: User[] = [];
+  consultationTypes: ConsultationType[] = [];
+  availableSlots: string[] = [];
+  clinicalMeasurements: ClinicalMeasurementResponse[] = [];
+  measurementsByAppointment: Record<string, ClinicalMeasurementResponse[]> = {};
 
   loading = false;
+  bookingLoading = false;
   errorMessage = '';
   successMessage = '';
   showDetailsModal = false;
   showClinicalMeasurementModal = false;
   clinicalMeasurementAppointment: Appointment | null = null;
+  today = new Date().toISOString().split('T')[0];
+  bookingForm = {
+    doctorId: '',
+    consultationTypeId: '',
+    date: '',
+    time: '',
+    caregiverPresence: 'REMOTE',
+    notes: ''
+  };
 
   constructor(
     private appointmentService: AppointmentService,
     private authService: AuthService,
     private router: Router,
     private toastr: ToastrService,
-    private patientCaregiverService: CaregiverPatientService
+    private patientCaregiverService: CaregiverPatientService,
+    private availabilityService: AvailabilityService,
+    private consultationTypeService: ConsultationTypeService,
+    private clinicalMeasurementService: ClinicalMeasurementService,
+    private feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -62,7 +90,7 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading caregiver:', error);
-        this.errorMessage = 'Failed to load user information';
+        this.showAppointmentPopup('error', 'Failed to load user information');
         this.loading = false;
       }
     });
@@ -73,7 +101,7 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
    */
   loadPatientForCaregiver(): void {
     if (!this.currentCaregiver?.userId) {
-      this.errorMessage = 'Caregiver ID not found';
+      this.showAppointmentPopup('error', 'Caregiver ID not found');
       this.loading = false;
       return;
     }
@@ -86,20 +114,20 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
         console.log('Patients received:', patients);
 
           if (patients && patients.length > 0) {
-            // Take the first patient (assuming one patient per caregiver)
+            this.patients = patients;
             this.patient = patients[0];
             console.log('<svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> Patient assigned:', this.patient);
 
-            // Load appointments for this patient
             if (this.patient.userId) {
+              this.loadBookingData();
               this.loadAppointments(this.patient.userId);
             } else {
-              this.errorMessage = 'Patient ID not found';
+              this.showAppointmentPopup('error', 'Patient ID not found');
               this.loading = false;
             }
           } else {
             console.log('<svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg> No patients found for this caregiver');
-            this.errorMessage = 'No patient assigned to you';
+            this.showAppointmentPopup('warning', 'No patient assigned to you');
             this.loading = false;
           }
         },
@@ -113,11 +141,11 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
           } else if (error.status === 403) {
             this.toastr.error('You do not have permission to access this resource.');
           } else if (error.status === 404) {
-            this.errorMessage = 'Patient endpoint not found';
+            this.showAppointmentPopup('error', 'Patient endpoint not found');
           } else if (error.status === 0) {
-            this.errorMessage = 'Cannot connect to server. Please check if backend is running.';
+            this.showAppointmentPopup('error', 'Cannot connect to server. Please check if backend is running.');
           } else {
-            this.errorMessage = 'Failed to load patient information';
+            this.showAppointmentPopup('error', 'Failed to load patient information');
           }
           this.loading = false;
         }
@@ -132,16 +160,173 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
 
     this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
       next: (data) => {
-        this.appointments = data;
+        this.appointments = this.normalizeAppointments(data);
         console.log('<svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> Appointments loaded:', this.appointments.length);
+        this.loadClinicalMeasurements(patientId);
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading appointments:', error);
-        this.errorMessage = 'Failed to load appointments';
+        this.showAppointmentPopup('error', 'Failed to load appointments');
         this.loading = false;
       }
     });
+  }
+
+  onPatientSelected(patientId: string): void {
+    const selected = this.patients.find(p => p.userId === patientId);
+    if (!selected?.userId) {
+      return;
+    }
+
+    this.patient = selected;
+    this.appointments = [];
+    this.clinicalMeasurements = [];
+    this.measurementsByAppointment = {};
+    this.resetBookingForm();
+    this.loadBookingData();
+    this.loadAppointments(selected.userId);
+  }
+
+  loadBookingData(): void {
+    this.loadConsultationTypes();
+    this.loadDoctors();
+  }
+
+  loadConsultationTypes(): void {
+    this.consultationTypeService.getAllConsultationTypes().subscribe({
+      next: (types) => {
+        this.consultationTypes = (types || []).filter(type => type.active !== false);
+      },
+      error: (error) => {
+        console.error('Error loading consultation types:', error);
+        this.consultationTypes = [];
+      }
+    });
+  }
+
+  loadDoctors(): void {
+    this.authService.searchUsersByRole('', 'DOCTOR').subscribe({
+      next: (doctors) => {
+        const doctorKeys = this.associatedDoctorKeys(this.patient);
+        this.doctors = doctorKeys.length
+          ? (doctors || []).filter(doctor =>
+              doctorKeys.includes(String(doctor.email || '').trim().toLowerCase()) ||
+              doctorKeys.includes(String(doctor.userId || '').trim().toLowerCase())
+            )
+          : (doctors || []);
+
+        if (this.doctors.length === 1) {
+          this.bookingForm.doctorId = this.doctors[0].userId || '';
+          this.loadAvailableSlots();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading doctors:', error);
+        this.doctors = [];
+      }
+    });
+  }
+
+  loadAvailableSlots(): void {
+    if (!this.bookingForm.doctorId || !this.bookingForm.date) {
+      this.availableSlots = [];
+      return;
+    }
+
+    this.bookingLoading = true;
+    this.availabilityService.getAvailableTimeSlots(
+      this.bookingForm.doctorId,
+      new Date(`${this.bookingForm.date}T00:00:00`),
+      this.getSelectedConsultationDuration()
+    ).subscribe({
+      next: (slots) => {
+        this.availableSlots = slots || [];
+        if (!this.availableSlots.includes(this.bookingForm.time)) {
+          this.bookingForm.time = '';
+        }
+        this.bookingLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading available slots:', error);
+        this.availableSlots = [];
+        this.bookingLoading = false;
+      }
+    });
+  }
+
+  bookAppointmentForPatient(): void {
+    if (!this.patient?.userId || !this.currentCaregiver?.userId) {
+      this.showAppointmentPopup('error', 'Missing caregiver or patient information');
+      return;
+    }
+
+    if (!this.bookingForm.doctorId || !this.bookingForm.consultationTypeId || !this.bookingForm.date || !this.bookingForm.time) {
+      this.showAppointmentPopup('warning', 'Please select a doctor, type, date, and time.');
+      return;
+    }
+
+    const selectedType = this.consultationTypes.find(type => type.typeId === this.bookingForm.consultationTypeId);
+    const startDateTime = new Date(`${this.bookingForm.date}T${this.bookingForm.time}`);
+    const endDateTime = new Date(startDateTime.getTime() + this.getSelectedConsultationDuration() * 60000);
+
+    const payload: CreateAppointmentRequest = {
+      patientId: this.patient.userId,
+      doctorId: this.bookingForm.doctorId,
+      caregiverId: this.currentCaregiver.userId,
+      consultationTypeId: this.bookingForm.consultationTypeId,
+      consultationTypeName: selectedType?.name,
+      startDateTime: this.toLocalDateTimeString(startDateTime),
+      endDateTime: this.toLocalDateTimeString(endDateTime),
+      status: 'SCHEDULED',
+      caregiverPresence: this.bookingForm.caregiverPresence,
+      simpleSummary: this.bookingForm.notes || undefined
+    };
+
+    this.bookingLoading = true;
+    this.appointmentService.createAppointment(payload).subscribe({
+      next: (created) => {
+        this.appointments = [
+          ...this.appointments,
+          ...this.normalizeAppointments([created])
+        ].sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+        this.resetBookingForm();
+        this.showAppointmentPopup('success', 'Appointment booked for the patient successfully.');
+        setTimeout(() => this.successMessage = '', 3000);
+        this.bookingLoading = false;
+      },
+      error: (error) => {
+        console.error('Error booking appointment:', error);
+        this.showAppointmentPopup('error', error?.error?.message || 'Failed to book appointment');
+        this.bookingLoading = false;
+      }
+    });
+  }
+
+  loadClinicalMeasurements(patientId: string): void {
+    this.clinicalMeasurementService.getByPatient(patientId).subscribe({
+      next: (measurements) => {
+        this.clinicalMeasurements = measurements || [];
+        this.measurementsByAppointment = this.clinicalMeasurements.reduce((acc, measurement) => {
+          const key = measurement.appointmentId || 'unlinked';
+          acc[key] = [...(acc[key] || []), measurement];
+          return acc;
+        }, {} as Record<string, ClinicalMeasurementResponse[]>);
+      },
+      error: (error) => {
+        console.error('Error loading clinical measurements:', error);
+        this.clinicalMeasurements = [];
+        this.measurementsByAppointment = {};
+      }
+    });
+  }
+
+  getMeasurementsForAppointment(appointment: Appointment): ClinicalMeasurementResponse[] {
+    return this.measurementsByAppointment[appointment.appointmentId] || [];
+  }
+
+  getLatestMeasurementForAppointment(appointment: Appointment): ClinicalMeasurementResponse | null {
+    return this.getMeasurementsForAppointment(appointment)[0] || null;
   }
 
   /**
@@ -160,6 +345,10 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
     this.selectedAppointment = null;
   }
 
+  openAppointmentDetails(appointment: Appointment): void {
+    this.viewAppointmentDetails(appointment);
+  }
+
   /**
    * Confirm an appointment as caregiver
    */
@@ -176,11 +365,11 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
 
         this.closeDetailsModal();
         this.loading = false;
-        this.toastr.success('Appointment confirmed successfully');
+        this.showAppointmentPopup('success', 'Appointment confirmed successfully');
       },
       error: (error) => {
         console.error('Error confirming appointment:', error);
-        this.toastr.error('Failed to confirm appointment');
+        this.showAppointmentPopup('error', 'Failed to confirm appointment');
         this.loading = false;
       }
     });
@@ -197,7 +386,7 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
     if (appointmentId) {
       this.router.navigate(['/appointments/video', appointmentId]);
     } else {
-      this.toastr.warning('No video consultation room available for this appointment');
+      this.showAppointmentPopup('warning', 'No video consultation room available for this appointment');
     }
   }
 
@@ -312,7 +501,66 @@ export class CaregiverAppointmentsPageComponent implements OnInit {
    */
   onClinicalMeasurementSubmitted(): void {
     this.closeClinicalMeasurementModal();
-    this.successMessage = 'Clinical measurements submitted successfully!';
+    if (this.patient?.userId) {
+      this.loadClinicalMeasurements(this.patient.userId);
+    }
+    this.showAppointmentPopup('success', 'Clinical measurements submitted successfully!');
     setTimeout(() => this.successMessage = '', 3000);
+  }
+
+  private normalizeAppointments(data: Appointment[]): Appointment[] {
+    return (data || []).map(item => ({
+      ...item,
+      startDateTime: new Date(item.startDateTime),
+      endDateTime: new Date(item.endDateTime),
+      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+      updatedAt: item.updatedAt ? new Date(item.updatedAt) : undefined,
+      confirmationDatePatient: item.confirmationDatePatient ? new Date(item.confirmationDatePatient) : undefined,
+      confirmationDateCaregiver: item.confirmationDateCaregiver ? new Date(item.confirmationDateCaregiver) : undefined
+    }));
+  }
+
+  private getSelectedConsultationDuration(): number {
+    const selectedType = this.consultationTypes.find(type => type.typeId === this.bookingForm.consultationTypeId);
+    return selectedType?.alzheimerDuration || selectedType?.defaultDuration || 20;
+  }
+
+  private resetBookingForm(): void {
+    this.bookingForm = {
+      doctorId: this.doctors.length === 1 ? this.doctors[0].userId || '' : '',
+      consultationTypeId: '',
+      date: '',
+      time: '',
+      caregiverPresence: 'REMOTE',
+      notes: ''
+    };
+    this.availableSlots = [];
+  }
+
+  private associatedDoctorKeys(patient: User | null): string[] {
+    if (!patient) return [];
+    return [
+      patient.doctorEmail,
+      ...(Array.isArray(patient.doctorEmails) ? patient.doctorEmails : [])
+    ]
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+      .filter((value, index, all) => all.indexOf(value) === index);
+  }
+
+  private toLocalDateTimeString(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }
+
+  private showAppointmentPopup(type: 'success' | 'error' | 'info' | 'warning', message: string): void {
+    this.errorMessage = type === 'error' || type === 'warning' ? message : '';
+    this.successMessage = type === 'success' ? message : '';
+    this.feedback.show(type, 'Appointments', message);
   }
 }

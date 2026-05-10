@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BlogService } from '../../../blog/pages/blog/services/blog.service';
-import { Article, Category, CategoryPerformance } from '../../../blog/models/blog.model';
 import { interval, Subscription } from 'rxjs';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
+import { Article, Category, CategoryPerformance } from '../../../blog/models/blog.model';
+import { BlogService } from '../../../blog/pages/blog/services/blog.service';
 
 @Component({
   selector: 'app-blog-admin',
@@ -13,10 +14,10 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
   categories: Category[] = [];
   categoryStats: CategoryPerformance[] = [];
 
-  newCatName: string = '';
-  showCatInput: boolean = false;
-  showModal: boolean = false;
-  isEditMode: boolean = false;
+  newCatName = '';
+  showCatInput = false;
+  showModal = false;
+  isEditMode = false;
   currentArticleId: number | null = null;
   newArticle: any = this.initEmptyArticle();
 
@@ -24,8 +25,9 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
 
   constructor(
     private blogService: BlogService,
+    private feedback: AppFeedbackService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.refreshData();
@@ -35,7 +37,7 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.pollingSubscription) this.pollingSubscription.unsubscribe();
+    this.pollingSubscription?.unsubscribe();
   }
 
   startRealTimeUpdate(): void {
@@ -45,17 +47,7 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  private syncCounters(serverArticles: Article[]): void {
-    serverArticles.forEach(serverArt => {
-      const localArt = this.articles.find(a => a.id === serverArt.id);
-      if (localArt) {
-        localArt.likeCount = serverArt.likeCount;
-        localArt.viewCount = serverArt.viewCount;
-      }
-    });
-  }
-
-  refreshData() {
+  refreshData(): void {
     this.blogService.getAllArticles().subscribe(data => {
       this.articles = data;
     });
@@ -68,56 +60,77 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
   }
 
   getArticlesCountByCategory(categoryId: number): number {
-    return this.articles.filter(a => a.category?.id === categoryId).length;
+    return this.articles.filter(article => article.category?.id === categoryId).length;
   }
 
-  deleteArticle(id: number | undefined) {
-    if (!id) return;
-    if (confirm("Voulez-vous vraiment supprimer cet article ? Cette action supprimera également tous les likes associés.")) {
-      this.blogService.deleteArticle(id).subscribe({
-        next: () => {
-          // Mise à jour locale immédiate pour la fluidité
-          this.articles = this.articles.filter(a => a.id !== id);
-          // Rafraîchissement global des compteurs et stats
-          this.refreshData();
-        },
-        error: (err) => {
-          console.error("Erreur suppression:", err);
-          alert("Impossible de supprimer l'article. Vérifiez les logs serveurs.");
-        }
-      });
+  async deleteArticle(id: number | undefined): Promise<void> {
+    if (!id) {
+      return;
     }
+
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete article?',
+      message: 'This will also remove the likes associated with this article.',
+      confirmText: 'Delete article',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.blogService.deleteArticle(id).subscribe({
+      next: () => {
+        this.articles = this.articles.filter(article => article.id !== id);
+        this.refreshData();
+        this.feedback.success('Article deleted successfully.', 'Blog updated');
+      },
+      error: (err) => {
+        console.error('Article deletion failed:', err);
+        this.feedback.error('Unable to delete this article right now.', 'Delete failed');
+      }
+    });
   }
 
-  // --- CRUD Catégories ---
-  addCategory() {
-    if (!this.newCatName.trim()) return;
+  addCategory(): void {
+    if (!this.newCatName.trim()) {
+      return;
+    }
+
     this.blogService.addCategory({ name: this.newCatName } as Category).subscribe(() => {
       this.refreshData();
       this.newCatName = '';
       this.showCatInput = false;
+      this.feedback.success('Category added successfully.', 'Blog updated');
     });
   }
 
-  deleteCategory(id: number) {
-    if (confirm("Supprimer cette catégorie ?")) {
-      this.blogService.deleteCategory(id).subscribe(() => this.refreshData());
+  async deleteCategory(id: number): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete category?',
+      message: 'Articles assigned to this category may need to be reviewed after deletion.',
+      confirmText: 'Delete category',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
     }
+
+    this.blogService.deleteCategory(id).subscribe(() => {
+      this.refreshData();
+      this.feedback.success('Category deleted successfully.', 'Blog updated');
+    });
   }
 
-  // --- Modal Logic ---
-  private initEmptyArticle() {
-    return { title: '', content: '', coverImageUrl: '', language: 'fr', readingTime: 5, categoryId: null, isPublished: true };
-  }
-
-  openAddModal() {
+  openAddModal(): void {
     this.isEditMode = false;
     this.currentArticleId = null;
     this.newArticle = this.initEmptyArticle();
     this.showModal = true;
   }
 
-  openEditModal(article: Article) {
+  openEditModal(article: Article): void {
     this.isEditMode = true;
     this.currentArticleId = article.id || null;
     this.newArticle = {
@@ -132,15 +145,46 @@ export class BlogAdminComponent implements OnInit, OnDestroy {
     this.showModal = true;
   }
 
-  handleSave() {
-    if (!this.newArticle.categoryId) return alert("Veuillez choisir une catégorie");
-    const obs = this.isEditMode && this.currentArticleId
+  handleSave(): void {
+    if (!this.newArticle.categoryId) {
+      this.feedback.warning('Please choose a category before saving the article.', 'Category required');
+      return;
+    }
+
+    const wasEdit = this.isEditMode && !!this.currentArticleId;
+    const request = this.isEditMode && this.currentArticleId
       ? this.blogService.updateArticle(this.currentArticleId, this.newArticle)
       : this.blogService.createArticle(this.newArticle, this.newArticle.categoryId);
 
-    obs.subscribe(() => {
+    request.subscribe(() => {
       this.refreshData();
       this.showModal = false;
+      this.feedback.success(
+        `"${this.newArticle.title}" was ${wasEdit ? 'updated' : 'created'} successfully.`,
+        wasEdit ? 'Article updated' : 'Article created'
+      );
     });
+  }
+
+  private syncCounters(serverArticles: Article[]): void {
+    serverArticles.forEach(serverArticle => {
+      const localArticle = this.articles.find(article => article.id === serverArticle.id);
+      if (localArticle) {
+        localArticle.likeCount = serverArticle.likeCount;
+        localArticle.viewCount = serverArticle.viewCount;
+      }
+    });
+  }
+
+  private initEmptyArticle() {
+    return {
+      title: '',
+      content: '',
+      coverImageUrl: '',
+      language: 'fr',
+      readingTime: 5,
+      categoryId: null,
+      isPublished: true
+    };
   }
 }

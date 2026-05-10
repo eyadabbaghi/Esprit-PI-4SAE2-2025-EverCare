@@ -11,6 +11,7 @@ import {
 } from '../../models/cognitive-stimulation.model';
 import { CognitiveStimulationService } from '../../services/cognitive-stimulation.service';
 import { getGameMedia } from '../../utils/cognitive-game-media';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 type GameActiveFilter = 'all' | 'active' | 'inactive';
 type UserRole = 'PATIENT' | 'CAREGIVER' | 'DOCTOR' | 'ADMIN' | null;
@@ -31,6 +32,22 @@ export class CognitiveGamesCatalogComponent implements OnInit {
     { value: 'PRAXIS', label: 'Praxis' },
     { value: 'GNOSIS', label: 'Recognition' },
   ];
+  readonly difficultyLevels = [1, 2, 3, 4, 5];
+  private readonly gameTypeAliases: Record<string, CognitiveGameType> = {
+    MEMORY: 'MEMORY',
+    MEMOIRE: 'MEMORY',
+    MEMOIRE_VISUELLE: 'MEMORY',
+    LANGUAGE: 'LANGUAGE',
+    LANGAGE: 'LANGUAGE',
+    LOGIC: 'LOGIC',
+    LOGIQUE: 'LOGIC',
+    ATTENTION: 'ATTENTION',
+    PRAXIS: 'PRAXIS',
+    PRAXIE: 'PRAXIS',
+    GNOSIS: 'GNOSIS',
+    GNOSIE: 'GNOSIS',
+    RECONNAISSANCE: 'GNOSIS',
+  };
 
   readonly gameForm = this.formBuilder.group({
     title: this.formBuilder.control('', [Validators.required, Validators.maxLength(255)]),
@@ -59,11 +76,13 @@ export class CognitiveGamesCatalogComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   editingGameId: string | null = null;
+  showGameEditor = false;
 
   constructor(
     private readonly authService: AuthService,
     private readonly cognitiveService: CognitiveStimulationService,
     private readonly medicalRecordService: MedicalRecordService,
+    private readonly feedback: AppFeedbackService,
     @Inject(PLATFORM_ID) private readonly platformId: Object
   ) {}
 
@@ -109,7 +128,12 @@ export class CognitiveGamesCatalogComponent implements OnInit {
 
     this.cognitiveService.listGames().subscribe({
       next: (games) => {
-        this.games = [...games].sort((a, b) => a.title.localeCompare(b.title));
+        this.games = games
+          .map((game) => ({
+            ...game,
+            gameType: this.normalizeGameType(game.gameType) ?? game.gameType,
+          }))
+          .sort((a, b) => a.title.localeCompare(b.title));
         this.applyFilters();
         this.isLoading = false;
       },
@@ -174,6 +198,7 @@ export class CognitiveGamesCatalogComponent implements OnInit {
           : 'The therapeutic game was created.';
         this.isSubmitting = false;
         this.resetEditor();
+        this.showGameEditor = false;
         this.loadGames();
       },
       error: (error: HttpErrorResponse) => {
@@ -189,6 +214,7 @@ export class CognitiveGamesCatalogComponent implements OnInit {
     }
 
     this.editingGameId = game.id;
+    this.showGameEditor = true;
     this.successMessage = '';
     this.errorMessage = '';
     this.gameForm.patchValue({
@@ -200,10 +226,44 @@ export class CognitiveGamesCatalogComponent implements OnInit {
       instructions: game.instructions,
       active: game.active,
     });
+    this.focusEditorPanel();
   }
 
-  deleteGame(game: CognitiveGame): void {
-    if (!this.canManageGames || !window.confirm(`Delete the game "${game.title}" ?`)) {
+  openCreateGameForm(): void {
+    if (!this.canManageGames) {
+      return;
+    }
+
+    this.resetEditor();
+    this.showGameEditor = true;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.focusEditorPanel();
+  }
+
+  closeEditor(): void {
+    this.resetEditor();
+    this.showGameEditor = false;
+  }
+
+  selectGameType(type: CognitiveGameType): void {
+    this.gameForm.patchValue({ gameType: type });
+    this.gameForm.controls.gameType.markAsDirty();
+  }
+
+  async deleteGame(game: CognitiveGame): Promise<void> {
+    if (!this.canManageGames) {
+      return;
+    }
+
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete cognitive game?',
+      message: `Delete "${game.title}" from the cognitive stimulation catalog?`,
+      confirmText: 'Delete game',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -214,7 +274,7 @@ export class CognitiveGamesCatalogComponent implements OnInit {
       next: () => {
         this.successMessage = 'The therapeutic game was deleted.';
         if (this.editingGameId === game.id) {
-          this.resetEditor();
+          this.closeEditor();
         }
         this.loadGames();
       },
@@ -237,8 +297,25 @@ export class CognitiveGamesCatalogComponent implements OnInit {
     });
   }
 
-  labelForType(type: CognitiveGameType): string {
-    return this.gameTypeOptions.find((item) => item.value === type)?.label ?? type;
+  labelForType(type: CognitiveGameType | string): string {
+    const normalizedType = this.normalizeGameType(type);
+    if (normalizedType) {
+      return this.gameTypeOptions.find((item) => item.value === normalizedType)?.label ?? normalizedType;
+    }
+
+    return type;
+  }
+
+  private normalizeGameType(type: CognitiveGameType | string): CognitiveGameType | null {
+    const normalized = type
+      ?.toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase()
+      .replace(/[\s-]+/g, '_');
+
+    return this.gameTypeAliases[normalized] ?? null;
   }
 
   imageForGame(game: CognitiveGame): string {
@@ -343,5 +420,15 @@ export class CognitiveGamesCatalogComponent implements OnInit {
   private extractError(error: HttpErrorResponse, fallback: string): string {
     const message = error.error?.message;
     return typeof message === 'string' && message.trim() ? message : fallback;
+  }
+
+  private focusEditorPanel(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
+    setTimeout(() => {
+      document.getElementById('gameEditorPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 }

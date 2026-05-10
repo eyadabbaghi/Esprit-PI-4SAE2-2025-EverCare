@@ -1,4 +1,13 @@
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAF8FC] via-[#F3E8FF] to-[#DDD6FE] p-4">
+<div
+  *ngIf="authPopup"
+  class="auth-popup"
+  [class.auth-popup-success]="authPopup.type === 'success'"
+  [class.auth-popup-error]="authPopup.type === 'error'"
+  role="status">
+  <strong>{{ authPopup.title }}</strong>
+  <p>{{ authPopup.message }}</p>
+</div>
 
 <!-- ── Face Recovery Overlay ── -->
 <div *ngIf="showFaceRecovery"
@@ -30,41 +39,26 @@
         Face Recognition
       </h1>
 
-      <!-- Subtitle -->
       <p class="text-sm text-purple-300">
         {{ recoveryState === 'processing'
           ? 'Verifying identity...'
-          : 'Align your face within the frame' }}
+          : 'Scanning securely in the background' }}
       </p>
 
-      <!-- Camera feed -->
-      <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden
-                  border border-purple-500/30 shadow-[0_0_60px_rgba(124,58,237,0.35)]">
-
-        <video #videoEl autoplay muted playsinline
-               class="w-full h-full object-cover"
-               style="transform: scaleX(-1);">
-        </video>
-
-        <!-- Soft glow overlay -->
-        <div class="absolute inset-0 rounded-full pointer-events-none
-                    bg-[radial-gradient(circle,transparent_60%,rgba(124,58,237,0.15))]">
-        </div>
-
-        <!-- Processing overlay -->
-        <div *ngIf="recoveryState === 'processing'"
-             class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center space-y-3">
-
-          <div class="w-10 h-10 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-          <span class="text-xs text-purple-300">Analyzing...</span>
-        </div>
-
-        <!-- Scan animation -->
-        <div *ngIf="recoveryState === 'scanning'"
-             class="absolute inset-0 overflow-hidden pointer-events-none">
-          <div class="scan-line"></div>
-        </div>
+      <div class="face-status-visual" [class.processing]="recoveryState === 'processing'" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M58 68V58a12 12 0 0 1 12-12h8"></path>
+          <path d="M102 68V58a12 12 0 0 0-12-12h-8"></path>
+          <path d="M58 92v10a12 12 0 0 0 12 12h8"></path>
+          <path d="M102 92v10a12 12 0 0 1-12 12h-8"></path>
+          <path d="M68 78v12M92 78v12"></path>
+          <path d="M74 104c4 3 8 3 12 0"></path>
+        </svg>
+        <span class="scan-beam"></span>
       </div>
+
+      <video #videoEl autoplay muted playsinline class="hidden-camera-feed"></video>
 
       <!-- Attempts -->
       <p class="text-xs text-gray-400">
@@ -225,6 +219,14 @@
                   [class.border-red-500]="lf['password'].invalid && lf['password'].touched">
               </div>
               <div *ngIf="lf['password'].invalid && lf['password'].touched" class="text-red-500 text-xs">Password is required</div>
+              <div class="flex justify-end">
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-[#7C3AED] hover:text-[#6D28D9] hover:underline"
+                  (click)="openPasswordReset()">
+                  Forgot password?
+                </button>
+              </div>
             </div>
 
             <label class="remember-me-row">
@@ -345,11 +347,51 @@
 
             <div class="space-y-2">
               <label class="text-sm font-medium text-[#1E293B]">I am a...</label>
-              <select formControlName="role"
-                class="w-full px-3 py-2 border border-[#E2E8F0] rounded-md focus:outline-none focus:ring-2 focus:ring-[#7C3AED] focus:border-transparent">
-                <option *ngFor="let role of userRoles" [value]="role.value">{{ role.label }}</option>
-              </select>
+              <div class="role-picker">
+                <button type="button" class="role-picker-trigger" (click)="toggleRolePicker()">
+                  <span class="role-picker-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path [attr.d]="roleIconPath(selectedRoleOption.value)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                  <span class="role-picker-copy">
+                    <strong>{{ selectedRoleOption.label }}</strong>
+                    <small>{{ selectedRoleOption.description }}</small>
+                  </span>
+                  <svg class="role-picker-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div *ngIf="showRolePicker" class="role-picker-menu">
+                  <button
+                    *ngFor="let role of userRoles"
+                    type="button"
+                    class="role-picker-option"
+                    [class.is-selected]="registerForm.get('role')?.value === role.value"
+                    (click)="selectRole(role.value)">
+                    <span class="role-picker-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path [attr.d]="roleIconPath(role.value)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                    <span class="role-picker-copy">
+                      <strong>{{ role.label }}</strong>
+                      <small>{{ role.description }}</small>
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
+
+            <div class="relative my-4">
+              <div class="absolute inset-0 flex items-center"><span class="w-full border-t border-gray-200"></span></div>
+              <div class="relative flex justify-center text-xs"><span class="bg-white px-2 text-gray-400">or sign up with your selected role</span></div>
+            </div>
+
+            <div id="google-signup-button" class="google-signin-slot" aria-label="Sign up with Google"></div>
+            <p class="text-center text-xs text-[#6B5B8C]">
+              Select your role above before signing up with Google.
+            </p>
 
             <button type="submit" [disabled]="isLoading"
               class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50">
@@ -358,6 +400,149 @@
           </form>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showPasswordResetModal" class="password-reset-backdrop">
+    <div class="password-reset-card">
+      <button type="button" class="password-reset-close" (click)="closePasswordReset()" aria-label="Close reset password">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+
+      <div class="password-reset-head">
+        <span class="password-reset-icon">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="10" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <p class="password-reset-eyebrow">Secure reset</p>
+        <h3>Reset your password</h3>
+        <p>Choose where EverCare should send your reset code before allowing a password change.</p>
+      </div>
+
+      <div class="reset-progress">
+        <span [class.is-active]="passwordResetStep === 'email'">Email</span>
+        <span [class.is-active]="passwordResetStep === 'code'">Code</span>
+        <span [class.is-active]="passwordResetStep === 'password'">Password</span>
+      </div>
+
+      <div *ngIf="passwordResetStep === 'email'" class="password-reset-body">
+        <label>Email address</label>
+        <input
+          type="email"
+          [(ngModel)]="resetEmail"
+          placeholder="your.email@example.com"
+          class="password-reset-input"
+        />
+        <div class="reset-method-grid" role="group" aria-label="Choose reset verification method">
+          <button
+            type="button"
+            class="reset-method-card"
+            [class.is-selected]="resetVerificationMethod === 'email'"
+            (click)="resetVerificationMethod = 'email'">
+            <span class="reset-method-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m5.5 8 5.9 4.7a1 1 0 0 0 1.2 0L18.5 8"/></svg>
+            </span>
+            Account email
+          </button>
+          <button
+            type="button"
+            class="reset-method-card"
+            [class.is-selected]="resetVerificationMethod === 'recovery-email'"
+            (click)="resetVerificationMethod = 'recovery-email'">
+            <span class="reset-method-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-3.7 7-9.3V5.2L12 2.8 5 5.2v6.5C5 17.3 12 21 12 21Z"/><path d="M9 12.2 11.1 14 15 9.5"/></svg>
+            </span>
+            Recovery email
+          </button>
+        </div>
+        <button
+          type="button"
+          class="password-reset-primary"
+          [disabled]="isPasswordResetBusy"
+          (click)="sendPasswordResetCode()">
+          {{ isPasswordResetBusy ? 'Sending...' : 'Send code' }}
+        </button>
+      </div>
+
+      <div *ngIf="passwordResetStep === 'code'" class="password-reset-body">
+        <label>Verification code</label>
+        <p *ngIf="resetDestination" class="password-reset-destination">Code sent to <strong>{{ resetDestination }}</strong>.</p>
+        <input
+          type="text"
+          inputmode="numeric"
+          maxlength="6"
+          [(ngModel)]="resetCode"
+          placeholder="6-digit code"
+          class="password-reset-input"
+        />
+        <div class="password-reset-actions">
+          <button
+            type="button"
+            class="password-reset-secondary"
+            [disabled]="passwordResetCountdown > 0 || isPasswordResetBusy"
+            (click)="sendPasswordResetCode()">
+            {{ passwordResetCountdown > 0 ? 'Resend in ' + passwordResetCountdown + 's' : 'Resend code' }}
+          </button>
+          <button type="button" class="password-reset-primary" (click)="continuePasswordResetCode()">
+            Continue
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="passwordResetStep === 'password'" class="password-reset-body">
+        <label>New password</label>
+        <input
+          type="password"
+          [(ngModel)]="resetNewPassword"
+          placeholder="New password"
+          class="password-reset-input"
+        />
+        <div *ngIf="resetNewPassword" class="mt-2">
+          <div class="flex justify-between mb-1 text-xs text-[#6B5B8C]">
+            <span>Strength: {{ getResetPasswordStrength().message }}</span>
+            <span>{{ getResetPasswordStrength().level }}/5</span>
+          </div>
+          <div class="auth-meter password-strength-meter" [ngClass]="getResetStrengthClass()">
+            <div [style.width.%]="getResetStrengthPercentage()"></div>
+          </div>
+        </div>
+
+        <label>Confirm password</label>
+        <input
+          type="password"
+          [(ngModel)]="resetConfirmPassword"
+          placeholder="Confirm password"
+          class="password-reset-input"
+        />
+        <div
+          class="auth-meter password-match-meter"
+          [class.meter-match]="resetPasswordConfirmationState === 'match'"
+          [class.meter-mismatch]="resetPasswordConfirmationState === 'mismatch'">
+          <div [style.width.%]="resetPasswordConfirmationProgress"></div>
+        </div>
+        <p
+          *ngIf="resetPasswordConfirmationState !== 'idle'"
+          class="password-match-hint"
+          [class.hint-match]="resetPasswordConfirmationState === 'match'"
+          [class.hint-mismatch]="resetPasswordConfirmationState === 'mismatch'">
+          {{ resetPasswordConfirmationState === 'match' ? 'Passwords match.' : 'Passwords do not match yet.' }}
+        </p>
+        <button
+          type="button"
+          class="password-reset-primary"
+          [disabled]="isPasswordResetBusy"
+          (click)="confirmPasswordReset()">
+          {{ isPasswordResetBusy ? 'Updating...' : 'Update password' }}
+        </button>
+      </div>
+
+      <div *ngIf="passwordResetStep === 'success'" class="password-reset-success">
+        <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+        <h3>Password updated</h3>
+        <p>You can sign in with your new password now.</p>
       </div>
     </div>
   </div>

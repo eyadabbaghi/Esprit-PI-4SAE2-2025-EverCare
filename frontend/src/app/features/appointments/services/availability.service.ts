@@ -90,7 +90,7 @@ export class AvailabilityService {
       validFrom: availability.validFrom,
       validTo: availability.validTo,
       recurrence: availability.recurrence,
-      isBlocked: availability.isBlocked || false,
+      blocked: availability.blocked ?? availability.isBlocked ?? false,
       blockReason: availability.blockReason || null
     };
 

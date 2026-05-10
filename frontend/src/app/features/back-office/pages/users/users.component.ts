@@ -6,6 +6,7 @@ import {
   UpdateUserByAdminRequest,
   UserAdminDto
 } from '../../../../core/services/admin.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 type UserRole = 'PATIENT' | 'DOCTOR' | 'CAREGIVER' | 'ADMIN';
 type DrawerMode = 'create' | 'edit' | null;
@@ -47,7 +48,8 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -158,8 +160,15 @@ export class UsersComponent implements OnInit {
     this.updateExistingUser();
   }
 
-  deleteUser(user: UserAdminDto): void {
-    if (!confirm(`Delete ${user.name || user.email}? This action cannot be undone.`)) {
+  async deleteUser(user: UserAdminDto): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete user account?',
+      message: `Delete ${user.name || user.email}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -169,7 +178,7 @@ export class UsersComponent implements OnInit {
         if (this.selectedUser?.userId === user.userId) {
           this.closeDrawer();
         }
-        this.toastr.success('User deleted successfully', 'Success');
+        this.feedback.success(`${user.name || user.email} was deleted successfully.`, 'User deleted');
       },
       error: (error) => {
         console.error('Failed to delete user', error);
@@ -226,7 +235,7 @@ export class UsersComponent implements OnInit {
         this.users = [createdUser, ...this.users];
         this.activeFilter = 'ADMIN';
         this.currentPage = 1;
-        this.toastr.success(`Admin account created for ${createdUser.email}`, 'Success');
+        this.feedback.success(`Admin account created for ${createdUser.email}.`, 'Admin created');
         this.closeDrawer();
       },
       error: (error) => {
@@ -254,7 +263,7 @@ export class UsersComponent implements OnInit {
     this.adminService.updateUser(this.selectedUser.userId, updatePayload).subscribe({
       next: (updatedUser) => {
         this.users = this.users.map(user => user.userId === updatedUser.userId ? updatedUser : user);
-        this.toastr.success('User updated successfully', 'Success');
+        this.feedback.success(`${updatedUser.name || updatedUser.email} was updated successfully.`, 'User updated');
         this.closeDrawer();
       },
       error: (error) => {

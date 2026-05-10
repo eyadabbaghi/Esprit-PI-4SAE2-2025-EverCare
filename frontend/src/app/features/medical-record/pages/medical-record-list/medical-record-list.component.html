@@ -24,6 +24,9 @@
       <a *ngIf="permissions.canCreate" routerLink="/medical-record/new" class="btn-solid">
         New Record
       </a>
+      <button *ngIf="!isPatientRole" type="button" class="btn-muted archived-library-btn" (click)="openArchivedRecordsModal()">
+        Archived Records
+      </button>
     </div>
 
     <div class="panel filter-panel" *ngIf="!isPatientRole">
@@ -44,7 +47,6 @@
             [value]="activeFilter"
             (change)="changeFilter($any($event.target).value)">
             <option value="active">Active</option>
-            <option value="archived">Archived</option>
             <option value="all">All</option>
           </select>
         </div>
@@ -93,6 +95,7 @@
     <div *ngIf="!isPatientRole && isStatsLoading" class="status-message info">Loading statistics...</div>
 
     <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="toast-popup success">{{ successMessage }}</div>
     <div *ngIf="isLoading" class="status-message info">Loading records...</div>
 
     <div class="records-grid" *ngIf="!isLoading && records.length > 0">
@@ -168,7 +171,7 @@
             Archive
           </button>
           <button
-            *ngIf="currentRole === 'ADMIN'"
+            *ngIf="canRestoreArchivedRecords"
             type="button"
             class="btn-link success"
             [disabled]="record.active"
@@ -200,6 +203,45 @@
 
     <div *ngIf="!permissions.canRead" class="status-message warning">
       You are not authorized to access medical records.
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="showArchivedModal" (click)="closeArchivedRecordsModal()">
+    <div class="archive-modal" (click)="$event.stopPropagation()">
+      <div class="archive-modal-head">
+        <div>
+          <span class="modal-kicker">Archive</span>
+          <h3>Archived Medical Records</h3>
+          <p>Review archived records and restore them when needed.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="closeArchivedRecordsModal()">x</button>
+      </div>
+
+      <div *ngIf="isArchivedModalLoading" class="status-message info">Loading archived records...</div>
+
+      <div class="archive-list" *ngIf="!isArchivedModalLoading && archivedRecords.length > 0">
+        <article class="archive-row" *ngFor="let record of archivedRecords">
+          <div>
+            <span class="archive-label">Patient</span>
+            <strong>{{ getPatientDisplayName(record) }}</strong>
+            <p>{{ record.alzheimerStage || 'No stage' }} · Updated {{ record.updatedAt | date: 'dd/MM/yyyy, HH:mm' }}</p>
+          </div>
+          <div class="archive-actions">
+            <a *ngIf="permissions.canViewDetails" [routerLink]="['/medical-record', record.id]" class="btn-link dark" (click)="closeArchivedRecordsModal()">Details</a>
+            <button
+              type="button"
+              class="btn-link success"
+              [disabled]="!canRestoreArchivedRecords"
+              (click)="restore(record)">
+              Unarchive
+            </button>
+          </div>
+        </article>
+      </div>
+
+      <div class="empty-row" *ngIf="!isArchivedModalLoading && archivedRecords.length === 0">
+        No archived records yet.
+      </div>
     </div>
   </div>
 </section>

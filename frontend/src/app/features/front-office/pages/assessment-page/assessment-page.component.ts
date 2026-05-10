@@ -6,8 +6,10 @@ import { AssessmentResult } from '../../ui/alzheimers-assessment/alzheimers-asse
   selector: 'app-assessment-page',
   template: `
     <app-alzheimers-assessment
+      [allowCaregiverDelegation]="true"
       (completed)="onCompleted($event)"
-      (skipped)="onSkipped()">
+      (skipped)="onSkipped()"
+      (caregiverRequested)="onCaregiverRequested()">
     </app-alzheimers-assessment>
   `
 })
@@ -20,6 +22,15 @@ export class AssessmentPageComponent {
   }
 
   onSkipped(): void {
-    this.router.navigate(['/']);
+    this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
+  }
+
+  onCaregiverRequested(): void {
+    if (localStorage.getItem('alzAssessmentReturnTo') === 'profile') {
+      localStorage.removeItem('alzAssessmentReturnTo');
+      this.router.navigate(['/profile']);
+      return;
+    }
+    this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
   }
 }

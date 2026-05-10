@@ -4,6 +4,7 @@ import lombok.Data;
 import tn.esprit.user.entity.UserRole;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -13,6 +14,7 @@ public class UserDto {
     private String email;
     private UserRole role;
     private String phone;
+    private String recoveryEmail;
     private String address;
     private String country;
     private boolean isVerified;
@@ -33,7 +35,10 @@ public class UserDto {
     // Relationship fields (emails of connected users)
     private Set<String> caregiverEmails;   // for patient
     private Set<String> patientEmails;
+    private Map<String, String> caregiverRelationships;
+    private Map<String, String> patientRelationships;
     private String doctorEmail;// for caregiver
+    private Set<String> doctorEmails;
 
 
     private String keycloakId;

@@ -116,11 +116,85 @@
     </select>
   </div>
 
+  <section *ngIf="isCaregiver" class="care-patient-switcher">
+    <div class="care-patient-copy">
+      <span>Associated patient</span>
+      <strong>{{ selectedCaregiverPatientName }}</strong>
+      <small>{{ selectedCaregiverPatientSubtitle }}</small>
+    </div>
+
+    <div class="care-patient-select" [class.open]="caregiverPatientMenuOpen">
+      <button type="button" class="care-patient-trigger" (click)="toggleCaregiverPatientMenu()" [disabled]="caregiverPatientLoading || caregiverPatients.length === 0">
+        <img [src]="selectedCaregiverPatientAvatar" alt="Selected patient" (error)="selectedCaregiverPatient && handlePatientAvatarError(selectedCaregiverPatient)">
+        <span>
+          <strong>{{ selectedCaregiverPatientName }}</strong>
+          <small>{{ caregiverPatients.length }} associated patient{{ caregiverPatients.length !== 1 ? 's' : '' }}</small>
+        </span>
+        <svg class="care-patient-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+
+      <div *ngIf="caregiverPatientMenuOpen" class="care-patient-menu">
+        <button type="button"
+                *ngFor="let patient of caregiverPatients"
+                class="care-patient-option"
+                [class.active]="selectedCaregiverPatient?.userId === patient.userId"
+                (click)="selectCaregiverPatient(patient)">
+          <img [src]="resolvePatientAvatar(patient)" alt="Patient" (error)="handlePatientAvatarError(patient)">
+          <span class="option-main">
+            <strong>{{ patient.name || patient.email }}</strong>
+            <small>{{ patient.email }}</small>
+          </span>
+          <span class="option-meta">
+            <b>{{ getCaregiverPatientOpenCount(patient) }}</b>
+            open
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div *ngIf="caregiverPatientLoading" class="care-patient-loading" role="status" aria-live="polite">
+    <div class="care-loader-ring"></div>
+    <div>
+      <strong>Loading patient alerts</strong>
+      <span>Refreshing incidents, alerts, and safety context.</span>
+    </div>
+  </div>
+
   <!-- ══════════════════════════════════════════════════════════════
        CAREGIVER LAYOUT
        ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="!isDoctor" class="prevention-tabs">
+    <button type="button" [class.active]="careViewTab === 'monitor'" (click)="careViewTab = 'monitor'">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.7 21a2 2 0 0 1-3.4 0"/>
+      </svg>
+      Alerts & incidents
+    </button>
+    <button type="button" [class.active]="careViewTab === 'prevention'" (click)="careViewTab = 'prevention'">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3 5.5 5.4v5.2c0 4.1 2.6 7.8 6.5 10 3.9-2.2 6.5-5.9 6.5-10V5.4L12 3Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.2l1.9 1.9L15.5 9.5"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7.8 7.7c1.1.5 2.5.6 4.2.1 1.7-.5 3.1-.4 4.2.1"/>
+      </svg>
+      EverCare Prevention
+    </button>
+    <button type="button" [class.active]="careViewTab === 'recommendations'" (click)="careViewTab = 'recommendations'">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9A2.5 2.5 0 0 1 17.5 17H9l-5 4V5.5Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8M8 12h5"/>
+      </svg>
+      Doctor recommendations
+      <span *ngIf="doctorRecommendationItems.length" class="count-badge">{{ doctorRecommendationItems.length }}</span>
+    </button>
+  </div>
+
+  <ng-container *ngIf="isDoctor || careViewTab === 'monitor'; else careSecondaryTabContent">
   <ng-container *ngIf="isCaregiver; else nonCaregiverLayout">
-    <div class="main-grid">
+    <div class="main-grid alerts-caregiver-content" [class.patient-switching]="caregiverPatientLoading" [class.patient-revealed]="caregiverPatientReveal">
 
       <!-- LEFT: Incidents list -->
       <div class="panel">
@@ -148,17 +222,11 @@
 
               <div class="avatar-wrap">
                 <div class="avatar">
-                  <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient">
+                  <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient" (error)="handleIncidentAvatarError(incident)">
                   <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
                 </div>
                 <ng-container *ngIf="getActivityStatus(incident.patientId) as act">
-                  <span class="activity-ring"
-                        [class.ring-active]="act.status === 'ACTIVE'"
-                        [class.ring-inactive]="act.status === 'INACTIVE'"
-                        [class.ring-risk]="act.status === 'AT_RISK'"
-                        [class.ring-recovered]="act.status === 'RECOVERED'"
-                        [class.ring-unusual]="act.status === 'UNUSUAL'">
-                  </span>
+                  <span class="avatar-online-dot" [class.dot-green]="act.onlineNow" [class.dot-red]="!act.onlineNow"></span>
                 </ng-container>
               </div>
 
@@ -174,7 +242,6 @@
                   </svg>
                   {{ incident.patientName }}
                   <ng-container *ngIf="getActivityStatus(incident.patientId) as act">
-                    <span class="online-dot" [class.dot-green]="act.onlineNow" [class.dot-red]="!act.onlineNow"></span>
                     <span class="badge"
                           [class.badge-act-ACTIVE]="act.status === 'ACTIVE'"
                           [class.badge-act-INACTIVE]="act.status === 'INACTIVE'"
@@ -227,8 +294,16 @@
                   <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
-                  {{ incident.aiSuggestion }}
+                  {{ getInsightSummary(incident.aiSuggestion) }}
                 </div>
+
+                <button type="button" class="ai-insight-chip" (click)="openAiInsights(incident, $event)">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c.8 2.5 2.2 3.9 4.7 4.7C14.2 8.5 12.8 9.9 12 12.4 11.2 9.9 9.8 8.5 7.3 7.7 9.8 6.9 11.2 5.5 12 3Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 12c.5 1.6 1.4 2.5 3 3-1.6.5-2.5 1.4-3 3-.5-1.6-1.4-2.5-3-3 1.6-.5 2.5-1.4 3-3Z"/>
+                  </svg>
+                  AI insights
+                </button>
               </div>
             </div>
           </ng-container>
@@ -505,9 +580,8 @@
                           <circle cx="12" cy="12" r="9"/>
                           <path stroke-linecap="round" d="M12 7v5l3 2"/>
                         </svg>
-                        <span *ngIf="alert.immediate !== false">Immediate alert</span>
-                        <span *ngIf="alert.immediate === false">{{ alert.scheduledTime || 'Scheduled' }}<ng-container *ngIf="alert.repeatDays?.length"> - {{ alert.repeatDays?.join(', ') }}</ng-container></span>
-                        <span *ngIf="alert.sentAt"> - {{ alert.sentAt | date:'MMM d, h:mm a' }}</span>
+                        <span>{{ getAlertScheduleLabel(alert) }}</span>
+                        <span *ngIf="alert.sentAt && alert.immediate !== false"> - {{ alert.sentAt | date:'MMM d, h:mm a' }}</span>
                       </p>
                     </div>
                   </div>
@@ -547,12 +621,12 @@
        NON-CAREGIVER LAYOUT (patient, doctor)
        ══════════════════════════════════════════════════════════════ -->
   <ng-template #nonCaregiverLayout>
-    <div class="main-grid">
+    <div class="main-grid" [class.doctor-main-grid]="isDoctor">
 
       <!-- ── DOCTOR VIEW ── -->
       <ng-container *ngIf="isDoctor; else patientLayout">
 
-        <div class="panel">
+        <div class="panel doctor-patient-rail">
           <div class="panel-header">
             <div class="panel-title">Your Patients</div>
           </div>
@@ -566,7 +640,7 @@
                  (click)="selectDoctorPatient(patient)">
               <div class="avatar-wrap">
                 <div class="avatar">
-                  <img *ngIf="patient.profilePicture" [src]="patient.profilePicture" alt="">
+                  <img *ngIf="patient.profilePicture" [src]="patient.profilePicture" alt="" (error)="handlePatientAvatarError(patient)">
                   <span *ngIf="!patient.profilePicture">{{ getInitials(patient.name) }}</span>
                 </div>
               </div>
@@ -581,10 +655,35 @@
           </div>
         </div>
 
-        <div class="right-col" *ngIf="selectedDoctorPatient">
+        <div class="right-col doctor-analysis-col" *ngIf="selectedDoctorPatient">
+          <div class="doctor-alert-tabs">
+            <button type="button"
+                    [class.active]="doctorActiveTab === 'incidents'"
+                    (click)="setDoctorTab('incidents')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
+              </svg>
+              Incidents
+            </button>
+            <button type="button"
+                    [class.active]="doctorActiveTab === 'analysis'"
+                    (click)="setDoctorTab('analysis')">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c.8 2.5 2.2 3.9 4.7 4.7C14.2 8.5 12.8 9.9 12 12.4 11.2 9.9 9.8 8.5 7.3 7.7 9.8 6.9 11.2 5.5 12 3Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M6 16v-4M12 16V9M18 16v-6"/>
+              </svg>
+              Smart AI analysis
+            </button>
+          </div>
+
+          <ng-container *ngIf="doctorActiveTab === 'incidents'; else doctorAnalysisTab">
           <div class="panel">
             <div class="panel-header">
-              <div class="panel-title">Incidents for {{ selectedDoctorPatient.name }}</div>
+              <div>
+                <div class="panel-title">Incidents for {{ selectedDoctorPatient.name }}</div>
+                <p class="doctor-detail-hint">Double-click an incident to see details, or single-click it to open the detail panel below.</p>
+              </div>
             </div>
             <div class="incident-list">
               <ng-container *ngIf="incidentsForSelectedPatient.length; else noPatientIncidents">
@@ -599,7 +698,7 @@
                      (dblclick)="openIncidentDetailsDialog(incident)">
                   <div class="avatar-wrap">
                     <div class="avatar">
-                      <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="">
+                      <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="" (error)="handleIncidentAvatarError(incident)">
                       <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
                     </div>
                   </div>
@@ -652,6 +751,228 @@
               </ng-template>
             </div>
           </div>
+
+          <ng-container *ngIf="selectedIncident as doctorIncident">
+            <div class="panel doctor-incident-detail-panel">
+              <div class="detail-header">
+                <div>
+                  <p class="detail-header-title">Incident details</p>
+                  <p class="detail-header-sub">{{ doctorIncident.title }}</p>
+                </div>
+                <button type="button" class="close-btn" (click)="selectedIncident = null; selectedAlert = null">&#x2715;</button>
+              </div>
+
+              <div class="detail-body">
+                <div class="patient-mini">
+                  <div class="avatar">
+                    <img *ngIf="doctorIncident.patientAvatar" [src]="doctorIncident.patientAvatar" alt="Patient" (error)="handleIncidentAvatarError(doctorIncident)">
+                    <span *ngIf="!doctorIncident.patientAvatar">{{ getInitials(doctorIncident.patientName) }}</span>
+                  </div>
+                  <div class="patient-mini-info">
+                    <p class="patient-mini-name">{{ doctorIncident.patientName }}</p>
+                    <span class="badge badge-type">Associated patient</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="section-label">Description</span>
+                  <p class="section-text">{{ doctorIncident.description || 'No description provided for this incident.' }}</p>
+                </div>
+
+                <div class="doctor-incident-detail-grid">
+                  <div>
+                    <span class="section-label">Severity</span>
+                    <span class="badge" [ngClass]="getSeverityBadgeClasses(doctorIncident.severity)">{{ doctorIncident.severity }}</span>
+                  </div>
+                  <div>
+                    <span class="section-label">Type</span>
+                    <span class="badge badge-type">{{ doctorIncident.type }}</span>
+                  </div>
+                  <div>
+                    <span class="section-label">Status</span>
+                    <span class="badge"
+                          [class.badge-ACKNOWLEDGED]="doctorIncident.status === 'ACKNOWLEDGED'"
+                          [class.badge-RESOLVED]="doctorIncident.status === 'RESOLVED'"
+                          [class.badge-OPEN]="doctorIncident.status === 'OPEN'">
+                      {{ doctorIncident.status }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="section-label">Date</span>
+                    <p class="section-text compact">{{ doctorIncident.incidentDate | date:'MMM d, y, h:mm a' }}</p>
+                  </div>
+                </div>
+
+                <div class="meta-row">
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  </svg>
+                  {{ doctorIncident.location || 'No location provided' }}
+                </div>
+
+                <div *ngIf="doctorIncident.aiSuggestion" class="ai-card">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  <div>
+                    <p class="ai-card-label">AI insight</p>
+                    <p>{{ doctorIncident.aiSuggestion }}</p>
+                  </div>
+                </div>
+
+                <div class="action-stack doctor-incident-actions">
+                  <button type="button" class="action-btn ab-outline" (click)="openAiInsights(doctorIncident)">
+                    View AI insights
+                  </button>
+                  <button type="button" class="action-btn ab-primary" (click)="openCreateAlertDialog(doctorIncident)">
+                    Add alert for patient
+                  </button>
+                </div>
+
+                <div class="doctor-recommendation-box">
+                  <div>
+                    <span class="section-label">Doctor recommendation</span>
+                    <p>Write guidance for this incident. It will appear for the patient and caregiver in their Doctor recommendations tab.</p>
+                  </div>
+                  <textarea
+                    [(ngModel)]="doctorRecommendationText"
+                    rows="4"
+                    maxlength="2000"
+                    placeholder="Example: Monitor hydration today, avoid unsupervised walking after sunset, and contact me if confusion repeats."></textarea>
+                  <div class="doctor-recommendation-actions">
+                    <span>{{ doctorRecommendationText.length }}/2000</span>
+                    <button
+                      type="button"
+                      class="action-btn ab-success"
+                      [disabled]="doctorRecommendationSubmitting || !doctorRecommendationText.trim()"
+                      (click)="submitDoctorRecommendation(doctorIncident)">
+                      {{ doctorRecommendationSubmitting ? 'Sending...' : 'Send recommendation' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          </ng-container>
+
+          <ng-template #doctorAnalysisTab>
+            <section class="doctor-ai-panel" *ngIf="selectedPatientAnalysis as analysis">
+              <div class="doctor-ai-hero">
+                <div>
+                  <span class="hero-kicker">AI clinical pattern analysis</span>
+                  <h2>{{ selectedDoctorPatient.name }}</h2>
+                  <p>{{ analysis.summary }}</p>
+                </div>
+                <div class="doctor-ai-side">
+                  <div class="risk-orb" [ngClass]="'risk-' + analysis.riskLevel.toLowerCase()">
+                    <span>{{ analysis.riskLevel }}</span>
+                    <small>risk</small>
+                  </div>
+                  <button type="button" class="download-analysis-btn" (click)="downloadPatientAnalysisPdf()">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+                    </svg>
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+
+              <div class="doctor-ai-stats">
+                <article>
+                  <strong>{{ analysis.total }}</strong>
+                  <span>Total incidents</span>
+                </article>
+                <article>
+                  <strong>{{ analysis.active }}</strong>
+                  <span>Open follow-ups</span>
+                </article>
+                <article>
+                  <strong>{{ analysis.critical }}</strong>
+                  <span>High severity</span>
+                </article>
+                <article>
+                  <strong>{{ analysis.riskiestLocation }}</strong>
+                  <span>Repeated context</span>
+                </article>
+              </div>
+
+              <div class="doctor-ai-grid">
+                <article class="doctor-ai-card">
+                  <h3>Patient incident behavior</h3>
+                  <div class="analysis-bars" *ngIf="analysis.typeBreakdown.length; else noTypePattern">
+                    <div *ngFor="let slice of analysis.typeBreakdown" class="analysis-bar-row">
+                      <span>{{ slice.label }}</span>
+                      <div class="analysis-bar-track">
+                        <div class="analysis-bar-fill" [style.width.%]="getBarWidth(slice)"></div>
+                      </div>
+                      <strong>{{ slice.count }}</strong>
+                    </div>
+                  </div>
+                  <ng-template #noTypePattern>
+                    <p class="analysis-empty">No type pattern detected yet.</p>
+                  </ng-template>
+                </article>
+
+                <article class="doctor-ai-card">
+                  <h3>Severity distribution</h3>
+                  <div class="analysis-bars" *ngIf="analysis.severityBreakdown.length; else noSeverityPattern">
+                    <div *ngFor="let slice of analysis.severityBreakdown" class="analysis-bar-row">
+                      <span>{{ slice.label }}</span>
+                      <div class="analysis-bar-track severity">
+                        <div class="analysis-bar-fill severity" [style.width.%]="getBarWidth(slice)"></div>
+                      </div>
+                      <strong>{{ slice.percent }}%</strong>
+                    </div>
+                  </div>
+                  <ng-template #noSeverityPattern>
+                    <p class="analysis-empty">No severity pattern detected yet.</p>
+                  </ng-template>
+                </article>
+              </div>
+
+              <article class="doctor-ai-card">
+                <h3>AI recommendations</h3>
+                <div class="recommendation-list">
+                  <div *ngFor="let recommendation of analysis.recommendations">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/>
+                    </svg>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="doctor-ai-card">
+                <h3>Common incidents across associated patients</h3>
+                <p class="analysis-summary">{{ doctorRiskSummary }}</p>
+                <div class="common-incident-grid">
+                  <div *ngFor="let slice of doctorCommonIncidentStats">
+                    <span>{{ slice.label }}</span>
+                    <strong>{{ slice.count }}</strong>
+                    <small>{{ slice.percent }}%</small>
+                  </div>
+                </div>
+              </article>
+
+              <article class="doctor-ai-card">
+                <h3>Associated patient snapshots</h3>
+                <div class="patient-analysis-list">
+                  <button type="button"
+                          *ngFor="let patient of doctorPatients"
+                          [class.active]="selectedDoctorPatient?.userId === patient.userId"
+                          (click)="selectDoctorPatient(patient)">
+                    <img [src]="patient.profilePicture || '/assets/default-avatar.png'" alt="" (error)="handlePatientAvatarError(patient)">
+                    <span>
+                      <strong>{{ patient.name }}</strong>
+                      <small>{{ getDoctorPatientAnalysis(patient).riskLevel }} risk - {{ getDoctorPatientAnalysis(patient).total }} incident{{ getDoctorPatientAnalysis(patient).total !== 1 ? 's' : '' }}</small>
+                    </span>
+                  </button>
+                </div>
+              </article>
+            </section>
+          </ng-template>
         </div>
 
       </ng-container><!-- /isDoctor -->
@@ -683,7 +1004,7 @@
                    (click)="selectIncident(incident)">
                 <div class="avatar-wrap">
                   <div class="avatar">
-                    <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient">
+                    <img *ngIf="incident.patientAvatar" [src]="incident.patientAvatar" alt="Patient" (error)="handleIncidentAvatarError(incident)">
                     <span *ngIf="!incident.patientAvatar">{{ getInitials(incident.patientName) }}</span>
                   </div>
                 </div>
@@ -792,6 +1113,14 @@
                   <p class="section-text">{{ selectedIncident.description }}</p>
                 </div>
 
+                <button type="button" class="action-btn ab-outline" (click)="openAiInsights(selectedIncident)">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c.8 2.5 2.2 3.9 4.7 4.7C14.2 8.5 12.8 9.9 12 12.4 11.2 9.9 9.8 8.5 7.3 7.7 9.8 6.9 11.2 5.5 12 3Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 12c.5 1.6 1.4 2.5 3 3-1.6.5-2.5 1.4-3 3-.5-1.6-1.4-2.5-3-3 1.6-.5 2.5-1.4 3-3Z"/>
+                  </svg>
+                  AI insights
+                </button>
+
                 <div style="display:flex;flex-wrap:wrap;gap:6px">
                   <span class="badge" [ngClass]="getSeverityBadgeClasses(selectedIncident.severity)">{{ selectedIncident.severity }}</span>
                   <span class="badge badge-type">{{ selectedIncident.type }}</span>
@@ -847,9 +1176,8 @@
                             <circle cx="12" cy="12" r="9"/>
                             <path stroke-linecap="round" d="M12 7v5l3 2"/>
                           </svg>
-                          <span *ngIf="alert.immediate !== false">Immediate alert</span>
-                          <span *ngIf="alert.immediate === false">{{ alert.scheduledTime || 'Scheduled' }}<ng-container *ngIf="alert.repeatDays?.length"> - {{ alert.repeatDays?.join(', ') }}</ng-container></span>
-                          <span *ngIf="alert.sentAt"> - {{ alert.sentAt | date:'MMM d, h:mm a' }}</span>
+                          <span>{{ getAlertScheduleLabel(alert) }}</span>
+                          <span *ngIf="alert.sentAt && alert.immediate !== false"> - {{ alert.sentAt | date:'MMM d, h:mm a' }}</span>
                         </p>
                       </div>
                     </div>
@@ -878,6 +1206,132 @@
 
     </div><!-- /main-grid non-caregiver -->
   </ng-template><!-- /nonCaregiverLayout -->
+  </ng-container>
+
+  <ng-template #careSecondaryTabContent>
+    <ng-container *ngIf="careViewTab === 'recommendations'; else preventionTabContent">
+      <section class="doctor-recommendations-panel">
+        <div class="recommendations-hero">
+          <div>
+            <span class="hero-kicker">Doctor recommendations</span>
+            <h2>Clinical guidance for incidents</h2>
+            <p>Review recommendations sent by doctors for your associated incidents and patient safety follow-up.</p>
+          </div>
+          <strong>{{ doctorRecommendationItems.length }}</strong>
+        </div>
+
+        <div *ngIf="doctorRecommendationItems.length; else noDoctorRecommendations" class="doctor-recommendation-list">
+          <article *ngFor="let item of doctorRecommendationItems" class="doctor-recommendation-card">
+            <div class="recommendation-card-top">
+              <div class="avatar">
+                <img *ngIf="item.patientAvatar" [src]="item.patientAvatar" alt="Patient">
+                <span *ngIf="!item.patientAvatar">{{ getInitials(item.patientName) }}</span>
+              </div>
+              <div>
+                <p class="recommendation-patient">{{ item.patientName }}</p>
+                <h3>{{ item.incidentTitle }}</h3>
+                <div class="inc-badges">
+                  <span class="badge" [ngClass]="getSeverityBadgeClasses(item.incidentSeverity)">{{ item.incidentSeverity }}</span>
+                  <span class="badge badge-type">{{ item.incidentType }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="recommendation-incident">
+              <span>Incident description</span>
+              <p>{{ item.incidentDescription || 'No description provided.' }}</p>
+            </div>
+
+            <div class="recommendation-message">
+              <div class="recommendation-doctor-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 4v5a4 4 0 0 0 8 0V4M6 4h4M14 4h4M12 13v3a4 4 0 0 0 8 0v-1"/>
+                  <circle cx="20" cy="15" r="2"/>
+                </svg>
+              </div>
+              <div>
+                <p class="recommendation-meta">
+                  {{ item.doctorName }} recommended
+                  <span *ngIf="item.createdAt"> - {{ item.createdAt | date:'MMM d, h:mm a' }}</span>
+                </p>
+                <p class="recommendation-text">{{ item.recommendation }}</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #noDoctorRecommendations>
+          <div class="empty-state recommendations-empty">
+            <div class="empty-icon">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9A2.5 2.5 0 0 1 17.5 17H9l-5 4V5.5Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8M8 12h5"/>
+              </svg>
+            </div>
+            <p class="empty-title">No doctor recommendations yet</p>
+            <p class="empty-sub">Recommendations will appear here when a doctor adds guidance to an incident.</p>
+          </div>
+        </ng-template>
+      </section>
+    </ng-container>
+  </ng-template>
+
+  <ng-template #preventionTabContent>
+    <section class="prevention-panel" *ngIf="preventionInsight as insight">
+      <div class="prevention-hero">
+        <div class="prevention-copy">
+          <span class="hero-kicker">EverCare Prevention AI</span>
+          <h2>{{ insight.title }}</h2>
+          <p>{{ insight.advice }}</p>
+        </div>
+        <div class="prevention-risk" [ngClass]="'risk-' + insight.level.toLowerCase()">
+          <strong>{{ insight.level }}</strong>
+          <span>risk</span>
+        </div>
+      </div>
+
+      <div class="prevention-stats">
+        <article><strong>{{ insight.total }}</strong><span>incident signals</span></article>
+        <article><strong>{{ insight.recurring }}</strong><span>recurring patterns</span></article>
+        <article><strong>{{ insight.missedAlerts }}</strong><span>missed alerts</span></article>
+        <article><strong>{{ insight.riskiestLocation }}</strong><span>risk context</span></article>
+      </div>
+
+      <div class="prevention-grid">
+        <article class="prevention-card">
+          <h3>Behavior pattern</h3>
+          <p>{{ insight.patternSummary }}</p>
+          <div class="prevention-tags">
+            <span>{{ insight.dominantType }}</span>
+            <span>{{ insight.dominantSeverity }}</span>
+            <span>{{ insight.riskiestLocation }}</span>
+          </div>
+        </article>
+
+        <article class="prevention-card">
+          <h3>What to do next</h3>
+          <div class="recommendation-list">
+            <div *ngFor="let action of insight.actions">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/>
+              </svg>
+              <span>{{ action }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <article class="prevention-card">
+        <h3>Future incident prevention</h3>
+        <div class="prevention-timeline">
+          <div *ngFor="let signal of insight.signals">
+            <span></span>
+            <p>{{ signal }}</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </ng-template>
 
 </div><!-- /dash -->
 
@@ -922,10 +1376,36 @@
 </div>
 
 <!-- ── Alert alarm ──────────────────────────────────────────── -->
-<app-alert-alarm
-  (dismissed)="onAlarmDismissed($event)"
-  (emergencySent)="toastr.warning('Emergency SMS sent to caregiver')">
-</app-alert-alarm>
+<div *ngIf="aiInsightIncident" class="ai-insights-overlay" (click)="closeAiInsights()">
+  <div class="ai-insights-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="ai-insights-close" (click)="closeAiInsights()" aria-label="Close AI insights">
+      <span></span>
+      <span></span>
+    </button>
+
+    <div class="ai-insights-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c.8 2.5 2.2 3.9 4.7 4.7C14.2 8.5 12.8 9.9 12 12.4 11.2 9.9 9.8 8.5 7.3 7.7 9.8 6.9 11.2 5.5 12 3Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 12c.5 1.6 1.4 2.5 3 3-1.6.5-2.5 1.4-3 3-.5-1.6-1.4-2.5-3-3 1.6-.5 2.5-1.4 3-3Z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 13c.4 1.2 1.1 1.9 2.3 2.3C7.1 15.7 6.4 16.4 6 17.6c-.4-1.2-1.1-1.9-2.3-2.3C4.9 14.9 5.6 14.2 6 13Z"/>
+      </svg>
+    </div>
+
+    <p class="ai-insights-kicker">EverCare AI insights</p>
+    <h2>{{ aiInsightIncident.title }}</h2>
+    <div class="ai-insights-tags">
+      <span class="badge" [ngClass]="getSeverityBadgeClasses(aiInsightIncident.severity)">{{ aiInsightIncident.severity }}</span>
+      <span class="badge badge-type">{{ aiInsightIncident.type }}</span>
+      <span class="badge badge-type">{{ aiInsightIncident.location || 'No location' }}</span>
+    </div>
+    <div *ngIf="aiInsightsLoading" class="ai-insights-loading">
+      <span class="ai-insights-spinner"></span>
+      <span>EverCare AI is analyzing this incident...</span>
+    </div>
+    <p *ngIf="!aiInsightsLoading && !aiInsightsError" class="ai-insights-copy">{{ aiInsightIncident.aiSuggestion }}</p>
+    <p *ngIf="!aiInsightsLoading && aiInsightsError" class="ai-insights-error">{{ aiInsightsError }}</p>
+  </div>
+</div>
 
 <!-- ── SOS Popup ─────────────────────────────────────────────── -->
 <div *ngIf="sosPopupVisible"
@@ -950,14 +1430,7 @@
   </div>
 </div>
 
-<!-- ── Patient check receiver ─────────────────────────────────── -->
-<app-patient-check
-  *ngIf="isPatient && caregiverId"
-  [patientId]="patientId || ''"
-  [caregiverId]="caregiverId || ''">
-</app-patient-check>
-
-<!-- ── EviCare popup ──────────────────────────────────────────── -->
+<!-- ── EverCare Prevention popup ──────────────────────────────── -->
 <div *ngIf="eviCarePopupVisible"
      class="modal-overlay"
      (click)="eviCarePopupVisible = false">
@@ -970,22 +1443,22 @@
         <path d="M12 26 Q14 22 20 22 Q26 22 28 26 L28 32 Q20 35 12 32 Z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
       </svg>
     </div>
-    <p class="evicare-label">EviCare AI</p>
-    <h2 class="evicare-title">Prevention insight</h2>
+    <p class="evicare-label">EverCare Prevention</p>
+    <h2 class="evicare-title">Smart prevention insight</h2>
     <span class="badge"
           [ngClass]="{'badge-CRITICAL': eviCareRiskScore?.level === 'HIGH', 'badge-MEDIUM': eviCareRiskScore?.level === 'MEDIUM'}"
           style="font-size:13px;padding:6px 16px">
       {{ eviCareRiskScore?.level }} risk detected
     </span>
-    <p class="evicare-advice">{{ eviCareRiskScore?.advice }}</p>
+    <p class="evicare-advice">{{ preventionInsight.advice }}</p>
     <div class="evicare-stats">
-      <div><p class="evicare-stat-num">{{ eviCareRiskScore?.recentIncidents }}</p><p>last 30 days</p></div>
-      <div><p class="evicare-stat-num red">{{ eviCareRiskScore?.criticalCount }}</p><p>critical / high</p></div>
-      <div><p class="evicare-stat-num amber">{{ eviCareRiskScore?.missedAlertsCount }}</p><p>missed alerts</p></div>
+      <div><p class="evicare-stat-num">{{ preventionInsight.total }}</p><p>tracked incidents</p></div>
+      <div><p class="evicare-stat-num red">{{ preventionInsight.critical }}</p><p>critical / high</p></div>
+      <div><p class="evicare-stat-num amber">{{ preventionInsight.missedAlerts }}</p><p>missed alerts</p></div>
     </div>
-    <div *ngIf="eviCareRiskScore?.patternSummary" class="evicare-pattern">
+    <div *ngIf="preventionInsight.patternSummary" class="evicare-pattern">
       <p class="evicare-pattern-label">Detected patterns</p>
-      {{ eviCareRiskScore?.patternSummary }}
+      {{ preventionInsight.patternSummary }}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
       <span *ngIf="eviCareRiskScore?.dominantTimeOfDay" class="badge badge-type">{{ eviCareRiskScore.dominantTimeOfDay | titlecase }}</span>
@@ -996,7 +1469,7 @@
 </div>
 
 <!-- ── Disconnect Alert Popup ────────────────────────────────── -->
-<div *ngIf="disconnectPopup"
+<div *ngIf="isCaregiver && disconnectPopup"
      class="modal-overlay"
      (click)="dismissDisconnectPopup()">
   <div class="modal-box" (click)="$event.stopPropagation()">
@@ -1027,8 +1500,8 @@
 </div>
 
 <!-- ── Pinned floating notifications (bottom-right) ───────────── -->
-<div class="pinned-stack">
-  <div *ngFor="let pin of getPinnedDisconnectList()" class="pinned-card">
+<div class="pinned-stack" *ngIf="isCaregiver">
+  <div *ngFor="let pin of pinnedDisconnectList; trackBy: trackPinnedDisconnect" class="pinned-card">
     <div class="pinned-top">
       <span class="pinned-title">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--red600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

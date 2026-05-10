@@ -9,6 +9,17 @@ import { Appointment } from '../../models/appointment';
 export class AppointmentListItemComponent {
   @Input() appointment!: Appointment;
   @Output() onClick = new EventEmitter<Appointment>();
+  @Output() onJoin = new EventEmitter<Appointment>();
+
+  get canJoinCall(): boolean {
+    return [
+      'SCHEDULED',
+      'CONFIRMED_BY_PATIENT',
+      'CONFIRMED_BY_CAREGIVER',
+      'RESCHEDULED',
+      'IN_PROGRESS'
+    ].includes(this.appointment.status);
+  }
 
   getStatusClass(status: string): string {
     const classes: Record<string, string> = {

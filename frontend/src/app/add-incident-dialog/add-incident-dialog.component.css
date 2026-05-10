@@ -187,6 +187,20 @@ mat-dialog-content {
   display: flex;
   gap: 13px;
   background: linear-gradient(135deg, #f3e8ff, #fff);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-suggestion::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12), transparent 66%);
+  pointer-events: none;
 }
 
 .ai-icon,
@@ -205,6 +219,53 @@ mat-dialog-content {
   color: #6b5b8c;
   font-size: 13px;
   margin: 0 0 8px;
+}
+
+.ai-copy,
+.review-ai {
+  white-space: pre-line;
+  line-height: 1.55;
+}
+
+.ai-loading-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #6b5b8c;
+  font-size: 13px;
+  margin: 4px 0 10px;
+}
+
+.ai-loader {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-top-color: #7c3aed;
+  animation: aiSpin 0.75s linear infinite;
+}
+
+.ai-error {
+  color: #be123c !important;
+  font-weight: 700;
+}
+
+@keyframes aiSpin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-level-critical {
+  border-color: rgba(190, 18, 60, 0.35);
+  background: linear-gradient(135deg, #fff1f2, #fff);
+}
+
+.ai-level-high {
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+.ai-level-low {
+  border-color: rgba(22, 163, 74, 0.28);
+  background: linear-gradient(135deg, #f0fdf4, #fff);
 }
 
 .review-card {

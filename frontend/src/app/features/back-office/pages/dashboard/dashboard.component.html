@@ -262,7 +262,7 @@
           <div class="micro-stats">
             <div>
               <span>Average rating</span>
-              <strong>{{ data.averageActivityRating | number:'1.1-1' }}</strong>
+              <strong>{{ data.averageActivityRating | number:'1.1-1' }} / 5</strong>
             </div>
             <div>
               <span>Total ratings</span>
@@ -273,6 +273,21 @@
               <strong>{{ formatNumber(data.doctorSuggestedActivities) }}</strong>
             </div>
           </div>
+          <div class="article-list" *ngIf="data.topRatedActivities.length; else noActivityRatings">
+            <article *ngFor="let activity of data.topRatedActivities">
+              <div>
+                <h4>{{ activity.name }}</h4>
+                <p>{{ activity.type }} - {{ activity.totalRatings }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</p>
+              </div>
+              <span>{{ activity.rating | number:'1.1-1' }} / 5</span>
+            </article>
+          </div>
+          <ng-template #noActivityRatings>
+            <div class="spotlight-card">
+              <span>No activity ratings yet</span>
+              <p>Ratings will appear here after patients or caregivers rate activities.</p>
+            </div>
+          </ng-template>
           <div class="ranking-list">
             <article *ngFor="let item of data.topActivityTypes">
               <div class="ranking-title">

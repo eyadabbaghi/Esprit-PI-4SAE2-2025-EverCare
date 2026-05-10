@@ -84,6 +84,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   lastPosition: any = null;
   idleCounter = 0;
+  private lastBrowserLocationAt = 0;
 
   lastZoneStatus: 'INSIDE' | 'OUTSIDE' | null = null;
   guidanceMessage = '';
@@ -114,7 +115,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.ensureMapStyles();
     this.user = JSON.parse(localStorage.getItem('current_user') || '{}');
-    this.patientId = this.user?.userId || 'default';
+    this.patientId = this.user?.userId || this.user?.keycloakId || this.user?.email || 'default';
 
     this.places = JSON.parse(localStorage.getItem(`places_${this.patientId}`) || '[]');
     this.alerts = JSON.parse(localStorage.getItem(`alerts_${this.patientId}`) || '[]');
@@ -150,6 +151,10 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.trackingMap.remove();
       this.trackingMap = null;
     }
+  }
+
+  get isCaregiverRole(): boolean {
+    return String(this.user?.role || '').trim().toUpperCase() === 'CAREGIVER';
   }
 
   loadPlacesFromBackend() {
@@ -228,7 +233,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isInSafeZone = this.currentStatus === 'SAFE';
     this.riskLevel = this.currentStatus;
 
-    if (typeof ping.lat === 'number' && typeof ping.lng === 'number') {
+    if (typeof ping.lat === 'number' && typeof ping.lng === 'number' && this.shouldApplyBackendCoordinates(ping)) {
       this.currentLat = ping.lat;
       this.currentLng = ping.lng;
       this.hasLocationSnapshot = true;
@@ -396,24 +401,15 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
 
   sendCurrentLocation() {
     navigator.geolocation.getCurrentPosition((pos) => {
-      const payload = {
-        patientId: this.patientId,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-      this.currentLat = payload.lat;
-      this.currentLng = payload.lng;
+      this.currentLat = lat;
+      this.currentLng = lng;
       this.hasLocationSnapshot = true;
+      this.lastBrowserLocationAt = Date.now();
       this.refreshSetupMapLayers();
-
-      this.http.post(
-        'http://localhost:8089/tracking/location-pings',
-        payload
-      ).subscribe(() => {
-        console.log('forced refresh ping');
-        this.loadPatientStatusFromBackend();
-      });
+      this.publishLocationPing(lat, lng, 'forced refresh ping');
     });
   }
 
@@ -469,28 +465,13 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentLat = lat;
       this.currentLng = lng;
       this.hasLocationSnapshot = true;
+      this.lastBrowserLocationAt = Date.now();
 
       this.updateTrackingMap(lat, lng);
       this.checkSafeZone(lat, lng);
       this.detectIdle(lat, lng);
 
-      const payload = {
-        patientId: this.patientId,
-        lat,
-        lng
-      };
-
-      this.http.post(
-        'http://localhost:8089/tracking/location-pings',
-        payload
-      ).subscribe({
-        next: () => {
-          console.log('sent to backend');
-          this.loadPatientStatusFromBackend();
-          this.loadClusters();
-        },
-        error: (e) => console.log('send failed', e)
-      });
+      this.publishLocationPing(lat, lng, 'sent to backend', () => this.loadClusters());
 
       this.history.unshift({
         time: new Date().toLocaleTimeString(),
@@ -690,6 +671,7 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentLat = lat;
       this.currentLng = lng;
       this.hasLocationSnapshot = true;
+      this.lastBrowserLocationAt = Date.now();
       this.form.patchValue({ lat, lng });
 
       this.syncModalPreviewToForm(true);
@@ -854,11 +836,40 @@ export class SavedPlacesComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentLat = pos.coords.latitude;
         this.currentLng = pos.coords.longitude;
         this.hasLocationSnapshot = true;
+        this.lastBrowserLocationAt = Date.now();
         this.refreshSetupMapLayers(centerMap);
+        this.publishLocationPing(this.currentLat, this.currentLng, 'initial location ping');
       },
       (error) => console.log('failed getting location snapshot', error),
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+
+  private publishLocationPing(lat: number, lng: number, successMessage: string, afterSuccess?: () => void): void {
+    const patientId = String(this.patientId || '').trim();
+    if (!patientId || patientId === 'default') return;
+
+    this.http.post(
+      'http://localhost:8089/tracking/location-pings',
+      { patientId, lat, lng }
+    ).subscribe({
+      next: () => {
+        console.log(successMessage);
+        this.loadPatientStatusFromBackend();
+        afterSuccess?.();
+      },
+      error: (e) => console.log('send failed', e)
+    });
+  }
+
+  private shouldApplyBackendCoordinates(ping: TrackingPingDto): boolean {
+    if (!this.hasLocationSnapshot || !this.lastBrowserLocationAt) return true;
+    if (!ping.timestamp) return false;
+
+    const backendTime = new Date(ping.timestamp).getTime();
+    if (Number.isNaN(backendTime)) return false;
+
+    return backendTime >= this.lastBrowserLocationAt - 5000;
   }
 
   private async initializeSetupMap(centerOnData = false) {

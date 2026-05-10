@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { ActivityService, Activity, ActivityDetails, ActivityWithDetails, CreateActivityRequest, UpdateActivityRequest, CreateActivityDetailsRequest, UpdateActivityDetailsRequest } from '../../../../core/services/activity.service';
+import { ActivityService, Activity, ActivityDetails, ActivityRatingFeedback, ActivityWithDetails, CreateActivityRequest, UpdateActivityRequest, CreateActivityDetailsRequest, UpdateActivityDetailsRequest } from '../../../../core/services/activity.service';
 import { ImageCroppedEvent } from 'ngx-image-cropper';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 // Custom validator: first letter uppercase
 function firstLetterUppercase(control: AbstractControl): ValidationErrors | null {
@@ -44,6 +45,8 @@ export class ActivitiesAdminComponent implements OnInit {
 
   currentPage = 1;
   pageSize = 4;
+  adminTab: 'library' | 'feedback' = 'library';
+  ratingFeedbacks: ActivityRatingFeedback[] = [];
 
   activityTypes = ['Relaxation', 'Cognitive', 'Physical', 'Social', 'Creative'];
   difficultyLevels: ('Easy' | 'Moderate' | 'Challenging')[] = ['Easy', 'Moderate', 'Challenging'];
@@ -61,7 +64,8 @@ export class ActivitiesAdminComponent implements OnInit {
     private fb: FormBuilder,
     private readonly router: Router,
     private activityService: ActivityService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) {
     this.activityForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), firstLetterUppercase]],
@@ -90,6 +94,7 @@ export class ActivitiesAdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadActivities();
+    this.loadRatingFeedbacks();
   }
 
   // Helper to get form arrays
@@ -159,6 +164,76 @@ export class ActivitiesAdminComponent implements OnInit {
 
   get pages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get totalRatings(): number {
+    return this.activitiesWithDetails.reduce((sum, activity) => sum + (activity.totalRatings || 0), 0);
+  }
+
+  get averageRating(): number {
+    const totalRatings = this.totalRatings;
+    if (!totalRatings) return 0;
+
+    const weightedTotal = this.activitiesWithDetails.reduce(
+      (sum, activity) => sum + ((activity.rating || 0) * (activity.totalRatings || 0)),
+      0
+    );
+    return weightedTotal / totalRatings;
+  }
+
+  get topRatedActivity(): ActivityWithDetails | null {
+    return [...this.activitiesWithDetails]
+      .filter(activity => (activity.totalRatings || 0) > 0)
+      .sort((left, right) =>
+        ((right.rating || 0) - (left.rating || 0)) ||
+        ((right.totalRatings || 0) - (left.totalRatings || 0))
+      )[0] || null;
+  }
+
+  get feedbackCount(): number {
+    return this.ratingFeedbacks.length;
+  }
+
+  get lowRatingFeedbackCount(): number {
+    return this.ratingFeedbacks.filter(feedback => feedback.rating <= 2).length;
+  }
+
+  get positiveFeedbackCount(): number {
+    return this.ratingFeedbacks.filter(feedback => feedback.rating >= 4).length;
+  }
+
+  get mostReviewedActivity(): { activityName: string; count: number } | null {
+    const counts = this.ratingFeedbacks.reduce((map, feedback) => {
+      map.set(feedback.activityName, (map.get(feedback.activityName) || 0) + 1);
+      return map;
+    }, new Map<string, number>());
+    const [activityName, count] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+    return activityName ? { activityName, count } : null;
+  }
+
+  get ratingDistribution(): Array<{ rating: number; count: number; percent: number }> {
+    const total = Math.max(1, this.ratingFeedbacks.length);
+    return [5, 4, 3, 2, 1].map(rating => {
+      const count = this.ratingFeedbacks.filter(feedback => feedback.rating === rating).length;
+      return { rating, count, percent: Math.round((count / total) * 100) };
+    });
+  }
+
+  loadRatingFeedbacks(): void {
+    this.ratingFeedbacks = this.activityService.getRatingFeedbacks();
+  }
+
+  setAdminTab(tab: 'library' | 'feedback'): void {
+    this.adminTab = tab;
+    if (tab === 'feedback') {
+      this.loadRatingFeedbacks();
+    }
+  }
+
+  getFeedbackMoodClass(rating: number): string {
+    if (rating <= 2) return 'feedback-low';
+    if (rating === 3) return 'feedback-mid';
+    return 'feedback-high';
   }
 
   setPage(page: number): void {
@@ -416,7 +491,7 @@ export class ActivitiesAdminComponent implements OnInit {
                 this.activitiesWithDetails = [...this.activitiesWithDetails, combined];
                 this.selectActivity(combined);
                 this.selectedFile = null; // reset file selection
-                this.toastr.success('Activity created');
+                this.feedback.success(`"${newActivity.name}" was added to the activity catalog.`, 'Activity created');
               },
               error: (err) => {
                 console.error('Details creation failed', err);
@@ -449,7 +524,7 @@ export class ActivitiesAdminComponent implements OnInit {
                 next: (updatedDetails) => {
                   this.updateLocal(updatedActivity, updatedDetails);
                   this.selectedFile = null;
-                  this.toastr.success('Activity updated');
+                  this.feedback.success(`"${updatedActivity.name}" was updated successfully.`, 'Activity updated');
                 },
                 error: (err) => {
                   console.error('Details update failed', err);
@@ -467,7 +542,7 @@ export class ActivitiesAdminComponent implements OnInit {
                 next: (newDetails) => {
                   this.updateLocal(updatedActivity, newDetails);
                   this.selectedFile = null;
-                  this.toastr.success('Activity updated and details created');
+                  this.feedback.success(`"${updatedActivity.name}" was updated and its details were added.`, 'Activity updated');
                 },
                 error: (err) => {
                   console.error('Details creation failed', err);
@@ -559,8 +634,14 @@ export class ActivitiesAdminComponent implements OnInit {
     this.deleteActivity(this.selectedActivity);
   }
 
-  deleteActivity(activity: ActivityWithDetails): void {
-    if (!confirm(`Delete "${activity.name}"?`)) return;
+  async deleteActivity(activity: ActivityWithDetails): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete activity?',
+      message: `Delete "${activity.name}" from the activity catalog?`,
+      confirmText: 'Delete activity',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
     this.activityService.deleteActivity(activity.id).subscribe({
       next: () => {
         this.activitiesWithDetails = this.activitiesWithDetails.filter(a => a.id !== activity.id);
@@ -572,7 +653,7 @@ export class ActivitiesAdminComponent implements OnInit {
             this.startCreate();
           }
         }
-        this.toastr.success('Activity deleted');
+        this.feedback.success(`"${activity.name}" was removed from the activity catalog.`, 'Activity deleted');
       },
       error: (err) => {
         console.error('Delete failed', err);

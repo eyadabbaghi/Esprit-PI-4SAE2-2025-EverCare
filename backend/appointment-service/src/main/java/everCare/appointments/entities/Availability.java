@@ -6,6 +6,7 @@
  */
 package everCare.appointments.entities;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.DayOfWeek;
@@ -56,6 +57,7 @@ public class Availability {
 
     // ========== EXCEPTIONS ==========
 
+    @JsonAlias("isBlocked")
     private boolean isBlocked; // For vacations, meetings
     private String blockReason;
 }

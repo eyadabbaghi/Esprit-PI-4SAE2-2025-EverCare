@@ -1,4 +1,27 @@
 <section class="assessment-page">
+  <div *ngIf="showAssessmentIntro" class="assessment-intro-overlay">
+    <div class="assessment-intro-card">
+      <div class="assessment-intro-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 4h10l4 4v12H5V4Z"/>
+          <path d="M15 4v5h5M8 13h7M8 17h5"/>
+          <path d="M10 9h3M11.5 7.5v3"/>
+        </svg>
+      </div>
+      <span class="assessment-intro-eyebrow">Medical record assessment</span>
+      <h3>Before you continue</h3>
+      <p>
+        This assessment creates a care baseline for the patient medical journal. You can complete it now or ask an associated caregiver to fill it.
+      </p>
+      <div class="assessment-intro-actions">
+        <button type="button" class="primary" (click)="startAssessmentNow()">Do it now</button>
+        <button type="button" class="caregiver" [disabled]="isRequestingCaregiverFill" (click)="requestCaregiverFillFromIntro()">
+          Let caregiver fill it
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="assessment-shell">
     <div class="panel assessment-card">
       <div class="head assessment-hero">
@@ -65,6 +88,24 @@
       <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
       <div *ngIf="successMessage" class="status-message success">{{ successMessage }}</div>
       <div *ngIf="isLoading" class="status-message info">Loading previous reports...</div>
+
+      <div *ngIf="isOnboardingSource && currentUser?.role === 'PATIENT'" class="caregiver-top-action">
+        <div>
+          <strong>Prefer caregiver help?</strong>
+          <p>Your linked caregiver can complete this medical record assessment for you.</p>
+        </div>
+        <button
+          type="button"
+          class="btn-caregiver top"
+          [disabled]="isRequestingCaregiverFill"
+          (click)="requestCaregiverFill()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 11a4 4 0 1 0-8 0v2.5a3 3 0 0 0 6 0V11"/>
+            <path d="M5 21a7 7 0 0 1 14 0M17 8h3m-1.5-1.5v3"/>
+          </svg>
+          {{ isRequestingCaregiverFill ? 'Notifying caregiver...' : 'Caregiver fill instead' }}
+        </button>
+      </div>
 
       <div class="status-message warning" *ngIf="previousReports.length > 0">
         A report already exists for this patient. You can view the latest report or create a new assessment.
@@ -148,6 +189,69 @@
           <a routerLink="/medical-record" class="btn-muted">Medical Record</a>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div *ngIf="showCaregiverAssociationModal" class="caregiver-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="caregiver-modal">
+      <button type="button" class="modal-close" aria-label="Back to medical record assessment" (click)="closeCaregiverAssociationModal()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18 9 12l6-6"/>
+        </svg>
+      </button>
+
+      <div class="modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M16 21v-2a4 4 0 0 0-8 0v2"/>
+          <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/>
+          <path d="M19 8v6M16 11h6"/>
+        </svg>
+      </div>
+
+      <span class="eyebrow">Caregiver required</span>
+      <h3>Associate a caregiver to continue</h3>
+      <p>
+        A caregiver can fill your medical record and assessment only after they are linked to your patient profile.
+      </p>
+
+      <div *ngIf="caregiverAssociationMessage" class="status-message warning">
+        {{ caregiverAssociationMessage }}
+      </div>
+
+      <label class="modal-field" for="caregiverEmail">
+        <span>Caregiver email</span>
+        <input
+          id="caregiverEmail"
+          type="email"
+          [(ngModel)]="caregiverEmail"
+          (ngModelChange)="onCaregiverEmailChange($event)"
+          placeholder="caregiver@example.com"
+          [disabled]="isAssociatingCaregiver" />
+      </label>
+
+      <div *ngIf="isLookingUpCaregiver" class="caregiver-preview-note">Checking this full email...</div>
+      <div *ngIf="caregiverPreview" class="caregiver-preview-card">
+        <img *ngIf="caregiverPreview.profilePicture; else caregiverPreviewInitials" [src]="caregiverPreview.profilePicture" [alt]="caregiverPreview.name">
+        <ng-template #caregiverPreviewInitials>
+          <div class="caregiver-preview-avatar">{{ getInitialsFor(caregiverPreview.name) }}</div>
+        </ng-template>
+        <div>
+          <span>Caregiver preview</span>
+          <strong>{{ caregiverPreview.name }}</strong>
+        </div>
+      </div>
+      <div *ngIf="caregiverPreviewMessage" class="caregiver-preview-note warning">
+        {{ caregiverPreviewMessage }}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-muted" (click)="closeCaregiverAssociationModal()" [disabled]="isAssociatingCaregiver">
+          Back to assessment
+        </button>
+        <button type="button" class="btn-solid" (click)="associateCaregiverAndRequestFill()" [disabled]="isAssociatingCaregiver">
+          {{ isAssociatingCaregiver ? 'Associating...' : 'Associate and notify' }}
+        </button>
+      </div>
     </div>
   </div>
 </section>

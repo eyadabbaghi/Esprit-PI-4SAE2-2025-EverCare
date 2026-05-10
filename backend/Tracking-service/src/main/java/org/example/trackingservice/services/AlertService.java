@@ -33,11 +33,11 @@ public class AlertService {
 
         LocationPing previous = history.get(1);
 
-        int oldRisk = previous.getRiskScore();
-        int newRisk = current.getRiskScore();
+        int oldRisk = previous.getRiskScore() == null ? 0 : previous.getRiskScore();
+        int newRisk = current.getRiskScore() == null ? 0 : current.getRiskScore();
 
         // 🔴 LEFT SAFE ZONE
-        if (previous.getInsideSafeZone() && !current.getInsideSafeZone()) {
+        if (Boolean.TRUE.equals(previous.getInsideSafeZone()) && Boolean.FALSE.equals(current.getInsideSafeZone())) {
             createAlert(current, "Patient left safe zone", "HIGH");
             checkEscalation(current, history);
             return;

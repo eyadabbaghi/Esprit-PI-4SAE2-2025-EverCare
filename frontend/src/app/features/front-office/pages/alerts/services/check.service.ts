@@ -5,7 +5,7 @@ import { Subject, firstValueFrom } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 
 export interface CheckSignalMessage {
-  type: 'check-request' | 'offer' | 'answer' | 'ice-candidate' | 'cancel' | 'snapshot-request' | 'snapshot';
+  type: 'check-request' | 'offer' | 'answer' | 'ice-candidate' | 'cancel' | 'snapshot-request' | 'snapshot' | 'voice-guide';
   from: string;
   to: string;
   payload?: any;

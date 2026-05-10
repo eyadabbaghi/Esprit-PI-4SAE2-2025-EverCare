@@ -6,11 +6,13 @@
  */
 package everCare.appointments.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserSimpleDTO {
     private String userId;
     private String keycloakId;
@@ -35,4 +37,5 @@ public class UserSimpleDTO {
     // Relationship emails (for patients/caregivers)
     private java.util.Set<String> caregiverEmails;
     private java.util.Set<String> patientEmails;
+    private java.util.Set<String> doctorEmails;
 }

@@ -46,7 +46,70 @@
                 </svg>
               </button>
             </div>
-            <p class="text-sm text-[#6B5B8C]">Recommended: square image, at least 200x200px</p>
+            <div class="text-center space-y-1">
+              <p class="text-sm text-[#6B5B8C]">
+                {{ isGooglePrefilled ? 'Profile photo imported from your Google account. You can replace it here.' : 'Recommended: square image, at least 200x200px' }}
+              </p>
+              <p *ngIf="email" class="google-prefill-note">
+                <span>{{ name }}</span>
+                <small>{{ email }}</small>
+              </p>
+            </div>
+          </div>
+
+          <div
+            *ngIf="shouldShowEmailVerification"
+            class="setup-email-verification rounded-2xl border-2 border-[#DDD6FE] bg-[#F9F5FF] p-4 md:p-5 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center gap-4">
+              <div class="flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide text-[#7C3AED]">Email verification</p>
+                <h3 class="text-lg font-bold text-[#2D1B4E]">Verify your account email</h3>
+                <p class="text-sm text-[#6B5B8C]">
+                  We will send a 6-digit code to <strong>{{ email }}</strong>. You can also verify later from your profile.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-full border border-[#C4B5FD] bg-white text-[#7C3AED] text-sm font-semibold hover:bg-[#F3E8FF] transition-all"
+                [disabled]="isSendingVerification || verificationResendCountdown > 0"
+                (click)="sendVerificationCode()">
+                {{
+                  isSendingVerification
+                    ? 'Sending...'
+                    : verificationResendCountdown > 0
+                      ? 'Resend in ' + verificationResendCountdown + 's'
+                      : hasSentVerificationCode ? 'Resend Code' : 'Send Code'
+                }}
+              </button>
+            </div>
+
+            <div *ngIf="hasSentVerificationCode" class="mt-4 grid md:grid-cols-[1fr_auto] gap-3">
+              <input
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                [(ngModel)]="verificationCode"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="Enter 6-digit code"
+                class="w-full px-4 py-2.5 rounded-xl border border-[#C4B5FD] bg-white text-[#2D1B4E] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+              />
+              <button
+                type="button"
+                class="px-5 py-2.5 rounded-xl bg-[#7C3AED] text-white text-sm font-semibold hover:bg-[#6D28D9] transition-all disabled:opacity-60"
+                [disabled]="isVerifyingEmail"
+                (click)="verifyEmailCode()">
+                {{ isVerifyingEmail ? 'Checking...' : 'Verify Email' }}
+              </button>
+            </div>
+          </div>
+
+          <div
+            *ngIf="role !== 'ADMIN' && isVerified"
+            class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+            Email verified. Your profile will show a verified account badge.
           </div>
 
           <div class="setup-grid grid md:grid-cols-2 gap-4">
@@ -233,6 +296,20 @@
               <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
                 Please enter a valid email address if you provide one.
               </div>
+              <div *ngIf="isLookingUpConnectedUser" class="connection-preview-hint">Checking this full email...</div>
+              <div *ngIf="connectedUserPreview && connectedExpectedRole === 'PATIENT'" class="connection-preview-card">
+                <img *ngIf="connectedUserPreview.profilePicture; else patientPreviewInitials" [src]="connectedUserPreview.profilePicture" [alt]="connectedUserPreview.name">
+                <ng-template #patientPreviewInitials>
+                  <div class="connection-preview-avatar">{{ getInitialsFor(connectedUserPreview.name) }}</div>
+                </ng-template>
+                <div>
+                  <span>{{ connectedPreviewTitle }}</span>
+                  <strong>{{ connectedUserPreview.name }}</strong>
+                </div>
+              </div>
+              <div *ngIf="connectedUserPreviewMessage && connectedExpectedRole === 'PATIENT'" class="connection-preview-hint warning">
+                {{ connectedUserPreviewMessage }}
+              </div>
               <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
@@ -301,6 +378,20 @@
               </div>
               <div *ngIf="profileForm.get('connectedEmail')?.invalid && profileForm.get('connectedEmail')?.touched" class="text-red-500 text-xs">
                 Please enter a valid email address if you provide one.
+              </div>
+              <div *ngIf="isLookingUpConnectedUser" class="connection-preview-hint">Checking this full email...</div>
+              <div *ngIf="connectedUserPreview && connectedExpectedRole === 'CAREGIVER'" class="connection-preview-card">
+                <img *ngIf="connectedUserPreview.profilePicture; else caregiverPreviewInitials" [src]="connectedUserPreview.profilePicture" [alt]="connectedUserPreview.name">
+                <ng-template #caregiverPreviewInitials>
+                  <div class="connection-preview-avatar">{{ getInitialsFor(connectedUserPreview.name) }}</div>
+                </ng-template>
+                <div>
+                  <span>{{ connectedPreviewTitle }}</span>
+                  <strong>{{ connectedUserPreview.name }}</strong>
+                </div>
+              </div>
+              <div *ngIf="connectedUserPreviewMessage && connectedExpectedRole === 'CAREGIVER'" class="connection-preview-hint warning">
+                {{ connectedUserPreviewMessage }}
               </div>
               <p class="text-sm text-amber-600 flex items-center gap-1 mt-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -447,6 +538,43 @@
           </p>
         </form>
       </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showRelationshipModal" class="image-cropper-backdrop">
+  <div class="image-cropper-card relationship-card">
+    <div class="cropper-head">
+      <div>
+        <p>Care relationship</p>
+        <h3>How are you related?</h3>
+      </div>
+      <button type="button" (click)="closeRelationshipModal()" aria-label="Close relationship dialog">×</button>
+    </div>
+
+    <p class="text-sm text-[#6B5B8C] mb-4">
+      This helps EverCare describe the association clearly on both profiles.
+    </p>
+
+    <div class="relationship-option-grid">
+      <button
+        *ngFor="let option of relationshipOptions"
+        type="button"
+        class="relationship-option"
+        [class.is-selected]="selectedRelationshipType === option"
+        (click)="selectedRelationshipType = option">
+        <span class="relationship-option-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path [attr.d]="relationshipIconPath(option)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>{{ option }}</span>
+      </button>
+    </div>
+
+    <div class="cropper-actions">
+      <button type="button" class="cropper-secondary" (click)="confirmRelationshipSelection(true)">I would rather not say</button>
+      <button type="button" class="cropper-primary" (click)="confirmRelationshipSelection()">Continue</button>
     </div>
   </div>
 </div>

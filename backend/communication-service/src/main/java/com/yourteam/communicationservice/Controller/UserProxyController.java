@@ -3,6 +3,7 @@ package com.yourteam.communicationservice.Controller;
 import com.yourteam.communicationservice.client.UserServiceClient;
 import com.yourteam.communicationservice.DTO.UserDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,10 @@ public class UserProxyController {
 
     @GetMapping("/by-email")
     public ResponseEntity<UserDto> getUserByEmail(@RequestParam String email) {
-        return ResponseEntity.ok(userServiceClient.getUserByEmail(email));
+        try {
+            return ResponseEntity.ok(userServiceClient.getUserByEmail(email));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

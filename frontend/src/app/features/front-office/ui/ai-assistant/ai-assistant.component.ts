@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild, ElementRef, AfterViewChecked }
 import { Subscription } from 'rxjs';
 import { AiAssistantService, MessageHistory, ChatResponse } from './ai-assistant.service';
 import { AuthService, User } from '../../pages/login/auth.service';
+import { EvercareRuntimeService } from '../../../../core/services/evercare-runtime.service';
 
 interface DisplayMessage {
   role: 'user' | 'assistant';
@@ -37,6 +38,7 @@ export class AiAssistantComponent implements OnInit, OnDestroy, AfterViewChecked
   constructor(
     private aiService: AiAssistantService,
     private authService: AuthService,
+    private evercareRuntime: EvercareRuntimeService,
   ) {}
 
   ngOnInit(): void {
@@ -64,6 +66,11 @@ export class AiAssistantComponent implements OnInit, OnDestroy, AfterViewChecked
   sendMessage(): void {
     const text = this.userInput.trim();
     if (!text || this.isLoading) return;
+
+    if (this.isCaregiverContactRequest(text)) {
+      this.triggerCaregiverContact(text);
+      return;
+    }
 
     this.messages.push({ role: 'user', content: text });
     this.userInput = '';
@@ -149,5 +156,40 @@ export class AiAssistantComponent implements OnInit, OnDestroy, AfterViewChecked
     }
 
     this.showWelcome = localStorage.getItem('evercare_welcome_seen') !== 'true';
+  }
+
+  private isCaregiverContactRequest(text: string): boolean {
+    const normalized = text.toLowerCase();
+    return /contact\s+my\s+caregiver/.test(normalized) ||
+      /call\s+my\s+caregiver/.test(normalized) ||
+      /need\s+(to\s+)?(contact|call|reach)\s+my\s+caregiver/.test(normalized) ||
+      /caregiver/.test(normalized) && /(help|emergency|sos|urgent|contact|call|reach)/.test(normalized);
+  }
+
+  private triggerCaregiverContact(text: string): void {
+    this.messages.push({ role: 'user', content: text });
+    this.userInput = '';
+
+    if (this.currentUser?.role !== 'PATIENT') {
+      this.messages.push({
+        role: 'assistant',
+        content: 'Emergency caregiver contact is available from a patient account. Please open the patient account or use the Alerts page SOS button.'
+      });
+      return;
+    }
+
+    const started = this.evercareRuntime.triggerPatientSos();
+    this.messages.push({
+      role: 'assistant',
+      content: started
+        ? 'I am contacting your caregiver now. The emergency SOS alert has been triggered, and your caregiver is being called.'
+        : 'I am already contacting your caregiver. Please stay where you are if you can.'
+    });
+
+    this.history.push({ role: 'user', content: text });
+    this.history.push({
+      role: 'assistant',
+      content: 'Emergency SOS caregiver contact was triggered.'
+    });
   }
 }

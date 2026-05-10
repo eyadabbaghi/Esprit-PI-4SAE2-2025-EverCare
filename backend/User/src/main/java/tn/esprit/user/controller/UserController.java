@@ -1,6 +1,8 @@
 package tn.esprit.user.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,11 +12,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tn.esprit.user.dto.ChangePasswordRequest;
+import tn.esprit.user.dto.EmailChangeConfirmRequest;
+import tn.esprit.user.dto.EmailChangeSendRequest;
 import tn.esprit.user.dto.UpdateUserRequest;
 import tn.esprit.user.dto.UserDto;
+import tn.esprit.user.dto.VerifyEmailRequest;
 import tn.esprit.user.entity.User;
 import tn.esprit.user.entity.UserRole;
 import tn.esprit.user.repository.UserRepository;
+import tn.esprit.user.service.EmailVerificationService;
 import tn.esprit.user.service.UserService;
 
 import java.io.File;
@@ -33,16 +39,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
     private final UserService userService;
     private final UserRepository userRepository;
+    private final EmailVerificationService emailVerificationService;
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateUserRequest request,
                                            @AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        User updatedUser = userService.updateUser(email, request);
-        UserDto userDto = mapToDto(updatedUser);
-        return ResponseEntity.ok(Map.of("user", userDto));
+        try {
+            String email = userDetails.getUsername();
+            User updatedUser = userService.updateUser(email, request);
+            UserDto userDto = userService.getUserDtoByEmail(updatedUser.getEmail());
+            return ResponseEntity.ok(Map.of("user", userDto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 
     @PutMapping("/change-password")
@@ -75,6 +88,89 @@ public class UserController {
         }
     }
 
+    @PostMapping("/email-verification/send")
+    public ResponseEntity<?> sendEmailVerification(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Please sign in again before verifying your email"));
+            }
+            emailVerificationService.sendVerificationCode(userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("message", "Verification code sent"));
+        } catch (RuntimeException e) {
+            log.warn("Email verification send failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email-verification/verify")
+    public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequest request,
+                                         @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Please sign in again before verifying your email"));
+            }
+            User user = emailVerificationService.verifyEmail(userDetails.getUsername(), request.getCode());
+            return ResponseEntity.ok(Map.of(
+                    "message", "Email verified successfully",
+                    "user", mapToDto(user)
+            ));
+        } catch (RuntimeException e) {
+            log.warn("Email verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email-change/send-phone-code")
+    public ResponseEntity<?> sendEmailChangePhoneCode(@RequestBody EmailChangeSendRequest request,
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Please sign in again before changing your email"));
+            }
+            String destination = emailVerificationService.sendEmailChangeCode(
+                    userDetails.getUsername(),
+                    request.getNewEmail(),
+                    request.getVerificationMethod(),
+                    request.getPhoneNumber()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "message", "Verification code sent",
+                    "destination", destination,
+                    "method", request.getVerificationMethod() == null ? "email" : request.getVerificationMethod()
+            ));
+        } catch (RuntimeException e) {
+            log.warn("Email change phone code send failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/email-change/confirm")
+    public ResponseEntity<?> confirmEmailChange(@RequestBody EmailChangeConfirmRequest request,
+                                                @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Please sign in again before changing your email"));
+            }
+            User user = emailVerificationService.confirmEmailChange(
+                    userDetails.getUsername(),
+                    request.getNewEmail(),
+                    request.getCode(),
+                    request.getVerificationMethod()
+            );
+            return ResponseEntity.ok(Map.of(
+                    "message", "Email changed successfully",
+                    "user", mapToDto(user)
+            ));
+        } catch (RuntimeException e) {
+            log.warn("Email change confirmation failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setUserId(user.getUserId());
@@ -83,6 +179,7 @@ public class UserController {
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
         dto.setPhone(user.getPhone());
+        dto.setRecoveryEmail(user.getRecoveryEmail());
         dto.setAddress(user.getAddress());
         dto.setCountry(user.getCountry());
         dto.setVerified(user.isVerified());
@@ -171,7 +268,14 @@ public class UserController {
 
     @GetMapping("/by-email")
     public ResponseEntity<UserDto> getUserByEmail(@RequestParam String email) {
-        return ResponseEntity.ok(userService.getUserDtoByEmail(email));
+        try {
+            return ResponseEntity.ok(userService.getUserDtoByEmail(email));
+        } catch (RuntimeException ex) {
+            if (!"User not found".equals(ex.getMessage())) {
+                throw ex;
+            }
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // ========== CAREGIVER & PATIENT RELATIONSHIP ENDPOINTS ---- Badr ==========

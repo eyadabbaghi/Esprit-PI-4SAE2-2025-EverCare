@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, ChangePasswordRequest } from '../../../front-office/pages/login/auth.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-settings',
@@ -22,7 +23,8 @@ export class SettingsComponent {
   constructor(
     public authService: AuthService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private feedback: AppFeedbackService
   ) {}
 
   get currentUser() {
@@ -139,13 +141,20 @@ export class SettingsComponent {
     });
   }
 
-  deleteAccount(): void {
+  async deleteAccount(): Promise<void> {
     if (this.deleteConfirmation !== 'DELETE') {
       this.toastr.warning('Type DELETE to confirm account removal.', 'Confirmation required');
       return;
     }
 
-    if (!confirm('Delete this admin account permanently? This cannot be undone.')) {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete admin account?',
+      message: 'Delete this admin account permanently? This cannot be undone.',
+      confirmText: 'Delete account',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 

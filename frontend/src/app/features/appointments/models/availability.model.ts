@@ -11,6 +11,7 @@ export interface Availability {
   validTo: Date;
   recurrence: string;
   isBlocked: boolean;
+  blocked?: boolean;
   blockReason?: string;
   alzheimerFriendly?: boolean;
 }

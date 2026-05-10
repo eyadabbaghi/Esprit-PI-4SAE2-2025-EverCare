@@ -16,6 +16,21 @@
           <strong>{{ activitiesWithDetails.length }}</strong>
         </div>
         <div class="hero-metric">
+          <span>Average rating</span>
+          <strong>{{ averageRating | number : '1.1-1' }} / 5</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Total ratings</span>
+          <strong>{{ totalRatings }}</strong>
+        </div>
+        <div class="hero-metric">
+          <span>Top rated</span>
+          <ng-container *ngIf="topRatedActivity as topActivity; else noTopRated">
+            <strong>{{ topActivity.rating | number : '1.1-1' }} / 5</strong>
+          </ng-container>
+          <ng-template #noTopRated><strong>No ratings</strong></ng-template>
+        </div>
+        <div class="hero-metric">
           <span>Editing mode</span>
           <strong>{{ formMode === 'create' ? 'Create' : 'Update' }}</strong>
         </div>
@@ -32,8 +47,97 @@
       </div>
     </header>
 
+    <nav class="admin-activity-tabs">
+      <button type="button" [class.is-active]="adminTab === 'library'" (click)="setAdminTab('library')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M4 5h16v14H4V5Z" stroke-width="2" stroke-linejoin="round"></path>
+          <path d="M8 9h8M8 13h5" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        Activity library
+      </button>
+      <button type="button" [class.is-active]="adminTab === 'feedback'" (click)="setAdminTab('feedback')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z" stroke-width="2" stroke-linejoin="round"></path>
+        </svg>
+        Rating feedback
+        <span>{{ feedbackCount }}</span>
+      </button>
+    </nav>
+
+    <section *ngIf="adminTab === 'feedback'" class="feedback-dashboard space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <article class="feedback-stat-card">
+          <span>Total feedback</span>
+          <strong>{{ feedbackCount }}</strong>
+        </article>
+        <article class="feedback-stat-card">
+          <span>Positive notes</span>
+          <strong>{{ positiveFeedbackCount }}</strong>
+        </article>
+        <article class="feedback-stat-card">
+          <span>Needs attention</span>
+          <strong>{{ lowRatingFeedbackCount }}</strong>
+        </article>
+        <article class="feedback-stat-card">
+          <span>Most reviewed</span>
+          <strong>{{ mostReviewedActivity?.activityName || 'No feedback' }}</strong>
+        </article>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="feedback-panel lg:col-span-1">
+          <h2>Rating analytics</h2>
+          <div class="space-y-4 mt-4">
+            <div *ngFor="let item of ratingDistribution" class="rating-distribution-row">
+              <div class="flex items-center justify-between text-xs font-bold text-[#2D1B4E]">
+                <span>{{ item.rating }} star{{ item.rating !== 1 ? 's' : '' }}</span>
+                <span>{{ item.count }}</span>
+              </div>
+              <div class="feedback-track">
+                <div class="feedback-fill" [style.width.%]="item.percent"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="feedback-panel lg:col-span-2">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2>User feedback</h2>
+              <p>Comments submitted after rating activities in the front office.</p>
+            </div>
+            <button type="button" class="feedback-refresh-btn" (click)="loadRatingFeedbacks()">Refresh</button>
+          </div>
+
+          <div *ngIf="ratingFeedbacks.length; else noRatingFeedbacks" class="space-y-3">
+            <article *ngFor="let feedback of ratingFeedbacks" class="feedback-card" [ngClass]="getFeedbackMoodClass(feedback.rating)">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3>{{ feedback.activityName }}</h3>
+                  <p class="text-xs text-[#6B5B8C]">
+                    {{ feedback.userName || feedback.userEmail || 'EverCare user' }} · {{ feedback.createdAt | date : 'medium' }}
+                  </p>
+                </div>
+                <span class="feedback-rating-pill">{{ feedback.rating }} / 5</span>
+              </div>
+              <p class="feedback-comment">"{{ feedback.feedback }}"</p>
+            </article>
+          </div>
+
+          <ng-template #noRatingFeedbacks>
+            <div class="feedback-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M8 12h8M8 16h5M5 4h14v16H5V4Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <p>No activity feedback has been shared yet.</p>
+            </div>
+          </ng-template>
+        </section>
+      </div>
+    </section>
+
     <!-- Content -->
-    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start" [class.hidden]="adminTab !== 'library'">
       <!-- Left side: list styled like front office cards -->
       <div class="space-y-4">
         <h2 class="text-sm font-semibold text-[#6B5B8C] uppercase tracking-wide">
@@ -69,7 +173,7 @@
                   <span
                     class="inline-flex items-center rounded-full bg-white/90 text-[#2D1B4E] px-2 py-1 text-xs font-medium"
                   >
-                    <svg class="inline-svg-icon text-yellow-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path></svg> {{ activity.rating | number : '1.1-1' }}
+                    <svg class="inline-svg-icon text-yellow-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path></svg> {{ activity.rating | number : '1.1-1' }} / 5
                   </span>
                 </div>
               </div>
@@ -117,6 +221,10 @@
                     <div class="flex items-center gap-1">
                       <span>⏱</span>
                       <span>{{ activity.duration }} min</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <svg class="inline-svg-icon text-yellow-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path></svg>
+                      <span>{{ activity.totalRatings || 0 }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</span>
                     </div>
                     <div class="flex items-center gap-1" *ngIf="activity.scheduledTime">
                       <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-width="2"></circle><path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>

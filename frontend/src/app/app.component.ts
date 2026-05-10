@@ -4,6 +4,8 @@ import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Rout
 import { Subscription } from 'rxjs';
 import { InactivityService } from './features/front-office/pages/services/inactivity/inactivity.service';
 import { AuthService, User } from './features/front-office/pages/login/auth.service';
+import { AppFeedbackConfirm, AppFeedbackMessage, AppFeedbackPrompt, AppFeedbackService } from './core/services/app-feedback.service';
+import { EvercareRuntimeService, TrackingRuntimeAlert } from './core/services/evercare-runtime.service';
 
 interface PageWelcome {
   key: string;
@@ -18,11 +20,20 @@ interface PageWelcome {
   styleUrl: './app.component.css'
 })
 export class AppComponent implements AfterViewInit, OnDestroy {
-  title = 'frontend';
+  title = 'EverCare';
   isRouteLoading = false;
   pageWelcome: PageWelcome | null = null;
+  appFeedbackMessage: AppFeedbackMessage | null = null;
+  appConfirm: AppFeedbackConfirm | null = null;
+  appPrompt: AppFeedbackPrompt | null = null;
+  appPromptValue = '';
+  trackingAlarm: TrackingRuntimeAlert | null = null;
 
   private routerSubscription?: Subscription;
+  private feedbackSubscriptions: Subscription[] = [];
+  private trackingAlarmSub?: Subscription;
+  private trackingAlarmAudioContext: AudioContext | null = null;
+  private trackingAlarmNodes: { oscillator: OscillatorNode; gain: GainNode }[] = [];
   private loadingStartedAt = 0;
   private loadingHideTimer?: ReturnType<typeof setTimeout>;
   private pageWelcomeTimer?: ReturnType<typeof setTimeout>;
@@ -30,6 +41,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   constructor(
     private inactivityService: InactivityService,
     private authService: AuthService,
+    private appFeedback: AppFeedbackService,
+    private evercareRuntime: EvercareRuntimeService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
@@ -54,6 +67,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       });
 
       this.queuePageWelcome(this.router.url);
+      this.bindAppFeedback();
+      this.bindTrackingAlarms();
 
       // setTimeout pushes this out of SSR zone entirely
       setTimeout(() => {
@@ -64,6 +79,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routerSubscription?.unsubscribe();
+    this.trackingAlarmSub?.unsubscribe();
+    this.feedbackSubscriptions.forEach(subscription => subscription.unsubscribe());
+    this.stopTrackingAlarmSound();
 
     if (this.loadingHideTimer) {
       clearTimeout(this.loadingHideTimer);
@@ -82,6 +100,95 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     localStorage.setItem(this.pageWelcomeStorageKey(this.pageWelcome.key), 'true');
     this.pageWelcome = null;
+  }
+
+  closeAppFeedbackMessage(): void {
+    this.appFeedbackMessage = null;
+  }
+
+  resolveAppConfirm(confirmed: boolean): void {
+    this.appFeedback.resolveConfirm(confirmed);
+  }
+
+  resolveAppPrompt(value: string | null): void {
+    this.appFeedback.resolvePrompt(value);
+  }
+
+  stopTrackingAlarm(): void {
+    this.stopTrackingAlarmSound();
+    this.trackingAlarm = null;
+  }
+
+  private bindAppFeedback(): void {
+    this.feedbackSubscriptions.push(
+      this.appFeedback.message$.subscribe(message => {
+        this.appFeedbackMessage = message;
+      }),
+      this.appFeedback.confirm$.subscribe(confirm => {
+        this.appConfirm = confirm;
+      }),
+      this.appFeedback.prompt$.subscribe(prompt => {
+        this.appPrompt = prompt;
+        this.appPromptValue = prompt?.value || '';
+      })
+    );
+  }
+
+  private bindTrackingAlarms(): void {
+    this.trackingAlarmSub = this.evercareRuntime.trackingAlert$.subscribe(alert => {
+      this.trackingAlarm = alert;
+      this.startTrackingAlarmSound();
+    });
+  }
+
+  private startTrackingAlarmSound(): void {
+    this.stopTrackingAlarmSound();
+
+    try {
+      const AudioContextRef = window.AudioContext || (window as any).webkitAudioContext;
+      this.trackingAlarmAudioContext = new AudioContextRef();
+      const context = this.trackingAlarmAudioContext;
+      let time = context.currentTime;
+
+      for (let cycle = 0; cycle < 80; cycle++) {
+        [980, 740, 1120].forEach((frequency, index) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.type = 'square';
+          oscillator.frequency.setValueAtTime(frequency, time + index * 0.18);
+          gain.gain.setValueAtTime(0.0001, time + index * 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.22, time + index * 0.18 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, time + index * 0.18 + 0.15);
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+          oscillator.start(time + index * 0.18);
+          oscillator.stop(time + index * 0.18 + 0.16);
+          this.trackingAlarmNodes.push({ oscillator, gain });
+        });
+
+        time += 1.05;
+      }
+    } catch {
+      // Browser audio may be blocked until user interaction.
+    }
+  }
+
+  private stopTrackingAlarmSound(): void {
+    for (const node of this.trackingAlarmNodes) {
+      try {
+        node.gain.gain.cancelScheduledValues(0);
+        node.gain.gain.setValueAtTime(0, this.trackingAlarmAudioContext?.currentTime ?? 0);
+      } catch {}
+      try { node.oscillator.stop(); } catch {}
+      try { node.oscillator.disconnect(); } catch {}
+      try { node.gain.disconnect(); } catch {}
+    }
+
+    this.trackingAlarmNodes = [];
+    if (this.trackingAlarmAudioContext) {
+      this.trackingAlarmAudioContext.close().catch(() => {});
+      this.trackingAlarmAudioContext = null;
+    }
   }
 
   private showPageLoader(): void {

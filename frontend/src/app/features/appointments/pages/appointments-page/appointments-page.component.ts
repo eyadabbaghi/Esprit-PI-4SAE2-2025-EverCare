@@ -10,6 +10,7 @@ import { ConsultationTypeService } from '../../services/consultation-type.servic
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs/operators';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-appointments-page',
@@ -34,6 +35,9 @@ export class AppointmentsPageComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  popupMessage = '';
+  popupTone: 'success' | 'error' | 'info' | 'warning' = 'info';
+  private popupTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Data
   doctors: User[] = [];
@@ -70,7 +74,8 @@ export class AppointmentsPageComponent implements OnInit {
     private consultationTypeService: ConsultationTypeService,
     private authService: AuthService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) { }
 
   // ========== INITIALIZATION ==========
@@ -93,11 +98,13 @@ export class AppointmentsPageComponent implements OnInit {
             role: 'PATIENT',
             phone: user.phone || '',
             profilePicture: user.profilePicture || '',
+            doctorEmail: user.doctorEmail || '',
+            doctorEmails: user.doctorEmails || [],
           };
           console.log('<svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> Patient loaded:', this.currentPatient);
           this.loadInitialData();
         } else if (user && user.role !== 'PATIENT') {
-          this.toastr.error('Access denied. This page is for patients only.');
+          this.showAppointmentPopup('error', 'Access denied. This page is for patients only.');
           this.router.navigate(['/']);
         } else {
           this.router.navigate(['/login']);
@@ -106,7 +113,7 @@ export class AppointmentsPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading current user:', error);
-        this.toastr.error('Failed to load user information');
+        this.showAppointmentPopup('error', 'Failed to load user information.');
         this.router.navigate(['/login']);
         this.loading = false;
       }
@@ -139,12 +146,22 @@ export class AppointmentsPageComponent implements OnInit {
       this.authService.searchUsersByRole('', 'DOCTOR').subscribe({
         next: (doctors) => {
           this.doctors = doctors || [];
+          const associatedDoctors = this.associatedDoctorKeys(this.currentPatient);
+          this.doctors = associatedDoctors.length
+            ? this.doctors.filter((doctor) =>
+                associatedDoctors.includes(String(doctor.email || '').trim().toLowerCase()) ||
+                associatedDoctors.includes(String(doctor.userId || '').trim().toLowerCase())
+              )
+            : [];
+          if (this.doctors.length === 0) {
+            this.showAppointmentPopup('warning', 'No associated doctor is available for booking yet.');
+          }
           console.log('<svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> Doctors loaded:', this.doctors.length);
           resolve();
         },
         error: (error) => {
           console.error('Error loading doctors:', error);
-          this.toastr.warning('Could not load doctors list');
+          this.showAppointmentPopup('warning', 'Could not load your associated doctors.');
           this.doctors = [];
           resolve();
         }
@@ -207,6 +224,7 @@ export class AppointmentsPageComponent implements OnInit {
         console.warn('<svg class="inline-svg-icon text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path><path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path></svg> No patient ID available');
         this.appointments = [];
         this.errorMessage = 'Patient ID not found';
+        this.showAppointmentPopup('error', 'Patient ID not found.');
         resolve();
         return;
       }
@@ -235,13 +253,15 @@ export class AppointmentsPageComponent implements OnInit {
             console.log(`<svg class="inline-svg-icon text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg> Loaded ${this.appointments.length} appointments`);
 
             if (this.appointments.length === 0) {
-              this.errorMessage = 'No appointments found for this patient';
+              this.errorMessage = '';
+              this.showAppointmentPopup('info', 'Book your first appointment.');
             } else {
               this.errorMessage = ''; // Clear any previous error
             }
           } else {
           console.error('Received data is not an array:', data);
             this.errorMessage = 'Invalid data format received from server';
+            this.showAppointmentPopup('error', this.errorMessage);
             this.appointments = [];
           }
 
@@ -253,25 +273,32 @@ export class AppointmentsPageComponent implements OnInit {
           // Handle different error types with specific messages
           if (error.status === 0) {
             this.errorMessage = 'Cannot connect to server. Please check if backend is running.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> Network error - Is the backend running on port 8089?');
           } else if (error.status === 401) {
             this.errorMessage = 'Your session has expired. Please login again.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> Authentication error - Token may be expired');
             setTimeout(() => this.router.navigate(['/login']), 2000);
           } else if (error.status === 403) {
             this.errorMessage = 'You do not have permission to access these appointments.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> Authorization error');
           } else if (error.status === 404) {
             this.errorMessage = 'Appointment endpoint not found.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> 404 - Check if the URL is correct:', `${this.appointmentService['baseUrl']}/patient/${patientId}`);
           } else if (error.status === 500) {
             this.errorMessage = 'Server error. Please try again later.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> Server error - Check backend logs');
           } else if (error.message && error.message.includes('incomplete')) {
             this.errorMessage = 'Server sent incomplete data. Please contact support.';
+            this.showAppointmentPopup('error', this.errorMessage);
             console.error('<svg class="inline-svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle></svg> Incomplete chunked encoding - Backend issue');
           } else {
             this.errorMessage = 'Failed to load appointments. Please try again.';
+            this.showAppointmentPopup('error', this.errorMessage);
           }
 
           this.appointments = [];
@@ -356,36 +383,45 @@ export class AppointmentsPageComponent implements OnInit {
           this.appointments[index] = updatedAppointment;
         }
         this.loading = false;
-        this.toastr.success('Appointment confirmed successfully');
+        this.showAppointmentPopup('success', 'Appointment confirmed successfully.');
       },
       error: (error) => {
         console.error('Error confirming appointment:', error);
-        this.toastr.error('Failed to confirm appointment. Please try again.');
+        this.showAppointmentPopup('error', 'Failed to confirm appointment. Please try again.');
         this.loading = false;
       }
     });
   }
 
-  cancelAppointment(appointmentId: string): void {
-    if (confirm('Are you sure you want to cancel this appointment?')) {
-      this.loading = true;
-      this.appointmentService.cancelAppointment(appointmentId).subscribe({
-        next: (updatedAppointment) => {
-          const index = this.appointments.findIndex(a => a.appointmentId === appointmentId);
-          if (index !== -1) {
-            this.appointments[index] = updatedAppointment;
-          }
-          this.closeDetailsDialog();
-          this.loading = false;
-          this.toastr.success('Appointment cancelled successfully');
-        },
-        error: (error) => {
-          console.error('Error cancelling appointment:', error);
-          this.toastr.error('Failed to cancel appointment. Please try again.');
-          this.loading = false;
-        }
-      });
+  async cancelAppointment(appointmentId: string): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Cancel appointment?',
+      message: 'This appointment will be marked as cancelled for the care team.',
+      confirmText: 'Cancel appointment',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
     }
+
+    this.loading = true;
+    this.appointmentService.cancelAppointment(appointmentId).subscribe({
+      next: (updatedAppointment) => {
+        const index = this.appointments.findIndex(a => a.appointmentId === appointmentId);
+        if (index !== -1) {
+          this.appointments[index] = updatedAppointment;
+        }
+        this.closeDetailsDialog();
+        this.loading = false;
+        this.showAppointmentPopup('success', 'Appointment cancelled successfully.');
+      },
+      error: (error) => {
+        console.error('Error cancelling appointment:', error);
+        this.showAppointmentPopup('error', 'Failed to cancel appointment. Please try again.');
+        this.loading = false;
+      }
+    });
   }
 
   joinVideoCall(appointment: Appointment | string | undefined): void {
@@ -450,12 +486,12 @@ export class AppointmentsPageComponent implements OnInit {
         this.loading = false;
 
         if (slots.length === 0) {
-          this.toastr.info('No available slots for this date');
+          this.showAppointmentPopup('info', 'No available slots for this date.');
         }
       },
       error: (error) => {
         console.error('Error loading available slots:', error);
-        this.toastr.warning('Could not load available slots');
+        this.showAppointmentPopup('warning', 'Could not load available slots.');
         this.availableSlots = [];
         this.loading = false;
       }
@@ -475,7 +511,7 @@ export class AppointmentsPageComponent implements OnInit {
 
   addAppointment(formData: any): void {
     if (!this.isFormValid()) {
-      this.toastr.warning('Please fill in all required fields');
+      this.showAppointmentPopup('warning', 'Please fill in all required fields.');
       return;
     }
 
@@ -484,7 +520,7 @@ export class AppointmentsPageComponent implements OnInit {
     const selectedCaregiver = this.myCaregivers.find(c => c.userId === formData.caregiverId);
 
     if (!selectedDoctor || !selectedType) {
-      this.toastr.error('Please select a valid doctor and consultation type');
+      this.showAppointmentPopup('error', 'Please select a valid doctor and consultation type.');
       return;
     }
 
@@ -511,22 +547,22 @@ export class AppointmentsPageComponent implements OnInit {
         this.appointments.push(createdAppointment);
         this.closeAddDialog();
         this.loading = false;
-        this.toastr.success('Appointment created successfully');
+        this.showAppointmentPopup('success', 'Appointment created successfully.');
       },
       error: (error) => {
         console.error('Error creating appointment:', error);
         if (error.status === 0) {
-          this.toastr.error('Cannot connect to server. Please check if backend is running.');
+          this.showAppointmentPopup('error', 'Cannot connect to server. Please check if backend is running.');
         } else if (error.status === 401) {
-          this.toastr.error('Session expired. Please login again.');
+          this.showAppointmentPopup('error', 'Session expired. Please login again.');
           this.router.navigate(['/login']);
         } else if (error.status === 404) {
-          this.toastr.error('API endpoint not found. Please check the URL.');
+          this.showAppointmentPopup('error', 'API endpoint not found. Please check the URL.');
         } else if (error.status === 500) {
-          this.toastr.error('Server error. Please try again later.');
+          this.showAppointmentPopup('error', 'Server error. Please try again later.');
         } else {
           const backendMessage = error?.error?.message || error?.error?.error || error?.message;
-          this.toastr.error(backendMessage || 'Failed to create appointment. Please try again.');
+          this.showAppointmentPopup('error', backendMessage || 'Failed to create appointment. Please try again.');
         }
         this.loading = false;
       }
@@ -551,7 +587,7 @@ export class AppointmentsPageComponent implements OnInit {
 
   refreshAppointments(): void {
     this.loadAppointments().then(() => {
-      this.toastr.success('Appointments refreshed');
+      this.showAppointmentPopup('success', 'Appointments refreshed.');
     });
   }
 
@@ -616,5 +652,35 @@ export class AppointmentsPageComponent implements OnInit {
     const minutes = d.getMinutes().toString().padStart(2, '0');
     const seconds = d.getSeconds().toString().padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  }
+
+  private associatedDoctorKeys(patient: User): string[] {
+    return [
+      patient.doctorEmail,
+      ...(Array.isArray(patient.doctorEmails) ? patient.doctorEmails : [])
+    ]
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+      .filter((value, index, all) => all.indexOf(value) === index);
+  }
+
+  dismissAppointmentPopup(): void {
+    this.popupMessage = '';
+    if (this.popupTimer) {
+      clearTimeout(this.popupTimer);
+      this.popupTimer = null;
+    }
+  }
+
+  private showAppointmentPopup(tone: 'success' | 'error' | 'info' | 'warning', message: string): void {
+    this.popupTone = tone;
+    this.popupMessage = message;
+    if (this.popupTimer) {
+      clearTimeout(this.popupTimer);
+    }
+    this.popupTimer = setTimeout(() => {
+      this.popupMessage = '';
+      this.popupTimer = null;
+    }, tone === 'info' ? 5200 : 3600);
   }
 }

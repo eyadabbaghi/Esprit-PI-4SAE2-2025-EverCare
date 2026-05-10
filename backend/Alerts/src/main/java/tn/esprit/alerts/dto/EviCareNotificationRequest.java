@@ -4,11 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class EviCareNotificationRequest {
-    private String activityId;   // use patientId here — reuses existing field
-    private String action;       // always "EVICARE_ALERT"
-    private String details;      // the advice message
+    private String activityId;
+    private String action;
+    private String details;
+    private List<String> targetUserIds;
+
+    public EviCareNotificationRequest(String activityId, String action, String details) {
+        this.activityId = activityId;
+        this.action = action;
+        this.details = details;
+    }
 }

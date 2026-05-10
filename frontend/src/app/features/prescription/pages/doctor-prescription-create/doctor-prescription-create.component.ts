@@ -102,10 +102,21 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
       catchError(() => of([] as User[]))
     ).subscribe(patients => {
       this.associatedPatients = patients.filter(patient =>
-        (patient.doctorEmail || '').toLowerCase() === (this.currentUser?.email || '').toLowerCase()
+        this.isDoctorAssociatedPatient(patient)
       );
       this.patientsLoading = false;
     });
+  }
+
+  private isDoctorAssociatedPatient(patient: User): boolean {
+    const currentEmail = (this.currentUser?.email || '').toLowerCase().trim();
+    return [
+      patient.doctorEmail,
+      ...(patient.doctorEmails || [])
+    ]
+      .map(email => (email || '').toLowerCase().trim())
+      .filter(Boolean)
+      .includes(currentEmail);
   }
 
   selectPatientForPrescription(patient: User): void {
@@ -159,10 +170,12 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
   }
 
   loadPatientActiveMedications(): void {
-    if (this.patientId) {
-      this.prescriptionService.getActivePrescriptionsByPatient(this.patientId).subscribe({
+    if (this.patientId && this.currentUser?.userId) {
+      this.prescriptionService.getPrescriptionsByDoctor(this.currentUser.userId).subscribe({
         next: (data) => {
-          this.patientActiveMedications = data;
+          this.patientActiveMedications = (data || []).filter((prescription) =>
+            prescription.statut === 'ACTIVE' && prescription.patient?.userId === this.patientId,
+          );
         },
         error: () => {
           this.patientActiveMedications = [];
@@ -210,11 +223,8 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
   }
 
   createPrescriptionWithSafetyCheck(request: PrescriptionRequest): void {
-    // Require safety check first if clinical measurement exists (to ensure doctor reviewed the data)
     if (this.clinicalMeasurement && !this.checkDone) {
-      this.loading = false;
-      this.errorMessage = 'Please click "Check Safety" first to review alerts.';
-      this.toastr.warning('Please check safety first to review alerts.');
+      this.runSafetyCheck(request, () => this.createPrescriptionWithSafetyCheck(request));
       return;
     }
 
@@ -263,6 +273,10 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
 
   // Handle Check Safety event from form
   onCheckSafety(request: PrescriptionRequest): void {
+    this.runSafetyCheck(request);
+  }
+
+  private runSafetyCheck(request: PrescriptionRequest, afterCheck?: () => void): void {
     this.checkLoading = true;
     this.checkPassed = false;
     this.checkDone = false;
@@ -280,10 +294,10 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
         // Always allow submission - just show warnings as alerts
         this.checkPassed = true;
         
-        if (result.level === 'SAFE') {
-          this.safetyWarning = null;
-          this.toastr.success('Safety check passed.');
-        } else {
+          if (result.level === 'SAFE') {
+            this.safetyWarning = null;
+            this.toastr.success('Safety check passed.');
+          } else {
           // Show warnings but don't block
           this.safetyWarning = {
             isSafe: false,
@@ -296,11 +310,14 @@ export class DoctorPrescriptionCreateComponent implements OnInit {
           } else if (result.level === 'CRITICAL') {
             this.toastr.error('Critical alerts - doctor is aware.', 'Safety Alert');
           }
-        }
-      },
+          }
+
+          afterCheck?.();
+        },
       error: (err) => {
         this.checkLoading = false;
         this.checkDone = false;
+        this.loading = false;
         this.errorMessage = 'Safety check failed. Please try again.';
         this.toastr.error('Safety check failed. Please try again.');
       }

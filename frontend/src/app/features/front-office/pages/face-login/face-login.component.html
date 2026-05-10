@@ -1,7 +1,6 @@
 <div class="min-h-screen bg-black flex items-center justify-center">
   <div class="w-full max-w-sm px-6 space-y-8">
 
-    <!-- EMAIL ENTRY -->
     <div *ngIf="state === 'email-entry'" class="text-center space-y-6 animate-fadeIn">
       <div class="flex justify-center">
         <div class="w-24 h-24 rounded-full bg-[#7C3AED]/20 border-2 border-[#7C3AED] flex items-center justify-center">
@@ -14,7 +13,7 @@
 
       <div>
         <h1 class="text-white text-3xl font-semibold">Face ID Login</h1>
-        <p class="text-gray-400 mt-2 text-sm">Enter your email, then look at the camera</p>
+        <p class="text-gray-400 mt-2 text-sm">Enter your email, then let EverCare scan securely.</p>
       </div>
 
       <input
@@ -36,51 +35,55 @@
       </button>
     </div>
 
-    <!-- SCANNING -->
     <div *ngIf="state === 'scanning'" class="text-center space-y-4 animate-fadeIn">
-      <h2 class="text-white text-xl">Looking for your face...</h2>
-
-      <div class="relative flex justify-center">
-        <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <svg width="300" height="300" viewBox="0 0 300 300" class="rotate-animation">
-            <circle cx="150" cy="150" r="145" fill="none" stroke="#7C3AED" stroke-width="3"
-              stroke-dasharray="50 862" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="absolute inset-0 flex items-center justify-center z-0">
-          <div class="w-64 h-64 rounded-full bg-[#7C3AED]/10 pulse-glow"></div>
-        </div>
-        <div class="w-64 h-64 rounded-full overflow-hidden border-2 border-[#7C3AED]/40 relative z-5">
-          <video #videoEl autoplay playsinline muted
-            class="w-full h-full object-cover scale-x-[-1]"></video>
-        </div>
+      <div class="face-status-visual" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M58 68V58a12 12 0 0 1 12-12h8"></path>
+          <path d="M102 68V58a12 12 0 0 0-12-12h-8"></path>
+          <path d="M58 92v10a12 12 0 0 0 12 12h8"></path>
+          <path d="M102 92v10a12 12 0 0 1-12 12h-8"></path>
+          <path d="M68 78v12M92 78v12"></path>
+          <path d="M74 104c4 3 8 3 12 0"></path>
+        </svg>
+        <span class="scan-beam"></span>
       </div>
 
-      <p class="text-gray-400 text-sm">Hold still — scanning automatically</p>
+      <video #videoEl autoplay playsinline muted class="hidden-camera-feed"></video>
+
+      <h2 class="text-white text-xl">Scanning securely...</h2>
+      <p class="text-gray-400 text-sm">The camera is active, but your face preview is hidden.</p>
     </div>
 
-    <!-- PROCESSING -->
     <div *ngIf="state === 'processing'" class="text-center space-y-6 animate-fadeIn">
-      <div class="flex justify-center">
-        <div class="w-24 h-24 rounded-full border-4 border-[#7C3AED] border-t-transparent animate-spin"></div>
+      <div class="face-status-visual processing" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M58 68V58a12 12 0 0 1 12-12h8"></path>
+          <path d="M102 68V58a12 12 0 0 0-12-12h-8"></path>
+          <path d="M58 92v10a12 12 0 0 0 12 12h8"></path>
+          <path d="M102 92v10a12 12 0 0 1-12 12h-8"></path>
+          <path d="M68 78v12M92 78v12"></path>
+          <path d="M74 104c4 3 8 3 12 0"></path>
+        </svg>
+        <span class="scan-beam"></span>
       </div>
       <p class="text-white text-lg">Verifying identity...</p>
     </div>
 
-    <!-- SUCCESS -->
     <div *ngIf="state === 'success'" class="text-center space-y-6 animate-fadeIn">
-      <div class="flex justify-center">
-        <div class="w-28 h-28 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center success-pop">
-          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
+      <div class="face-status-visual recovered" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M66 78v9M94 78v9"></path>
+          <path d="M64 101c8 11 24 11 32 0"></path>
+          <path d="M50 47 39 58M110 47l11 11M50 113l-11-11M110 113l11-11"></path>
+        </svg>
       </div>
       <h2 class="text-white text-2xl font-semibold">Welcome back!</h2>
-      <p class="text-gray-400 text-sm">Face recognized — redirecting...</p>
+      <p class="text-gray-400 text-sm">Face recognized - redirecting...</p>
     </div>
 
-    <!-- FAILED -->
     <div *ngIf="state === 'failed'" class="text-center space-y-6 animate-fadeIn shake">
       <div class="flex justify-center">
         <div class="w-24 h-24 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">

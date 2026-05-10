@@ -8,6 +8,7 @@ import { interval, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-blog',
@@ -83,6 +84,7 @@ export class BlogComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
+    private feedback: AppFeedbackService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) { }
 
@@ -254,7 +256,7 @@ export class BlogComponent implements OnInit, OnDestroy {
 
     // Vérifier que l'utilisateur est connecté (token présent)
     if (!this.authService.getToken()) {
-      alert("Please login to like this article.");
+      this.feedback.info('Please log in to like this article.', 'Login required');
       return;
     }
 
@@ -278,7 +280,7 @@ export class BlogComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error(err);
         this.isLiking = false;
-        alert("Failed to update like. Please try again.");
+        this.feedback.error('Failed to update like. Please try again.', 'Like failed');
       }
     });
   }
@@ -386,7 +388,7 @@ export class BlogComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Erreur chargement résumé', err);
-            alert('Impossible de charger le résumé. Veuillez réessayer.');
+            this.feedback.error('Unable to load the summary. Please try again.', 'Summary unavailable');
           }
         });
       }

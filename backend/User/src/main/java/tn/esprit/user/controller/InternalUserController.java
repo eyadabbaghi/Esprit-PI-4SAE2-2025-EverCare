@@ -73,6 +73,7 @@ public class InternalUserController {
         dto.setRole(user.getRole());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
+        dto.setRecoveryEmail(user.getRecoveryEmail());
         dto.setAddress(user.getAddress());
         dto.setCountry(user.getCountry());
         dto.setVerified(user.isVerified());

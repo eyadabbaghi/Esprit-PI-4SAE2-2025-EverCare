@@ -46,7 +46,7 @@ public class LocalUserJwtAuthenticationConverter implements Converter<Jwt, Usern
         );
 
         if (email != null) {
-            Optional<User> byEmail = userRepository.findByEmail(email);
+            Optional<User> byEmail = userRepository.findByEmailIgnoreCase(email);
             if (byEmail.isPresent()) {
                 return byEmail;
             }

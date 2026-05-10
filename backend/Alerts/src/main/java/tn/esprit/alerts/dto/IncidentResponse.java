@@ -10,11 +10,13 @@ public class IncidentResponse {
     private String title;
     private String type;
     private String description;
+    private String aiSuggestion;
     private String severity;
     private String status;
     private LocalDateTime incidentDate;
     private String reportedByUserId;
     private String location;
     private List<AlertResponse> alerts;
+    private List<DoctorRecommendationResponse> doctorRecommendations;
     private String patientId;
 }

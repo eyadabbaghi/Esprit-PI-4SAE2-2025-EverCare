@@ -1,3 +1,7 @@
+:host {
+  pointer-events: none;
+}
+
 .alarm-overlay {
   position: fixed;
   inset: 0;
@@ -7,6 +11,7 @@
   justify-content: center;
   z-index: 9999;
   animation: fadeIn 0.3s ease;
+  pointer-events: auto;
 }
 
 @keyframes fadeIn {

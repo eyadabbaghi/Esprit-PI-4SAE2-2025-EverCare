@@ -215,6 +215,72 @@
   color: #5b5b73;
 }
 
+.patient-picker {
+  position: relative;
+}
+
+.patient-suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 8;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(196, 181, 253, 0.82);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 38px rgba(76, 29, 149, 0.16);
+}
+
+.patient-suggestion {
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem;
+  background: transparent;
+  color: #2d1b4e;
+  text-align: left;
+  cursor: pointer;
+}
+
+.patient-suggestion:hover {
+  background: #f4edff;
+}
+
+.patient-suggestion img {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid #ddd6fe;
+}
+
+.patient-suggestion strong,
+.patient-suggestion small {
+  display: block;
+}
+
+.patient-suggestion small {
+  margin-top: 0.12rem;
+  color: #7c6a9e;
+  font-size: 0.78rem;
+}
+
+.picker-hint {
+  margin-top: 0.35rem;
+  color: #6b5b8c;
+  font-size: 0.82rem;
+}
+
+.picker-hint.warning {
+  color: #8a450d;
+}
+
 .field input.invalid,
 .field select.invalid,
 .field textarea.invalid {

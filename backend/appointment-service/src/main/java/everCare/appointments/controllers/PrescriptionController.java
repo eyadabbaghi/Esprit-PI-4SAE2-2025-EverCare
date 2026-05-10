@@ -5,20 +5,11 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-import everCare.appointments.dtos.ClinicalMeasurementResponseDTO;
-import everCare.appointments.dtos.MedicamentResponseDTO;
-import everCare.appointments.dtos.PdfEmailRequest;
-import everCare.appointments.dtos.PrescriptionAnalyticsSummaryDTO;
-import everCare.appointments.dtos.PrescriptionRequestDTO;
-import everCare.appointments.dtos.PrescriptionResponseDTO;
-import everCare.appointments.dtos.SafetyCheckResult;
-import everCare.appointments.dtos.SafetyCheckResponseDTO;
-import everCare.appointments.dtos.StatusCountDTO;
-import everCare.appointments.dtos.TopMedicamentDTO;
-import everCare.appointments.dtos.PatientSimpleDTO;
-import everCare.appointments.dtos.UserSimpleDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import everCare.appointments.dtos.*;
 import everCare.appointments.feign.NotificationFeignClient;
 import everCare.appointments.feign.PatientFeignClient;
+import everCare.appointments.feign.UserFeignClient;
 import everCare.appointments.mappers.PrescriptionMapper;
 import everCare.appointments.services.ClinicalMeasurementService;
 import everCare.appointments.services.MedicamentService;
@@ -43,7 +34,12 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Base64;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.io.ByteArrayOutputStream;
 
@@ -59,10 +55,12 @@ public class PrescriptionController {
     private final PrescriptionPdfService prescriptionPdfService;
     private final NotificationFeignClient notificationFeignClient;
     private final PatientFeignClient patientFeignClient;
+    private final UserFeignClient userFeignClient;
     private final ClinicalMeasurementService clinicalMeasurementService;
     private final PrescriptionSafetyService prescriptionSafetyService;
     private final MedicamentService medicamentService;
     private final PrescriptionRepository prescriptionRepository;
+    private final ObjectMapper objectMapper;
 
     // ========== CREATE ==========
 
@@ -119,25 +117,27 @@ public class PrescriptionController {
             }
         }
 
-        PrescriptionResponseDTO response = mapper.toResponse(
-                prescriptionService.createPrescriptionFromConsultation(
-                        request.getPatientId(),
-                        request.getDoctorId(),
-                        request.getAppointmentId(),
-                        request.getMedicamentId(),
-                        request.getDateDebut(),
-                        request.getDateFin(),
-                        request.getPosologie(),
-                        request.getInstructions(),
-                        request.getRenouvelable(),
-                        request.getNombreRenouvellements(),
-                        request.getPriseMatin(),
-                        request.getPriseMidi(),
-                        request.getPriseSoir(),
-                        request.getResumeSimple(),
-                        request.getNotesMedecin()
-                )
+        everCare.appointments.entities.Prescription prescription = prescriptionService.createPrescriptionFromConsultation(
+                request.getPatientId(),
+                request.getDoctorId(),
+                request.getAppointmentId(),
+                request.getMedicamentId(),
+                request.getDateDebut(),
+                request.getDateFin(),
+                request.getPosologie(),
+                request.getInstructions(),
+                request.getRenouvelable(),
+                request.getNombreRenouvellements(),
+                request.getPriseMatin(),
+                request.getPriseMidi(),
+                request.getPriseSoir(),
+                request.getResumeSimple(),
+                request.getNotesMedecin()
         );
+
+        sendDailyPrescriptionScheduleNotification(prescription);
+
+        PrescriptionResponseDTO response = mapper.toResponse(prescription);
         return ResponseEntity.ok(response);
     }
 
@@ -337,6 +337,101 @@ public class PrescriptionController {
                 && prescription.getMedicament() != null;
     }
 
+    private void sendDailyPrescriptionScheduleNotification(everCare.appointments.entities.Prescription prescription) {
+        if (!hasDailyAlzheimerSchedule(prescription)) {
+            return;
+        }
+
+        Set<String> targetUserIds = new LinkedHashSet<>();
+        targetUserIds.add(prescription.getPatientId());
+
+        UserSimpleDTO patient = safeGetUser(prescription.getPatientId());
+        UserSimpleDTO doctor = safeGetUser(prescription.getDoctorId());
+
+        try {
+            List<UserSimpleDTO> caregivers = userFeignClient.getCaregiversByPatientId(prescription.getPatientId());
+            if (caregivers != null) {
+                caregivers.stream()
+                        .map(UserSimpleDTO::getUserId)
+                        .filter(id -> id != null && !id.isBlank())
+                        .forEach(targetUserIds::add);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load caregivers for prescription notification: {}", e.getMessage());
+        }
+
+        if (targetUserIds.isEmpty()) {
+            return;
+        }
+
+        String medicationName = prescription.getMedicament() != null
+                ? prescription.getMedicament().getNomCommercial()
+                : "medication";
+        String patientName = patient != null && patient.getName() != null && !patient.getName().isBlank()
+                ? patient.getName()
+                : "the patient";
+        String doctorName = doctor != null && doctor.getName() != null && !doctor.getName().isBlank()
+                ? doctor.getName()
+                : "the doctor";
+
+        Map<String, Object> details = new LinkedHashMap<>();
+        details.put("message", doctorName + " set a daily Alzheimer medication schedule for " + patientName + ".");
+        details.put("patientId", prescription.getPatientId());
+        details.put("patientName", patientName);
+        details.put("medicationName", medicationName);
+        details.put("morning", prescription.getPriseMatin());
+        details.put("midday", prescription.getPriseMidi());
+        details.put("evening", prescription.getPriseSoir());
+        details.put("summary", prescription.getResumeSimple());
+
+        try {
+            NotificationRequest request = NotificationRequest.builder()
+                    .activityId("prescription-daily-schedule:" + prescription.getPrescriptionId())
+                    .action("PRESCRIPTION_DAILY_SCHEDULE")
+                    .details(objectMapper.writeValueAsString(details))
+                    .targetUserIds(new ArrayList<>(targetUserIds))
+                    .build();
+
+            notificationFeignClient.sendNotification(request);
+        } catch (Exception e) {
+            log.warn("Failed to send daily prescription schedule notification for prescription {}: {}",
+                    prescription.getPrescriptionId(), e.getMessage());
+        }
+    }
+
+    private boolean hasDailyAlzheimerSchedule(everCare.appointments.entities.Prescription prescription) {
+        return hasText(prescription.getPriseMatin())
+                || hasText(prescription.getPriseMidi())
+                || hasText(prescription.getPriseSoir())
+                || hasText(prescription.getResumeSimple());
+    }
+
+    private boolean hasDailyAlzheimerSchedule(PrescriptionRequestDTO request) {
+        return request != null && (
+                hasText(request.getPriseMatin())
+                        || hasText(request.getPriseMidi())
+                        || hasText(request.getPriseSoir())
+                        || hasText(request.getResumeSimple())
+        );
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private UserSimpleDTO safeGetUser(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return null;
+        }
+
+        try {
+            return userFeignClient.getUserById(userId);
+        } catch (Exception e) {
+            log.warn("Failed to load user {} for prescription notification: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
     // ========== READ BY DOCTOR ==========
 
     @GetMapping("/doctor/{doctorId}")
@@ -413,9 +508,11 @@ public class PrescriptionController {
             @PathVariable String id,
             @RequestBody PrescriptionRequestDTO request) {
         accessControlService.assertCanManagePrescription(request.getDoctorId());
-        PrescriptionResponseDTO response = mapper.toResponse(
-                prescriptionService.updatePrescriptionFromRequest(id, request)
-        );
+        everCare.appointments.entities.Prescription prescription = prescriptionService.updatePrescriptionFromRequest(id, request);
+        if (hasDailyAlzheimerSchedule(request)) {
+            sendDailyPrescriptionScheduleNotification(prescription);
+        }
+        PrescriptionResponseDTO response = mapper.toResponse(prescription);
         return ResponseEntity.ok(response);
     }
 

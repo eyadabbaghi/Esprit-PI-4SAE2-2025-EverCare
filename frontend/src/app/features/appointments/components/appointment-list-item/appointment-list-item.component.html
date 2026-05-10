@@ -37,9 +37,22 @@
       </div>
     </div>
 
-    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-          [class]="getStatusClass(appointment.status)">
-          {{ getStatusLabel(appointment.status) }}
-        </span>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+            [class]="getStatusClass(appointment.status)">
+            {{ getStatusLabel(appointment.status) }}
+          </span>
+
+      <button *ngIf="canJoinCall"
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-md bg-[#7C3AED] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#6D28D9]"
+              (click)="onJoin.emit(appointment); $event.stopPropagation()">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M23 7l-7 5 7 5V7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2" stroke-width="2"/>
+        </svg>
+        Join Call
+      </button>
+    </div>
   </div>
 </div>

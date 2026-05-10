@@ -1,2 +1,324 @@
-/* Layout and styling are driven by Tailwind utility classes in the template. */
+.alz-assessment-backdrop {
+  background:
+    radial-gradient(circle at top left, rgba(196, 181, 253, 0.26), transparent 32%),
+    rgba(25, 16, 46, 0.68) !important;
+}
 
+.assessment-modal {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(196, 181, 253, 0.44) !important;
+  box-shadow: 0 30px 90px rgba(45, 27, 78, 0.24), 0 10px 28px rgba(124, 58, 237, 0.12) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.alz-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.alz-caregiver-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(124, 58, 237, 0.24);
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  color: #6d28d9;
+  background: linear-gradient(135deg, #faf5ff, #ffffff);
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.11);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.alz-caregiver-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.17);
+  background: #f3e8ff;
+}
+
+.alz-caregiver-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.alz-caregiver-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.caregiver-association-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(45, 27, 78, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.caregiver-association-card {
+  position: relative;
+  width: min(100%, 440px);
+  border-radius: 24px;
+  border: 1px solid rgba(196, 181, 253, 0.55);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 70px rgba(45, 27, 78, 0.24);
+  padding: 1.5rem;
+}
+
+.caregiver-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #6b5b8c;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+}
+
+.caregiver-modal-close svg,
+.caregiver-modal-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.caregiver-modal-icon {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1rem;
+  color: #7c3aed;
+  background: linear-gradient(135deg, #ede9fe, #fff);
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.14);
+  margin-bottom: 1rem;
+}
+
+.caregiver-association-card h3 {
+  margin: 0 0 0.4rem;
+  color: #2d1b4e;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.caregiver-association-card p {
+  margin: 0 0 1rem;
+  color: #6b5b8c;
+  line-height: 1.55;
+}
+
+.caregiver-association-card label {
+  display: grid;
+  gap: 0.45rem;
+  color: #4c1d95;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.caregiver-association-card input {
+  width: 100%;
+  border: 1px solid #ddd6fe;
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  color: #2d1b4e;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.caregiver-association-card input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.18);
+}
+
+.caregiver-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+}
+
+.caregiver-modal-actions button {
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.caregiver-modal-actions .secondary {
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+  background: #fff;
+}
+
+.caregiver-modal-actions .primary {
+  color: #fff;
+  border: 1px solid #7c3aed;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.2);
+}
+
+.caregiver-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #fff, #f5f0ff);
+  box-shadow: 0 16px 34px rgba(45, 27, 78, 0.12);
+}
+
+.caregiver-preview-card img,
+.caregiver-preview-avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: 0 0 2.8rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(124, 58, 237, 0.22);
+}
+
+.caregiver-preview-avatar {
+  display: grid;
+  place-items: center;
+  color: #6d28d9;
+  background: #ede9fe;
+  font-weight: 900;
+}
+
+.caregiver-preview-card span,
+.caregiver-preview-card small {
+  display: block;
+  color: #6b5b8c;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.caregiver-preview-card strong {
+  display: block;
+  color: #2d1b4e;
+  font-weight: 900;
+}
+
+.caregiver-preview-note {
+  margin-top: 0.5rem;
+  color: #6d28d9;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.caregiver-preview-note.warning {
+  color: #b45309;
+}
+
+.assessment-intro-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(45, 27, 78, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.assessment-intro-card {
+  width: min(100%, 520px);
+  border-radius: 28px;
+  border: 1px solid rgba(196, 181, 253, 0.6);
+  background:
+    radial-gradient(circle at top left, rgba(216, 180, 254, 0.28), transparent 42%),
+    rgba(255, 255, 255, 0.98);
+  padding: 1.6rem;
+  box-shadow: 0 28px 80px rgba(45, 27, 78, 0.28);
+}
+
+.assessment-intro-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.2rem;
+  color: #7c3aed;
+  background: linear-gradient(135deg, #ede9fe, #fff);
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.14);
+  margin-bottom: 1rem;
+}
+
+.assessment-intro-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.assessment-intro-eyebrow {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #f3e8ff;
+  color: #6d28d9;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.65rem;
+}
+
+.assessment-intro-card h3 {
+  margin: 0.8rem 0 0.5rem;
+  color: #2d1b4e;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  font-weight: 950;
+}
+
+.assessment-intro-card p {
+  margin: 0;
+  color: #6b5b8c;
+  line-height: 1.65;
+}
+
+.assessment-intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.assessment-intro-actions button {
+  border-radius: 999px;
+  padding: 0.75rem 1.05rem;
+  font-size: 0.86rem;
+  font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.assessment-intro-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.assessment-intro-actions .primary {
+  color: #fff;
+  border: 1px solid #7c3aed;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.2);
+}
+
+.assessment-intro-actions .secondary,
+.assessment-intro-actions .caregiver {
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.assessment-intro-actions .caregiver {
+  background: #faf5ff;
+}

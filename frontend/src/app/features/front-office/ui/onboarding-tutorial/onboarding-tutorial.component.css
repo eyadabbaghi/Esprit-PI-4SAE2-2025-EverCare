@@ -4,6 +4,7 @@
   z-index: 70;
   background: rgba(17, 24, 39, 0.48);
   backdrop-filter: blur(2px);
+  pointer-events: none;
 }
 
 .tutorial-highlight {
@@ -40,6 +41,7 @@
   color: #2d1b4e;
   box-shadow: 0 24px 60px rgba(45, 27, 78, 0.24);
   padding: 22px;
+  pointer-events: auto;
 }
 
 .tutorial-topline,

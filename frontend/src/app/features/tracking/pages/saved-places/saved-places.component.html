@@ -13,7 +13,7 @@
 
       <div class="header-actions">
         <button
-          *ngIf="mode === 'setup' && places.length > 0"
+          *ngIf="isCaregiverRole && mode === 'setup' && places.length > 0"
           type="button"
           class="secondary-btn"
           (click)="startTrackingMode()">

@@ -32,6 +32,9 @@ class AlertServiceTest {
     @Mock
     private IncidentRepository incidentRepository;
 
+    @Mock
+    private AlertNotificationChannelService alertNotificationChannelService;
+
     @InjectMocks
     private AlertService alertService;
 

@@ -48,6 +48,15 @@ export interface AdminContributor {
   lastActionAt?: string;
 }
 
+export interface AdminTopRatedActivity {
+  id: string;
+  name: string;
+  type: string;
+  rating: number;
+  totalRatings: number;
+  imageUrl?: string;
+}
+
 export interface AdminDashboardData {
   refreshedAt: Date;
   users: UserAdminDto[];
@@ -85,6 +94,7 @@ export interface AdminDashboardData {
   recentAdmins: UserAdminDto[];
   topArticles: Article[];
   topActivityTypes: Array<{ type: string; count: number }>;
+  topRatedActivities: AdminTopRatedActivity[];
   topLaboratories: Array<{ name: string; count: number }>;
   topCategory?: CategoryPerformance;
 }
@@ -175,6 +185,21 @@ export class AdminInsightsService {
       4,
       'type'
     ) as Array<{ type: string; count: number }>;
+    const topRatedActivities = [...activities]
+      .filter(activity => (activity.totalRatings || 0) > 0)
+      .sort((left, right) =>
+        ((right.rating || 0) - (left.rating || 0)) ||
+        ((right.totalRatings || 0) - (left.totalRatings || 0))
+      )
+      .slice(0, 5)
+      .map(activity => ({
+        id: activity.id,
+        name: activity.name || 'Untitled activity',
+        type: activity.type || 'Uncategorized',
+        rating: activity.rating || 0,
+        totalRatings: activity.totalRatings || 0,
+        imageUrl: activity.imageUrl
+      }));
     const topLaboratories = this.groupCount(
       medicaments.map(medicament => medicament.laboratoire || 'Unknown lab'),
       4,
@@ -218,6 +243,7 @@ export class AdminInsightsService {
       recentAdmins,
       topArticles,
       topActivityTypes,
+      topRatedActivities,
       topLaboratories,
       topCategory: [...categoryStats].sort((left, right) => (right.totalViews || 0) - (left.totalViews || 0))[0]
     };

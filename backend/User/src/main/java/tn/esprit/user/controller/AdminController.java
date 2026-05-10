@@ -33,9 +33,13 @@ public class AdminController {
 
     @PostMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdminCreatedUserResponse> createAdminUser(@RequestBody CreateAdminUserRequest request) {
-        User createdUser = userService.createAdminUser(request);
-        return ResponseEntity.ok(mapToCreatedDto(createdUser));
+    public ResponseEntity<?> createAdminUser(@RequestBody CreateAdminUserRequest request) {
+        try {
+            User createdUser = userService.createAdminUser(request);
+            return ResponseEntity.ok(mapToCreatedDto(createdUser));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/users/{userId}")

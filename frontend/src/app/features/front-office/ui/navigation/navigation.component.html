@@ -150,11 +150,39 @@
                 <button type="button" class="text-xs text-[#7C3AED] hover:underline"
                         *ngIf="unreadCount > 0" (click)="markAllAsRead()">Mark all as read</button>
                 <button type="button" class="text-xs text-[#C06C84] hover:underline"
-                        *ngIf="activityNotifications.length > 0 || taskNotifications.length > 0"
+                        *ngIf="activityNotifications.length > 0 || taskNotifications.length > 0 || wellnessNotifications.length > 0 || messageNotifications.length > 0"
                         (click)="clearAllNotifications()">Clear all</button>
               </div>
             </div>
             <div class="notification-list border-t border-[#E5E7EB] max-h-96 overflow-y-auto">
+              <!-- Email verification reminder -->
+              <ng-container *ngIf="hasVerificationReminder">
+                <div class="notification-group-label px-4 py-1 bg-[#F9FAFB]">
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Account</span>
+                </div>
+                <button
+                  class="notification-row w-full text-left px-4 py-3 border-b border-[#E5E7EB] hover:bg-[#F9FAFB]"
+                  [ngClass]="{ 'bg-[#FFF7ED]': !verificationReminderRead }"
+                  (click)="handleVerificationReminderClick()">
+                  <div class="flex items-start gap-3">
+                    <div class="notification-icon text-amber-700 bg-amber-50 border-amber-200">
+                      <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2"></rect>
+                        <path d="m22 7-10 7L2 7M12 14v4M12 21h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="text-xs font-semibold text-[#2D1B4E]">Verify your email</p>
+                        <span class="notification-kind">account</span>
+                      </div>
+                      <p class="text-xs text-[#6B5B8C] line-clamp-2">Add the code sent to your email to mark your EverCare profile as verified.</p>
+                      <p class="text-[10px] text-[#9CA3AF] mt-1">Reminder</p>
+                    </div>
+                  </div>
+                </button>
+              </ng-container>
+
               <!-- Task notifications -->
               <ng-container *ngIf="taskNotifications.length > 0">
                 <div class="notification-group-label px-4 py-1 bg-[#F9FAFB]">
@@ -182,10 +210,112 @@
                   </div>
                 </button>
               </ng-container>
+              <!-- Message notifications -->
+              <ng-container *ngIf="messageNotifications.length > 0">
+                <div class="notification-group-label px-4 py-1 bg-[#F9FAFB]">
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Messages</span>
+                </div>
+                <button *ngFor="let notification of messageNotifications"
+                        class="notification-row w-full text-left px-4 py-3 border-b border-[#E5E7EB] hover:bg-[#F9FAFB]"
+                        [ngClass]="{ 'bg-[#F3E8FF]': !notification.read }"
+                        (click)="handleMessageNotificationClick(notification)">
+                  <div class="flex items-start gap-3">
+                    <div class="message-notification-avatar">
+                      <ng-container *ngIf="notification.senderAvatar; else messageSenderInitials">
+                        <img [src]="notification.senderAvatar" alt="" />
+                      </ng-container>
+                      <ng-template #messageSenderInitials>
+                        <span>{{ getInitials(notification.senderName) }}</span>
+                      </ng-template>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="text-xs font-semibold text-[#2D1B4E]">{{ notification.senderName }}</p>
+                        <span class="notification-kind">message</span>
+                      </div>
+                      <p class="text-xs text-[#6B5B8C] line-clamp-2">{{ notification.preview }}</p>
+                      <p class="text-[10px] text-[#9CA3AF] mt-1">{{ notification.time }}</p>
+                    </div>
+                  </div>
+                </button>
+              </ng-container>
+              <!-- Gentle EverCare reminders -->
+              <ng-container *ngIf="wellnessNotifications.length > 0">
+                <div class="notification-group-label px-4 py-1 bg-[#F9FAFB]">
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">EverCare reminders</span>
+                </div>
+                <button *ngFor="let notification of wellnessNotifications"
+                        class="notification-row w-full text-left px-4 py-3 border-b border-[#E5E7EB] hover:bg-[#F9FAFB]"
+                        [ngClass]="{ 'bg-[#F3E8FF]': !notification.read }"
+                        (click)="handleWellnessNotificationClick(notification)">
+                  <div class="flex items-start gap-3">
+                    <div class="notification-icon text-[#7C3AED] bg-[#F3E8FF] border-[#DDD6FE]">
+                      <ng-container [ngSwitch]="notification.kind">
+                        <svg *ngSwitchCase="'daily'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21l8.8-8a5.2 5.2 0 0 0 0-7.4Z" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'patientDaily'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21l8.8-8a5.2 5.2 0 0 0 0-7.4Z" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'patientLocation'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" stroke-width="2" stroke-linejoin="round"/>
+                          <circle cx="12" cy="10" r="2.5" stroke-width="2"/>
+                        </svg>
+                        <svg *ngSwitchCase="'appointments'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M8 3v4M16 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'patientAppointments'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M8 3v4M16 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M9 14h6M9 17h4" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'patientMedicalRecords'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-1.5Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M8 7h6M8 11h6M8 15h4" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'recommendActivities'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M12 3v18M5 12h14" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M7 5h10v14H7z" stroke-width="2" stroke-linejoin="round" opacity=".45"/>
+                        </svg>
+                        <svg *ngSwitchCase="'incidentsAlerts'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M10.3 4.3 2.8 17.5A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.5L13.7 4.3a2 2 0 0 0-3.4 0Z" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'patientAlerts'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14v-3a6 6 0 1 0-12 0v3a2 2 0 0 1-.6 1.6L4 17h5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M9 17a3 3 0 0 0 6 0M12 7v4" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <svg *ngSwitchCase="'monitorPatient'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" stroke-width="2" stroke-linejoin="round"/>
+                          <circle cx="12" cy="12" r="3" stroke-width="2"/>
+                        </svg>
+                        <svg *ngSwitchCase="'blogs'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M5 4h10l4 4v12H5V4Z" stroke-width="2" stroke-linejoin="round"></path>
+                          <path d="M15 4v5h5M8 13h8M8 17h6" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        <svg *ngSwitchCase="'ai'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <rect x="5" y="8" width="14" height="11" rx="3" stroke-width="2"></rect>
+                          <path d="M12 4v4M9 13h.01M15 13h.01M10 17h4" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                        <svg *ngSwitchDefault class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                      </ng-container>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="text-xs font-semibold text-[#2D1B4E]">{{ notification.title }}</p>
+                        <span class="notification-kind">tip</span>
+                      </div>
+                      <p class="text-xs text-[#6B5B8C] line-clamp-2">{{ notification.message }}</p>
+                      <p class="text-[10px] text-[#9CA3AF] mt-1">{{ notification.time }}</p>
+                    </div>
+                  </div>
+                </button>
+              </ng-container>
               <!-- Activity notifications -->
               <ng-container *ngIf="activityNotifications.length > 0">
                 <div class="notification-group-label px-4 py-1 bg-[#F9FAFB]">
-                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Activity and blog</span>
+                  <span class="text-[10px] font-semibold text-[#6B5B8C] uppercase tracking-wide">Care notifications</span>
                 </div>
                 <button *ngFor="let n of activityNotifications"
                         class="notification-row w-full text-left px-4 py-3 border-b border-[#E5E7EB] last:border-0 hover:bg-[#F9FAFB] flex gap-3"
@@ -203,6 +333,42 @@
                       <svg *ngSwitchCase="'alert'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                         <path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path>
                         <path d="M12 9v4M12 17h.01" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'incident'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M12 3 3.5 19.5h17L12 3Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M12 8v5M12 17h.01" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'tracking'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <circle cx="12" cy="10" r="2.5" stroke-width="2"></circle>
+                        <path d="M12 4v2M19 10h2M3 10h2" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'prescription'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M9 8h6M9 12h6M9 16h3M17 17l1.5 1.5L22 15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'doctor-recommendation'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M12 3a3 3 0 0 1 3 3v1H9V6a3 3 0 0 1 3-3Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M6 8h12l-1 12H7L6 8Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M12 11v6M9 14h6" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'medical-record'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M5 4h10l4 4v12H5V4Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M15 4v5h5M8 13h8M8 17h5" stroke-width="2" stroke-linecap="round"></path>
+                        <path d="M9 9h3M10.5 7.5v3" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'alzheimer'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M9.5 17.5h5M12 3a6 6 0 0 0-6 6c0 1.6.6 3 1.7 4.1.8.8 1.3 1.8 1.3 2.9h6c0-1.1.5-2.1 1.3-2.9A5.8 5.8 0 0 0 18 9a6 6 0 0 0-6-6Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path d="M10 21h4M10 9h4M12 7v4" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'connection'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <circle cx="9" cy="7" r="4" stroke-width="2"></circle>
+                        <path d="M22 8h-6M19 5v6" stroke-width="2" stroke-linecap="round"></path>
+                      </svg>
+                      <svg *ngSwitchCase="'routine'" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M9 4h6a2 2 0 0 1 2 2v13l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke-width="2" stroke-linejoin="round"></path>
+                        <path d="M10 9h4M10 13h3" stroke-width="2" stroke-linecap="round"></path>
                       </svg>
                       <ng-container *ngSwitchDefault>
                         <svg *ngIf="getNotificationAction(n) === 'UPDATED'; else createdOrDeletedNotificationIcon" class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -231,7 +397,7 @@
                   </div>
                 </button>
               </ng-container>
-              <div *ngIf="activityNotifications.length === 0 && taskNotifications.length === 0"
+              <div *ngIf="activityNotifications.length === 0 && taskNotifications.length === 0 && wellnessNotifications.length === 0 && messageNotifications.length === 0 && !hasVerificationReminder"
                    class="py-6 text-center text-[#6B5B8C] text-sm">No notifications</div>
             </div>
             <button type="button" class="w-full text-center text-xs text-[#7C3AED] py-2 hover:bg-[#F3E8FF]"
@@ -357,3 +523,28 @@
 
   </div>
 </nav>
+
+<div *ngIf="showRecoveryEmailReminder" class="recovery-reminder-popover" role="status" aria-live="polite">
+  <button type="button" class="recovery-reminder-close" (click)="dismissRecoveryEmailReminder()" aria-label="Dismiss recovery email reminder">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <div class="recovery-reminder-art" aria-hidden="true">
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="60" cy="60" r="46" fill="#F3E8FF"/>
+      <path d="M60 22 92 35v24c0 24-14 39-32 46-18-7-32-22-32-46V35l32-13Z" fill="#FFFFFF" stroke="#A78BFA" stroke-width="4"/>
+      <path d="M43 61 55 73l24-29" stroke="#7C3AED" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 33 24 25M88 29l9-9M95 80l10 5" stroke="#C4B5FD" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="recovery-reminder-copy">
+    <span>Account protection</span>
+    <h3>Secure your EverCare account</h3>
+    <p>Add a recovery email so you never lose access to your care records, alerts, and support circle.</p>
+  </div>
+  <div class="recovery-reminder-actions">
+    <button type="button" class="recovery-reminder-secondary" (click)="dismissRecoveryEmailReminder()">Later</button>
+    <button type="button" class="recovery-reminder-primary" (click)="openRecoveryEmailSettings()">Add recovery email</button>
+  </div>
+</div>

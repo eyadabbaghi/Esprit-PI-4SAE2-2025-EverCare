@@ -2,6 +2,15 @@ export type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type IncidentType = 'Medical' | 'Behavioral' | 'Safety';
 export type AlertStatus = 'SENT' | 'ACKNOWLEDGED' | 'RESOLVED';
 
+export interface DoctorRecommendation {
+  recommendationId: string;
+  incidentId: string;
+  doctorId: string;
+  doctorName: string;
+  recommendation: string;
+  createdAt: Date;
+}
+
 export interface Incident {
   incidentId: string;
   title: string;
@@ -15,6 +24,7 @@ export interface Incident {
   reportedByUserId: string;
   status: 'OPEN' |'ACKNOWLEDGED' | 'RESOLVED';
   aiSuggestion?: string;
+  doctorRecommendations?: DoctorRecommendation[];
   
 }
 
@@ -28,5 +38,8 @@ export interface Alert {
   acknowledgedAt?: Date;
   targetRoles?: string[];
   notificationChannels?: string[];
-  label?: string;   
+  label?: string;
+  immediate?: boolean;
+  scheduledTime?: string;
+  repeatDays?: string[];
 }

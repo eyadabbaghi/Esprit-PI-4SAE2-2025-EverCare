@@ -41,8 +41,8 @@ export function getMedicalRecordPermissions(roleInput: string | null | undefined
     return {
       canRead: true,
       canViewDetails: true,
-      canCreate: false,
-      canUpdate: false,
+      canCreate: true,
+      canUpdate: true,
       canArchive: false,
       canManageHistory: false,
       canManageDocuments: false,

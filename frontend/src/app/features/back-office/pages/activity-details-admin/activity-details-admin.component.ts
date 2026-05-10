@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ActivityService, Activity, ActivityDetails, UpdateActivityRequest, UpdateActivityDetailsRequest } from '../../../../core/services/activity.service';
 import { ImageCroppedEvent } from 'ngx-image-cropper';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 // Custom validator: at least one stage selected
 function atLeastOneStage(control: AbstractControl): ValidationErrors | null {
@@ -43,7 +44,8 @@ export class ActivityDetailsAdminComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private activityService: ActivityService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) {
     this.activityForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
@@ -275,7 +277,7 @@ export class ActivityDetailsAdminComponent implements OnInit {
                 this.details = updatedDetails;
                 this.isEditing = false;
                 this.selectedFile = null;
-                this.toastr.success('Activity updated');
+                this.feedback.success(`"${updatedActivity.name}" was updated successfully.`, 'Activity updated');
               },
               error: (err) => {
                 console.error('Details update failed', err);
@@ -287,7 +289,7 @@ export class ActivityDetailsAdminComponent implements OnInit {
           } else {
             this.isEditing = false;
             this.selectedFile = null;
-            this.toastr.success('Activity updated');
+            this.feedback.success(`"${updatedActivity.name}" was updated successfully.`, 'Activity updated');
           }
         },
         error: (err) => {
@@ -314,12 +316,18 @@ export class ActivityDetailsAdminComponent implements OnInit {
     }
   }
 
-  deleteAndBack(): void {
+  async deleteAndBack(): Promise<void> {
     if (!this.activity) return;
-    if (!confirm('Delete this activity?')) return;
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete activity?',
+      message: `Delete "${this.activity.name}" from the activity catalog?`,
+      confirmText: 'Delete activity',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
     this.activityService.deleteActivity(this.activity.id).subscribe({
       next: () => {
-        this.toastr.success('Activity deleted');
+        this.feedback.success(`"${this.activity?.name || 'Activity'}" was removed from the activity catalog.`, 'Activity deleted');
         this.router.navigate(['/admin/activities']);
       },
       error: (err) => {

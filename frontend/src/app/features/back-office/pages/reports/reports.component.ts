@@ -8,6 +8,7 @@ import {
 } from '../../../medical-record/models/assessment.model';
 import { AssessmentService } from '../../../medical-record/services/assessment.service';
 import { MedicalRecordService } from '../../../medical-record/services/medical-record.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 type ReportsActiveFilter = 'active' | 'archived' | 'all';
 
@@ -43,7 +44,8 @@ export class ReportsComponent implements OnInit {
   constructor(
     private readonly router: Router,
     private readonly assessmentService: AssessmentService,
-    private readonly medicalRecordService: MedicalRecordService
+    private readonly medicalRecordService: MedicalRecordService,
+    private readonly feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -161,13 +163,18 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  deleteReport(report: AssessmentReport): void {
+  async deleteReport(report: AssessmentReport): Promise<void> {
     if (this.deletingReportId || !report.active) {
       return;
     }
 
     const label = report.patientName || report.patientId;
-    const confirmed = window.confirm(`Supprimer ce rapport du patient "${label}" ?`);
+    const confirmed = await this.feedback.confirm({
+      title: 'Archive assessment report?',
+      message: `Archive the assessment report for "${label}"?`,
+      confirmText: 'Archive report',
+      tone: 'danger'
+    });
     if (!confirmed) {
       return;
     }

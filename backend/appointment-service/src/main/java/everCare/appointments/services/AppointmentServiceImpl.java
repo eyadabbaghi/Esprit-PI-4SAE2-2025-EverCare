@@ -109,19 +109,16 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<Appointment> getAppointmentsByPatient(String patientId) {
-        validateUserExists(patientId, "Patient");
         return appointmentRepository.findByPatientId(patientId);
     }
 
     @Override
     public List<Appointment> getAppointmentsByDoctor(String doctorId) {
-        validateUserExists(doctorId, "Doctor");
         return appointmentRepository.findByDoctorId(doctorId);
     }
 
     @Override
     public List<Appointment> getAppointmentsByCaregiver(String caregiverId) {
-        validateUserExists(caregiverId, "Caregiver");
         return appointmentRepository.findByCaregiverId(caregiverId);
     }
 
@@ -137,13 +134,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<Appointment> getAppointmentsByDoctorAndDateRange(String doctorId, LocalDateTime start, LocalDateTime end) {
-        validateUserExists(doctorId, "Doctor");
         return appointmentRepository.findByDoctorIdAndStartDateTimeBetween(doctorId, start, end);
     }
 
     @Override
     public List<Appointment> getFutureAppointmentsByPatient(String patientId) {
-        validateUserExists(patientId, "Patient");
         return appointmentRepository.findFutureByPatientId(patientId, LocalDateTime.now());
     }
 

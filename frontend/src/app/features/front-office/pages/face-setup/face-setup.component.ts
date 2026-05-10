@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { take } from 'rxjs/operators';
 import { CameraService } from '../../services/camera/camera.service';
 import { FaceService } from '../../services/camera/face.service';
-import { OnboardingTutorialService } from '../../ui/onboarding-tutorial/onboarding-tutorial.service';
 import { AuthService } from '../login/auth.service';
 
 type SetupState = 'instructions' | 'scanning' | 'processing' | 'success' | 'error';
@@ -39,7 +38,6 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef,
     private readonly authService: AuthService,
-    private readonly tutorialService: OnboardingTutorialService,
   ) {}
 
   ngOnInit(): void {}
@@ -82,7 +80,7 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
 
   skip(): void {
     this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
-      this.queueTutorialAfterOnboarding(user?.role);
+      this.preparePostFaceOnboarding(user?.role);
       this.router.navigate([this.resolveDestination(user?.role)]);
     });
   }
@@ -136,7 +134,7 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
         this.state = 'success';
         this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
           const destination = this.resolveDestination(user?.role);
-          this.queueTutorialAfterOnboarding(user?.role);
+          this.preparePostFaceOnboarding(user?.role);
           setTimeout(() => this.router.navigate([destination]), 2000);
         });
       },
@@ -164,10 +162,10 @@ export class FaceSetupComponent implements OnInit, OnDestroy {
     return '/';
   }
 
-  private queueTutorialAfterOnboarding(role?: string): void {
+  private preparePostFaceOnboarding(role?: string): void {
     const isOnboarding = this.route.snapshot.queryParamMap.get('mode') === 'onboarding';
     if (isOnboarding && (role === 'DOCTOR' || role === 'CAREGIVER')) {
-      this.tutorialService.queueForCurrentUser(role);
+      localStorage.setItem('showWelcomeFlow', 'true');
     }
   }
 }

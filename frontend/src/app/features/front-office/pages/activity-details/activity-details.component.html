@@ -30,7 +30,7 @@
 
         <!-- Language dropdown -->
         <select *ngIf="!translatedActivity || showOriginal" [(ngModel)]="selectedLang"
-                class="px-2 py-1.5 rounded-full text-sm border border-[#E5E7EB] bg-white focus:outline-none">
+                class="detail-translate-select">
           <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }} - {{ lang.name }}</option>
         </select>
 
@@ -187,10 +187,24 @@
           </button>
         </div>
 
-        <div class="activity-sidebar-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
-          <h3 class="text-xl text-[#2D1B4E]">Rate this activity</h3>
-          <div class="flex justify-center gap-2 mb-2">
-            <button *ngFor="let star of [1,2,3,4,5]" type="button" class="text-2xl focus:outline-none" (click)="rate(star)">
+        <div class="activity-sidebar-card rating-detail-card border-2 border-[#DDD6FE] rounded-2xl bg-white p-6 space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="rating-detail-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl text-[#2D1B4E]">Rate this activity</h3>
+              <p class="text-xs text-[#6B5B8C]">Your feedback helps EverCare improve the catalog.</p>
+            </div>
+          </div>
+          <div class="rating-detail-stars">
+            <button *ngFor="let star of [1,2,3,4,5]" type="button" class="rating-detail-star focus:outline-none"
+                    [class.is-active]="star <= userRating"
+                    [class.is-busy]="ratingSubmitting"
+                    (click)="rate(star)"
+                    [disabled]="ratingSubmitting">
               <svg width="26" height="26" viewBox="0 0 24 24"
                    [ngClass]="star <= userRating ? 'text-yellow-400' : 'text-gray-300'">
                 <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" fill="currentColor"/>
@@ -232,6 +246,45 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="ratingPopup"
+       class="rating-feedback-overlay fixed inset-0 bg-black/45 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
+       (click)="skipRatingFeedback()">
+    <section class="rating-feedback-modal bg-white rounded-3xl shadow-2xl border border-[#DDD6FE] w-full max-w-lg overflow-hidden"
+             (click)="$event.stopPropagation()">
+      <div class="rating-feedback-hero" [ngClass]="getRatingMoodClass(ratingPopup.rating)">
+        <div class="rating-face" [ngClass]="getRatingMoodClass(ratingPopup.rating)">
+          <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+            <circle cx="60" cy="60" r="42" fill="currentColor" opacity="0.13"></circle>
+            <circle cx="60" cy="60" r="34" fill="white" stroke="currentColor" stroke-width="4"></circle>
+            <circle cx="48" cy="53" r="4" fill="currentColor"></circle>
+            <circle cx="72" cy="53" r="4" fill="currentColor"></circle>
+            <path *ngIf="ratingPopup.rating >= 4" d="M45 68c7 10 23 10 30 0" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+            <path *ngIf="ratingPopup.rating === 3" d="M47 72h26" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+            <path *ngIf="ratingPopup.rating <= 2" d="M45 76c7-9 23-9 30 0" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+            <path d="m60 14 3 9 9 1.4-6.5 6.3 1.5 8.9L60 35.4l-7 4.2 1.5-8.9L48 24.4 57 23l3-9Z" fill="currentColor"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] font-bold text-[#7C3AED]">Rating saved</p>
+          <h3 class="text-2xl font-bold text-[#2D1B4E]">{{ getRatingMoodLabel(ratingPopup.rating) }}</h3>
+          <p class="text-sm text-[#6B5B8C] mt-1">You rated "{{ a.name }}" {{ ratingPopup.rating }} star{{ ratingPopup.rating !== 1 ? 's' : '' }}.</p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4">
+        <label class="block">
+          <span class="text-sm font-bold text-[#2D1B4E]">Optional feedback for the EverCare team</span>
+          <textarea [(ngModel)]="ratingPopup.feedback" rows="4" class="rating-feedback-textarea" placeholder="Tell us why you rated it this way..."></textarea>
+        </label>
+        <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
+          <button type="button" class="rating-skip-btn" (click)="skipRatingFeedback()">Skip</button>
+          <button type="button" class="rating-submit-btn" (click)="submitRatingFeedback()" [disabled]="ratingPopup.submitting">
+            Share feedback
+          </button>
         </div>
       </div>
     </section>

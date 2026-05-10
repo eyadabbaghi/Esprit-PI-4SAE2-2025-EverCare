@@ -26,6 +26,13 @@
           </button>
         </div>
 
+        <button type="button" class="archive-open-button" (click)="openArchivedConversations()">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span>Archived conversations</span>
+        </button>
+
         <div class="search-field">
           <svg class="inline-svg-icon search-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
             <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
@@ -205,10 +212,18 @@
               </div>
 
               <div *ngIf="editingMessageId === msg.id" class="edit-message-box">
-                <textarea [(ngModel)]="editContent"></textarea>
+                <textarea [(ngModel)]="editContent" [attr.maxlength]="MAX_MESSAGE_CHARS"></textarea>
+                <p *ngIf="isTextTooLong(editContent)" class="text-xs font-bold text-amber-600">
+                  Message too long ({{ editContent.length }}/{{ MAX_MESSAGE_CHARS }})
+                </p>
                 <div>
                   <button (click)="cancelEdit()" type="button">Cancel</button>
-                  <button (click)="saveEdit(msg)" type="button">Save</button>
+                  <button
+                    (click)="saveEdit(msg)"
+                    [disabled]="!editContent.trim() || containsBadWords(editContent) || isTextTooLong(editContent)"
+                    type="button">
+                    Save
+                  </button>
                 </div>
               </div>
 
@@ -264,7 +279,7 @@
             </svg>
             <div>
               <strong>Message too long ({{ messageText.length }}/{{ MAX_MESSAGE_CHARS }})</strong>
-              <p>Book an appointment for a detailed explanation.</p>
+              <p>Try sending a shorter message or split it into two parts.</p>
             </div>
           </div>
 
@@ -294,6 +309,7 @@
             <input
               type="text"
               [(ngModel)]="messageText"
+              [attr.maxlength]="MAX_MESSAGE_CHARS"
               (keyup.enter)="!isMessageTooLong() && !containsBadWords(messageText) && handleSendMessage()"
               placeholder="Write a message..."
               class="composer-input">
@@ -328,6 +344,62 @@
           <p>Select a conversation to start exchanging care updates.</p>
         </div>
       </ng-template>
+    </section>
+  </div>
+
+  <div *ngIf="showArchivedModal" class="archive-backdrop" (click)="closeArchivedConversations()">
+    <section class="archive-modal" (click)="$event.stopPropagation()">
+      <header class="archive-modal-header">
+        <div>
+          <p>Message archive</p>
+          <h3>Archived Conversations</h3>
+        </div>
+        <button type="button" (click)="closeArchivedConversations()" aria-label="Close archived conversations">
+          <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </header>
+
+      <div *ngIf="archivedLoading" class="archive-empty-state">
+        <div class="archive-loader"></div>
+        <p>Loading archived conversations...</p>
+      </div>
+
+      <div *ngIf="!archivedLoading && archivedConversations.length === 0" class="archive-empty-state">
+        <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <h4>No archived conversations</h4>
+        <p>Conversations you archive will appear here.</p>
+      </div>
+
+      <div *ngIf="!archivedLoading && archivedConversations.length > 0" class="archive-list custom-scrollbar">
+        <button
+          *ngFor="let conv of archivedConversations"
+          type="button"
+          class="archive-conversation-card"
+          (click)="openArchivedConversation(conv)">
+          <div class="conversation-avatar">
+            <img
+              *ngIf="resolveProfilePictureUrl(conv.interlocutorAvatar) as archivedAvatarUrl; else archivedInitial"
+              [src]="archivedAvatarUrl"
+              [alt]="conv.interlocutorName || 'Archived contact profile picture'"
+              (error)="clearConversationAvatar(conv)"
+              class="w-full h-full object-cover">
+            <ng-template #archivedInitial>
+              {{ (conv.interlocutorName || '?').toString() | slice:0:1 | uppercase }}
+            </ng-template>
+          </div>
+          <div>
+            <h4>{{ conv.interlocutorName || 'Archived contact' }}</h4>
+            <p>Click to open conversation</p>
+          </div>
+          <svg class="inline-svg-icon archive-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="m9 18 6-6-6-6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </button>
+      </div>
     </section>
   </div>
 

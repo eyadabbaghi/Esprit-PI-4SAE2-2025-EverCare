@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
 import { MedicamentRequest } from '../../../prescription/models/medicament.model';
 import { MedicamentService } from '../../../prescription/services/medicament.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-medicament-editor-placeholder',
@@ -22,7 +22,7 @@ export class MedicamentEditorPlaceholderComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private medicamentService: MedicamentService,
-    private toastr: ToastrService
+    private feedback: AppFeedbackService
   ) {
     this.medicamentForm = this.fb.group({
       nomCommercial: ['', [Validators.required, Validators.minLength(2)]],
@@ -82,7 +82,10 @@ export class MedicamentEditorPlaceholderComponent implements OnInit {
     request$.subscribe({
       next: (medicament) => {
         this.saving = false;
-        this.toastr.success(`Medicament ${this.mode === 'edit' ? 'updated' : 'created'} successfully.`);
+        this.feedback.success(
+          `${medicament.nomCommercial} was ${this.mode === 'edit' ? 'updated' : 'created'} successfully.`,
+          this.mode === 'edit' ? 'Medication updated' : 'Medication created'
+        );
         this.router.navigate(['/admin/medicaments', medicament.medicamentId, 'edit']);
       },
       error: (error) => {

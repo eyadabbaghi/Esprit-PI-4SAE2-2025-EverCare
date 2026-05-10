@@ -23,20 +23,3 @@
   backdrop-filter: blur(10px);
   border-radius: 16px;
 }
-
-.video-card {
-  border: 1px solid rgba(196, 181, 253, 0.55);
-  border-radius: 1.75rem;
-  background: rgba(255, 255, 255, 0.82);
-  padding: 0.75rem;
-  box-shadow:
-    0 26px 70px rgba(76, 29, 149, 0.16),
-    0 10px 24px rgba(124, 58, 237, 0.12);
-}
-
-.video-card video {
-  display: block;
-  aspect-ratio: 16 / 9;
-  background: #2D1B4E;
-  box-shadow: 0 16px 42px rgba(45, 27, 78, 0.18);
-}

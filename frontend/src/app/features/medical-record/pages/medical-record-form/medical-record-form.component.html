@@ -39,20 +39,46 @@
       <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
       <div *ngIf="isLoading" class="status-message info">Loading medical record...</div>
       <div *ngIf="currentRole === 'CAREGIVER'" class="status-message warning">
-        Caregiver mode: the Alzheimer stage is read-only.
+        Caregiver mode: you can fill records only for patients associated with your profile. The Alzheimer stage is updated from the assessment.
+        <span *ngIf="caregiverTargetPatientName">Current patient: <strong>{{ caregiverTargetPatientName }}</strong></span>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="save()" novalidate>
         <div class="form-grid">
           <div class="field">
             <label for="patientId">Patient Name (existing account)</label>
-            <input
-              id="patientId"
-              type="text"
-              formControlName="patientId"
-              placeholder="Enter the patient name"
-              [readonly]="isEditMode"
-              [class.invalid]="form.controls.patientId.touched && form.controls.patientId.invalid" />
+            <div class="patient-picker">
+              <input
+                id="patientId"
+                type="text"
+                formControlName="patientId"
+                placeholder="Choose a patient from your profile"
+                [readonly]="isEditMode || currentRole === 'CAREGIVER'"
+                (input)="onPatientSearchChange(($any($event.target)).value)"
+                [class.invalid]="form.controls.patientId.touched && form.controls.patientId.invalid" />
+
+              <div *ngIf="currentRole === 'DOCTOR' && !isEditMode && isLookingUpPatients" class="picker-hint">
+                Loading your associated patients...
+              </div>
+
+              <div *ngIf="currentRole === 'DOCTOR' && !isEditMode && patientSuggestions.length > 0" class="patient-suggestions">
+                <button
+                  type="button"
+                  *ngFor="let patient of patientSuggestions; trackBy: trackPatient"
+                  class="patient-suggestion"
+                  (click)="selectAssociatedPatient(patient)">
+                  <img [src]="patient.profilePicture || 'assets/default-avatar.png'" alt="" />
+                  <span>
+                    <strong>{{ formatPatientLabel(patient) }}</strong>
+                    <small>Associated patient</small>
+                  </span>
+                </button>
+              </div>
+
+              <div *ngIf="currentRole === 'DOCTOR' && !isEditMode && form.controls.patientId.value && !selectedPatient && !isLookingUpPatients && patientSuggestions.length === 0" class="picker-hint warning">
+                Type a name and select one of your associated patients.
+              </div>
+            </div>
             <div class="field-error" *ngIf="form.controls.patientId.touched && form.controls.patientId.invalid">
               <span *ngIf="form.controls.patientId.errors?.['required']">Patient name is required.</span>
               <span *ngIf="form.controls.patientId.errors?.['maxlength']">Patient name is too long.</span>

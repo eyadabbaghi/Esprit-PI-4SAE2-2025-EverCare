@@ -44,30 +44,89 @@
         Reset Filters
       </button>
 
-      <!-- MY ROUTINE BUTTON (patients only) -->
-      <button *ngIf="userRole !== 'DOCTOR'"
+      <!-- Routine button -->
+      <button *ngIf="userRole"
               type="button"
               class="routine-btn px-5 py-2 rounded-full bg-[#7C3AED] text-white font-semibold flex items-center gap-2 transition-all duration-200"
               (click)="openRoutineModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 5.55228 9.44772 6 10 6H14C14.5523 6 15 5.55228 15 5M9 5C9 4.44772 9.44772 4 10 4H14C14.5523 4 15 4.44772 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        My Routine
-        <span *ngIf="routineActivities.length > 0"
+        {{ userRole === 'PATIENT' ? 'My Routine' : 'Patient Routines' }}
+        <span *ngIf="userRole === 'PATIENT' && routineActivities.length > 0"
               class="bg-white text-[#7C3AED] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
           {{ routineActivities.length }}
+        </span>
+        <span *ngIf="userRole !== 'PATIENT' && patients.length > 0"
+              class="bg-white text-[#7C3AED] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {{ patients.length }}
         </span>
       </button>
     </div>
 
     <!-- ═══════════════════════ DOCTOR VIEW ═══════════════════════ -->
     <div *ngIf="userRole === 'DOCTOR'" class="space-y-6">
-      <h2 class="text-2xl font-bold text-[#2D1B4E]">Recommend Activities to Your Patients</h2>
+      <div class="routine-care-board">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#7C3AED] font-bold">Care routines</p>
+          <h2 class="text-2xl font-bold text-[#2D1B4E]">Recommend and pin routines for your patients</h2>
+          <p class="text-sm text-[#6B5B8C]">Use recommendations for clinical suggestions, or pin a routine item with a time and priority so the patient can check it off.</p>
+        </div>
+        <button type="button" class="routine-secondary-btn" (click)="openRoutineModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M5 5h14v14H5V5Z" stroke-width="2" stroke-linejoin="round"></path>
+            <path d="M8 10h8M8 14h5M17 3v4M7 3v4" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          Track patient routines
+        </button>
+      </div>
+      <div *ngIf="patientRoutineSummaries.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button *ngFor="let summary of patientRoutineSummaries"
+                type="button"
+                class="patient-routine-tile text-left"
+                (click)="openPatientRoutineModal(summary.patient)">
+          <div class="flex items-center gap-3">
+            <img [src]="summary.patient.profilePicture || '/assets/default-avatar.png'" class="w-11 h-11 rounded-full object-cover border-2 border-white shadow">
+            <div class="min-w-0">
+              <p class="font-bold text-[#2D1B4E] truncate">{{ summary.patient.name }}</p>
+              <p class="text-xs text-[#6B5B8C]">{{ summary.completed }}/{{ summary.total }} checked</p>
+            </div>
+          </div>
+          <div class="progress-bar-track mt-3" style="height:7px">
+            <div class="progress-bar-fill" [style.width.%]="summary.progress"></div>
+          </div>
+          <p class="mt-2 text-xs" [ngClass]="summary.overdueCount ? 'text-[#BE185D] font-semibold' : 'text-[#6B5B8C]'">
+            {{ summary.overdueCount ? summary.overdueCount + ' item(s) need attention' : (summary.nextItem ? 'Next: ' + summary.nextItem.name : 'No pending routine') }}
+          </p>
+        </button>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div *ngFor="let activity of doctorActivities" class="doctor-activity-card border rounded-lg p-4 bg-white">
           <img [src]="getImageUrl(activity.imageUrl)" alt="" class="w-full h-40 object-cover rounded mb-2">
           <h3 class="font-semibold">{{ activity.name }}</h3>
           <p class="text-sm text-gray-600">{{ activity.description | slice:0:100 }}...</p>
+          <div class="activity-card-badge-row mt-3">
+            <span class="activity-type-pill"
+                  [ngClass]="{'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation','bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive','bg-green-100 text-green-700 border-green-200': activity.type === 'Physical','bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social','bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'}">
+              <svg class="activity-type-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path *ngIf="activity.type === 'Cognitive'" d="M9 4.5a3 3 0 0 0-3 3v.3A3.6 3.6 0 0 0 4 11a3.5 3.5 0 0 0 2 3.1V16a3 3 0 0 0 4.5 2.6M15 4.5a3 3 0 0 1 3 3v.3A3.6 3.6 0 0 1 20 11a3.5 3.5 0 0 1-2 3.1V16a3 3 0 0 1-4.5 2.6M12 5v14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path *ngIf="activity.type === 'Physical'" d="M6 14v-4m12 4v-4M4 12h16M8 9v6m8-6v6" stroke-width="1.8" stroke-linecap="round"/>
+                <path *ngIf="activity.type === 'Relaxation'" d="M12 4c3 2.2 4.5 4.6 4.5 7.1A4.5 4.5 0 0 1 12 15.6a4.5 4.5 0 0 1-4.5-4.5C7.5 8.6 9 6.2 12 4Z M5 20c2.2-2 4.5-3 7-3s4.8 1 7 3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path *ngIf="activity.type === 'Social'" d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5M10.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path *ngIf="activity.type === 'Creative'" d="M12 20a8 8 0 1 1 7.7-5.8c-.3 1.1-1.4 1.8-2.5 1.8h-1.4a1.3 1.3 0 0 0-1.2 1.8l.2.5A1.3 1.3 0 0 1 13.6 20H12Z" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+              {{ activity.type }}
+            </span>
+            <span class="activity-difficulty-pill"
+                  [ngClass]="{'bg-green-100 text-green-700 border-green-200': (activity.difficulty || 'Easy') === 'Easy','bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate','bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'}">
+              <svg class="activity-difficulty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path *ngIf="(activity.difficulty || 'Easy') === 'Easy'" d="M20 7 10 17l-5-5" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path *ngIf="activity.difficulty === 'Moderate'" d="M4 15a8 8 0 1 1 16 0M12 15l3-4M8 17h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path *ngIf="activity.difficulty === 'Challenging'" d="M3 20h18L14 5l-4 8-2-4-5 11Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              {{ activity.difficulty || 'Easy' }}
+            </span>
+          </div>
           <div class="mt-2 flex gap-2">
             <div class="relative flex-1">
               <button type="button"
@@ -96,6 +155,27 @@
                     [disabled]="!selectedPatient[activity.id] || recommending.has(activity.id)"
                     class="bg-[#7C3AED] text-white px-3 py-1 rounded text-sm">
               {{ recommending.has(activity.id) ? 'Recommending...' : 'Recommend' }}
+            </button>
+          </div>
+          <div class="mt-3 routine-assignment-strip">
+            <label class="routine-mini-field">
+              <span>Time</span>
+              <input type="time" [(ngModel)]="routineAssignmentTime">
+            </label>
+            <label class="routine-mini-field">
+              <span>Priority</span>
+              <select [(ngModel)]="routineAssignmentPriority">
+                <option *ngFor="let priority of routinePriorities" [value]="priority">{{ priority }}</option>
+              </select>
+            </label>
+            <button type="button"
+                    class="routine-pin-patient-btn"
+                    [disabled]="!selectedPatient[activity.id] || isInPatientRoutine(activity.id, selectedPatient[activity.id])"
+                    (click)="pinToPatientRoutine(activity, selectedPatient[activity.id], $event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke-width="2.2" stroke-linecap="round"></path>
+              </svg>
+              {{ isInPatientRoutine(activity.id, selectedPatient[activity.id]) ? 'Pinned' : 'Pin routine' }}
             </button>
           </div>
         </div>
@@ -130,7 +210,7 @@
             Doctor's Recommendations
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div *ngFor="let activity of recommendedActivities" class="cursor-pointer" (click)="viewDetails(activity)">
+            <div *ngFor="let activity of recommendedActivities" class="cursor-pointer h-full" (click)="viewDetails(activity)">
               <div class="activity-list-card border-2 border-[#DDD6FE] bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300">
                 <div class="relative h-52 overflow-hidden">
                   <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
@@ -160,14 +240,57 @@
                   <p class="text-sm text-[#6B5B8C] line-clamp-3">
                     {{ translations[activity.id] && !showOriginal[activity.id] ? translations[activity.id].description : activity.description }}
                   </p>
+                  <div class="activity-card-badge-row">
+                    <span class="activity-type-pill"
+                          [ngClass]="{'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation','bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive','bg-green-100 text-green-700 border-green-200': activity.type === 'Physical','bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social','bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'}">
+                      <svg class="activity-type-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path *ngIf="activity.type === 'Cognitive'" d="M9 4.5a3 3 0 0 0-3 3v.3A3.6 3.6 0 0 0 4 11a3.5 3.5 0 0 0 2 3.1V16a3 3 0 0 0 4.5 2.6M15 4.5a3 3 0 0 1 3 3v.3A3.6 3.6 0 0 1 20 11a3.5 3.5 0 0 1-2 3.1V16a3 3 0 0 1-4.5 2.6M12 5v14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Physical'" d="M6 14v-4m12 4v-4M4 12h16M8 9v6m8-6v6" stroke-width="1.8" stroke-linecap="round"/>
+                        <path *ngIf="activity.type === 'Relaxation'" d="M12 4c3 2.2 4.5 4.6 4.5 7.1A4.5 4.5 0 0 1 12 15.6a4.5 4.5 0 0 1-4.5-4.5C7.5 8.6 9 6.2 12 4Z M5 20c2.2-2 4.5-3 7-3s4.8 1 7 3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Social'" d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5M10.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Creative'" d="M12 20a8 8 0 1 1 7.7-5.8c-.3 1.1-1.4 1.8-2.5 1.8h-1.4a1.3 1.3 0 0 0-1.2 1.8l.2.5A1.3 1.3 0 0 1 13.6 20H12Z" stroke-width="1.8" stroke-linejoin="round"/>
+                      </svg>
+                      {{ activity.type }}
+                    </span>
+                    <span class="activity-difficulty-pill"
+                          [ngClass]="{'bg-green-100 text-green-700 border-green-200': activity.difficulty === 'Easy','bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate','bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'}">
+                      <svg class="activity-difficulty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path *ngIf="activity.difficulty === 'Easy'" d="M20 7 10 17l-5-5" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.difficulty === 'Moderate'" d="M4 15a8 8 0 1 1 16 0M12 15l3-4M8 17h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.difficulty === 'Challenging'" d="M3 20h18L14 5l-4 8-2-4-5 11Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      {{ activity.difficulty }}
+                    </span>
+                  </div>
                   <div *ngIf="activity.recommendedByDoctor && activity.doctorName" class="flex items-center gap-2 mt-1 text-xs text-[#6B5B8C]">
                     <img [src]="activity.doctorPicture || '/assets/default-avatar.png'" class="w-5 h-5 rounded-full object-cover">
                     <span>Recommended by Dr. {{ activity.doctorName }}</span>
                   </div>
+                  <div class="activity-rating-control" (click)="$event.stopPropagation()">
+                    <div class="flex items-center gap-1">
+                      <button *ngFor="let star of ratingStars"
+                              type="button"
+                              class="rating-star-btn"
+                              [class.is-active]="star <= (activity.userRating || 0)"
+                              [disabled]="ratingSubmitting.has(activity.id)"
+                              (click)="rateActivity(activity, star, $event)"
+                              [attr.aria-label]="'Rate ' + star + ' stars'">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <span>{{ getRatingLabel(activity) }} - {{ activity.totalRatings || 0 }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</span>
+                  </div>
                   <div class="flex items-center justify-between text-xs text-[#6B5B8C]">
                     <div class="flex items-center gap-4">
                       <div class="flex items-center gap-1">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M9 2.75h6" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M12 7.25v4.9l3.05 1.8" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <circle cx="12" cy="13" r="7.25" stroke="#A78BFA" stroke-width="2"/>
+                          <path d="M17.2 7.8l1.15-1.15" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
                         <span>{{ activity.duration }} min</span>
                       </div>
                       <div class="flex items-center gap-1">
@@ -176,7 +299,7 @@
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="px-1 py-1 rounded-full text-[10px] border border-[#E5E7EB] bg-white focus:outline-none" (click)="$event.stopPropagation()">
+                      <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="activity-translate-select" (click)="$event.stopPropagation()">
                         <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }} - {{ lang.name }}</option>
                       </select>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] flex items-center gap-1"
@@ -194,7 +317,7 @@
                       </button>
                     </div>
                   </div>
-                  <button appButton class="w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white mt-2">Learn more →</button>
+                  <button appButton class="activity-card-action-area w-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white mt-2">Learn more →</button>
                 </div>
               </div>
             </div>
@@ -206,11 +329,11 @@
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-3xl text-[#2D1B4E] flex items-center gap-2">
               <span class="text-2xl">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <rect x="7" y="14" width="2" height="2" fill="currentColor"/>
-                  <rect x="11" y="14" width="2" height="2" fill="currentColor"/>
-                  <rect x="15" y="14" width="2" height="2" fill="currentColor"/>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="15" rx="4" fill="#F3E8FF"/>
+                  <path d="M8 3.5v3M16 3.5v3M7.5 10h9" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8.2 14.1l2.05 2.05 5.45-5.45" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="4" y="5" width="16" height="15" rx="4" stroke="#C4B5FD" stroke-width="1.5"/>
                 </svg>
               </span>
               Today's Activities
@@ -218,7 +341,7 @@
 
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div *ngFor="let activity of todayActivities" class="cursor-pointer" (click)="viewDetails(activity)">
+            <div *ngFor="let activity of todayActivities" class="cursor-pointer h-full" (click)="viewDetails(activity)">
               <div class="activity-list-card border-2 rounded-2xl overflow-hidden transition-all duration-300"
                    [ngClass]="activity.completed ? 'bg-green-50 border-green-200' : 'bg-white border-[#DDD6FE] hover:shadow-2xl'">
                 <div class="relative h-52 overflow-hidden">
@@ -238,12 +361,6 @@
                       Favorite
                     </span>
                   </div>
-                  <div *ngIf="activity.completed" class="absolute inset-0 bg-green-600/20 flex items-center justify-center">
-                    <div class="bg-white rounded-full px-4 py-2 text-green-700 font-semibold flex items-center gap-1">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      Completed
-                    </div>
-                  </div>
                 </div>
                 <div class="p-5 space-y-4">
                   <div class="flex items-start justify-between gap-4">
@@ -255,13 +372,25 @@
                         {{ translations[activity.id] && !showOriginal[activity.id] ? translations[activity.id].description : activity.description }}
                       </p>
                     </div>
-                    <div class="text-right space-y-2">
-                      <div class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
+                    <div class="activity-card-badges">
+                      <div class="activity-type-pill"
                            [ngClass]="{'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation','bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive','bg-green-100 text-green-700 border-green-200': activity.type === 'Physical','bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social','bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'}">
+                        <svg class="activity-type-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path *ngIf="activity.type === 'Cognitive'" d="M9 4.5a3 3 0 0 0-3 3v.3A3.6 3.6 0 0 0 4 11a3.5 3.5 0 0 0 2 3.1V16a3 3 0 0 0 4.5 2.6M15 4.5a3 3 0 0 1 3 3v.3A3.6 3.6 0 0 1 20 11a3.5 3.5 0 0 1-2 3.1V16a3 3 0 0 1-4.5 2.6M12 5v14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path *ngIf="activity.type === 'Physical'" d="M6 14v-4m12 4v-4M4 12h16M8 9v6m8-6v6" stroke-width="1.8" stroke-linecap="round"/>
+                          <path *ngIf="activity.type === 'Relaxation'" d="M12 4c3 2.2 4.5 4.6 4.5 7.1A4.5 4.5 0 0 1 12 15.6a4.5 4.5 0 0 1-4.5-4.5C7.5 8.6 9 6.2 12 4Z M5 20c2.2-2 4.5-3 7-3s4.8 1 7 3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path *ngIf="activity.type === 'Social'" d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5M10.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path *ngIf="activity.type === 'Creative'" d="M12 20a8 8 0 1 1 7.7-5.8c-.3 1.1-1.4 1.8-2.5 1.8h-1.4a1.3 1.3 0 0 0-1.2 1.8l.2.5A1.3 1.3 0 0 1 13.6 20H12Z" stroke-width="1.8" stroke-linejoin="round"/>
+                        </svg>
                         {{ activity.type }}
                       </div>
-                      <div class="inline-flex items-center rounded-full border px-3 py-1 text-xs"
+                      <div class="activity-difficulty-pill"
                            [ngClass]="{'bg-green-100 text-green-700 border-green-200': activity.difficulty === 'Easy','bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate','bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'}">
+                        <svg class="activity-difficulty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                          <path *ngIf="activity.difficulty === 'Easy'" d="M20 7 10 17l-5-5" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path *ngIf="activity.difficulty === 'Moderate'" d="M4 15a8 8 0 1 1 16 0M12 15l3-4M8 17h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path *ngIf="activity.difficulty === 'Challenging'" d="M3 20h18L14 5l-4 8-2-4-5 11Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                         {{ activity.difficulty }}
                       </div>
                     </div>
@@ -269,7 +398,12 @@
                   <div class="flex items-center justify-between text-xs text-[#6B5B8C]">
                     <div class="flex items-center gap-4">
                       <div class="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 102.85 122.88" class="w-4 h-4 fill-current"><path d="M56.91,20.32C67.15,21.4,76.5,25.5,84.05,31.7l5.21-5.44c1.06-1.11,2.84-1.13,3.95-0.06l3.5,3.4c1.1,1.07,1.12,2.84,0.06,3.94l-5.35,5.58c7.15,8.83,11.44,20.08,11.44,32.32c0,28.4-23.03,51.43-51.43,51.43C23.03,122.88,0,99.85,0,71.45C0,58.63,4.7,46.9,12.46,37.89l-6.02-5.66c-1.12-1.05-1.15-2.83-0.09-3.94l3.37-3.53c1.06-1.11,2.83-1.14,3.94-0.09l6.41,6.03c7.81-6.02,17.39-9.84,27.83-10.54V9h-9.9c-1.32,0-2.4-1.08-2.4-2.4V2.4c0-1.32,1.08-2.4,2.4-2.4h28.8c1.32,0,2.4,1.08,2.4,2.4v4.2c0,1.32-1.08,2.4-2.4,2.4h-9.9V20.32ZM47.24,52.63h4.39c0.8,0,1.46,0.66,1.46,1.46v18.35h13.51c0.8,0,1.46,0.66,1.46,1.46v4.39c0,0.8-0.66,1.46-1.46,1.46H45.78V54.09C45.78,53.28,46.44,52.63,47.24,52.63ZM51.43,29.69c23.06,0,41.76,18.7,41.76,41.76c0,23.06-18.7,41.76-41.76,41.76c-23.06,0-41.76-18.7-41.76-41.76C9.67,48.39,28.37,29.69,51.43,29.69Z"/></svg>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M9 2.75h6" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                          <path d="M12 7.25v4.9l3.05 1.8" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <circle cx="12" cy="13" r="7.25" stroke="#A78BFA" stroke-width="2"/>
+                          <path d="M17.2 7.8l1.15-1.15" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
                         <span>{{ activity.duration }} min</span>
                       </div>
                       <div class="flex items-center gap-1" *ngIf="activity.scheduledTime">
@@ -282,7 +416,7 @@
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="px-1 py-1 rounded-full text-[10px] border border-[#E5E7EB] bg-white focus:outline-none" (click)="$event.stopPropagation()">
+                      <select *ngIf="!translations[activity.id] || showOriginal[activity.id]" [(ngModel)]="selectedLang[activity.id]" class="activity-translate-select" (click)="$event.stopPropagation()">
                         <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }} - {{ lang.name }}</option>
                       </select>
                       <button type="button" class="px-2 py-1 rounded-full text-[10px] flex items-center gap-1"
@@ -299,17 +433,26 @@
                       </button>
                     </div>
                   </div>
-                  <div class="pt-2">
-                    <button appButton class="w-full"
-                            [ngClass]="activity.completed ? 'bg-green-600 hover:bg-green-700' : 'bg-[#7C3AED] hover:bg-[#6D28D9]'"
-                            (click)="completeActivity(activity, $event)" [disabled]="activity.completed">
-                      <ng-container *ngIf="activity.completed; else startLabel">
-                        <span class="flex items-center justify-center gap-1">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                          Completed
-                        </span>
-                      </ng-container>
-                      <ng-template #startLabel>View details &amp; start →</ng-template>
+                  <div class="activity-rating-control" (click)="$event.stopPropagation()">
+                    <div class="flex items-center gap-1">
+                      <button *ngFor="let star of ratingStars"
+                              type="button"
+                              class="rating-star-btn"
+                              [class.is-active]="star <= (activity.userRating || 0)"
+                              [disabled]="ratingSubmitting.has(activity.id)"
+                              (click)="rateActivity(activity, star, $event)"
+                              [attr.aria-label]="'Rate ' + star + ' stars'">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <span>{{ getRatingLabel(activity) }} - {{ activity.totalRatings || 0 }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</span>
+                  </div>
+                  <div class="activity-card-action-area pt-2">
+                    <button appButton class="w-full bg-[#7C3AED] hover:bg-[#6D28D9]"
+                            (click)="viewDetails(activity); $event.stopPropagation()">
+                      View details &amp; start →
                     </button>
                   </div>
                 </div>
@@ -321,15 +464,63 @@
 
       <!-- CAREGIVER layout -->
       <ng-template #caregiverLayout>
+        <section class="routine-care-board">
+          <div>
+            <p class="text-xs uppercase tracking-[0.18em] text-[#7C3AED] font-bold">Caregiver routine hub</p>
+            <h2 class="text-2xl md:text-3xl font-bold text-[#2D1B4E]">Pin and track routines for your patients</h2>
+            <p class="text-sm text-[#6B5B8C]">Assign daily activities, remind patients to finish them, and watch their checked progress from one place.</p>
+          </div>
+          <button type="button" class="routine-secondary-btn" (click)="openRoutineModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M9 4h6a2 2 0 0 1 2 2v13l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke-width="2" stroke-linejoin="round"></path>
+              <path d="M10 9h4M10 13h3" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+            Open routine tracker
+          </button>
+        </section>
+
+        <section *ngIf="patientRoutineSummaries.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <article *ngFor="let summary of patientRoutineSummaries" class="patient-routine-tile">
+            <div class="flex items-center justify-between gap-3">
+              <button type="button" class="flex items-center gap-3 min-w-0 text-left" (click)="openPatientRoutineModal(summary.patient)">
+                <img [src]="summary.patient.profilePicture || '/assets/default-avatar.png'" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow">
+                <span class="min-w-0">
+                  <span class="block font-bold text-[#2D1B4E] truncate">{{ summary.patient.name }}</span>
+                  <span class="block text-xs text-[#6B5B8C]">{{ summary.pending }} pending routine item{{ summary.pending !== 1 ? 's' : '' }}</span>
+                </span>
+              </button>
+              <span class="routine-progress-badge">{{ summary.progress }}%</span>
+            </div>
+            <div class="progress-bar-track mt-4" style="height:8px">
+              <div class="progress-bar-fill" [style.width.%]="summary.progress"></div>
+            </div>
+            <div class="mt-4 flex items-center justify-between gap-3 text-xs">
+              <span [ngClass]="summary.overdueCount ? 'text-[#BE185D] font-semibold' : 'text-[#6B5B8C]'">
+                {{ summary.nextItem ? 'Next: ' + summary.nextItem.name : 'No routine pinned yet' }}
+              </span>
+              <button type="button"
+                      class="routine-remind-btn"
+                      [disabled]="summary.pending === 0"
+                      (click)="sendRoutineReminder(summary.patient, $event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M10 21h4" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                Remind
+              </button>
+            </div>
+          </article>
+        </section>
+
         <section>
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-3xl text-[#2D1B4E] flex items-center gap-2">
               <span class="text-2xl">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <rect x="7" y="14" width="2" height="2" fill="currentColor"/>
-                  <rect x="11" y="14" width="2" height="2" fill="currentColor"/>
-                  <rect x="15" y="14" width="2" height="2" fill="currentColor"/>
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="15" rx="4" fill="#F3E8FF"/>
+                  <path d="M8 3.5v3M16 3.5v3M7.5 10h9" stroke="#7C3AED" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8.2 14.1l2.05 2.05 5.45-5.45" stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="4" y="5" width="16" height="15" rx="4" stroke="#C4B5FD" stroke-width="1.5"/>
                 </svg>
               </span>
               Today's Activities
@@ -340,29 +531,98 @@
           </div>
           <!-- Caregiver cards (same structure as patient, omitted for brevity — keep your existing caregiver card HTML here) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div *ngFor="let activity of todayActivities" class="cursor-pointer" (click)="viewDetails(activity)">
+            <div *ngFor="let activity of todayActivities" class="cursor-pointer h-full" (click)="viewDetails(activity)">
               <div class="activity-list-card border-2 rounded-2xl overflow-hidden transition-all duration-300 bg-white border-[#DDD6FE] hover:shadow-2xl">
                 <div class="relative h-52 overflow-hidden">
                   <img [src]="getImageUrl(activity.imageUrl)" [alt]="activity.name" class="w-full h-full object-cover" />
                   <div class="absolute top-3 right-3 flex gap-2">
                     <button type="button"
-                            class="pin-activity-btn flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border"
-                            [ngClass]="isInRoutine(activity.id) ? 'bg-[#7C3AED] text-white border-[#7C3AED] pinned' : 'bg-white/95 text-[#7C3AED] border-[#C4B5FD] hover:bg-[#F3E8FF]'"
-                            (click)="isInRoutine(activity.id) ? unpinFromRoutine(activity.id, $event) : pinToRoutine(activity, $event)">
+                            class="pin-activity-btn flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-white/95 text-[#7C3AED] border-[#C4B5FD] hover:bg-[#F3E8FF]"
+                            (click)="togglePatientDropdown(activity.id); $event.stopPropagation()">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-                      {{ isInRoutine(activity.id) ? 'Pinned' : 'Pin' }}
+                      Pin for patient
                     </button>
                   </div>
                 </div>
                 <div class="p-5">
                   <h3 class="text-xl text-[#2D1B4E] mb-1">{{ activity.name }}</h3>
                   <p class="text-sm text-[#6B5B8C] line-clamp-2 mb-3">{{ activity.description }}</p>
-                  <button appButton class="w-full bg-[#7C3AED] hover:bg-[#6D28D9]" (click)="completeActivity(activity, $event)" [disabled]="activity.completed">
-                    <span *ngIf="activity.completed; else caregiverStartLabel" class="flex items-center justify-center gap-1">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      Completed
+                  <div class="activity-card-badge-row mb-3">
+                    <span class="activity-type-pill"
+                          [ngClass]="{'bg-blue-100 text-blue-700 border-blue-200': activity.type === 'Relaxation','bg-purple-100 text-purple-700 border-purple-200': activity.type === 'Cognitive','bg-green-100 text-green-700 border-green-200': activity.type === 'Physical','bg-pink-100 text-pink-700 border-pink-200': activity.type === 'Social','bg-orange-100 text-orange-700 border-orange-200': activity.type === 'Creative'}">
+                      <svg class="activity-type-mini-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path *ngIf="activity.type === 'Cognitive'" d="M9 4.5a3 3 0 0 0-3 3v.3A3.6 3.6 0 0 0 4 11a3.5 3.5 0 0 0 2 3.1V16a3 3 0 0 0 4.5 2.6M15 4.5a3 3 0 0 1 3 3v.3A3.6 3.6 0 0 1 20 11a3.5 3.5 0 0 1-2 3.1V16a3 3 0 0 1-4.5 2.6M12 5v14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Physical'" d="M6 14v-4m12 4v-4M4 12h16M8 9v6m8-6v6" stroke-width="1.8" stroke-linecap="round"/>
+                        <path *ngIf="activity.type === 'Relaxation'" d="M12 4c3 2.2 4.5 4.6 4.5 7.1A4.5 4.5 0 0 1 12 15.6a4.5 4.5 0 0 1-4.5-4.5C7.5 8.6 9 6.2 12 4Z M5 20c2.2-2 4.5-3 7-3s4.8 1 7 3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Social'" d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5M10.5 19c.7-3.1 2.4-5 5-5s4.3 1.9 5 5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.type === 'Creative'" d="M12 20a8 8 0 1 1 7.7-5.8c-.3 1.1-1.4 1.8-2.5 1.8h-1.4a1.3 1.3 0 0 0-1.2 1.8l.2.5A1.3 1.3 0 0 1 13.6 20H12Z" stroke-width="1.8" stroke-linejoin="round"/>
+                      </svg>
+                      {{ activity.type }}
                     </span>
-                    <ng-template #caregiverStartLabel>View details &amp; start</ng-template>
+                    <span class="activity-difficulty-pill"
+                          [ngClass]="{'bg-green-100 text-green-700 border-green-200': activity.difficulty === 'Easy','bg-yellow-100 text-yellow-700 border-yellow-200': activity.difficulty === 'Moderate','bg-orange-100 text-orange-700 border-orange-200': activity.difficulty === 'Challenging'}">
+                      <svg class="activity-difficulty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path *ngIf="activity.difficulty === 'Easy'" d="M20 7 10 17l-5-5" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.difficulty === 'Moderate'" d="M4 15a8 8 0 1 1 16 0M12 15l3-4M8 17h8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path *ngIf="activity.difficulty === 'Challenging'" d="M3 20h18L14 5l-4 8-2-4-5 11Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      {{ activity.difficulty }}
+                    </span>
+                  </div>
+                  <div class="activity-rating-control mb-4" (click)="$event.stopPropagation()">
+                    <div class="flex items-center gap-1">
+                      <button *ngFor="let star of ratingStars"
+                              type="button"
+                              class="rating-star-btn"
+                              [class.is-active]="star <= (activity.userRating || 0)"
+                              [disabled]="ratingSubmitting.has(activity.id)"
+                              (click)="rateActivity(activity, star, $event)"
+                              [attr.aria-label]="'Rate ' + star + ' stars'">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="m12 3 2.7 5.47 6.03.88-4.36 4.25 1.03 6L12 16.76 6.6 19.6l1.03-6-4.36-4.25 6.03-.88L12 3Z"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <span>{{ getRatingLabel(activity) }} - {{ activity.totalRatings || 0 }} rating{{ activity.totalRatings !== 1 ? 's' : '' }}</span>
+                  </div>
+                  <div class="caregiver-pin-box mb-4" (click)="$event.stopPropagation()">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div class="relative sm:col-span-1">
+                        <button type="button" class="patient-select-btn w-full border p-2 text-xs flex items-center justify-between bg-white" (click)="togglePatientDropdown(activity.id)">
+                          <span *ngIf="selectedPatient[activity.id]" class="flex items-center gap-2 min-w-0">
+                            <img [src]="selectedPatient[activity.id].profilePicture || '/assets/default-avatar.png'" class="w-6 h-6 rounded-full object-cover">
+                            <span class="truncate">{{ selectedPatient[activity.id].name }}</span>
+                          </span>
+                          <span *ngIf="!selectedPatient[activity.id]" class="text-[#6B5B8C]">Patient</span>
+                        </button>
+                        <div *ngIf="patientDropdownOpen === activity.id"
+                             class="absolute z-20 mt-1 w-full bg-white border rounded-xl shadow-lg max-h-56 overflow-auto">
+                          <div *ngFor="let p of patients"
+                               class="flex items-center gap-2 p-2 hover:bg-[#F3E8FF] cursor-pointer text-xs"
+                               (click)="selectPatient(activity.id, p)">
+                            <img [src]="p.profilePicture || '/assets/default-avatar.png'" class="w-6 h-6 rounded-full object-cover">
+                            <span>{{ p.name }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <input type="time" [(ngModel)]="routineAssignmentTime" class="routine-care-input">
+                      <select [(ngModel)]="routineAssignmentPriority" class="routine-care-input">
+                        <option *ngFor="let priority of routinePriorities" [value]="priority">{{ priority }}</option>
+                      </select>
+                    </div>
+                    <textarea [(ngModel)]="routineAssignmentNote" rows="2" class="routine-care-note" placeholder="Optional note for the patient"></textarea>
+                    <button type="button"
+                            class="routine-pin-patient-btn w-full justify-center mt-2"
+                            [disabled]="!selectedPatient[activity.id] || isInPatientRoutine(activity.id, selectedPatient[activity.id])"
+                            (click)="pinToPatientRoutine(activity, selectedPatient[activity.id], $event)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14" stroke-width="2.2" stroke-linecap="round"></path>
+                      </svg>
+                      {{ isInPatientRoutine(activity.id, selectedPatient[activity.id]) ? 'Already pinned' : 'Pin to patient routine' }}
+                    </button>
+                  </div>
+                  <button appButton class="activity-card-action-area w-full bg-[#7C3AED] hover:bg-[#6D28D9]" (click)="viewDetails(activity); $event.stopPropagation()">
+                    View details &amp; start
                   </button>
                 </div>
               </div>
@@ -389,10 +649,57 @@
 </div>
 
 <!-- ═══════════════════════ MY ROUTINE MODAL ═══════════════════════ -->
+<div *ngIf="ratingPopup"
+     class="rating-feedback-overlay fixed inset-0 bg-black/45 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
+     (click)="skipRatingFeedback()">
+  <section class="rating-feedback-modal bg-white rounded-3xl shadow-2xl border border-[#DDD6FE] w-full max-w-lg overflow-hidden"
+           (click)="$event.stopPropagation()">
+    <div class="rating-feedback-hero" [ngClass]="getRatingMoodClass(ratingPopup.rating)">
+      <div class="rating-face" [ngClass]="getRatingMoodClass(ratingPopup.rating)">
+        <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <circle cx="60" cy="60" r="42" fill="currentColor" opacity="0.13"></circle>
+          <circle cx="60" cy="60" r="34" fill="white" stroke="currentColor" stroke-width="4"></circle>
+          <circle cx="48" cy="53" r="4" fill="currentColor"></circle>
+          <circle cx="72" cy="53" r="4" fill="currentColor"></circle>
+          <path *ngIf="ratingPopup.rating >= 4" d="M45 68c7 10 23 10 30 0" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+          <path *ngIf="ratingPopup.rating === 3" d="M47 72h26" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+          <path *ngIf="ratingPopup.rating <= 2" d="M45 76c7-9 23-9 30 0" stroke="currentColor" stroke-width="5" stroke-linecap="round"></path>
+          <path d="m60 14 3 9 9 1.4-6.5 6.3 1.5 8.9L60 35.4l-7 4.2 1.5-8.9L48 24.4 57 23l3-9Z" fill="currentColor"></path>
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-[0.18em] font-bold text-[#7C3AED]">Rating saved</p>
+        <h3 class="text-2xl font-bold text-[#2D1B4E]">{{ getRatingMoodLabel(ratingPopup.rating) }}</h3>
+        <p class="text-sm text-[#6B5B8C] mt-1">Your {{ ratingPopup.rating }} star rating for "{{ ratingPopup.activity.name }}" helps us improve EverCare.</p>
+      </div>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <label class="block">
+        <span class="text-sm font-bold text-[#2D1B4E]">Optional feedback for the EverCare team</span>
+        <textarea [(ngModel)]="ratingPopup.feedback"
+                  rows="4"
+                  class="rating-feedback-textarea"
+                  placeholder="Tell us why you rated it this way..."></textarea>
+      </label>
+      <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
+        <button type="button" class="rating-skip-btn" (click)="skipRatingFeedback()">Skip</button>
+        <button type="button" class="rating-submit-btn" (click)="submitRatingFeedback()" [disabled]="ratingPopup.submitting">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M22 2 11 13" stroke-width="2" stroke-linecap="round"></path>
+            <path d="m22 2-7 20-4-9-9-4 20-7Z" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+          Share feedback
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div *ngIf="showRoutineModal"
      class="routine-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
      (click)="closeRoutineModal()">
-  <div class="routine-panel bg-white w-full sm:max-w-2xl sm:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
+  <div class="routine-panel bg-white w-full sm:max-w-4xl sm:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col overflow-hidden"
        (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
@@ -407,14 +714,27 @@
             <svg class="routine-title-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M9 5H7C5.89543 5 5 5.89543 5 7V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V7C19 5.89543 18.1046 5 17 5H15M9 5C9 5.55228 9.44772 6 10 6H14C14.5523 6 15 5.55228 15 5M9 5C9 4.44772 9.44772 4 10 4H14C14.5523 4 15 4.44772 15 5M12 12H15M12 16H15M9 12H9.01M9 16H9.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            My Routine
+            {{ userRole === 'PATIENT' ? 'My Routine' : 'Patient Routine Tracker' }}
           </h2>
-          <p class="text-white/80 text-sm mt-1">Track your personal wellness journey</p>
+          <p class="text-white/80 text-sm mt-1">
+            {{ userRole === 'PATIENT' ? 'Track your personal wellness journey' : 'Pin, remind, and monitor routine progress' }}
+          </p>
         </div>
         <button (click)="closeRoutineModal()" class="routine-close text-white/80 hover:text-white leading-none p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Close routine">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/>
           </svg>
+        </button>
+      </div>
+
+      <div *ngIf="userRole !== 'PATIENT' && patients.length" class="relative mt-4 flex flex-wrap gap-2">
+        <button *ngFor="let patient of patients"
+                type="button"
+                class="routine-patient-chip"
+                [ngClass]="activeRoutinePatient?.userId === patient.userId ? 'is-active' : ''"
+                (click)="selectRoutinePatient(patient)">
+          <img [src]="patient.profilePicture || '/assets/default-avatar.png'" alt="" class="w-6 h-6 rounded-full object-cover">
+          <span>{{ patient.name }}</span>
         </button>
       </div>
 
@@ -437,15 +757,15 @@
         <div class="grid grid-cols-3 gap-3 flex-1">
           <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
             <div class="text-xl font-bold text-white">{{ routineActivities.length }}</div>
-            <div class="text-[10px] text-white/70">Pinned</div>
+            <div class="text-[10px] text-white/70">{{ userRole === 'PATIENT' ? 'Pinned' : 'Assigned' }}</div>
           </div>
           <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
             <div class="text-xl font-bold text-white">{{ getRoutineCompletedCount() }}</div>
             <div class="text-[10px] text-white/70">Done</div>
           </div>
           <div class="routine-stat-card bg-white/20 rounded-xl p-2 text-center">
-            <div class="text-xl font-bold text-white">{{ routineActivities.length - getRoutineCompletedCount() }}</div>
-            <div class="text-[10px] text-white/70">Left</div>
+            <div class="text-xl font-bold text-white">{{ userRole === 'PATIENT' ? (routineActivities.length - getRoutineCompletedCount()) : getAssignedRoutineCount() }}</div>
+            <div class="text-[10px] text-white/70">{{ userRole === 'PATIENT' ? 'Left' : 'Care pins' }}</div>
           </div>
         </div>
       </div>
@@ -457,8 +777,14 @@
       <!-- EMPTY STATE -->
       <div *ngIf="routineActivities.length === 0" class="flex flex-col items-center justify-center py-16 px-6 text-center">
         <div class="empty-routine text-7xl mb-4"></div>
-        <h3 class="text-xl font-semibold text-[#2D1B4E] mb-2">Your routine is empty</h3>
-        <p class="text-[#6B5B8C] text-sm max-w-xs">Browse activities and tap the <strong>Pin</strong> button or <strong>Pin to My Routine</strong> on any activity to add it here.</p>
+        <h3 class="text-xl font-semibold text-[#2D1B4E] mb-2">
+          {{ userRole === 'PATIENT' ? 'Your routine is empty' : 'No routine pinned yet' }}
+        </h3>
+        <p class="text-[#6B5B8C] text-sm max-w-sm">
+          {{ userRole === 'PATIENT'
+            ? 'Browse activities and tap Pin on any activity to add it here.'
+            : 'Choose a patient, set an optional time and priority, then pin an activity to build their daily routine.' }}
+        </p>
         <button (click)="closeRoutineModal()"
                 class="mt-6 px-6 py-2.5 bg-[#7C3AED] text-white rounded-full font-medium hover:bg-[#6D28D9] transition-colors">
           Browse Activities
@@ -467,6 +793,32 @@
 
       <!-- GOALS SECTION -->
       <div *ngIf="routineActivities.length > 0" class="p-5 space-y-5">
+        <section class="routine-reminder-card">
+          <div class="routine-reminder-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M10 21h4" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-[#2D1B4E]">
+              {{ userRole === 'PATIENT' ? 'Today\'s routine reminder' : (activeRoutinePatient?.name || 'Patient') + '\'s routine status' }}
+            </p>
+            <p class="text-xs text-[#6B5B8C]">{{ getRoutineReminderText() }}</p>
+          </div>
+          <button *ngIf="userRole !== 'PATIENT' && activeRoutinePatient"
+                  type="button"
+                  class="routine-remind-btn ml-auto"
+                  [disabled]="routineActivities.length === getRoutineCompletedCount()"
+                  (click)="sendRoutineReminder(activeRoutinePatient, $event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M22 2 11 13" stroke-width="2" stroke-linecap="round"></path>
+              <path d="m22 2-7 20-4-9-9-4 20-7Z" stroke-width="2" stroke-linejoin="round"></path>
+            </svg>
+            Send reminder
+          </button>
+        </section>
+
         <div>
           <h3 class="text-sm font-bold text-[#2D1B4E] uppercase tracking-wider mb-3 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#7C3AED"/></svg>
@@ -565,6 +917,20 @@
                     {{ routine.name }}
                   </div>
                   <div class="text-xs text-[#6B5B8C]">{{ routine.duration }} min</div>
+                  <div class="routine-meta-row">
+                    <span *ngIf="routine.scheduledTime">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="8" stroke-width="2"></circle>
+                        <path d="M12 8v4l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                      {{ routine.scheduledTime }}
+                    </span>
+                    <span *ngIf="routine.priority" class="routine-priority-pill">{{ routine.priority }}</span>
+                    <span *ngIf="routine.assignedByRole && routine.assignedByRole !== 'SELF'">
+                      {{ routine.assignedByRole === 'DOCTOR' ? 'Doctor' : 'Caregiver' }}: {{ routine.assignedByName }}
+                    </span>
+                  </div>
+                  <p *ngIf="routine.notes" class="routine-note-text">{{ routine.notes }}</p>
                 </div>
                 <!-- Actions -->
                 <div class="flex items-center gap-2 flex-shrink-0">

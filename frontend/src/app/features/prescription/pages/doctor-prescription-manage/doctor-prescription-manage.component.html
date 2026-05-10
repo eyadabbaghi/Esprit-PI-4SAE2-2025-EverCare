@@ -181,12 +181,12 @@
           <tbody>
             <tr *ngFor="let prescription of prescriptions; trackBy: trackByPrescription" class="border-t border-[#F3E8FF] align-top">
               <td class="px-4 py-3">
-                <div class="font-medium text-[#2D1B4E]">{{ prescription.patient?.name || 'N/A' }}</div>
-                <div class="text-xs text-[#6B5B8C]">{{ prescription.patient?.email || 'N/A' }}</div>
+                <div class="font-medium text-[#2D1B4E]">{{ prescription.patient.name || 'N/A' }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ prescription.patient.email || 'N/A' }}</div>
               </td>
               <td class="px-4 py-3">
-                <div class="font-medium text-[#2D1B4E]">{{ prescription.medicament?.nomCommercial || 'N/A' }}</div>
-                <div class="text-xs text-[#6B5B8C]">{{ prescription.medicament?.dosage }} · {{ prescription.medicament?.forme }}</div>
+                <div class="font-medium text-[#2D1B4E]">{{ prescription.medicament.nomCommercial || 'N/A' }}</div>
+                <div class="text-xs text-[#6B5B8C]">{{ prescription.medicament.dosage }} · {{ prescription.medicament.forme }}</div>
               </td>
               <td class="px-4 py-3 text-[#2D1B4E]">{{ prescription.datePrescription | date:'mediumDate' }}</td>
               <td class="px-4 py-3 text-[#2D1B4E]">{{ prescription.dateFin | date:'mediumDate' }}</td>
@@ -204,6 +204,10 @@
               <td class="px-4 py-3">
                 <div class="flex flex-wrap gap-2">
                   <button (click)="viewPrescription(prescription)" class="rounded-md border border-[#E9D5FF] px-3 py-1 text-xs font-medium text-[#2D1B4E]">View</button>
+                  <button (click)="editPrescription(prescription)" class="rounded-md bg-[#F3E8FF] px-3 py-1 text-xs font-medium text-[#7C3AED]">
+                    <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.8 2.8 0 0 0-4-4L4 16v4Z" stroke-width="2" stroke-linejoin="round"></path><path d="m13.5 6.5 4 4" stroke-width="2" stroke-linecap="round"></path></svg>
+                    Edit
+                  </button>
                   <button *ngIf="prescription.statut === 'ACTIVE' && prescription.renouvelable && prescription.nombreRenouvellements > 0"
                           (click)="renewPrescription(prescription)"
                           class="rounded-md bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">Renew</button>
@@ -213,6 +217,10 @@
                   <button *ngIf="prescription.statut === 'ACTIVE'"
                           (click)="terminatePrescription(prescription)"
                           class="rounded-md bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">Complete</button>
+                  <button (click)="deletePrescription(prescription)" class="rounded-md bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                    <svg class="inline-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    Delete
+                  </button>
                 </div>
               </td>
             </tr>
@@ -241,3 +249,76 @@
   (onCancelled)="onPrescriptionUpdated()"
   (onPdfGenerated)="onPrescriptionUpdated()">
 </app-prescription-details>
+
+<div *ngIf="editingPrescription && editForm" class="fixed inset-0 z-50 flex items-center justify-center bg-[#1F1633]/55 px-4 py-6">
+  <section class="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div class="flex items-start justify-between gap-4 border-b border-[#E9D5FF] bg-[#FAF8FC] px-6 py-5">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-[#7C3AED]">Edit Prescription</p>
+        <h2 class="mt-1 text-xl font-bold text-[#2D1B4E]">{{ editingPrescription.medicament.nomCommercial || 'Medication' }}</h2>
+      </div>
+      <button type="button" class="rounded-full p-2 text-[#6B5B8C] hover:bg-[#F3E8FF]" (click)="closeEdit()" aria-label="Close edit form">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg>
+      </button>
+    </div>
+
+    <form class="max-h-[72vh] overflow-y-auto px-6 py-5" (ngSubmit)="savePrescriptionEdit()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Start date</span>
+          <input type="date" name="dateDebut" [(ngModel)]="editForm.dateDebut" required class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">End date</span>
+          <input type="date" name="dateFin" [(ngModel)]="editForm.dateFin" required class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="md:col-span-2 text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Dosage / Posology</span>
+          <input name="posologie" [(ngModel)]="editForm.posologie" required class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="md:col-span-2 text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Instructions</span>
+          <textarea name="instructions" [(ngModel)]="editForm.instructions" rows="2" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2"></textarea>
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Renewable</span>
+          <select name="renouvelable" [(ngModel)]="editForm.renouvelable" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Renewals</span>
+          <input type="number" min="0" name="nombreRenouvellements" [(ngModel)]="editForm.nombreRenouvellements" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Morning</span>
+          <input name="priseMatin" [(ngModel)]="editForm.priseMatin" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Midday</span>
+          <input name="priseMidi" [(ngModel)]="editForm.priseMidi" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Evening</span>
+          <input name="priseSoir" [(ngModel)]="editForm.priseSoir" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Simple summary</span>
+          <input name="resumeSimple" [(ngModel)]="editForm.resumeSimple" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2">
+        </label>
+        <label class="md:col-span-2 text-sm">
+          <span class="mb-1 block font-medium text-[#6B5B8C]">Doctor notes</span>
+          <textarea name="notesMedecin" [(ngModel)]="editForm.notesMedecin" rows="3" class="w-full rounded-lg border border-[#E9D5FF] px-3 py-2"></textarea>
+        </label>
+      </div>
+
+      <div class="mt-5 flex justify-end gap-3 border-t border-[#F3E8FF] pt-4">
+        <button type="button" class="rounded-lg border border-[#E9D5FF] px-4 py-2 text-sm font-medium text-[#6B5B8C]" (click)="closeEdit()">Cancel</button>
+        <button type="submit" class="rounded-lg bg-[#7C3AED] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60" [disabled]="editSaving">
+          {{ editSaving ? 'Saving...' : 'Save changes' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

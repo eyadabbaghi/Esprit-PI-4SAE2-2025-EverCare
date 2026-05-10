@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { Availability, AvailabilityStats } from '../../models/availability.model';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-availability-manager',
@@ -18,6 +19,8 @@ export class AvailabilityManagerComponent implements OnInit {
   @Output() deleteAvailability = new EventEmitter<string>();
   @Input() doctorId: string = '';
   today: string = new Date().toISOString().split('T')[0];
+
+  constructor(private feedback: AppFeedbackService) {}
 
   newAvailability: any = {
     dayCode: 'MONDAY',
@@ -83,8 +86,15 @@ export class AvailabilityManagerComponent implements OnInit {
     this.editAvailability.emit(slot);
   }
 
-  onDeleteAvailability(id: string): void {
-    if (confirm('Are you sure you want to delete this availability slot?')) {
+  async onDeleteAvailability(id: string): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete availability?',
+      message: 'Remove this availability slot from your scheduling calendar?',
+      confirmText: 'Delete slot',
+      tone: 'danger'
+    });
+
+    if (confirmed) {
       this.deleteAvailability.emit(id);
     }
   }

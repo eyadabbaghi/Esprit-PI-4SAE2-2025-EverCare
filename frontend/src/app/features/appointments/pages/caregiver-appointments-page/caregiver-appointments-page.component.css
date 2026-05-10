@@ -64,6 +64,33 @@
   font-size: 1.45rem;
 }
 
+.patient-switcher {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+
+.patient-switcher select,
+.caregiver-booking-form select,
+.caregiver-booking-form input,
+.caregiver-booking-form textarea {
+  width: 100%;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  background: #fff;
+  color: #2d1b4e;
+  padding: 0.65rem 0.75rem;
+  outline: none;
+}
+
+.patient-switcher select:focus,
+.caregiver-booking-form select:focus,
+.caregiver-booking-form input:focus,
+.caregiver-booking-form textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
 .workflow-panel {
   position: relative;
   overflow: hidden;
@@ -136,6 +163,45 @@
   box-shadow: 0 22px 46px rgba(124, 58, 237, 0.22);
 }
 
+.booking-panel {
+  border: 1px solid rgba(196, 181, 253, 0.68);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 1rem;
+  box-shadow: 0 24px 58px rgba(124, 58, 237, 0.1);
+}
+
+.caregiver-booking-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.caregiver-booking-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: #6b5b8c;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.booking-notes {
+  grid-column: span 2;
+}
+
+.booking-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.booking-status {
+  color: #7c3aed;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .appointment-grid {
   display: grid;
   gap: 1.25rem;
@@ -198,6 +264,48 @@
   background: rgba(255, 255, 255, 0.72);
 }
 
+.measurement-summary,
+.measurement-list,
+.details-measurements {
+  margin-top: 0.65rem;
+}
+
+.measurement-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.measurement-summary span,
+.measurement-item span {
+  border-radius: 999px;
+  background: #fff;
+  color: #6b5b8c;
+  padding: 0.22rem 0.52rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.measurement-list {
+  border-top: 1px solid rgba(221, 214, 254, 0.8);
+  padding-top: 0.7rem;
+}
+
+.measurement-list strong,
+.details-measurements h4 {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #2d1b4e;
+  font-size: 0.9rem;
+}
+
+.measurement-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
 .primary-action,
 .secondary-action {
   border-radius: 999px;
@@ -224,6 +332,113 @@
   transform: translateY(-2px);
 }
 
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
+.details-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.details-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(45, 27, 78, 0.48);
+}
+
+.appointment-details-card {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: min(720px, 92vh);
+  overflow: auto;
+  border-radius: 24px;
+  background: #fff;
+  padding: 1.2rem;
+  box-shadow: 0 30px 80px rgba(45, 27, 78, 0.28);
+}
+
+.details-header,
+.details-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.details-header p {
+  margin: 0;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.details-header h3 {
+  margin: 0.15rem 0 0;
+  color: #2d1b4e;
+  font-size: 1.3rem;
+}
+
+.details-header button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #6b5b8c;
+}
+
+.details-header svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.details-grid div,
+.details-measurements {
+  border: 1px solid #ede9fe;
+  border-radius: 16px;
+  background: #faf5ff;
+  padding: 0.85rem;
+}
+
+.details-grid span {
+  display: block;
+  color: #6b5b8c;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.details-grid strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #2d1b4e;
+}
+
+.empty-measurements {
+  color: #6b5b8c;
+  font-size: 0.86rem;
+}
+
+.details-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
 @keyframes caregiverCursor {
   0%, 22% { transform: translateX(0) translateY(0) rotate(-8deg); }
   42%, 62% { transform: translateX(32vw) translateY(-7px) rotate(-8deg); }
@@ -232,8 +447,14 @@
 
 @media (max-width: 900px) {
   .caregiver-hero,
-  .workflow-steps {
+  .workflow-steps,
+  .caregiver-booking-form,
+  .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .booking-notes {
+    grid-column: auto;
   }
 
   .floating-cursor {

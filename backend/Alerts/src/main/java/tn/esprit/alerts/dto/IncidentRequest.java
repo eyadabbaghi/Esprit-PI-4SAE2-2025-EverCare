@@ -19,6 +19,9 @@ public class IncidentRequest {
     @Size(max = 1000)
     private String description;
 
+    @Size(max = 4000)
+    private String aiSuggestion;
+
     @NotNull
     private String severity;   // will be converted to Severity enum
 

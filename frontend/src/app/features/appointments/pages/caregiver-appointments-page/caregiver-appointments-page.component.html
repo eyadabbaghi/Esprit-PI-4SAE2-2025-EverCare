@@ -11,6 +11,12 @@
         <span>Active patient</span>
         <strong>{{ patient.name }}</strong>
         <small>{{ getUpcomingAppointments().length }} upcoming appointment{{ getUpcomingAppointments().length === 1 ? '' : 's' }}</small>
+        <label *ngIf="patients.length > 1" class="patient-switcher">
+          <span>Switch patient</span>
+          <select [ngModel]="patient.userId" (ngModelChange)="onPatientSelected($event)">
+            <option *ngFor="let linkedPatient of patients" [value]="linkedPatient.userId">{{ linkedPatient.name }}</option>
+          </select>
+        </label>
       </div>
     </section>
 
@@ -53,6 +59,89 @@
       </div>
     </section>
 
+    <section *ngIf="patient" class="booking-panel">
+      <div class="section-heading">
+        <div>
+          <p>Book for patient</p>
+          <h3>Schedule an appointment for {{ patient.name }}</h3>
+        </div>
+      </div>
+
+      <form class="caregiver-booking-form" (ngSubmit)="bookAppointmentForPatient()">
+        <label>
+          <span>Doctor</span>
+          <select
+            name="doctorId"
+            [(ngModel)]="bookingForm.doctorId"
+            (ngModelChange)="loadAvailableSlots()"
+            required>
+            <option value="">Select doctor</option>
+            <option *ngFor="let doctor of doctors" [value]="doctor.userId">
+              {{ doctor.name }}{{ doctor.specialization ? ' - ' + doctor.specialization : '' }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          <span>Consultation type</span>
+          <select
+            name="consultationTypeId"
+            [(ngModel)]="bookingForm.consultationTypeId"
+            (ngModelChange)="loadAvailableSlots()"
+            required>
+            <option value="">Select type</option>
+            <option *ngFor="let type of consultationTypes" [value]="type.typeId">
+              {{ type.name }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          <span>Date</span>
+          <input
+            type="date"
+            name="appointmentDate"
+            [min]="today"
+            [(ngModel)]="bookingForm.date"
+            (ngModelChange)="loadAvailableSlots()"
+            required>
+        </label>
+
+        <label>
+          <span>Available time</span>
+          <select name="appointmentTime" [(ngModel)]="bookingForm.time" required>
+            <option value="">Select time</option>
+            <option *ngFor="let slot of availableSlots" [value]="slot">{{ slot }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Caregiver presence</span>
+          <select name="caregiverPresence" [(ngModel)]="bookingForm.caregiverPresence">
+            <option value="REMOTE">Remote support</option>
+            <option value="PHYSICAL">Physical presence</option>
+            <option value="NONE">No caregiver presence</option>
+          </select>
+        </label>
+
+        <label class="booking-notes">
+          <span>Notes</span>
+          <textarea
+            name="notes"
+            rows="3"
+            [(ngModel)]="bookingForm.notes"
+            placeholder="Add context for the doctor"></textarea>
+        </label>
+
+        <div class="booking-actions">
+          <span *ngIf="bookingLoading" class="booking-status">Loading schedule...</span>
+          <button type="submit" class="primary-action" [disabled]="bookingLoading">
+            Book Appointment
+          </button>
+        </div>
+      </form>
+    </section>
+
     <!-- Submit Clinical Data Button (for upcoming appointments) -->
     <div *ngIf="patient && getUpcomingAppointments().length > 0" class="measurement-banner">
       <div class="flex items-center justify-between gap-4">
@@ -85,10 +174,24 @@
             <div>
               <p class="font-medium text-[#2D1B4E]">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>
               <p class="text-sm text-gray-500">{{ apt.status }}</p>
+              <div *ngIf="getLatestMeasurementForAppointment(apt) as measurement" class="measurement-summary">
+                <span>{{ measurement.weight }} kg</span>
+                <span>Kidney: {{ measurement.kidneyTestResult }}</span>
+                <span>{{ measurement.measuredAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
             </div>
             <div class="flex flex-wrap gap-2 justify-end">
               <button (click)="openClinicalMeasurementModal(apt)" class="secondary-action">Measurements</button>
-              <button (click)="viewAppointmentDetails(apt)" class="primary-action">View</button>
+              <button (click)="openAppointmentDetails(apt)" class="primary-action">View Appointment</button>
+            </div>
+          </div>
+          <div *ngIf="getMeasurementsForAppointment(apt).length > 0" class="measurement-list">
+            <strong>Added measurements</strong>
+            <div *ngFor="let measurement of getMeasurementsForAppointment(apt)" class="measurement-item">
+              <span>{{ measurement.measuredAt | date:'short' }}</span>
+              <span>{{ measurement.weight }} kg</span>
+              <span>Kidney: {{ measurement.kidneyTestResult }}</span>
+              <span>{{ measurement.severeLiverProblem ? 'Severe liver issue' : 'No severe liver issue' }}</span>
             </div>
           </div>
         </div>
@@ -107,11 +210,84 @@
             <div>
               <p class="font-medium text-gray-600">{{ apt.startDateTime | date:'dd/MM/yyyy HH:mm' }}</p>
               <p class="text-sm text-gray-500">{{ apt.status }}</p>
+              <div *ngIf="getLatestMeasurementForAppointment(apt) as measurement" class="measurement-summary">
+                <span>{{ measurement.weight }} kg</span>
+                <span>Kidney: {{ measurement.kidneyTestResult }}</span>
+              </div>
             </div>
-            <button (click)="viewAppointmentDetails(apt)" class="text-gray-500 text-sm">View</button>
+            <button (click)="openAppointmentDetails(apt)" class="text-gray-500 text-sm">View Appointment</button>
           </div>
         </div>
       </div>
+    </div>
+
+    <div *ngIf="showDetailsModal && selectedAppointment" class="details-overlay">
+      <div class="details-backdrop" (click)="closeDetailsModal()"></div>
+      <section class="appointment-details-card">
+        <div class="details-header">
+          <div>
+            <p>Appointment details</p>
+            <h3>{{ selectedAppointment.consultationTypeName || 'Consultation' }}</h3>
+          </div>
+          <button type="button" (click)="closeDetailsModal()" aria-label="Close details">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="details-grid">
+          <div>
+            <span>Patient</span>
+            <strong>{{ patient?.name }}</strong>
+          </div>
+          <div>
+            <span>Doctor</span>
+            <strong>{{ selectedAppointment.doctorName || 'Doctor' }}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{{ selectedAppointment.startDateTime | date:'dd/MM/yyyy' }}</strong>
+          </div>
+          <div>
+            <span>Time</span>
+            <strong>{{ selectedAppointment.startDateTime | date:'HH:mm' }}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>{{ selectedAppointment.status }}</strong>
+          </div>
+          <div>
+            <span>Caregiver presence</span>
+            <strong>{{ selectedAppointment.caregiverPresence || 'REMOTE' }}</strong>
+          </div>
+        </div>
+
+        <div class="details-measurements">
+          <h4>Measurements</h4>
+          <div *ngIf="getMeasurementsForAppointment(selectedAppointment).length === 0" class="empty-measurements">
+            No measurements added yet.
+          </div>
+          <div *ngFor="let measurement of getMeasurementsForAppointment(selectedAppointment)" class="measurement-item">
+            <span>{{ measurement.measuredAt | date:'short' }}</span>
+            <span>{{ measurement.weight }} kg</span>
+            <span>Kidney: {{ measurement.kidneyTestResult }}</span>
+            <span>{{ measurement.severeLiverProblem ? 'Severe liver issue' : 'No severe liver issue' }}</span>
+          </div>
+        </div>
+
+        <div class="details-actions">
+          <button *ngIf="canConfirm(selectedAppointment)" type="button" class="secondary-action" (click)="confirmAppointment(selectedAppointment.appointmentId)">
+            Confirm
+          </button>
+          <button type="button" class="secondary-action" (click)="openClinicalMeasurementModal(selectedAppointment)">
+            Add Measurements
+          </button>
+          <button *ngIf="canJoinCall(selectedAppointment)" type="button" class="primary-action" (click)="joinVideoCall(selectedAppointment)">
+            Join Call
+          </button>
+        </div>
+      </section>
     </div>
 
     <!-- Clinical Measurement Modal -->
@@ -120,6 +296,7 @@
       [patientId]="patient?.userId || ''"
       [appointmentId]="clinicalMeasurementAppointment?.appointmentId || ''"
       [patientName]="patient?.name || ''"
+      [caregiverId]="currentCaregiver?.userId || ''"
       (onClose)="closeClinicalMeasurementModal()"
       (onSubmit)="onClinicalMeasurementSubmitted()">
     </app-clinical-measurement-modal>

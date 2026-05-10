@@ -81,6 +81,32 @@
       </div>
     </div>
 
+    <div *ngIf="popupMessage" class="appointment-popup" [ngClass]="popupTone">
+      <div class="popup-icon">
+        <svg *ngIf="popupTone === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <svg *ngIf="popupTone === 'error'" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M12 9v4M12 17h.01" stroke-width="2.4" stroke-linecap="round"></path>
+          <path d="M10.3 4.2 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z" stroke-width="2"></path>
+        </svg>
+        <svg *ngIf="popupTone === 'info' || popupTone === 'warning'" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M7 3v4M17 3v4M4 9h16M5 5h14v16H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M12 13v4M12 9h.01" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <div>
+        <strong>{{ popupTone === 'info' ? 'Appointments' : (popupTone | titlecase) }}</strong>
+        <span>{{ popupMessage }}</span>
+        <button *ngIf="popupMessage === 'Book your first appointment.'" type="button" (click)="activeTab = 'book-appointment'; dismissAppointmentPopup()">Book now</button>
+      </div>
+      <button type="button" class="popup-close" (click)="dismissAppointmentPopup()" aria-label="Dismiss message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+
     <div *ngIf="errorMessage" class="error-banner">
       <span>{{ errorMessage }}</span>
       <button type="button" (click)="errorMessage = ''" aria-label="Dismiss error">

@@ -15,6 +15,7 @@ export class ClinicalMeasurementModalComponent implements OnInit {
   @Input() patientId: string = '';
   @Input() appointmentId: string = '';
   @Input() patientName: string = '';
+  @Input() caregiverId: string = '';
   @Output() onClose = new EventEmitter<void>();
   @Output() onSubmit = new EventEmitter<void>();
 
@@ -61,7 +62,7 @@ export class ClinicalMeasurementModalComponent implements OnInit {
       allergies: formData.allergies || undefined
     };
 
-    this.clinicalMeasurementService.submitMeasurement(request, '').subscribe({
+    this.clinicalMeasurementService.submitMeasurement(request, this.caregiverId).subscribe({
       next: () => {
         this.loading = false;
         this.submitted = true;

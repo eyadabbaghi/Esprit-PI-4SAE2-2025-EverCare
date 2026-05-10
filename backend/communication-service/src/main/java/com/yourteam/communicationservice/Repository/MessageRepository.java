@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByConversationIdOrderBySentAtAsc(Long conversationId);
+    List<Message> findBySenderIdIgnoreCase(String senderId);
 
     @Query("SELECT new com.yourteam.communicationservice.DTO.MessageSearchDTO(m.id, m.content, m.senderId, m.sentAt, CAST(c.id AS string)) " +
             "FROM Message m JOIN m.conversation c WHERE " +

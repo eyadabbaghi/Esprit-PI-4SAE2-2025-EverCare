@@ -52,6 +52,7 @@ import { ConfirmDialogComponent } from './pages/alerts/components/confirm-dialog
 import { FaceRecoveryComponent } from './pages/face-recovery/face-recovery.component';
 import { AssessmentPageComponent } from './pages/assessment-page/assessment-page.component';
 import { OnboardingTutorialComponent } from './ui/onboarding-tutorial/onboarding-tutorial.component';
+import { EmergencySosPopupComponent } from './ui/emergency-sos-popup/emergency-sos-popup.component';
 import { ImageCropperComponent } from 'ngx-image-cropper';
 
 @NgModule({
@@ -90,6 +91,7 @@ import { ImageCropperComponent } from 'ngx-image-cropper';
     FaceRecoveryComponent,
     AssessmentPageComponent, 
     OnboardingTutorialComponent,
+    EmergencySosPopupComponent,
   ],
   imports: [
     CommonModule,

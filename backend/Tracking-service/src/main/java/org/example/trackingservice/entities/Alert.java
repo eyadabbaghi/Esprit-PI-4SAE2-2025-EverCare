@@ -23,6 +23,13 @@ public class Alert {
         this.timestamp = LocalDateTime.now();
     }
 
+    @PrePersist
+    public void prePersist() {
+        if (this.timestamp == null) {
+            this.timestamp = LocalDateTime.now();
+        }
+    }
+
     // getters/setters
     public Long getId() { return id; }
 
@@ -36,4 +43,5 @@ public class Alert {
     public void setSeverity(String severity) { this.severity = severity; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 }

@@ -25,6 +25,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final IncidentRepository incidentRepository;
+    private final AlertNotificationChannelService alertNotificationChannelService;
 
     @Transactional
     public AlertResponse createAlert(AlertRequest request) {
@@ -39,20 +40,30 @@ public class AlertService {
                 .label(request.getLabel())
                 .build();
 
-        if (request.getImmediate() != null && request.getImmediate()) {
+        if (request.getNotificationChannels() != null) {
+            alert.setNotificationChannels(new HashSet<>(request.getNotificationChannels()));
+        }
+
+        boolean sendImmediately = isImmediate(request);
+
+        if (sendImmediately) {
             // Immediate alert – set sentAt to now
             alert.setSentAt(LocalDateTime.now());
+            alert.setScheduledTime(null);
+            alert.setRepeatDays(new HashSet<>());
         } else {
             // Scheduled alert – store schedule info, sentAt remains null
-            if (request.getScheduledTime() != null) {
-                alert.setScheduledTime(LocalTime.parse(request.getScheduledTime()));
-            }
+            alert.setSentAt(null);
+            alert.setScheduledTime(parseScheduledTime(request.getScheduledTime()));
             if (request.getRepeatDays() != null) {
                 alert.setRepeatDays(new HashSet<>(request.getRepeatDays()));
             }
         }
 
         alert = alertRepository.save(alert);
+        if (sendImmediately) {
+            alertNotificationChannelService.dispatch(alert, alert.getNotificationChannels());
+        }
         return mapToResponse(alert);
     }
 
@@ -107,11 +118,15 @@ public class AlertService {
         response.setSentAt(alert.getSentAt());
         response.setAcknowledgedAt(alert.getAcknowledgedAt());
         response.setLabel(alert.getLabel());
+        response.setImmediate(alert.getScheduledTime() == null);
         if (alert.getScheduledTime() != null) {
             response.setScheduledTime(alert.getScheduledTime().toString()); // "HH:mm"
         }
         if (alert.getRepeatDays() != null) {
             response.setRepeatDays(new ArrayList<>(alert.getRepeatDays()));
+        }
+        if (alert.getNotificationChannels() != null) {
+            response.setNotificationChannels(new ArrayList<>(alert.getNotificationChannels()));
         }
         return response;
     }
@@ -131,14 +146,23 @@ public class AlertService {
         // Update fields
         alert.setTargetId(request.getTargetId());
         alert.setLabel(request.getLabel());
+        alert.setNotificationChannels(request.getNotificationChannels() != null
+                ? new HashSet<>(request.getNotificationChannels())
+                : new HashSet<>());
 
-        // Handle schedule
-        if (request.getImmediate() != null && request.getImmediate()) {
+        boolean sendImmediately = isImmediate(request);
+        boolean shouldDispatchNow = false;
+
+        if (sendImmediately) {
             alert.setScheduledTime(null);
             alert.setRepeatDays(new HashSet<>());
-            // Optionally set sentAt if immediate and not already sent? For simplicity, we leave sentAt as is.
+            if (alert.getSentAt() == null) {
+                alert.setSentAt(LocalDateTime.now());
+                shouldDispatchNow = true;
+            }
         } else {
-            alert.setScheduledTime(request.getScheduledTime() != null ? LocalTime.parse(request.getScheduledTime()) : null);
+            alert.setSentAt(null);
+            alert.setScheduledTime(parseScheduledTime(request.getScheduledTime()));
             alert.setRepeatDays(request.getRepeatDays() != null ? new HashSet<>(request.getRepeatDays()) : new HashSet<>());
         }
 
@@ -148,6 +172,20 @@ public class AlertService {
         }
 
         alert = alertRepository.save(alert);
+        if (shouldDispatchNow) {
+            alertNotificationChannelService.dispatch(alert, alert.getNotificationChannels());
+        }
         return mapToResponse(alert);
+    }
+
+    private boolean isImmediate(AlertRequest request) {
+        return request.getImmediate() == null || Boolean.TRUE.equals(request.getImmediate());
+    }
+
+    private LocalTime parseScheduledTime(String scheduledTime) {
+        if (scheduledTime == null || scheduledTime.isBlank()) {
+            return null;
+        }
+        return LocalTime.parse(scheduledTime);
     }
 }

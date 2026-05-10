@@ -28,10 +28,16 @@ export class MedicalRecordListComponent implements OnInit {
   patientIdentifierCandidates: string[] = [];
   private readonly patientNameById = new Map<string, string>();
   private readonly patientNameLoading = new Set<string>();
+  private readonly patientProfileByIdentifier = new Map<string, User>();
   private associatedRecords: MedicalRecord[] = [];
+  private successTimer: ReturnType<typeof setTimeout> | null = null;
 
   isLoading = false;
+  isArchivedModalLoading = false;
   errorMessage = '';
+  successMessage = '';
+  showArchivedModal = false;
+  archivedRecords: MedicalRecord[] = [];
 
   page = 0;
   size = 10;
@@ -203,9 +209,15 @@ export class MedicalRecordListComponent implements OnInit {
       return;
     }
 
+    this.errorMessage = '';
+    this.successMessage = '';
     this.medicalRecordService.archive(record.id).subscribe({
       next: () => {
+        this.showSuccessMessage('Archive done.');
         this.refreshStats();
+        if (this.showArchivedModal) {
+          this.loadArchivedRecordsForModal();
+        }
         if (this.isSearchMode) {
           this.searchByPatientId();
           return;
@@ -219,13 +231,17 @@ export class MedicalRecordListComponent implements OnInit {
   }
 
   restore(record: MedicalRecord): void {
-    if (record.active || this.currentRole !== 'ADMIN') {
+    if (record.active || !this.canRestoreArchivedRecords) {
       return;
     }
 
+    this.errorMessage = '';
+    this.successMessage = '';
     this.medicalRecordService.restore(record.id).subscribe({
       next: () => {
+        this.showSuccessMessage('Medical record unarchived successfully.');
         this.refreshStats();
+        this.loadArchivedRecordsForModal();
         if (this.isSearchMode) {
           this.searchByPatientId();
           return;
@@ -236,6 +252,64 @@ export class MedicalRecordListComponent implements OnInit {
         this.errorMessage = 'Failed to restore medical record.';
       }
     });
+  }
+
+  openArchivedRecordsModal(): void {
+    if (this.isPatientRole) {
+      return;
+    }
+
+    this.showArchivedModal = true;
+    this.loadArchivedRecordsForModal();
+  }
+
+  closeArchivedRecordsModal(): void {
+    if (this.isArchivedModalLoading) {
+      return;
+    }
+    this.showArchivedModal = false;
+  }
+
+  get canRestoreArchivedRecords(): boolean {
+    return this.currentRole === 'ADMIN' || this.currentRole === 'DOCTOR';
+  }
+
+  private loadArchivedRecordsForModal(): void {
+    if (!this.showArchivedModal) {
+      return;
+    }
+
+    this.isArchivedModalLoading = true;
+    if (this.isCareTeamRole) {
+      this.archivedRecords = this.associatedRecords.filter((record) => !record.active);
+      this.hydratePatientNames(this.archivedRecords);
+      this.isArchivedModalLoading = false;
+      return;
+    }
+
+    this.medicalRecordService.getPage(0, Math.max(100, this.archivedCount || 0), false).subscribe({
+      next: (response) => {
+        this.archivedRecords = response.content;
+        this.hydratePatientNames(this.archivedRecords);
+        this.isArchivedModalLoading = false;
+      },
+      error: () => {
+        this.archivedRecords = [];
+        this.isArchivedModalLoading = false;
+        this.errorMessage = 'Failed to load archived medical records.';
+      }
+    });
+  }
+
+  private showSuccessMessage(message: string): void {
+    this.successMessage = message;
+    if (this.successTimer) {
+      clearTimeout(this.successTimer);
+    }
+    this.successTimer = setTimeout(() => {
+      this.successMessage = '';
+      this.successTimer = null;
+    }, 3600);
   }
 
   private resolveActiveParam(): boolean | undefined {
@@ -501,12 +575,14 @@ export class MedicalRecordListComponent implements OnInit {
 
         for (const patient of direct) {
           if (patient) {
+            this.cachePatientProfile(patient);
             associated.set(this.patientAssociationKey(patient), patient);
           }
         }
 
         for (const patient of fallback || []) {
           if (this.isAssociatedPatientUser(patient, currentEmail)) {
+            this.cachePatientProfile(patient);
             associated.set(this.patientAssociationKey(patient), patient);
           }
         }
@@ -534,6 +610,7 @@ export class MedicalRecordListComponent implements OnInit {
   private resolveRecordCandidates(patient: User): string[] {
     const candidates = [
       patient.userId,
+      patient.keycloakId,
       patient.email,
       patient.name
     ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
@@ -547,7 +624,10 @@ export class MedicalRecordListComponent implements OnInit {
     }
 
     if (this.currentRole === 'DOCTOR') {
-      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+      return this.normalizeEmailList([
+        patient.doctorEmail || '',
+        ...(patient.doctorEmails || [])
+      ]).includes(currentEmail);
     }
 
     const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
@@ -618,6 +698,12 @@ export class MedicalRecordListComponent implements OnInit {
     for (const record of records) {
       const patientId = record.patientId.trim();
       const normalizedId = patientId.toLowerCase();
+      const profile = this.patientProfileByIdentifier.get(normalizedId);
+
+      if (profile) {
+        this.patientNameById.set(normalizedId, profile.name || profile.email || patientId);
+        continue;
+      }
 
       if (!this.isUuid(patientId)) {
         this.patientNameById.set(normalizedId, patientId);
@@ -637,14 +723,46 @@ export class MedicalRecordListComponent implements OnInit {
 
           if (reportWithName?.patientName) {
             this.patientNameById.set(normalizedId, reportWithName.patientName.trim());
+          } else {
+            this.lookupPatientProfileForRecord(patientId);
           }
 
           this.patientNameLoading.delete(normalizedId);
         },
         error: () => {
+          this.lookupPatientProfileForRecord(patientId);
           this.patientNameLoading.delete(normalizedId);
         }
       });
+    }
+  }
+
+  private lookupPatientProfileForRecord(patientId: string): void {
+    const normalizedId = patientId.trim().toLowerCase();
+    if (this.patientNameById.has(normalizedId)) {
+      return;
+    }
+
+    this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([]))).subscribe((patients) => {
+      const match = (patients || []).find((patient) =>
+        this.resolveRecordCandidates(patient).some((candidate) => candidate.toLowerCase() === normalizedId)
+      );
+
+      if (!match) {
+        return;
+      }
+
+      this.cachePatientProfile(match);
+      this.patientNameById.set(normalizedId, match.name || match.email || patientId);
+    });
+  }
+
+  private cachePatientProfile(patient: User): void {
+    for (const candidate of this.resolveRecordCandidates(patient)) {
+      this.patientProfileByIdentifier.set(candidate.toLowerCase(), patient);
+      if (patient.name || patient.email) {
+        this.patientNameById.set(candidate.toLowerCase(), patient.name || patient.email);
+      }
     }
   }
 

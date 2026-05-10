@@ -2,7 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { combineLatest, forkJoin } from 'rxjs';
+import { combineLatest, forkJoin, Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
 import { AssessmentService } from '../../../medical-record/services/assessment.service';
 import { MedicalRecord } from '../../../medical-record/models/medical-record.model';
@@ -19,6 +20,24 @@ import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { getGameMedia } from '../../utils/cognitive-game-media';
 
 type UserRole = 'PATIENT' | 'CAREGIVER' | 'DOCTOR' | 'ADMIN' | null;
+type CognitiveResultLevel = 'strong' | 'stable' | 'support' | 'empty';
+
+interface CognitiveAnalysis {
+  level: CognitiveResultLevel;
+  label: string;
+  headline: string;
+  details: string;
+}
+
+interface DoctorPatientCognitiveOverview {
+  patient: User;
+  record: MedicalRecord | null;
+  progress: CognitiveProgress | null;
+  recommendedGames: CognitiveGame[];
+  sessions: GameSession[];
+  analysis: CognitiveAnalysis;
+  errorMessage?: string;
+}
 
 @Component({
   selector: 'app-cognitive-plan',
@@ -57,6 +76,8 @@ export class CognitivePlanComponent implements OnInit {
   progress: CognitiveProgress | null = null;
   recommendedGames: CognitiveGame[] = [];
   sessions: GameSession[] = [];
+  doctorPatientOverviews: DoctorPatientCognitiveOverview[] = [];
+  selectedDoctorOverview: DoctorPatientCognitiveOverview | null = null;
 
   recordRouteId: string | null = null;
   patientIdentifierCandidates: string[] = [];
@@ -64,6 +85,7 @@ export class CognitivePlanComponent implements OnInit {
 
   isLoading = false;
   isSubmitting = false;
+  isDoctorPatientsLoading = false;
   errorMessage = '';
   infoMessage = '';
   successMessage = '';
@@ -208,6 +230,11 @@ export class CognitivePlanComponent implements OnInit {
 
     if (this.shouldAutoLoadOwnRecord()) {
       this.loadOwnRecord();
+      return;
+    }
+
+    if (this.isDoctorView) {
+      this.loadDoctorPatientCognitiveOverviews();
       return;
     }
 
@@ -358,6 +385,289 @@ export class CognitivePlanComponent implements OnInit {
         this.isLoading = false;
         this.errorMessage = this.extractError(error, 'Unable to load cognitive stimulation data.');
       }
+    });
+  }
+
+  selectDoctorCognitivePatient(overview: DoctorPatientCognitiveOverview): void {
+    this.selectedDoctorOverview = overview;
+    this.currentRecord = overview.record;
+    this.patientDisplayName = this.patientLabel(overview.patient);
+    this.progress = overview.progress;
+    this.recommendedGames = overview.recommendedGames;
+    this.sessions = [...overview.sessions].sort(
+      (left, right) => new Date(right.playedAt).getTime() - new Date(left.playedAt).getTime()
+    );
+    this.selectedGame = overview.recommendedGames[0] ?? null;
+
+    if (this.selectedGame) {
+      this.sessionForm.patchValue({
+        cognitiveGameId: this.selectedGame.id,
+        difficultyAtPlay: this.selectedGame.difficultyLevel,
+      });
+    }
+  }
+
+  isDoctorCognitivePatientSelected(overview: DoctorPatientCognitiveOverview): boolean {
+    return this.selectedDoctorOverview?.patient === overview.patient;
+  }
+
+  trackDoctorOverview(_: number, overview: DoctorPatientCognitiveOverview): string {
+    return overview.patient.userId || overview.patient.email || overview.patient.name;
+  }
+
+  patientLabel(patient: User): string {
+    return patient.name || patient.email || patient.userId || 'Patient';
+  }
+
+  patientInitials(patient: User): string {
+    const value = this.patientLabel(patient).trim();
+    if (!value) {
+      return 'P';
+    }
+
+    const parts = value.split(/\s+/).filter(Boolean);
+    const initials = parts.length > 1
+      ? `${parts[0][0]}${parts[1][0]}`
+      : value.slice(0, 2);
+
+    return initials.toUpperCase();
+  }
+
+  private loadDoctorPatientCognitiveOverviews(): void {
+    this.currentRecord = null;
+    this.patientDisplayName = '';
+    this.progress = null;
+    this.recommendedGames = [];
+    this.sessions = [];
+    this.doctorPatientOverviews = [];
+    this.selectedDoctorOverview = null;
+    this.isLoading = true;
+    this.isDoctorPatientsLoading = true;
+
+    this.loadAssociatedPatients().subscribe({
+      next: (patients) => {
+        if (patients.length === 0) {
+          this.isLoading = false;
+          this.isDoctorPatientsLoading = false;
+          this.infoMessage = 'No associated patients were found for your doctor account.';
+          return;
+        }
+
+        forkJoin(patients.map((patient) => this.loadPatientCognitiveOverview(patient))).subscribe({
+          next: (overviews) => {
+            this.doctorPatientOverviews = overviews;
+            this.isLoading = false;
+            this.isDoctorPatientsLoading = false;
+            const firstWithRecord = overviews.find((overview) => !!overview.record);
+            this.selectDoctorCognitivePatient(firstWithRecord || overviews[0]);
+          },
+          error: () => {
+            this.isLoading = false;
+            this.isDoctorPatientsLoading = false;
+            this.errorMessage = 'Unable to load associated patient cognitive stimulation data.';
+          }
+        });
+      },
+      error: () => {
+        this.isLoading = false;
+        this.isDoctorPatientsLoading = false;
+        this.errorMessage = 'Unable to load associated patients.';
+      }
+    });
+  }
+
+  private loadPatientCognitiveOverview(patient: User): Observable<DoctorPatientCognitiveOverview> {
+    return this.loadRecordForPatient(patient).pipe(
+      switchMap((record) => {
+        if (!record) {
+          return of({
+            patient,
+            record: null,
+            progress: null,
+            recommendedGames: [],
+            sessions: [],
+            analysis: this.buildCognitiveAnalysis(null, []),
+            errorMessage: 'No medical record found for this patient.'
+          });
+        }
+
+        return forkJoin({
+          progress: this.cognitiveService.getProgress(record.id).pipe(catchError(() => of(null))),
+          recommendedGames: this.cognitiveService.getRecommendedGames(record.id).pipe(catchError(() => of([] as CognitiveGame[]))),
+          sessions: this.cognitiveService.listSessions(record.id).pipe(catchError(() => of([] as GameSession[]))),
+        }).pipe(
+          map(({ progress, recommendedGames, sessions }) => ({
+            patient,
+            record,
+            progress,
+            recommendedGames,
+            sessions: [...sessions].sort(
+              (left, right) => new Date(right.playedAt).getTime() - new Date(left.playedAt).getTime()
+            ),
+            analysis: this.buildCognitiveAnalysis(progress, sessions),
+          }))
+        );
+      }),
+      catchError(() => of({
+        patient,
+        record: null,
+        progress: null,
+        recommendedGames: [],
+        sessions: [],
+        analysis: this.buildCognitiveAnalysis(null, []),
+        errorMessage: 'Unable to load this patient cognitive data.'
+      }))
+    );
+  }
+
+  private loadAssociatedPatients(): Observable<User[]> {
+    const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const directRequests = directEmails.map((email) =>
+      this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
+    );
+
+    const direct$ = directRequests.length > 0 ? forkJoin(directRequests) : of([]);
+    const fallback$ = this.authService.searchUsersByRole('', 'PATIENT').pipe(catchError(() => of([] as User[])));
+
+    return forkJoin({ direct: direct$, fallback: fallback$ }).pipe(
+      map(({ direct, fallback }) => {
+        const associated = new Map<string, User>();
+
+        for (const patient of direct) {
+          if (patient) {
+            associated.set(this.patientAssociationKey(patient), patient);
+          }
+        }
+
+        for (const patient of fallback || []) {
+          if (this.isAssociatedPatientUser(patient, currentEmail)) {
+            associated.set(this.patientAssociationKey(patient), patient);
+          }
+        }
+
+        return Array.from(associated.values()).sort((left, right) =>
+          this.patientLabel(left).localeCompare(this.patientLabel(right))
+        );
+      })
+    );
+  }
+
+  private loadRecordForPatient(patient: User): Observable<MedicalRecord | null> {
+    return this.tryLoadRecordCandidate(this.resolveRecordCandidates(patient), 0);
+  }
+
+  private tryLoadRecordCandidate(candidates: string[], index: number): Observable<MedicalRecord | null> {
+    if (index >= candidates.length) {
+      return of(null);
+    }
+
+    return this.medicalRecordService.getByPatientId(candidates[index]).pipe(
+      catchError(() => this.tryLoadRecordCandidate(candidates, index + 1))
+    );
+  }
+
+  private resolveRecordCandidates(patient: User): string[] {
+    const candidates = [
+      patient.userId,
+      patient.email,
+      patient.name,
+    ]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+    return this.uniqueValues(candidates);
+  }
+
+  private buildCognitiveAnalysis(progress: CognitiveProgress | null, sessions: GameSession[]): CognitiveAnalysis {
+    const totalSessions = progress?.totalSessions ?? sessions.length;
+    if (totalSessions === 0) {
+      return {
+        level: 'empty',
+        label: 'No results yet',
+        headline: 'No saved cognitive game results',
+        details: 'The patient has not completed a cognitive stimulation game yet, so EverCare cannot judge overall performance.',
+      };
+    }
+
+    const average30 = progress?.averageScoreLast30Days ?? this.averageScore(sessions);
+    const recentSessions = [...sessions]
+      .sort((left, right) => new Date(right.playedAt).getTime() - new Date(left.playedAt).getTime())
+      .slice(0, 5);
+    const recentAverage = this.averageScore(recentSessions);
+    const abandonedRate = sessions.filter((session) => session.abandoned).length / Math.max(sessions.length, 1);
+    const highFrustration = sessions.filter((session) => session.frustrationLevel >= 4).length;
+
+    if (!progress?.declineDetected && average30 >= 80 && recentAverage >= 75 && abandonedRate <= 0.2) {
+      return {
+        level: 'strong',
+        label: 'Good overall',
+        headline: 'The patient is performing well overall',
+        details: `Average score is ${Math.round(average30)}/100 with recent sessions around ${Math.round(recentAverage)}/100. Keep the current plan and consider gradual difficulty increases when sessions stay comfortable.`,
+      };
+    }
+
+    if (!progress?.declineDetected && average30 >= 60 && recentAverage >= 55 && abandonedRate <= 0.35) {
+      return {
+        level: 'stable',
+        label: 'Stable overall',
+        headline: 'The patient has acceptable, steady results',
+        details: `Average score is ${Math.round(average30)}/100. Results are not poor, but more consistent sessions are needed before increasing difficulty.`,
+      };
+    }
+
+    const reason = progress?.declineDetected
+      ? 'recent scores dropped compared with the 30-day baseline'
+      : abandonedRate > 0.35
+        ? 'several sessions were abandoned'
+        : highFrustration > 0
+          ? 'frustration signals are present'
+          : 'scores are below the desired range';
+
+    return {
+      level: 'support',
+      label: 'Needs support',
+      headline: 'The patient may need easier or more guided activities',
+      details: `Overall results need attention because ${reason}. Review the latest sessions and consider lower difficulty or caregiver-assisted play.`,
+    };
+  }
+
+  private averageScore(sessions: GameSession[]): number {
+    if (!sessions.length) {
+      return 0;
+    }
+
+    return sessions.reduce((sum, session) => sum + session.score, 0) / sessions.length;
+  }
+
+  private isAssociatedPatientUser(patient: User, currentEmail: string): boolean {
+    if (!currentEmail) {
+      return false;
+    }
+
+    return this.normalizeEmailList([
+      patient.doctorEmail || '',
+      ...(patient.doctorEmails || [])
+    ]).includes(currentEmail);
+  }
+
+  private patientAssociationKey(patient: User): string {
+    return String(patient.userId || patient.email || patient.name).trim().toLowerCase();
+  }
+
+  private normalizeEmailList(values: string[]): string[] {
+    return this.uniqueValues(values.map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
+  }
+
+  private uniqueValues(values: string[]): string[] {
+    const seen = new Set<string>();
+    return values.filter((value) => {
+      const normalized = value.toLowerCase();
+      if (seen.has(normalized)) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
     });
   }
 

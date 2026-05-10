@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, User } from '../../../front-office/pages/login/auth.service';
-import { Prescription, PrescriptionFilterParams } from '../../models/prescription.model';
+import { Prescription, PrescriptionFilterParams, PrescriptionRequest } from '../../models/prescription.model';
 import { PrescriptionService } from '../../services/prescription.service';
-import { PageResponse } from '../../models/page.model';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-doctor-prescription-manage',
@@ -16,6 +16,9 @@ export class DoctorPrescriptionManageComponent implements OnInit {
   prescriptions: Prescription[] = [];
   summaryPrescriptions: Prescription[] = [];
   selectedPrescription: Prescription | null = null;
+  editingPrescription: Prescription | null = null;
+  editForm: PrescriptionRequest | null = null;
+  editSaving = false;
 
   loading = false;
   errorMessage = '';
@@ -42,7 +45,8 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     private authService: AuthService,
     private prescriptionService: PrescriptionService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -87,7 +91,7 @@ export class DoctorPrescriptionManageComponent implements OnInit {
 
     this.prescriptionService.getPrescriptionsByDoctor(this.currentUser.userId).subscribe({
       next: (prescriptions) => {
-        this.summaryPrescriptions = prescriptions;
+        this.summaryPrescriptions = prescriptions.map(prescription => this.normalizePrescription(prescription));
       },
       error: () => {
         this.summaryPrescriptions = [];
@@ -103,42 +107,18 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.prescriptionService.filterPrescriptions({
-      ...this.filters,
-      page: this.page,
-      size: this.size
-    }).subscribe({
-      next: (response: PageResponse<Prescription>) => {
-        this.prescriptions = response.content;
-        this.totalElements = response.totalElements;
-        this.totalPages = response.totalPages;
-        this.page = response.number;
-        this.loading = false;
-      },
-      error: () => {
-        this.loadPrescriptionsFallback();
-      }
-    });
-  }
-
-  private loadPrescriptionsFallback(): void {
-    if (!this.currentUser?.userId) {
-      this.loading = false;
-      return;
-    }
-
     this.prescriptionService.getPrescriptionsByDoctor(this.currentUser.userId).subscribe({
       next: (prescriptions) => {
-        const filtered = this.applyClientFilters(prescriptions);
+        const normalized = prescriptions.map(prescription => this.normalizePrescription(prescription));
+        const filtered = this.applyClientFilters(normalized);
         const start = this.page * this.size;
         const end = start + this.size;
 
-        this.summaryPrescriptions = prescriptions;
+        this.summaryPrescriptions = normalized;
         this.prescriptions = filtered.slice(start, end);
         this.totalElements = filtered.length;
         this.totalPages = Math.max(Math.ceil(filtered.length / this.size), 1);
         this.loading = false;
-        this.errorMessage = 'Advanced filters are temporarily using local fallback mode.';
       },
       error: (error) => {
         this.errorMessage = error?.error?.message || 'Failed to load prescriptions.';
@@ -170,11 +150,73 @@ export class DoctorPrescriptionManageComponent implements OnInit {
   }
 
   viewPrescription(prescription: Prescription): void {
-    this.selectedPrescription = prescription;
+    this.selectedPrescription = this.normalizePrescription(prescription);
   }
 
   closeDetails(): void {
     this.selectedPrescription = null;
+  }
+
+  editPrescription(prescription: Prescription): void {
+    const normalized = this.normalizePrescription(prescription);
+    const raw = prescription as Prescription & {
+      patientId?: string;
+      doctorId?: string;
+      medicamentId?: string;
+    };
+    const patientId = normalized.patient.userId || raw.patientId;
+    const doctorId = this.currentUser?.userId || normalized.doctor.userId || raw.doctorId;
+    const medicamentId = normalized.medicament.medicamentId || raw.medicamentId;
+
+    if (!patientId || !doctorId || !medicamentId) {
+      this.toastr.error('Prescription data is incomplete. Please refresh and try again.');
+      return;
+    }
+
+    this.editingPrescription = normalized;
+    this.editForm = {
+      patientId,
+      doctorId,
+      medicamentId,
+      appointmentId: normalized.appointment?.appointmentId,
+      dateDebut: normalized.dateDebut,
+      dateFin: normalized.dateFin,
+      posologie: normalized.posologie,
+      instructions: normalized.instructions || '',
+      renouvelable: normalized.renouvelable,
+      nombreRenouvellements: normalized.nombreRenouvellements || 0,
+      priseMatin: normalized.priseMatin || '',
+      priseMidi: normalized.priseMidi || '',
+      priseSoir: normalized.priseSoir || '',
+      resumeSimple: normalized.resumeSimple || '',
+      notesMedecin: normalized.notesMedecin || ''
+    };
+  }
+
+  closeEdit(): void {
+    this.editingPrescription = null;
+    this.editForm = null;
+    this.editSaving = false;
+  }
+
+  savePrescriptionEdit(): void {
+    if (!this.editingPrescription || !this.editForm) {
+      return;
+    }
+
+    this.editSaving = true;
+    this.prescriptionService.updatePrescription(this.editingPrescription.prescriptionId, this.editForm).subscribe({
+      next: () => {
+        this.toastr.success('Prescription updated.');
+        this.closeEdit();
+        this.loadSummary();
+        this.loadPrescriptions();
+      },
+      error: (error) => {
+        this.editSaving = false;
+        this.toastr.error(error?.error?.message || 'Failed to update prescription.');
+      }
+    });
   }
 
   onPrescriptionUpdated(): void {
@@ -182,8 +224,14 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     this.loadPrescriptions();
   }
 
-  renewPrescription(prescription: Prescription): void {
-    const newDateFin = window.prompt('New end date (YYYY-MM-DD):', prescription.dateFin);
+  async renewPrescription(prescription: Prescription): Promise<void> {
+    const newDateFin = await this.feedback.prompt({
+      title: 'Renew prescription',
+      message: 'Enter the new end date in YYYY-MM-DD format.',
+      value: prescription.dateFin,
+      placeholder: 'YYYY-MM-DD',
+      confirmText: 'Renew'
+    });
     if (!newDateFin) {
       return;
     }
@@ -198,8 +246,15 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     });
   }
 
-  cancelPrescription(prescription: Prescription): void {
-    if (!window.confirm('Cancel this prescription?')) {
+  async cancelPrescription(prescription: Prescription): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Cancel prescription?',
+      message: 'This prescription will be marked as cancelled.',
+      confirmText: 'Cancel prescription',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -213,8 +268,37 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     });
   }
 
-  terminatePrescription(prescription: Prescription): void {
-    if (!window.confirm('Mark this prescription as completed?')) {
+  async deletePrescription(prescription: Prescription): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete prescription?',
+      message: 'This permanently removes the prescription from the system.',
+      confirmText: 'Delete',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.prescriptionService.deletePrescription(prescription.prescriptionId).subscribe({
+      next: () => {
+        this.toastr.success('Prescription deleted.');
+        this.selectedPrescription = null;
+        this.loadSummary();
+        this.loadPrescriptions();
+      },
+      error: (error) => this.toastr.error(error?.error?.message || 'Failed to delete prescription.')
+    });
+  }
+
+  async terminatePrescription(prescription: Prescription): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Complete prescription?',
+      message: 'Mark this prescription as completed for the patient record.',
+      confirmText: 'Mark completed'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -339,5 +423,38 @@ export class DoctorPrescriptionManageComponent implements OnInit {
     const endDate = new Date(prescription.dateFin);
     const diff = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diff >= 0 && diff <= 7;
+  }
+
+  private normalizePrescription(prescription: Prescription): Prescription {
+    const raw = prescription as Prescription & {
+      patientId?: string;
+      doctorId?: string;
+      medicamentId?: string;
+    };
+    const patientId = prescription.patient?.userId || raw.patientId || '';
+    const doctorId = prescription.doctor?.userId || raw.doctorId || this.currentUser?.userId || '';
+
+    return {
+      ...prescription,
+      patient: prescription.patient || {
+        userId: patientId,
+        name: patientId ? `Patient ${patientId.slice(0, 8)}` : 'Unknown patient',
+        email: ''
+      },
+      doctor: prescription.doctor || {
+        userId: doctorId,
+        name: this.currentUser?.name || 'Doctor',
+        specialization: this.currentUser?.specialization
+      },
+      medicament: prescription.medicament || {
+        medicamentId: raw.medicamentId || '',
+        nomCommercial: 'Medication',
+        denominationCommuneInternationale: '',
+        dosage: '',
+        forme: ''
+      },
+      renouvelable: Boolean(prescription.renouvelable),
+      nombreRenouvellements: prescription.nombreRenouvellements || 0
+    };
   }
 }

@@ -30,6 +30,12 @@ export interface FaceLoginResponse {
   email?: string;
   userId?: string;
   user?: User;
+  isNewUser?: boolean;
+}
+
+export interface GoogleLoginResult {
+  user: User;
+  isNewUser?: boolean;
 }
 
 export interface User {
@@ -39,9 +45,11 @@ export interface User {
   email: string;
   role: string;
   phone?: string;
+  recoveryEmail?: string;
   address?: string;
   country?: string;
   isVerified?: boolean;
+  verified?: boolean;
   createdAt?: string;
   profilePicture?: string;
   dateOfBirth?: string;
@@ -53,13 +61,17 @@ export interface User {
   workplaceName?: string;
   caregiverEmails?: string[];
   patientEmails?: string[];
+  caregiverRelationships?: Record<string, string>;
+  patientRelationships?: Record<string, string>;
   doctorEmail?: string;
+  doctorEmails?: string[];
 }
 
 export interface UpdateUserRequest {
   name?: string;
   email?: string;
   phone?: string;
+  recoveryEmail?: string;
   address?: string;
   country?: string;
   dateOfBirth?: string;
@@ -71,12 +83,28 @@ export interface UpdateUserRequest {
   workplaceType?: string;
   workplaceName?: string;
   connectedEmail?: string;
+  relationshipType?: string;
   doctorEmail?: string;
+  doctorEmails?: string[];
 }
 
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface PasswordResetConfirmRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
+export type VerificationMethod = 'phone' | 'email' | 'recovery-email';
+
+export interface EmailChangeConfirmRequest {
+  newEmail: string;
+  code: string;
+  verificationMethod?: VerificationMethod;
 }
 
 @Injectable({
@@ -85,10 +113,9 @@ export interface ChangePasswordRequest {
 export class AuthService {
   private apiUrl = 'http://localhost:8089/EverCare/auth';
   private usersUrl = 'http://localhost:8089/EverCare/users';
-
-  private keycloakUrl = 'http://localhost:8180/realms/EverCareRealm/protocol/openid-connect/token';
-  private clientId = 'frontend-app';
-  private clientSecret = 'SMqMpg1PpqG4UcMOJM1WgTM0zNK5AhZF';
+  private directUsersUrl = 'http://localhost:8096/EverCare/users';
+  private communicationApiUrl = 'http://localhost:8089/EverCare/communication-service/api';
+  private assessmentUrl = 'http://localhost:8089/EverCare/assessment';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -102,22 +129,30 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loadStoredUser();
+    this.retryPendingCommunicationEmailSync();
   }
 
-  // ---------- Login with Keycloak ----------
+  // ---------- Login ----------
   login(credentials: LoginRequest): Observable<User> {
-    const body = new URLSearchParams();
-    body.set('grant_type', 'password');
-    body.set('client_id', this.clientId);
-    body.set('client_secret', this.clientSecret);
-    body.set('username', credentials.email);
-    body.set('password', credentials.password);
-
-    return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
-      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
-    }).pipe(
+    return this.http.post<KeycloakTokenResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap(tokenResponse => this.storeTokens(tokenResponse)),
       switchMap(() => this.fetchCurrentUser()),
+      switchMap(user => {
+        const attemptedEmail = this.normalizeEmail(credentials.email);
+        const currentEmail = this.normalizeEmail(user.email);
+        if (attemptedEmail && currentEmail && attemptedEmail !== currentEmail) {
+          this.clearStoredSession();
+          this.currentUserSubject.next(null);
+          return throwError(() => ({
+            status: 401,
+            error: {
+              message: 'This account email was changed. Please sign in with the new email.'
+            }
+          }));
+        }
+
+        return of(user);
+      }),
       tap(() => {
         this.http.post(`${this.apiUrl}/record-login`, {}).subscribe();
       }),
@@ -143,9 +178,10 @@ export class AuthService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${this.getToken()}`);
     return this.http.get<User>(`${this.apiUrl}/me`, { headers }).pipe(
       tap(user => {
-        this.currentUserSubject.next(user);
+        const normalizedUser = this.normalizeUser(user);
+        this.currentUserSubject.next(normalizedUser);
         if (this.isBrowser) {
-          localStorage.setItem('current_user', JSON.stringify(user));
+          localStorage.setItem('current_user', JSON.stringify(normalizedUser));
         }
       })
     );
@@ -199,15 +235,7 @@ export class AuthService {
       return throwError(() => ({ status: 401, message: 'Session expired' }));
     }
 
-    const body = new URLSearchParams();
-    body.set('grant_type', 'refresh_token');
-    body.set('client_id', this.clientId);
-    body.set('client_secret', this.clientSecret);
-    body.set('refresh_token', refreshToken);
-
-    return this.http.post<KeycloakTokenResponse>(this.keycloakUrl, body.toString(), {
-      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
-    }).pipe(
+    return this.http.post<KeycloakTokenResponse>(`${this.apiUrl}/refresh`, { refreshToken }).pipe(
       tap(tokenResponse => this.storeTokens(tokenResponse)),
       catchError(error => {
         this.clearStoredSession();
@@ -248,6 +276,7 @@ logout(triggerFaceRecovery: boolean = false): void {
       // Clear only transient onboarding flags. Assessment results are scoped per user.
     localStorage.removeItem('showAlzheimerAssessment');
     localStorage.removeItem('showWelcomeFlow');
+    localStorage.removeItem('showPostMedicalWelcome');
     localStorage.removeItem('alzAssessmentReturnTo');
 
     if (wasPatient && triggerFaceRecovery && user?.keycloakId) {
@@ -275,7 +304,7 @@ logout(triggerFaceRecovery: boolean = false): void {
 
       const storedUser = localStorage.getItem('current_user');
       if (storedUser) {
-        this.currentUserSubject.next(JSON.parse(storedUser));
+        this.currentUserSubject.next(this.normalizeUser(JSON.parse(storedUser)));
       }
     }
   }
@@ -295,8 +324,44 @@ logout(triggerFaceRecovery: boolean = false): void {
     return this.http.put(`${this.usersUrl}/change-password`, data);
   }
 
+  sendPasswordResetCode(email: string, verificationMethod: VerificationMethod = 'email'): Observable<{ message: string; destination?: string }> {
+    return this.http.post<{ message: string; destination?: string }>(`${this.apiUrl}/password-reset/send`, { email, verificationMethod });
+  }
+
+  confirmPasswordReset(data: PasswordResetConfirmRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/password-reset/confirm`, data);
+  }
+
+  submitAlzheimerAssessment<T>(payload: unknown): Observable<T> {
+    return this.retryAfterRefresh(() =>
+      this.http.post<T>(`${this.assessmentUrl}/predict`, payload)
+    );
+  }
+
+  submitAlzheimerAssessmentForPatient<T>(patientId: string, payload: unknown): Observable<T> {
+    return this.retryAfterRefresh(() =>
+      this.http.post<T>(`${this.assessmentUrl}/patient/${encodeURIComponent(patientId)}/predict`, payload)
+    );
+  }
+
+  getLatestAlzheimerAssessment<T>(): Observable<T | null> {
+    return this.retryAfterRefresh(() =>
+      this.http.get<T>(`${this.assessmentUrl}/latest`).pipe(
+        catchError(error => error?.status === 204 ? of(null) : throwError(() => error))
+      )
+    );
+  }
+
+  getPatientAlzheimerAssessment<T>(patientId: string): Observable<T | null> {
+    return this.retryAfterRefresh(() =>
+      this.http.get<T>(`${this.assessmentUrl}/patient/${encodeURIComponent(patientId)}`).pipe(
+        catchError(error => error?.status === 204 ? of(null) : throwError(() => error))
+      )
+    );
+  }
+
   deleteAccount(): Observable<any> {
-    return this.http.delete(`${this.usersUrl}/profile`);
+    return this.retryAfterRefresh(() => this.http.delete(`${this.usersUrl}/profile`));
   }
 
   uploadProfilePicture(file: File): Observable<{ profilePicture: string }> {
@@ -311,6 +376,44 @@ logout(triggerFaceRecovery: boolean = false): void {
     return this.http.delete(`${this.usersUrl}/profile/picture`);
   }
 
+  sendEmailVerificationCode(): Observable<{ message: string }> {
+    return this.retryAfterRefresh(() =>
+      this.http.post<{ message: string }>(`${this.usersUrl}/email-verification/send`, {})
+    );
+  }
+
+  verifyEmailCode(code: string): Observable<{ message: string; user: User }> {
+    return this.retryAfterRefresh(() =>
+      this.http.post<{ message: string; user: User }>(`${this.usersUrl}/email-verification/verify`, { code }).pipe(
+        tap(response => {
+          if (response.user) {
+            this.setCurrentUser(response.user);
+          }
+        })
+      )
+    );
+  }
+
+  sendEmailChangePhoneCode(newEmail: string, phoneNumber?: string, verificationMethod: VerificationMethod = 'phone'): Observable<{ message: string; destination?: string; method?: string }> {
+    return this.retryAfterRefresh(() =>
+      this.http.post<{ message: string; destination?: string; method?: string }>(`${this.usersUrl}/email-change/send-phone-code`, { newEmail, phoneNumber, verificationMethod })
+    );
+  }
+
+  confirmEmailChange(data: EmailChangeConfirmRequest): Observable<{ message: string; user: User }> {
+    const previousEmail = this.getCurrentUserValue()?.email;
+    return this.retryAfterRefresh(() =>
+      this.http.post<{ message: string; user: User }>(`${this.usersUrl}/email-change/confirm`, data).pipe(
+        tap(response => {
+          if (response.user) {
+            this.setCurrentUser(response.user);
+            this.syncCommunicationEmailReferences(previousEmail, response.user.email);
+          }
+        })
+      )
+    );
+  }
+
   searchUsersByRole(term: string, role: string): Observable<User[]> {
     return this.http.get<User[]>(`${this.usersUrl}/search`, {
       params: { q: term, role },
@@ -322,13 +425,91 @@ logout(triggerFaceRecovery: boolean = false): void {
     return this.http.get<User>(`${this.usersUrl}/by-email`, {
       params: { email },
       headers: this.optionalAuthHeaders()
+    }).pipe(
+      catchError(err => {
+        if (err?.status === 503 || err?.status === 502 || err?.status === 504) {
+          return this.http.get<User>(`${this.directUsersUrl}/by-email`, {
+            params: { email },
+            headers: this.optionalAuthHeaders()
+          });
+        }
+        return throwError(() => err);
+      })
+    );
+  }
+
+  private syncCommunicationEmailReferences(oldEmail?: string, newEmail?: string): void {
+    const previous = (oldEmail || '').trim().toLowerCase();
+    const next = (newEmail || '').trim().toLowerCase();
+    if (!previous || !next || previous === next) return;
+    this.rememberPendingCommunicationEmailSync(previous, next);
+
+    this.http.post<void>(
+      `${this.communicationApiUrl}/internal/email-reference-update`,
+      { oldEmail: previous, newEmail: next },
+      { headers: this.optionalAuthHeaders() }
+    ).pipe(
+      catchError(() =>
+        this.http.post<void>(
+          'http://localhost:8086/api/internal/email-reference-update',
+          { oldEmail: previous, newEmail: next },
+          { headers: this.optionalAuthHeaders() }
+        )
+      )
+    ).subscribe({
+      next: () => this.forgetPendingCommunicationEmailSync(previous, next),
+      error: () => undefined
     });
   }
 
-  // ---------- Google login – temporarily disabled ----------
-  googleLogin(idToken: string): Observable<any> {
-    this.toastr.warning('Google login is being migrated. Please use email/password.', 'Not available');
-    return of(null);
+  private rememberPendingCommunicationEmailSync(oldEmail: string, newEmail: string): void {
+    if (!this.isBrowser) return;
+    const pending = this.getPendingCommunicationEmailSyncs();
+    pending.set(`${oldEmail}->${newEmail}`, { oldEmail, newEmail });
+    localStorage.setItem('evercare_pending_chat_email_syncs', JSON.stringify([...pending.values()]));
+  }
+
+  private forgetPendingCommunicationEmailSync(oldEmail: string, newEmail: string): void {
+    if (!this.isBrowser) return;
+    const pending = this.getPendingCommunicationEmailSyncs();
+    pending.delete(`${oldEmail}->${newEmail}`);
+    localStorage.setItem('evercare_pending_chat_email_syncs', JSON.stringify([...pending.values()]));
+  }
+
+  private retryPendingCommunicationEmailSync(): void {
+    if (!this.isBrowser) return;
+    this.getPendingCommunicationEmailSyncs().forEach(({ oldEmail, newEmail }) => {
+      this.syncCommunicationEmailReferences(oldEmail, newEmail);
+    });
+  }
+
+  private getPendingCommunicationEmailSyncs(): Map<string, { oldEmail: string; newEmail: string }> {
+    if (!this.isBrowser) return new Map();
+    try {
+      const rows = JSON.parse(localStorage.getItem('evercare_pending_chat_email_syncs') || '[]') as Array<{ oldEmail: string; newEmail: string }>;
+      return new Map(rows
+        .filter(row => row?.oldEmail && row?.newEmail)
+        .map(row => [`${row.oldEmail}->${row.newEmail}`, row]));
+    } catch {
+      return new Map();
+    }
+  }
+
+  // ---------- Google login ----------
+  googleLogin(idToken: string, role: string): Observable<GoogleLoginResult> {
+    const body = { credential: idToken, role };
+
+    return this.http.post<FaceLoginResponse>(`${this.apiUrl}/google`, body).pipe(
+      switchMap(response =>
+        this.completeFaceLogin(response).pipe(
+          map(user => ({ user, isNewUser: response.isNewUser }))
+        )
+      ),
+      catchError(error => {
+        console.error('Google login error', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getCurrentUserValue(): User | null {
@@ -336,9 +517,10 @@ logout(triggerFaceRecovery: boolean = false): void {
   }
 
   setCurrentUser(user: User): void {
-    this.currentUserSubject.next(user);
+    const normalizedUser = this.normalizeUser(user);
+    this.currentUserSubject.next(normalizedUser);
     if (this.isBrowser) {
-      localStorage.setItem('current_user', JSON.stringify(user));
+      localStorage.setItem('current_user', JSON.stringify(normalizedUser));
     }
   }
 
@@ -347,5 +529,32 @@ logout(triggerFaceRecovery: boolean = false): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
+  }
+
+  private normalizeUser(user: User): User {
+    const verified = user.isVerified ?? user.verified ?? false;
+    const doctorEmails = this.normalizeDoctorEmails(user);
+    return {
+      ...user,
+      doctorEmails,
+      doctorEmail: doctorEmails[0] || user.doctorEmail,
+      isVerified: verified,
+      verified
+    };
+  }
+
+  private normalizeEmail(email?: string | null): string {
+    return String(email || '').trim().toLowerCase();
+  }
+
+  private normalizeDoctorEmails(user: User): string[] {
+    const emails = [
+      user.doctorEmail,
+      ...(Array.isArray(user.doctorEmails) ? user.doctorEmails : [])
+    ]
+      .map(email => this.normalizeEmail(email))
+      .filter(Boolean);
+
+    return [...new Set(emails)];
   }
 }

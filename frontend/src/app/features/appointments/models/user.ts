@@ -18,6 +18,7 @@ export interface User {
   caregiverEmails?: string[];
   patientEmails?: string[];
   doctorEmail?: string;
+  doctorEmails?: string[];
 }
 export type UserRole = 'PATIENT' | 'DOCTOR' | 'CAREGIVER' | 'ADMIN';
 

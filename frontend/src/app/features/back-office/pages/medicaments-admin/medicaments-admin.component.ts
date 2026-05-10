@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Medicament, MedicamentFilterParams, MedicamentUsageStats } from '../../../prescription/models/medicament.model';
 import { MedicamentService } from '../../../prescription/services/medicament.service';
 import { PageResponse } from '../../../prescription/models/page.model';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-medicaments-admin',
@@ -38,7 +39,8 @@ export class MedicamentsAdminComponent implements OnInit {
   constructor(
     private medicamentService: MedicamentService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -109,10 +111,34 @@ export class MedicamentsAdminComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.toastr.success(`Medicament ${medicament.actif ? 'deactivated' : 'activated'}.`);
+        this.feedback.success(
+          `${medicament.nomCommercial} was ${medicament.actif ? 'deactivated' : 'activated'} successfully.`,
+          'Medication updated'
+        );
         this.loadMedicaments();
       },
       error: (error) => this.toastr.error(error?.error?.message || 'Failed to update medicament status.')
+    });
+  }
+
+  async deleteMedicament(medicament: Medicament): Promise<void> {
+    const confirmed = await this.feedback.confirm({
+      title: 'Delete medication?',
+      message: `Delete ${medicament.nomCommercial} from the medication catalog?`,
+      confirmText: 'Delete medication',
+      tone: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.medicamentService.deleteMedicament(medicament.medicamentId).subscribe({
+      next: () => {
+        this.feedback.success(`${medicament.nomCommercial} was deleted successfully.`, 'Medication deleted');
+        this.loadMedicaments();
+      },
+      error: (error) => this.toastr.error(error?.error?.message || 'Failed to delete medicament.')
     });
   }
 

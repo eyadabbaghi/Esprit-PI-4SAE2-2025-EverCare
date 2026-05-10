@@ -14,6 +14,20 @@ export class AlertsService {
     return this.http.post<Incident>(`${this.baseUrl}/incidents`, data);
   }
 
+  generateIncidentInsights(data: {
+    title: string;
+    type?: string;
+    description: string;
+    severity?: string;
+    location?: string;
+  }): Observable<{ aiSuggestion: string }> {
+    return this.http.post<{ aiSuggestion: string }>(`${this.baseUrl}/incidents/ai-insights`, data);
+  }
+
+  generateAndSaveIncidentInsights(id: string): Observable<Incident> {
+    return this.http.post<Incident>(`${this.baseUrl}/incidents/${id}/ai-insights`, {});
+  }
+
   getIncidents(): Observable<Incident[]> {
     return this.http.get<Incident[]>(`${this.baseUrl}/incidents`);
   }
@@ -24,6 +38,13 @@ export class AlertsService {
 
   updateIncident(id: string, data: any): Observable<Incident> {
     return this.http.put<Incident>(`${this.baseUrl}/incidents/${id}`, data);
+  }
+
+  addDoctorRecommendation(
+    id: string,
+    data: { doctorId: string; doctorName: string; recommendation: string }
+  ): Observable<Incident> {
+    return this.http.post<Incident>(`${this.baseUrl}/incidents/${id}/doctor-recommendations`, data);
   }
 
   deleteIncident(id: string): Observable<void> {

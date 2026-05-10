@@ -1,72 +1,64 @@
-<div class="min-h-screen flex flex-col items-center justify-center"
-     style="background: rgba(10,0,30,0.97);">
-
-  <!-- WAITING (camera denied or loading) -->
-  <ng-container *ngIf="state === 'waiting'">
-    <div class="text-center space-y-6 p-8">
-      <div class="text-6xl animate-bounce">🚨</div>
-      <h1 class="text-3xl font-bold text-red-400">Patient Session Ended</h1>
-      <p class="text-purple-200">Please approach the camera to log back in automatically.</p>
-      <button (click)="startCameraAndScan()"
-        class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-10 rounded-2xl text-xl">
-        📷 Start Camera
+<div class="face-recovery-shell">
+  <section class="face-recovery-card">
+    <ng-container *ngIf="state === 'waiting'">
+      <div class="face-status-visual waiting" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M59 68v-7a13 13 0 0 1 13-13h16a13 13 0 0 1 13 13v7"></path>
+          <path d="M54 88h52M80 84v22"></path>
+          <path d="M65 112h30"></path>
+        </svg>
+      </div>
+      <p class="status-kicker">Patient session ended</p>
+      <h1>Face recognition is ready</h1>
+      <p class="status-copy">Approach the camera and EverCare will scan your face privately in the background.</p>
+      <button type="button" class="primary-action" (click)="startCameraAndScan()">
+        Start Recognition
       </button>
-      <br/>
-      <button (click)="goToPasswordLogin()" class="text-sm text-gray-400 underline mt-2">
+      <button type="button" class="secondary-action" (click)="goToPasswordLogin()">
         Use password instead
       </button>
-    </div>
-  </ng-container>
+    </ng-container>
 
-  <!-- SCANNING / PROCESSING -->
-  <ng-container *ngIf="state === 'scanning' || state === 'processing'">
-    <div class="text-center space-y-6 p-8 w-full max-w-md">
-
-      <div class="text-5xl animate-pulse">🚨</div>
-      <h1 class="text-2xl font-bold text-red-400">Waiting for Patient...</h1>
-      <p class="text-purple-300 text-sm">
-        {{ state === 'processing' ? 'Verifying face...' : 'Scanning — please approach the camera' }}
-      </p>
-
-      <!-- Camera feed -->
-      <div class="relative mx-auto w-72 h-72 rounded-full overflow-hidden border-4
-                  border-purple-500 shadow-[0_0_40px_rgba(124,58,237,0.8)]">
-        <video #videoEl autoplay muted playsinline
-               class="w-full h-full object-cover"
-               style="transform: scaleX(-1);">
-        </video>
-
-        <!-- Processing overlay -->
-        <div *ngIf="state === 'processing'"
-             class="absolute inset-0 bg-purple-900/60 flex items-center justify-center">
-          <div class="text-4xl animate-spin">⚙️</div>
-        </div>
-
-        <!-- Scan line -->
-        <div *ngIf="state === 'scanning'"
-             class="absolute inset-0 pointer-events-none overflow-hidden">
-          <div class="scan-line"></div>
-        </div>
+    <ng-container *ngIf="state === 'scanning' || state === 'processing'">
+      <div class="face-status-visual scanning" [class.processing]="state === 'processing'" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M58 68V58a12 12 0 0 1 12-12h8"></path>
+          <path d="M102 68V58a12 12 0 0 0-12-12h-8"></path>
+          <path d="M58 92v10a12 12 0 0 0 12 12h8"></path>
+          <path d="M102 92v10a12 12 0 0 1-12 12h-8"></path>
+          <path d="M68 78v12M92 78v12"></path>
+          <path d="M74 104c4 3 8 3 12 0"></path>
+        </svg>
+        <span class="scan-beam"></span>
       </div>
 
-      <!-- Attempt counter -->
-      <p class="text-gray-500 text-xs">
-        Scan attempts: {{ scanAttempts }} — camera is active and waiting
-      </p>
+      <video #videoEl autoplay muted playsinline class="hidden-camera-feed"></video>
 
-      <button (click)="goToPasswordLogin()" class="text-sm text-gray-400 underline">
+      <p class="status-kicker">{{ state === 'processing' ? 'Verifying face' : 'Scanning securely' }}</p>
+      <h1>{{ state === 'processing' ? 'Matching your Face ID...' : 'Look toward the camera' }}</h1>
+      <p class="status-copy">
+        The camera is active, but your face preview is hidden. EverCare only uses the frame to verify you.
+      </p>
+      <p class="attempt-copy">Scan attempts: {{ scanAttempts }}</p>
+      <button type="button" class="secondary-action" (click)="goToPasswordLogin()">
         Use password instead
       </button>
-    </div>
-  </ng-container>
+    </ng-container>
 
-  <!-- SUCCESS -->
-  <ng-container *ngIf="state === 'success'">
-    <div class="text-center space-y-6">
-      <div class="text-6xl">✅</div>
-      <h2 class="text-3xl font-bold text-green-400">Welcome back!</h2>
-      <p class="text-purple-200">Logging you in...</p>
-    </div>
-  </ng-container>
-
+    <ng-container *ngIf="state === 'success'">
+      <div class="face-status-visual success" aria-hidden="true">
+        <svg viewBox="0 0 160 160" class="face-id-svg">
+          <rect x="34" y="34" width="92" height="92" rx="28"></rect>
+          <path d="M66 78v9M94 78v9"></path>
+          <path d="M64 101c8 11 24 11 32 0"></path>
+          <path d="M50 47 39 58M110 47l11 11M50 113l-11-11M110 113l11-11"></path>
+        </svg>
+      </div>
+      <p class="status-kicker success-text">Recognition successful</p>
+      <h1>Welcome back</h1>
+      <p class="status-copy">EverCare recognized you. Logging you in now...</p>
+    </ng-container>
+  </section>
 </div>

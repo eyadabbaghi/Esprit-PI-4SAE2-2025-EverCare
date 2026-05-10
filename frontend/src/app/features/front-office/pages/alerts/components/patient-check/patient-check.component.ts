@@ -69,6 +69,11 @@ export class PatientCheckComponent implements OnInit, OnChanges, OnDestroy {
 
     } else if (msg.type === 'snapshot-request') {
       this.captureAndSendSnapshot();
+    } else if (msg.type === 'voice-guide') {
+      const text = typeof msg.payload?.text === 'string' ? msg.payload.text.trim() : '';
+      if (text) {
+        this.speakPrompt(text);
+      }
     }
   }
 

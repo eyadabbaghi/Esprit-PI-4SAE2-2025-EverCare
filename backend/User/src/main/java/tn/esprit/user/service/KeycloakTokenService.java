@@ -36,14 +36,41 @@ public class KeycloakTokenService {
     @Value("${keycloak.frontend-client-id:frontend-app}")
     private String frontendClientId;
 
+    @Value("${keycloak.frontend-client-secret:}")
+    private String frontendClientSecret;
+
     private final RestTemplate restTemplate;
 
-    public String getTokenForUser(String keycloakUserId) {
-        String tokenUrl = authServerUrl + "/realms/" + realm
-                + "/protocol/openid-connect/token";
+    public Map<String, Object> loginFrontendUser(String username, String password) {
+        String tokenUrl = tokenUrl();
+        HttpHeaders headers = formHeaders();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", frontendClientId);
+        addClientSecret(body, frontendClientSecret);
+        body.add("username", username);
+        body.add("password", password);
+
+        return requestToken(tokenUrl, headers, body);
+    }
+
+    public Map<String, Object> refreshFrontendUserToken(String refreshToken) {
+        String tokenUrl = tokenUrl();
+        HttpHeaders headers = formHeaders();
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("client_id", frontendClientId);
+        addClientSecret(body, frontendClientSecret);
+        body.add("refresh_token", refreshToken);
+
+        return requestToken(tokenUrl, headers, body);
+    }
+
+    public String getTokenForUser(String keycloakUserId) {
+        String tokenUrl = tokenUrl();
+        HttpHeaders headers = formHeaders();
 
         String serviceToken = getClientAccessToken(tokenUrl, headers, faceClientId, faceClientSecret);
         if (serviceToken == null) {
@@ -77,11 +104,8 @@ public class KeycloakTokenService {
     }
 
     public String getAdminAccessToken() {
-        String tokenUrl = authServerUrl + "/realms/" + realm
-                + "/protocol/openid-connect/token";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        String tokenUrl = tokenUrl();
+        HttpHeaders headers = formHeaders();
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "client_credentials");
@@ -91,6 +115,42 @@ public class KeycloakTokenService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
         return (String) response.getBody().get("access_token");
+    }
+
+    private Map<String, Object> requestToken(
+            String tokenUrl,
+            HttpHeaders headers,
+            MultiValueMap<String, String> body
+    ) {
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    tokenUrl,
+                    new HttpEntity<>(body, headers),
+                    Map.class
+            );
+            if (response.getBody() == null) {
+                throw new RuntimeException("Keycloak returned an empty token response");
+            }
+            return response.getBody();
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException(e.getResponseBodyAsString(), e);
+        }
+    }
+
+    private String tokenUrl() {
+        return authServerUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+    }
+
+    private HttpHeaders formHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        return headers;
+    }
+
+    private void addClientSecret(MultiValueMap<String, String> body, String secret) {
+        if (secret != null && !secret.isBlank()) {
+            body.add("client_secret", secret);
+        }
     }
 
     private String getClientAccessToken(

@@ -12,6 +12,7 @@ export class AuthInterceptor implements HttpInterceptor {
     if (
       req.url.includes('/auth/register') ||
       req.url.includes('/auth/face-login') ||
+      req.url.includes('/auth/password-reset') ||
       req.url.includes('/users/by-email') ||
       req.url.includes('/users/search') ||
       req.url.includes('/protocol/openid-connect/token') ||

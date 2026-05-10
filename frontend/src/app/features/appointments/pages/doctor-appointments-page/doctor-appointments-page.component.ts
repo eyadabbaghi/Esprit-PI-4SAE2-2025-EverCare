@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Appointment } from '../../models/appointment';
 import { User } from '../../models/user';
 import { DoctorStats } from '../../models/doctor-stats';
@@ -10,7 +12,10 @@ import { AvailabilityService } from '../../services/availability.service';
 import { ConsultationTypeService } from '../../services/consultation-type.service';
 import { Availability, AvailabilityStats } from '../../models/availability.model';
 import { ConsultationType } from '../../models/consultation-type.model';
+import { ClinicalMeasurementResponse } from '../../models/clinical-measurement.model';
+import { ClinicalMeasurementService } from '../../services/clinical-measurement.service';
 import { Router } from '@angular/router';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 @Component({
   selector: 'app-doctor-appointments-page',
   templateUrl: './doctor-appointments-page.component.html',
@@ -32,6 +37,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   // Appointments data
   appointments: Appointment[] = [];
   selectedAppointment: Appointment | null = null;
+  measurementsByAppointment: Record<string, ClinicalMeasurementResponse[]> = {};
 
   // Stats
   doctorStats: DoctorStats = {
@@ -43,6 +49,9 @@ export class DoctorAppointmentsPageComponent implements OnInit {
 
   // Recent patients
   recentPatients: RecentPatient[] = [];
+  showHistoryModal = false;
+  historyPatientName = 'Patient';
+  historyAppointments: Appointment[] = [];
 
   // Selected patient details
   selectedPatientBirthDate?: Date;
@@ -97,7 +106,9 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     private authService: AuthService,
     private availabilityService: AvailabilityService,
     private consultationTypeService: ConsultationTypeService,
-    private router: Router
+    private clinicalMeasurementService: ClinicalMeasurementService,
+    private router: Router,
+    private feedback: AppFeedbackService
   ) {
   }
 
@@ -137,6 +148,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       next: (data: any) => {
         console.log('Raw appointments data:', data);
         this.appointments = this.transformAppointments(data);
+        this.loadClinicalMeasurementsForAppointments();
 
         this.calculateStats();
         this.loadRecentPatients();
@@ -145,7 +157,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading appointments:', error);
-        this.errorMessage = 'Failed to load appointments';
+        this.showPopup('error', 'Failed to load appointments');
         this.loading = false;
         setTimeout(() => this.errorMessage = '', 3000);
       }
@@ -186,6 +198,32 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       isRecurring: item.isRecurring || false,
       createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
     }));
+  }
+
+  private loadClinicalMeasurementsForAppointments(): void {
+    const appointmentIds = [...new Set(this.appointments.map(apt => apt.appointmentId).filter(Boolean))];
+    this.measurementsByAppointment = {};
+
+    if (!appointmentIds.length) {
+      return;
+    }
+
+    forkJoin(appointmentIds.map(appointmentId =>
+      this.clinicalMeasurementService.getByAppointment(appointmentId).pipe(
+        catchError(() => of(null))
+      )
+    )).subscribe(measurements => {
+      this.measurementsByAppointment = measurements.reduce((acc, measurement) => {
+        if (measurement?.appointmentId) {
+          acc[measurement.appointmentId] = [...(acc[measurement.appointmentId] || []), measurement];
+        }
+        return acc;
+      }, {} as Record<string, ClinicalMeasurementResponse[]>);
+    });
+  }
+
+  getMeasurementsForAppointment(appointment: Appointment | null): ClinicalMeasurementResponse[] {
+    return appointment ? this.measurementsByAppointment[appointment.appointmentId] || [] : [];
   }
 
   private resolveProfilePicture(...candidates: Array<string | null | undefined>): string {
@@ -266,6 +304,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       next: (data) => {
         this.availabilities = data.map(slot => ({
           ...slot,
+          isBlocked: slot.isBlocked ?? slot.blocked ?? false,
           day: this.getDayName(slot.dayOfWeek)
         }));
         this.updateAvailabilityStats();
@@ -338,7 +377,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   // In doctor-appointments-page.component.ts
   addAvailability(slotData: any): void {
     if (!this.currentDoctor.userId) {
-      this.errorMessage = 'Cannot add availability without a doctor profile.';
+      this.showPopup('error', 'Cannot add availability without a doctor profile.');
       setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
@@ -360,15 +399,16 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       next: (newSlot) => {
         this.availabilities.push({
           ...newSlot,
+          isBlocked: newSlot.isBlocked ?? newSlot.blocked ?? false,
           day: this.getDayName(newSlot.dayOfWeek)
         });
         this.updateAvailabilityStats();
-        this.successMessage = 'Availability added successfully';
+        this.showPopup('success', 'Availability added successfully');
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error adding availability:', error);
-        this.errorMessage = 'Failed to add availability. Please check the data and try again.';
+        this.showPopup('error', 'Failed to add availability. Please check the data and try again.');
         setTimeout(() => this.errorMessage = '', 3000);
       }
     });
@@ -377,7 +417,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   editAvailability(slot: Availability): void {
     // Implement edit functionality
     console.log('Edit availability:', slot);
-    this.successMessage = 'Edit functionality coming soon';
+    this.showPopup('info', 'Edit functionality coming soon');
     setTimeout(() => this.successMessage = '', 3000);
   }
 
@@ -388,12 +428,12 @@ export class DoctorAppointmentsPageComponent implements OnInit {
       next: () => {
         this.availabilities = this.availabilities.filter(a => a.availabilityId !== id);
         this.updateAvailabilityStats();
-        this.successMessage = 'Availability deleted successfully';
+        this.showPopup('success', 'Availability deleted successfully');
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error deleting availability:', error);
-        this.errorMessage = 'Failed to delete availability';
+        this.showPopup('error', 'Failed to delete availability');
         setTimeout(() => this.errorMessage = '', 3000);
       }
     });
@@ -422,7 +462,7 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   addConsultationType($event: any): void {
 
     if (!$event.name || !$event.defaultDuration) {
-      this.errorMessage = 'Please fill in all required fields';
+      this.showPopup('error', 'Please fill in all required fields');
       setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
@@ -440,13 +480,13 @@ export class DoctorAppointmentsPageComponent implements OnInit {
     this.consultationTypeService.createConsultationType(payload).subscribe({
       next: (newType) => {
         this.consultationTypesList.push(newType);
-        this.successMessage = 'Consultation type added successfully';
+        this.showPopup('success', 'Consultation type added successfully');
         setTimeout(() => this.successMessage = '', 3000);
 
       },
       error: (error) => {
         console.error('Error adding consultation type:', error);
-        this.errorMessage = 'Failed to add consultation type';
+        this.showPopup('error', 'Failed to add consultation type');
         setTimeout(() => this.errorMessage = '', 3000);
       }
     });
@@ -499,14 +539,14 @@ export class DoctorAppointmentsPageComponent implements OnInit {
         if (index !== -1) {
           this.consultationTypesList[index] = updatedType;
         }
-        this.successMessage = 'Consultation type updated successfully';
+        this.showPopup('success', 'Consultation type updated successfully');
         this.editingTypeId = undefined;
         this.loading = false;
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error updating consultation type:', error);
-        this.errorMessage = 'Failed to update consultation type';
+        this.showPopup('error', 'Failed to update consultation type');
         this.loading = false;
         setTimeout(() => this.errorMessage = '', 3000);
       }
@@ -602,7 +642,31 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   }
 
   viewPatientHistory(patientId: string): void {
-    console.log('Viewing patient history:', patientId);
+    const patient = this.recentPatients.find((item) => item.id === patientId);
+    const now = new Date();
+    const oldStatuses = ['COMPLETED', 'CANCELLED', 'MISSED', 'RESCHEDULED'];
+
+    this.historyPatientName = patient?.name
+      || this.appointments.find((appointment) => appointment.patientId === patientId)?.patientName
+      || 'Patient';
+
+    this.historyAppointments = this.appointments
+      .filter((appointment) => appointment.patientId === patientId)
+      .filter((appointment) =>
+        oldStatuses.includes(appointment.status) || new Date(appointment.startDateTime).getTime() < now.getTime(),
+      )
+      .sort((a, b) => new Date(b.startDateTime).getTime() - new Date(a.startDateTime).getTime());
+
+    this.showHistoryModal = true;
+  }
+
+  closeHistoryModal(): void {
+    this.showHistoryModal = false;
+  }
+
+  openHistoryAppointment(appointment: Appointment): void {
+    this.closeHistoryModal();
+    this.viewAppointmentDetails(appointment);
   }
 
   onDateSelected(date: string): void {
@@ -636,13 +700,13 @@ export class DoctorAppointmentsPageComponent implements OnInit {
         if (this.selectedAppointment?.appointmentId === appointmentId) {
           this.selectedAppointment.doctorNotes = notes;
         }
-        this.successMessage = 'Notes updated successfully';
+        this.showPopup('success', 'Notes updated successfully');
         this.isEditingNotes = false;
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
         console.error('Error updating notes:', error);
-        this.errorMessage = 'Failed to update notes';
+        this.showPopup('error', 'Failed to update notes');
         setTimeout(() => this.errorMessage = '', 3000);
       }
     });
@@ -651,5 +715,11 @@ export class DoctorAppointmentsPageComponent implements OnInit {
   clearMessages(): void {
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  private showPopup(type: 'success' | 'error' | 'info' | 'warning', message: string): void {
+    this.errorMessage = type === 'error' ? message : '';
+    this.successMessage = type === 'success' ? message : '';
+    this.feedback.show(type, 'Appointments', message);
   }
 }

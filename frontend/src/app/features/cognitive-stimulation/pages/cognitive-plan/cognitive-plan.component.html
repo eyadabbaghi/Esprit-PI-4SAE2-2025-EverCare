@@ -22,6 +22,69 @@
     <div *ngIf="infoMessage" class="status-message info">{{ infoMessage }}</div>
     <div *ngIf="isLoading" class="status-message info">Loading cognitive stimulation module...</div>
 
+    <div
+      class="panel doctor-cognitive-panel"
+      *ngIf="isDoctorView && !recordRouteId && !isLoading && doctorPatientOverviews.length > 0">
+      <div class="section-head">
+        <div>
+          <span class="hero-kicker">Associated patients</span>
+          <h3>Patient's Cognitive Stimulation</h3>
+          <p>Select a patient to review saved game results, progress, and the overall performance analysis.</p>
+        </div>
+        <span class="doctor-count">{{ doctorPatientOverviews.length }} patient{{ doctorPatientOverviews.length === 1 ? '' : 's' }}</span>
+      </div>
+
+      <div class="doctor-patient-review">
+        <div class="doctor-patient-list">
+          <button
+            type="button"
+            class="doctor-patient-option"
+            *ngFor="let overview of doctorPatientOverviews; trackBy: trackDoctorOverview"
+            [class.selected]="isDoctorCognitivePatientSelected(overview)"
+            (click)="selectDoctorCognitivePatient(overview)">
+            <ng-container *ngIf="overview.patient.profilePicture; else patientInitialsTpl">
+              <img [src]="overview.patient.profilePicture" [alt]="patientLabel(overview.patient)" />
+            </ng-container>
+            <ng-template #patientInitialsTpl>
+              <span class="patient-initials">{{ patientInitials(overview.patient) }}</span>
+            </ng-template>
+            <span>
+              <strong>{{ patientLabel(overview.patient) }}</strong>
+              <small>{{ overview.progress?.totalSessions || overview.sessions.length }} saved session{{ (overview.progress?.totalSessions || overview.sessions.length) === 1 ? '' : 's' }}</small>
+            </span>
+            <b [class]="'result-dot ' + overview.analysis.level">{{ overview.analysis.label }}</b>
+          </button>
+        </div>
+
+        <div
+          class="doctor-analysis-card"
+          *ngIf="selectedDoctorOverview as overview"
+          [class.analysis-strong]="overview.analysis.level === 'strong'"
+          [class.analysis-stable]="overview.analysis.level === 'stable'"
+          [class.analysis-support]="overview.analysis.level === 'support'"
+          [class.analysis-empty]="overview.analysis.level === 'empty'">
+          <span>{{ overview.analysis.label }}</span>
+          <h3>{{ overview.analysis.headline }}</h3>
+          <p>{{ overview.analysis.details }}</p>
+          <div class="analysis-metrics">
+            <div>
+              <small>30-day average</small>
+              <strong>{{ (overview.progress?.averageScoreLast30Days ?? 0) | number: '1.0-0' }}/100</strong>
+            </div>
+            <div>
+              <small>7-day average</small>
+              <strong>{{ (overview.progress?.averageScoreLast7Days ?? 0) | number: '1.0-0' }}/100</strong>
+            </div>
+            <div>
+              <small>Sessions</small>
+              <strong>{{ overview.progress?.totalSessions || overview.sessions.length }}</strong>
+            </div>
+          </div>
+          <p *ngIf="overview.errorMessage" class="analysis-warning">{{ overview.errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+
     <ng-container *ngIf="!isLoading && currentRecord as record; else noRecord">
       <div class="summary-grid">
         <article class="summary-card highlighted">
@@ -209,9 +272,13 @@
 <ng-template #noRecord>
   <div class="cognitive-shell" *ngIf="!isLoading && !currentRecord && !errorMessage">
     <div class="panel empty-card">
-      <p>No medical record context is available to load cognitive stimulation.</p>
+      <p>
+        {{ isDoctorView
+          ? 'No associated patient cognitive records are available yet.'
+          : 'No medical record context is available to load cognitive stimulation.' }}
+      </p>
       <div class="empty-actions">
-        <a routerLink="/medical-record" class="btn-muted">Open My Medical Record</a>
+        <a *ngIf="!isDoctorView" routerLink="/medical-record" class="btn-muted">Open My Medical Record</a>
         <a routerLink="/cognitive-stimulation/catalog" class="btn-link">Open Catalog</a>
       </div>
     </div>

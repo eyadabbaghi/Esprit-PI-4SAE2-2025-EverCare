@@ -32,18 +32,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   constructor(private readonly trackingDashboardService: TrackingDashboardService) {}
 
   ngOnInit() {
-    this.initializeAlertAudio();
-    this.loadPatients();
-
-    this.refreshInterval = setInterval(() => {
-      this.loadPatients();
-      if (this.selectedPatient) {
-        this.loadSelectedPatientStatus();
-        this.loadHistoryThenChart();
-        this.loadBackendAlerts();
-        this.loadDangerDuration();
-      }
-    }, 5000);
+    this.statusMessage = 'This page is not dedicated for doctors.';
   }
 
   ngOnDestroy() {

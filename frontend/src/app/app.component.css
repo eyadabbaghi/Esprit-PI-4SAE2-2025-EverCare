@@ -121,6 +121,349 @@
   animation: loaderProgressSweep 1.15s ease-in-out infinite;
 }
 
+.evercare-feedback-toast {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 10020;
+  width: min(92vw, 360px);
+  padding: 1rem 2.75rem 1rem 1.1rem;
+  border: 1px solid rgba(196, 181, 253, 0.58);
+  border-left: 4px solid #7c3aed;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 24px 56px rgba(45, 27, 78, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  animation: feedbackSlideIn 280ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.tracking-alarm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10040;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(248, 113, 113, 0.24), transparent 28rem),
+    rgba(45, 27, 78, 0.78);
+  backdrop-filter: blur(10px);
+  animation: trackingAlarmIn 220ms ease both;
+}
+
+.tracking-alarm-card {
+  width: min(92vw, 430px);
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  padding: 2rem 1.4rem 1.35rem;
+  border: 1px solid rgba(254, 202, 202, 0.7);
+  border-radius: 1.4rem;
+  color: #fff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.2), transparent 8rem),
+    linear-gradient(135deg, #be123c, #7c2d12 54%, #4c1d95);
+  box-shadow: 0 32px 80px rgba(127, 29, 29, 0.45);
+  animation: trackingAlarmLift 360ms cubic-bezier(0.22, 0.9, 0.28, 1.2) both;
+}
+
+.tracking-alarm-icon {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  display: grid;
+  place-items: center;
+}
+
+.tracking-alarm-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  animation: trackingAlarmPulse 900ms ease-in-out infinite;
+}
+
+.tracking-alarm-icon svg {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: trackingAlarmShake 420ms ease-in-out infinite alternate;
+}
+
+.tracking-alarm-eyebrow {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tracking-alarm-card h2 {
+  margin: 0;
+  max-width: 20rem;
+  font-size: clamp(1.45rem, 5vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.tracking-alarm-message {
+  margin: 0;
+  max-width: 22rem;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.5;
+}
+
+.tracking-alarm-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.tracking-alarm-grid div {
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tracking-alarm-grid span,
+.tracking-alarm-grid strong {
+  display: block;
+}
+
+.tracking-alarm-grid span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.tracking-alarm-grid strong {
+  margin-top: 0.15rem;
+  font-size: 1.2rem;
+}
+
+.tracking-alarm-stop {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1rem;
+  color: #9f1239;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(76, 29, 149, 0.22);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.tracking-alarm-stop:hover {
+  transform: translateY(-1px);
+  background: #fff1f2;
+}
+
+.evercare-feedback-toast strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #2d1b4e;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+
+.evercare-feedback-toast p {
+  margin: 0;
+  color: #6b5b8c;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.feedback-success {
+  border-left-color: #22c55e;
+}
+
+.feedback-error {
+  border-left-color: #ef4444;
+}
+
+.feedback-warning {
+  border-left-color: #f59e0b;
+}
+
+.feedback-info {
+  border-left-color: #7c3aed;
+}
+
+.feedback-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(243, 232, 255, 0.8);
+  cursor: pointer;
+}
+
+.feedback-close span,
+.page-welcome-close span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.8rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #6d28d9;
+}
+
+.feedback-close span:first-child,
+.page-welcome-close span:first-child {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.feedback-close span:last-child,
+.page-welcome-close span:last-child {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.evercare-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(196, 181, 253, 0.3), transparent 30%),
+    rgba(45, 27, 78, 0.34);
+  backdrop-filter: blur(14px);
+  animation: loaderBackdropIn 220ms ease both;
+}
+
+.evercare-dialog-card {
+  width: min(92vw, 430px);
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  padding: 1.45rem;
+  border: 1px solid rgba(196, 181, 253, 0.58);
+  border-radius: 1.55rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 30px 70px rgba(45, 27, 78, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  text-align: center;
+  animation: loaderCardLift 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.evercare-dialog-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1.05rem;
+  color: #7c3aed;
+  background: linear-gradient(145deg, rgba(243, 232, 255, 0.96), rgba(255, 255, 255, 0.88));
+  box-shadow:
+    0 14px 30px rgba(124, 58, 237, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.evercare-dialog-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dialog-danger {
+  color: #ef4444;
+}
+
+.evercare-dialog-card p {
+  margin: 0;
+  color: #2d1b4e;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.evercare-dialog-card span {
+  color: #6b5b8c;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.evercare-dialog-input {
+  width: 100%;
+  border: 1px solid rgba(196, 181, 253, 0.8);
+  border-radius: 0.95rem;
+  padding: 0.82rem 0.95rem;
+  color: #2d1b4e;
+  outline: none;
+  background: rgba(250, 248, 252, 0.84);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.evercare-dialog-input:focus {
+  border-color: #8b5cf6;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.16);
+}
+
+.evercare-dialog-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dialog-cancel,
+.dialog-confirm {
+  min-width: 7.4rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.dialog-cancel {
+  color: #5b4b7a;
+  background: rgba(243, 232, 255, 0.82);
+}
+
+.dialog-confirm {
+  color: #fff;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.22);
+}
+
+.dialog-danger-action {
+  background: linear-gradient(135deg, #fb7185, #ef4444);
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.2);
+}
+
+.dialog-cancel:hover,
+.dialog-confirm:hover {
+  transform: translateY(-1px);
+}
+
 .page-welcome-overlay {
   position: fixed;
   inset: 0;
@@ -134,6 +477,58 @@
     rgba(45, 27, 78, 0.28);
   backdrop-filter: blur(12px);
   animation: loaderBackdropIn 220ms ease both;
+}
+
+@keyframes feedbackSlideIn {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, -8px, 0) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes trackingAlarmIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes trackingAlarmLift {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes trackingAlarmPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes trackingAlarmShake {
+  from {
+    transform: rotate(-10deg) scale(1);
+  }
+  to {
+    transform: rotate(10deg) scale(1.04);
+  }
 }
 
 .page-welcome-card {
@@ -327,6 +722,10 @@
   .page-welcome-card,
   .page-welcome-icon,
   .page-welcome-progress i,
+  .tracking-alarm-overlay,
+  .tracking-alarm-card,
+  .tracking-alarm-pulse,
+  .tracking-alarm-icon svg,
   .loader-card,
   .loader-orbit::after,
   .loader-orbit span,

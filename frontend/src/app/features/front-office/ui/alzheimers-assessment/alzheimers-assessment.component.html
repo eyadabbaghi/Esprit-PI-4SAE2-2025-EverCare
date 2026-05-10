@@ -1,5 +1,31 @@
 <!-- alzheimers-assessment.component.html -->
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(15,10,30,0.75); backdrop-filter: blur(8px);">
+<div class="alz-assessment-backdrop fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(15,10,30,0.75); backdrop-filter: blur(8px);">
+  <div *ngIf="showIntro" class="assessment-intro-panel">
+    <div class="assessment-intro-card">
+      <div class="assessment-intro-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9.5 17.5h5M12 3a6 6 0 0 0-6 6c0 1.6.6 3 1.7 4.1.8.8 1.3 1.8 1.3 2.9h6c0-1.1.5-2.1 1.3-2.9A5.8 5.8 0 0 0 18 9a6 6 0 0 0-6-6Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 21h4M10 9h4M12 7v4" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="assessment-intro-eyebrow">Brain health screening</span>
+      <h3>Before you begin</h3>
+      <p>
+        This short assessment reviews memory, symptoms, lifestyle, and medical history to estimate Alzheimer risk and guide the next care steps.
+      </p>
+      <div class="assessment-intro-actions">
+        <button type="button" class="primary" (click)="startAssessmentNow()">Do it now</button>
+        <button
+          *ngIf="canDelegateToCaregiver"
+          type="button"
+          class="caregiver"
+          [disabled]="isRequestingCaregiverFill"
+          (click)="requestCaregiverFill()">
+          Let caregiver fill it
+        </button>
+      </div>
+    </div>
+  </div>
   <div class="assessment-modal" style="
     background: #FDFAF6;
     border-radius: 28px;
@@ -290,11 +316,20 @@
               </svg>
               <h2 style="font-size:22px; font-weight:700; color:#1C0F33; margin:0;">Brain Health Assessment</h2>
             </div>
-            <button (click)="skip()" style="
-              background:none; border:1px solid #D1C4E9; border-radius:10px;
-              padding:8px 16px; font-size:15px; color:#5B4A7A;
-              cursor:pointer; font-family:'Georgia','Times New Roman',serif;
-            ">Skip</button>
+            <div class="alz-top-actions">
+              <button
+                *ngIf="canDelegateToCaregiver"
+                type="button"
+                class="alz-caregiver-button"
+                [disabled]="isRequestingCaregiverFill"
+                (click)="requestCaregiverFill()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path d="M16 11a4 4 0 1 0-8 0v2.5a3 3 0 0 0 6 0V11" stroke-width="2" stroke-linecap="round"></path>
+                  <path d="M5 21a7 7 0 0 1 14 0M17 8h3m-1.5-1.5v3" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                {{ isRequestingCaregiverFill ? 'Sending...' : 'Caregiver fill' }}
+              </button>
+            </div>
           </div>
 
           <!-- Step indicators -->
@@ -703,5 +738,47 @@
       </div>
     </ng-template>
 
+  </div>
+
+  <div *ngIf="showCaregiverAssociationModal" class="caregiver-association-panel">
+    <div class="caregiver-association-card">
+      <button type="button" class="caregiver-modal-close" (click)="closeCaregiverAssociationModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6 6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <div class="caregiver-modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke-width="2"></path>
+          <path d="M4 21a8 8 0 0 1 16 0M18 8h3m-1.5-1.5v3" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <h3>Associate a caregiver first</h3>
+      <p>Your caregiver needs to be linked to your profile before they can complete this Alzheimer assessment for you.</p>
+      <label>
+        Caregiver email
+        <input type="email" [(ngModel)]="caregiverEmail" (ngModelChange)="onCaregiverEmailChange($event)" [ngModelOptions]="{ standalone: true }" placeholder="caregiver@email.com">
+      </label>
+      <div *ngIf="isLookingUpCaregiver" class="caregiver-preview-note">Checking this full email...</div>
+      <div *ngIf="caregiverPreview" class="caregiver-preview-card">
+        <img *ngIf="caregiverPreview.profilePicture; else caregiverPreviewInitials" [src]="caregiverPreview.profilePicture" [alt]="caregiverPreview.name">
+        <ng-template #caregiverPreviewInitials>
+          <div class="caregiver-preview-avatar">{{ getInitialsFor(caregiverPreview.name) }}</div>
+        </ng-template>
+        <div>
+          <span>Caregiver preview</span>
+          <strong>{{ caregiverPreview.name }}</strong>
+        </div>
+      </div>
+      <div *ngIf="caregiverPreviewMessage" class="caregiver-preview-note warning">
+        {{ caregiverPreviewMessage }}
+      </div>
+      <div class="caregiver-modal-actions">
+        <button type="button" class="secondary" (click)="closeCaregiverAssociationModal()">Back</button>
+        <button type="button" class="primary" [disabled]="isAssociatingCaregiver" (click)="associateCaregiverAndRequestFill()">
+          {{ isAssociatingCaregiver ? 'Linking...' : 'Link and notify' }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

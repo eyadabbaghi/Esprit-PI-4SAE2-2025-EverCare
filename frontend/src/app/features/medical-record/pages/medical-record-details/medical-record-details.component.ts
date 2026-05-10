@@ -468,6 +468,11 @@ export class MedicalRecordDetailsComponent implements OnInit {
   private verifyAssociatedRecord(record: MedicalRecord): Observable<boolean> {
     const currentEmail = String(this.currentUser?.email || '').trim().toLowerCase();
     const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const recordPatientId = record.patientId.trim().toLowerCase();
+    if (directEmails.some((email) => email.toLowerCase() === recordPatientId)) {
+      return of(true);
+    }
+
     const directRequests = directEmails.map((email) =>
       this.authService.getUserByEmail(email).pipe(catchError(() => of(null)))
     );
@@ -493,8 +498,17 @@ export class MedicalRecordDetailsComponent implements OnInit {
       return false;
     }
 
+    const directEmails = this.normalizeEmailList(this.currentUser?.patientEmails || []);
+    const patientCandidates = this.resolveRecordCandidates(patient).map((candidate) => candidate.toLowerCase());
+    if (directEmails.some((email) => patientCandidates.includes(email.toLowerCase()))) {
+      return true;
+    }
+
     if (this.currentRole === 'DOCTOR') {
-      return String(patient.doctorEmail || '').trim().toLowerCase() === currentEmail;
+      return this.normalizeEmailList([
+        patient.doctorEmail || '',
+        ...(patient.doctorEmails || [])
+      ]).includes(currentEmail);
     }
 
     const caregiverEmails = this.normalizeEmailList(patient.caregiverEmails || []);
@@ -509,6 +523,7 @@ export class MedicalRecordDetailsComponent implements OnInit {
   private resolveRecordCandidates(patient: User): string[] {
     return this.uniqueNormalized([
       patient.userId || '',
+      patient.keycloakId || '',
       patient.email || '',
       patient.name || ''
     ]);

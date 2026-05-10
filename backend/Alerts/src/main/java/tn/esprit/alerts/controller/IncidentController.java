@@ -5,8 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.alerts.dto.IncidentInsightsRequest;
+import tn.esprit.alerts.dto.IncidentInsightsResponse;
 import tn.esprit.alerts.dto.IncidentRequest;
 import tn.esprit.alerts.dto.IncidentResponse;
+import tn.esprit.alerts.dto.DoctorRecommendationRequest;
 import tn.esprit.alerts.service.IncidentService;
 
 import java.util.List;
@@ -22,6 +25,26 @@ public class IncidentController {
     public ResponseEntity<IncidentResponse> createIncident(@Valid @RequestBody IncidentRequest request) {
         IncidentResponse response = incidentService.createIncident(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/ai-insights")
+    public ResponseEntity<IncidentInsightsResponse> generateAiInsights(@Valid @RequestBody IncidentInsightsRequest request) {
+        String insights = incidentService.generateAiInsights(request);
+        return ResponseEntity.ok(new IncidentInsightsResponse(insights));
+    }
+
+    @PostMapping("/{id}/ai-insights")
+    public ResponseEntity<IncidentResponse> generateAndSaveAiInsights(@PathVariable String id) {
+        IncidentResponse response = incidentService.generateAndSaveAiInsights(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/doctor-recommendations")
+    public ResponseEntity<IncidentResponse> addDoctorRecommendation(
+            @PathVariable String id,
+            @Valid @RequestBody DoctorRecommendationRequest request) {
+        IncidentResponse response = incidentService.addDoctorRecommendation(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

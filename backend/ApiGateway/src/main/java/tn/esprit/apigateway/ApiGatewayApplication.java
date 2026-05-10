@@ -102,6 +102,28 @@ public class ApiGatewayApplication {
                         .uri("http://localhost:8098"))
 
                 // =========================
+                // TRACKING SERVICE
+                // =========================
+                .route("tracking-service-resources", r -> r
+                        .path(
+                                "/tracking/location-pings",
+                                "/tracking/location-pings/**",
+                                "/tracking/saved-places",
+                                "/tracking/saved-places/**",
+                                "/tracking/alerts",
+                                "/tracking/alerts/**"
+                        )
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://TRACKING-SERVICE"))
+
+                .route("tracking-service-analytics", r -> r
+                        .path(
+                                "/tracking/clusters/**",
+                                "/tracking/danger-duration/**"
+                        )
+                        .uri("lb://TRACKING-SERVICE"))
+
+                // =========================
                 // COMMUNICATION SERVICE
                 // =========================
                 .route("communication-websocket", r -> r

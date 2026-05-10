@@ -1,0 +1,125 @@
+.sos-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10025;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(45, 27, 78, 0.46);
+  backdrop-filter: blur(10px);
+  animation: sosFadeIn 0.2s ease-out;
+}
+
+.sos-modal {
+  width: min(100%, 360px);
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  border-radius: 28px;
+  background: #fff;
+  padding: 40px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+  animation: sosSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sos-ring-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sos-ping {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #d4537e;
+  opacity: 0.2;
+  animation: sosPing 1.5s infinite;
+}
+
+.sos-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #d4537e, #534ab7);
+  box-shadow: 0 8px 24px rgba(212, 83, 126, 0.4);
+}
+
+.sos-title {
+  margin: 0;
+  color: #26215c;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.sos-sub {
+  margin: 0;
+  color: #5f5e5a;
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.sos-bar-track {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 50px;
+  background: #eeedfe;
+}
+
+.sos-bar-fill {
+  height: 100%;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #d4537e, #534ab7);
+  transition: width 1s linear;
+}
+
+.sos-countdown {
+  margin: 0;
+  color: #888780;
+  font-size: 12px;
+}
+
+.sos-action {
+  width: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 28px;
+  color: #fff;
+  font-weight: 800;
+  background: #534ab7;
+  box-shadow: 0 12px 24px rgba(83, 74, 183, 0.22);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.sos-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(83, 74, 183, 0.28);
+}
+
+@keyframes sosFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sosSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sosPing {
+  75%, 100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}

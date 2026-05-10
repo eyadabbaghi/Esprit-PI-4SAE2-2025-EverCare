@@ -1,4 +1,5 @@
 .cognitive-page {
+  --game-accent: #7c3aed;
   background: radial-gradient(circle at top left, rgba(216, 180, 254, 0.32), transparent 32%),
     linear-gradient(180deg, #faf7ff 0%, #f7f1ff 100%);
   min-height: calc(100vh - 64px);
@@ -12,6 +13,7 @@
 
 .page-header,
 .catalog-hero,
+.hero-actions,
 .editor-head,
 .game-card-head,
 .hero-chips,
@@ -49,6 +51,27 @@
 
 .catalog-hero > * {
   position: relative;
+}
+
+.hero-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.btn-add-game {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
+}
+
+.btn-add-game svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
 }
 
 .hero-kicker {
@@ -149,6 +172,10 @@
   margin-bottom: 1.5rem;
 }
 
+.add-game-panel {
+  animation: panelReveal 260ms ease both;
+}
+
 .filter-title {
   margin-bottom: 1rem;
 }
@@ -171,6 +198,51 @@
 .form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 1rem 0 1.25rem;
+}
+
+.type-picker {
+  gap: 0.7rem;
+}
+
+.type-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.type-card {
+  min-height: 5.2rem;
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  border: 1px solid #d8c5ff;
+  border-radius: 1rem;
+  padding: 0.85rem;
+  background: #fff;
+  color: #5f4c8a;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.type-card:hover,
+.type-card.selected {
+  transform: translateY(-2px);
+  border-color: #8b5cf6;
+  background: #f6f1ff;
+  box-shadow: 0 14px 28px rgba(124, 58, 237, 0.14);
+}
+
+.type-card span {
+  color: #2d1b4e;
+  font-weight: 900;
+}
+
+.type-card small {
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .filter-grid {
@@ -340,6 +412,13 @@
   margin-top: 2rem;
 }
 
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
 .status-message {
   border-radius: 1rem;
   padding: 0.95rem 1rem;
@@ -434,6 +513,11 @@
   box-shadow: 0 14px 28px rgba(124, 58, 237, 0.16);
 }
 
+.btn-solid:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .btn-link {
   background: transparent;
   color: #7c3aed;
@@ -450,14 +534,89 @@
   border-color: #fecaca;
 }
 
+.doctor-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-left: auto;
+  padding: 0.28rem;
+  border: 1px solid #eadfff;
+  border-radius: 1.15rem;
+  background: #fcfbff;
+}
+
+.game-action-btn {
+  min-height: 2.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.game-action-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.game-action-btn.edit {
+  color: #5b21b6;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.game-action-btn.delete {
+  color: #be123c;
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.game-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.game-action-btn.edit:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.13);
+}
+
+.game-action-btn.delete:hover {
+  border-color: #fb7185;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.12);
+}
+
 .btn-muted {
   background: #f6f1ff;
   color: #5f4c8a;
   border: 1px solid #dcc7ff;
 }
 
+@keyframes panelReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 900px) {
   .catalog-hero,
+  .hero-actions,
   .page-header {
     flex-direction: column;
     align-items: stretch;
@@ -468,7 +627,8 @@
   }
 
   .form-grid,
-  .filter-grid {
+  .filter-grid,
+  .type-card-grid {
     grid-template-columns: 1fr;
   }
 
@@ -494,5 +654,14 @@
   .card-actions {
     margin-left: 1.2rem;
     margin-right: 1.2rem;
+  }
+
+  .doctor-card-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .game-action-btn {
+    flex: 1;
   }
 }

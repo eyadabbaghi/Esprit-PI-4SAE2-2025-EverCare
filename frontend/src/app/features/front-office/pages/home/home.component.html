@@ -1,8 +1,10 @@
 <!-- Step 1: Alzheimer Assessment overlay (shows first after signup) -->
 <app-alzheimers-assessment
   *ngIf="showAlzheimerAssessment"
+  [allowCaregiverDelegation]="true"
   (completed)="onAlzheimerCompleted($event)"
-  (skipped)="onAlzheimerSkipped()">
+  (skipped)="onAlzheimerSkipped()"
+  (caregiverRequested)="onAlzheimerCaregiverRequested()">
 </app-alzheimers-assessment>
 
 <!-- Step 2: Welcome popup (shows after Alzheimer assessment) -->
@@ -10,6 +12,18 @@
   *ngIf="showNewUserFlow && !showAlzheimerAssessment"
   (finished)="onNewUserFlowFinished()">
 </app-new-user-flow>
+
+<app-welcome-popup
+  *ngIf="showRoleWelcomeFlow"
+  eyebrow="Welcome to EverCare"
+  title="Your workspace is ready"
+  subtitle="We will show you the main tools for your role so you can start using EverCare with confidence."
+  primaryLabel="Start tutorial"
+  secondaryLabel="Start later"
+  skipLabel="Skip for now"
+  (completed)="onRoleWelcomeFinished()"
+  (skipped)="onRoleWelcomeFinished()">
+</app-welcome-popup>
 
 <div class="bg-[#FDFBFF] overflow-hidden">
 
@@ -42,41 +56,6 @@
         >
           Discover EverCare
         </button>
-
-        <button
-          type="button"
-          class="inline-flex items-center justify-center rounded-md border border-white/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/20 hover:scale-105"
-          (click)="scrollToVideo()"
-        >
-          Watch App Video
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= COMMERCIAL VIDEO ================= -->
-  <section id="evercare-video" class="scroll-mt-24 py-24 px-6 bg-gradient-to-br from-[#F3E8FF] to-white">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-[#2D1B4E] mb-4">
-          Watch the EverCare Commercial Video
-        </h2>
-        <p class="text-[#6B5B8C] text-lg max-w-3xl mx-auto">
-          See how EverCare connects patients, caregivers, and doctors in one proactive care experience.
-        </p>
-      </div>
-
-      <div class="video-card max-w-5xl mx-auto">
-        <video
-          class="w-full rounded-3xl"
-          controls
-          playsinline
-          preload="metadata"
-          poster="https://static.vecteezy.com/system/resources/thumbnails/074/519/873/small/a-close-up-side-profile-shows-the-detailed-wrinkled-skin-and-white-hair-of-an-elderly-person-bathed-in-soft-natural-light-photo.jpg"
-        >
-          <source src="/video/EverCareVID.web.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
       </div>
     </div>
   </section>

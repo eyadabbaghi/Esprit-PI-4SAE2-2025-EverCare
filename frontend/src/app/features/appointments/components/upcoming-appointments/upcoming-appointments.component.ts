@@ -10,6 +10,7 @@ import { AppointmentListItemComponent } from '../appointment-list-item/appointme
 export class UpcomingAppointmentsComponent {
   @Input() appointments: Appointment[] = [];
   @Output() onCardClick = new EventEmitter<Appointment>();
+  @Output() onJoin = new EventEmitter<Appointment>();
   @Output() onDateSelected = new EventEmitter<string>();
 
   viewMode: 'list' | 'calendar' = 'list';

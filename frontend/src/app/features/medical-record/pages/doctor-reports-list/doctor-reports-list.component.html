@@ -9,17 +9,24 @@
         <button *ngIf="isPatientFiltered" type="button" class="btn-muted" (click)="clearPatientFilter()">
           Back to Patient List
         </button>
-        <button type="button" class="btn-alert" (click)="toggleAlertsOnly()" [disabled]="isPatientFiltered">
-          {{ alertsOnly ? 'Show All Reports' : 'Show Alerts Only' }}
-        </button>
       </div>
     </div>
 
     <div *ngIf="errorMessage" class="status-message error">{{ errorMessage }}</div>
     <div *ngIf="actionMessage" class="status-message success">{{ actionMessage }}</div>
     <div *ngIf="isLoading" class="status-message info">Loading reports...</div>
-    <div *ngIf="isPatientFiltered && !isLoading" class="status-message warning">
-      Active filter for patient: <strong>{{ patientFilterId }}</strong>
+    <div *ngIf="isPatientFiltered && !isLoading" class="patient-filter-card">
+      <div class="patient-filter-avatar">
+        <img
+          *ngIf="patientFilterProfile?.profilePicture; else patientFilterInitials"
+          [src]="patientFilterProfile?.profilePicture"
+          [alt]="getPatientFilterName()" />
+        <ng-template #patientFilterInitials>{{ getPatientFilterInitials() }}</ng-template>
+      </div>
+      <div>
+        <span>Active filter for patient</span>
+        <strong>{{ getPatientFilterName() }}</strong>
+      </div>
     </div>
 
     <div class="panel filter-panel" *ngIf="!isPatientFiltered">
@@ -56,6 +63,12 @@
     </div>
 
     <div class="panel table-panel">
+      <div class="panel-title">
+        <div>
+          <h3>Medical Record Assessments</h3>
+          <p>Reports submitted by the patient or their caregiver.</p>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -105,7 +118,53 @@
             </td>
           </tr>
           <tr *ngIf="!isLoading && reports.length === 0">
-            <td colspan="6" class="empty-row">No reports found.</td>
+            <td colspan="6" class="empty-row">No medical record assessment reports found.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel table-panel alzheimer-panel">
+      <div class="panel-title">
+        <div>
+          <h3>Alzheimer Assessments</h3>
+          <p>Latest ML assessment results saved for associated patients.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Date</th>
+            <th>Diagnosis</th>
+            <th>Confidence</th>
+            <th>Stage / Risk</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let report of alzheimerReports">
+            <td>{{ report.patientName || report.patientId }}</td>
+            <td>{{ report.completedAt | date: 'dd/MM/yyyy, HH:mm' }}</td>
+            <td>
+              <span class="alz-diagnosis">{{ report.diagnosisLabel }}</span>
+              <small class="alz-recommendation">{{ report.recommendationTitle }}</small>
+            </td>
+            <td>
+              {{ report.diagnosisProbability === null ? 'N/A' : (report.diagnosisProbability | percent:'1.0-1') }}
+            </td>
+            <td>{{ report.stageOrRisk }}</td>
+            <td class="actions-col">
+              <div class="row-actions">
+                <button type="button" class="btn-link" (click)="openAlzheimerReport(report)">View Details</button>
+                <button type="button" class="btn-link dark" (click)="openPatientDossier(report.patientId)">Open Record</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!isLoading && alzheimerReports.length === 0">
+            <td colspan="6" class="empty-row">No Alzheimer assessment results found.</td>
           </tr>
           </tbody>
         </table>
@@ -118,6 +177,65 @@
         <button type="button" class="btn-muted small" [disabled]="page === 0" (click)="previousPage()">Previous</button>
         <span>Page {{ page + 1 }} / {{ totalPages || 1 }}</span>
         <button type="button" class="btn-muted small" [disabled]="page + 1 >= totalPages" (click)="nextPage()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedAlzheimerReport as selected" (click)="closeAlzheimerReport()">
+    <div class="alz-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="modal-close" (click)="closeAlzheimerReport()">x</button>
+      <div class="alz-modal-header">
+        <span class="alz-icon">AI</span>
+        <div>
+          <h3>{{ selected.patientName }} - Alzheimer Assessment</h3>
+          <p>{{ selected.completedAt | date: 'dd/MM/yyyy, HH:mm' }}</p>
+        </div>
+      </div>
+
+      <div class="alz-summary-grid">
+        <div>
+          <span>Diagnosis</span>
+          <strong>{{ selected.diagnosisLabel }}</strong>
+        </div>
+        <div>
+          <span>Confidence</span>
+          <strong>
+            {{ selected.diagnosisProbability === null ? 'N/A' : (selected.diagnosisProbability | percent:'1.0-1') }}
+          </strong>
+        </div>
+        <div>
+          <span>Stage / Risk</span>
+          <strong>{{ selected.stageOrRisk }}</strong>
+        </div>
+      </div>
+
+      <div class="alz-detail" *ngIf="selected.result.severity">
+        <h4>Severity</h4>
+        <p>
+          MMSE estimate:
+          <strong>{{ selected.result.severity.mmseEstimate || 'N/A' }}</strong>
+          <span *ngIf="selected.result.severity.mmseRange">
+            ({{ selected.result.severity.mmseRange }})
+          </span>
+        </p>
+      </div>
+
+      <div class="alz-detail" *ngIf="selected.result.riskAssessment">
+        <h4>Risk Factors</h4>
+        <p>Score: <strong>{{ selected.result.riskAssessment.score || 0 }}</strong></p>
+        <ul *ngIf="selected.result.riskAssessment.riskFactors?.length">
+          <li *ngFor="let factor of selected.result.riskAssessment.riskFactors">{{ factor }}</li>
+        </ul>
+      </div>
+
+      <div class="alz-detail">
+        <h4>{{ selected.result.recommendations?.title || 'Recommendations' }}</h4>
+        <p *ngIf="selected.result.recommendations?.description">
+          {{ selected.result.recommendations?.description }}
+        </p>
+        <ul *ngIf="getAlzheimerRecommendationItems(selected).length">
+          <li *ngFor="let item of getAlzheimerRecommendationItems(selected)">{{ item }}</li>
+        </ul>
       </div>
     </div>
   </div>

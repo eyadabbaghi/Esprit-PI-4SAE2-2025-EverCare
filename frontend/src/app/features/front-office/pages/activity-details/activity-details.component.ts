@@ -4,6 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { ActivityService, ActivityWithUserData } from '../../../../core/services/activity.service';
 import { AuthService } from '../login/auth.service';
 import { RoutineActivity } from '../activities/activities.component';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 @Component({
   selector: 'app-activity-details',
@@ -14,7 +15,10 @@ export class ActivityDetailsComponent implements OnInit {
   activity: ActivityWithUserData | null = null;
   userRating = 0;
   userId: string | null = null;
+  user: any = null;
   Math = Math;
+  ratingSubmitting = false;
+  ratingPopup: { rating: number; feedback: string; submitting: boolean } | null = null;
 
   // Translation and summarization
   languages = [
@@ -48,7 +52,8 @@ export class ActivityDetailsComponent implements OnInit {
     private readonly router: Router,
     private readonly toastr: ToastrService,
     private activityService: ActivityService,
-    private authService: AuthService
+    private authService: AuthService,
+    private feedback: AppFeedbackService
   ) {}
 
   ngOnInit(): void {
@@ -60,6 +65,7 @@ export class ActivityDetailsComponent implements OnInit {
 
     this.authService.currentUser$.subscribe(user => {
       if (user && user.userId) {
+        this.user = user;
         this.userId = user.userId;
         this.loadActivity(activityId);
         this.checkRoutineStatus(activityId);
@@ -145,19 +151,70 @@ export class ActivityDetailsComponent implements OnInit {
   }
 
   rate(rating: number): void {
-    if (!this.activity || !this.userId) return;
+    if (!this.activity || !this.userId || this.ratingSubmitting) return;
+    this.ratingSubmitting = true;
     this.activityService.rateActivity(this.userId, this.activity.id, rating).subscribe({
       next: (updated) => {
         this.activity!.rating = updated.rating;
         this.activity!.totalRatings = updated.totalRatings;
         this.userRating = rating;
-        this.toastr.success(`You rated this activity ${rating} star${rating !== 1 ? 's' : ''}`);
+        this.ratingSubmitting = false;
+        this.openRatingPopup(rating);
       },
       error: (err) => {
         console.error('Rate failed', err);
-        this.toastr.error('Failed to submit rating');
+        this.ratingSubmitting = false;
+        this.feedback.error('Failed to submit rating. Please try again.', 'Rating failed');
       }
     });
+  }
+
+  openRatingPopup(rating: number): void {
+    this.ratingPopup = { rating, feedback: '', submitting: false };
+  }
+
+  closeRatingPopup(): void {
+    this.ratingPopup = null;
+  }
+
+  skipRatingFeedback(): void {
+    this.feedback.info('Thanks for rating. Your score helps EverCare improve activities.', 'Rating saved');
+    this.closeRatingPopup();
+  }
+
+  submitRatingFeedback(): void {
+    if (!this.activity || !this.ratingPopup) return;
+    const comment = this.ratingPopup.feedback.trim();
+    if (!comment) {
+      this.feedback.info('You can write a short reason or skip feedback for now.', 'Feedback optional');
+      return;
+    }
+
+    this.ratingPopup.submitting = true;
+    this.activityService.saveRatingFeedback({
+      activityId: this.activity.id,
+      activityName: this.activity.name,
+      userId: this.userId || undefined,
+      userName: this.user?.name,
+      userEmail: this.user?.email,
+      rating: this.ratingPopup.rating,
+      feedback: comment
+    });
+    this.ratingPopup.submitting = false;
+    this.feedback.success('We appreciate the feedback. The EverCare team can now review it.', 'Feedback shared');
+    this.closeRatingPopup();
+  }
+
+  getRatingMoodLabel(rating: number): string {
+    if (rating <= 2) return "We're sorry this activity did not feel right.";
+    if (rating === 3) return 'Thanks for the honest rating.';
+    return 'We appreciate your rating.';
+  }
+
+  getRatingMoodClass(rating: number): string {
+    if (rating <= 2) return 'is-low';
+    if (rating === 3) return 'is-mid';
+    return 'is-high';
   }
 
   getImageUrl(relativePath: string): string {
@@ -179,11 +236,11 @@ export class ActivityDetailsComponent implements OnInit {
         this.currentTranslationLang = lang;
         this.showOriginal = false;
         this.translating = false;
-        this.toastr.success(`Activity translated to ${this.getLanguageName(lang)}`);
+        this.feedback.success(`Activity translated to ${this.getLanguageName(lang)}.`, 'Translation ready');
       },
       error: (err) => {
         console.error('Translation failed', err);
-        this.toastr.error('Translation failed');
+        this.feedback.error('Translation failed. Please try again.', 'Translation unavailable');
         this.translating = false;
       }
     });
@@ -205,7 +262,7 @@ export class ActivityDetailsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Summarization failed', err);
-        this.toastr.error('Summarization failed');
+        this.feedback.error('Summarization failed. Please try again.', 'Summary unavailable');
         this.summaryLoading = false;
       }
     });

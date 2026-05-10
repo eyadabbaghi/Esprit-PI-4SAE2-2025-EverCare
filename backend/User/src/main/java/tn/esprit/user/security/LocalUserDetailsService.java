@@ -19,7 +19,7 @@ public class LocalUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        tn.esprit.user.entity.User user = userRepository.findByEmail(email)
+        tn.esprit.user.entity.User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
         return User.builder()

@@ -15,6 +15,11 @@ export class VoiceSosService implements OnDestroy {
   private ownsGlobalLock = false;
   private networkErrorCount = 0;
   private triggered = false; // prevent double-firing
+  private screamStream: MediaStream | null = null;
+  private screamAudioCtx: AudioContext | null = null;
+  private screamAnalyser: AnalyserNode | null = null;
+  private screamRafId: number | null = null;
+  private loudSince = 0;
 
   private readonly TRIGGER_WORDS = [
     'help', 'sos', 'emergency', 'urgent', 'au secours', 'aidez moi'
@@ -37,14 +42,15 @@ export class VoiceSosService implements OnDestroy {
       (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      console.warn('[VoiceSOS] SpeechRecognition not supported');
-      _globalInstanceActive = false;
-      this.ownsGlobalLock = false;
+      console.warn('[VoiceSOS] SpeechRecognition not supported; loud distress monitor will still run');
+      this.isListening = true;
+      this.startScreamMonitor();
       return;
     }
 
     console.log('[VoiceSOS] Starting recognition');
     this.initRecognition(SpeechRecognition);
+    this.startScreamMonitor();
   }
 
   private initRecognition(SpeechRecognition: any): void {
@@ -173,6 +179,60 @@ export class VoiceSosService implements OnDestroy {
     this.recognition = rec;
   }
 
+  private async startScreamMonitor(): Promise<void> {
+    this.ngZone.runOutsideAngular(async () => {
+      try {
+        const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextCtor || !navigator.mediaDevices?.getUserMedia) return;
+
+        this.screamStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        this.screamAudioCtx = new AudioContextCtor();
+        const source = this.screamAudioCtx.createMediaStreamSource(this.screamStream);
+        this.screamAnalyser = this.screamAudioCtx.createAnalyser();
+        this.screamAnalyser.fftSize = 1024;
+        source.connect(this.screamAnalyser);
+        this.monitorScreamVolume();
+      } catch (error) {
+        console.warn('[VoiceSOS] Loud sound monitor unavailable:', error);
+      }
+    });
+  }
+
+  private monitorScreamVolume(): void {
+    if (!this.screamAnalyser || this.destroyed || !this.ownsGlobalLock) return;
+
+    const data = new Uint8Array(this.screamAnalyser.fftSize);
+    const tick = () => {
+      if (!this.screamAnalyser || this.destroyed || !this.ownsGlobalLock) return;
+
+      this.screamAnalyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (const value of data) {
+        const normalized = (value - 128) / 128;
+        sum += normalized * normalized;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      const now = Date.now();
+
+      if (rms > 0.36) {
+        this.loudSince ||= now;
+        if (now - this.loudSince > 500 && !this.triggered) {
+          this.triggered = true;
+          console.log('[VoiceSOS] Loud distress sound detected');
+          this.ngZone.run(() => this.sosTrigger$.next());
+          setTimeout(() => { this.triggered = false; }, 6000);
+          this.loudSince = 0;
+        }
+      } else {
+        this.loudSince = 0;
+      }
+
+      this.screamRafId = requestAnimationFrame(tick);
+    };
+
+    this.screamRafId = requestAnimationFrame(tick);
+  }
+
   stop(): void {
     this.isListening = false;
     this.triggered = false;
@@ -184,6 +244,16 @@ export class VoiceSosService implements OnDestroy {
       try { this.recognition.stop(); } catch (e) {}
       this.recognition = null;
     }
+    if (this.screamRafId !== null) {
+      cancelAnimationFrame(this.screamRafId);
+      this.screamRafId = null;
+    }
+    this.screamStream?.getTracks().forEach(track => track.stop());
+    this.screamStream = null;
+    this.screamAudioCtx?.close();
+    this.screamAudioCtx = null;
+    this.screamAnalyser = null;
+    this.loudSince = 0;
     if (this.ownsGlobalLock) {
       _globalInstanceActive = false;
       this.ownsGlobalLock = false;

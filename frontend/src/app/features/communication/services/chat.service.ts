@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import { Message, Conversation, Call } from '../models/messages.model';
 import { User } from '../../front-office/pages/login/auth.service';
 import SockJS from 'sockjs-client';
@@ -9,6 +11,7 @@ import { Client } from '@stomp/stompjs';
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private gatewayUrl = 'http://localhost:8089/EverCare/communication-service/api';
+  private directUsersUrl = 'http://localhost:8096/EverCare/users';
   private webSocketUrl = 'http://localhost:8086/ws-chat';
   public uploadUrl = 'http://localhost:8089/EverCare/communication-service/uploads/';
   private stompClient: any;
@@ -66,7 +69,20 @@ export class ChatService {
   }
 
   getUserProfile(email: string): Observable<User> {
-    return this.http.get<User>(`${this.gatewayUrl}/users/by-email?email=${email}`, { headers: this.getHeaders() });
+    return this.http.get<User>(`${this.gatewayUrl}/users/by-email`, {
+      params: { email },
+      headers: this.getHeaders()
+    }).pipe(
+      catchError(err => {
+        if (err?.status === 503 || err?.status === 502 || err?.status === 504 || err?.status === 404) {
+          return this.http.get<User>(`${this.directUsersUrl}/by-email`, {
+            params: { email },
+            headers: this.getHeaders()
+          });
+        }
+        return throwError(() => err);
+      })
+    );
   }
 
   getForbiddenWords(): Observable<string[]> {
@@ -76,6 +92,10 @@ export class ChatService {
   // ---------- Conversations ----------
   getConversations(userEmail: string): Observable<Conversation[]> {
     return this.http.get<Conversation[]>(`${this.gatewayUrl}/conversations/my?email=${userEmail}`, { headers: this.getHeaders() });
+  }
+
+  getArchivedConversations(userEmail: string): Observable<Conversation[]> {
+    return this.http.get<Conversation[]>(`${this.gatewayUrl}/conversations/archived?email=${userEmail}`, { headers: this.getHeaders() });
   }
 
   createConversation(user1Email: string, user2Email: string): Observable<Conversation> {

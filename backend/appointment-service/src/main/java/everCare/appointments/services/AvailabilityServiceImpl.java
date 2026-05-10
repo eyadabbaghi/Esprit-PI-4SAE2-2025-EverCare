@@ -97,25 +97,21 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     @Override
     public List<Availability> getAvailabilitiesByDoctor(String doctorId) {
-        validateDoctorExists(doctorId);
         return availabilityRepository.findByDoctorId(doctorId);
     }
 
     @Override
     public List<Availability> getAvailabilitiesByDoctorAndDay(String doctorId, DayOfWeek dayOfWeek) {
-        validateDoctorExists(doctorId);
         return availabilityRepository.findByDoctorIdAndDayOfWeek(doctorId, dayOfWeek);
     }
 
     @Override
     public List<Availability> getValidAvailabilitiesForDate(String doctorId, LocalDate date) {
-        validateDoctorExists(doctorId);
         return availabilityRepository.findValidByDoctorIdAndDate(doctorId, date);
     }
 
     @Override
     public List<Availability> getBlockedSlots(String doctorId) {
-        validateDoctorExists(doctorId);
         return availabilityRepository.findByDoctorIdAndIsBlockedTrue(doctorId);
     }
 
@@ -126,7 +122,6 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
     @Override
     public List<Availability> getAvailabilitiesByDoctorAndPeriod(String doctorId, LocalDate from, LocalDate to) {
-        validateDoctorExists(doctorId);
         return availabilityRepository.findByDoctorIdAndValidFromLessThanEqualAndValidToGreaterThanEqual(doctorId, from, to);
     }
 

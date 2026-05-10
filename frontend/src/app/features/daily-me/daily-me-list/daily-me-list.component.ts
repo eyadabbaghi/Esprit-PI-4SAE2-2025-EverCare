@@ -604,7 +604,10 @@ export class DailyMeListComponent implements OnInit, OnDestroy {
     ).subscribe((patients: any[]) => {
       const associatedPatients = (patients || []).filter((patient: any) => {
         if (role === 'doctor') {
-          return String(patient?.doctorEmail || '').trim().toLowerCase() === currentEmail;
+          return this.normalizeEmailList([
+            patient?.doctorEmail || '',
+            ...(patient?.doctorEmails || [])
+          ]).includes(currentEmail);
         }
 
         const caregiverEmails = this.normalizeEmailList(patient?.caregiverEmails || []);

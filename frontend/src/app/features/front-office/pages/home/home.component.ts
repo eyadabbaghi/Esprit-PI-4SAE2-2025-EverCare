@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService, User } from '../login/auth.service';
 import { AssessmentResult } from '../../ui/alzheimers-assessment/alzheimers-assessment.component';
+import { OnboardingTutorialService } from '../../ui/onboarding-tutorial/onboarding-tutorial.service';
 
 interface HomeModuleCard {
   id: string;
@@ -28,6 +29,7 @@ interface HomeFeature {
 export class HomeComponent implements OnInit, OnDestroy {
   showAlzheimerAssessment = false;
   showNewUserFlow = false;
+  showRoleWelcomeFlow = false;
   private userSub?: Subscription;
 
   readonly modules: HomeModuleCard[] = [
@@ -101,6 +103,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private readonly router: Router,
     private authService: AuthService,
+    private readonly tutorialService: OnboardingTutorialService,
   ) {}
 
  ngOnInit(): void {
@@ -110,7 +113,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.syncPatientOnboarding(user);
+    this.syncOnboarding(user);
   });
 }
 
@@ -128,13 +131,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/activities');
   }
 
-  scrollToVideo(): void {
-    document.getElementById('evercare-video')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  }
-
   // Called when Alzheimer assessment is completed with results
   onAlzheimerCompleted(result: AssessmentResult): void {
     this.showAlzheimerAssessment = false;
@@ -145,49 +141,90 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.router.navigate(['/profile']);
       return;
     }
-    if (localStorage.getItem('showWelcomeFlow') === 'true') {
-      this.showNewUserFlow = true;
-    } else {
-      this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
-    }
+    this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
   }
 
   // Called when user skips the Alzheimer assessment
   onAlzheimerSkipped(): void {
     this.showAlzheimerAssessment = false;
     localStorage.removeItem('showAlzheimerAssessment');
+    localStorage.setItem('alzheimerAssessmentSkipped', 'true');
     if (localStorage.getItem('alzAssessmentReturnTo') === 'profile') {
       localStorage.removeItem('alzAssessmentReturnTo');
       this.router.navigate(['/profile']);
       return;
     }
-    if (localStorage.getItem('showWelcomeFlow') === 'true') {
-      this.showNewUserFlow = true;
-    } else {
-      this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
+    this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
+  }
+
+  onAlzheimerCaregiverRequested(): void {
+    this.showAlzheimerAssessment = false;
+    localStorage.removeItem('showAlzheimerAssessment');
+
+    if (localStorage.getItem('alzAssessmentReturnTo') === 'profile') {
+      localStorage.removeItem('alzAssessmentReturnTo');
+      localStorage.removeItem('showWelcomeFlow');
+      this.router.navigate(['/profile']);
+      return;
     }
+
+    this.router.navigate(['/assessment'], { queryParams: { source: 'onboarding' } });
   }
 
   // Called when welcome popup is finished — navigate to medical record assessment
 onNewUserFlowFinished(): void {
   this.showNewUserFlow = false;
   localStorage.removeItem('showWelcomeFlow');
+  localStorage.removeItem('showPostMedicalWelcome');
+  const role = this.authService.getCurrentUserValue()?.role;
+  if (role === 'PATIENT') {
+    this.tutorialService.queueForCurrentUser(role);
+    setTimeout(() => this.tutorialService.startPendingIfNeeded(), 250);
+  }
 }
 
-  private syncPatientOnboarding(user: User | null): void {
-    const isPatient = user?.role === 'PATIENT';
-    if (!this.authService.isAuthenticated() || !isPatient) {
-      this.showAlzheimerAssessment = false;
-      this.showNewUserFlow = false;
+  onRoleWelcomeFinished(): void {
+    const role = this.authService.getCurrentUserValue()?.role;
+    this.showRoleWelcomeFlow = false;
+    localStorage.removeItem('showWelcomeFlow');
+
+    if (role === 'DOCTOR' || role === 'CAREGIVER') {
+      this.tutorialService.queueForCurrentUser(role);
+      setTimeout(() => this.tutorialService.startPendingIfNeeded(), 250);
+    }
+  }
+
+  private syncOnboarding(user: User | null): void {
+    this.showAlzheimerAssessment = false;
+    this.showNewUserFlow = false;
+    this.showRoleWelcomeFlow = false;
+
+    if (!this.authService.isAuthenticated() || !user) {
       return;
     }
 
+    const isPatient = user?.role === 'PATIENT';
+    const isCaregiverPatientAssessment = user.role === 'CAREGIVER'
+      && !!localStorage.getItem('caregiverAlzheimerPatientId')
+      && localStorage.getItem('showAlzheimerAssessment') === 'true';
     const showAlzheimer = localStorage.getItem('showAlzheimerAssessment') === 'true';
     const showWelcome = localStorage.getItem('showWelcomeFlow') === 'true';
+
+    if (isCaregiverPatientAssessment) {
+      this.showAlzheimerAssessment = true;
+      return;
+    }
+
+    if (!isPatient) {
+      this.showRoleWelcomeFlow = showWelcome && (user.role === 'DOCTOR' || user.role === 'CAREGIVER');
+      return;
+    }
+
     const hasPinnedAssessment = !!localStorage.getItem(this.assessmentStorageKey(user));
 
     this.showAlzheimerAssessment = showAlzheimer && !hasPinnedAssessment;
-    this.showNewUserFlow = showWelcome && !this.showAlzheimerAssessment;
+    const showPostMedicalWelcome = localStorage.getItem('showPostMedicalWelcome') === 'true';
+    this.showNewUserFlow = showWelcome && showPostMedicalWelcome && !this.showAlzheimerAssessment;
   }
 
   private assessmentStorageKey(user: User): string {

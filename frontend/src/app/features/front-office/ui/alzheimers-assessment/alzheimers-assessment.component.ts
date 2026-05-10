@@ -1,9 +1,9 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService, User } from '../../pages/login/auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 export interface AssessmentResult {
   userId: string;
@@ -39,16 +39,25 @@ export interface AssessmentResult {
   styleUrls: ['./alzheimers-assessment.component.css'],
 })
 export class AlzheimersAssessmentComponent implements OnInit {
+  @Input() allowCaregiverDelegation = false;
   @Output() completed = new EventEmitter<AssessmentResult>();
   @Output() skipped = new EventEmitter<void>();
+  @Output() caregiverRequested = new EventEmitter<void>();
 
   currentStep = 0;
   isLoading = false;
+  isRequestingCaregiverFill = false;
+  isAssociatingCaregiver = false;
+  showCaregiverAssociationModal = false;
+  showIntro = false;
+  caregiverEmail = '';
+  caregiverPreview: User | null = null;
+  caregiverPreviewMessage = '';
+  isLookingUpCaregiver = false;
   assessmentResult: AssessmentResult | null = null;
+  private caregiverLookupTimer: ReturnType<typeof setTimeout> | null = null;
 
   form: FormGroup;
-
-  private apiUrl = 'http://localhost:8089/EverCare/assessment/predict';
 
   readonly steps = [
     { title: 'Personal Info', icon: '👤', fields: ['age', 'gender', 'bmi'] },
@@ -60,10 +69,10 @@ export class AlzheimersAssessmentComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
-    private router: Router,
     private toastr: ToastrService,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService,
+    private feedback: AppFeedbackService
   ) {
     this.form = this.fb.group({
       // Step 1: Personal info
@@ -111,9 +120,17 @@ export class AlzheimersAssessmentComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUserValue();
-    if (user?.role !== 'PATIENT') {
+    if (user?.role !== 'PATIENT' && !this.isCaregiverPatientMode()) {
       this.skipped.emit();
+      return;
     }
+    this.showIntro = user?.role === 'PATIENT' && !this.isCaregiverPatientMode();
+  }
+
+  get canDelegateToCaregiver(): boolean {
+    return this.allowCaregiverDelegation
+      && this.authService.getCurrentUserValue()?.role === 'PATIENT'
+      && !this.isCaregiverPatientMode();
   }
 
   get totalSteps(): number {
@@ -130,6 +147,15 @@ export class AlzheimersAssessmentComponent implements OnInit {
     } else {
       this.submitAssessment();
     }
+  }
+
+  startAssessmentNow(): void {
+    this.showIntro = false;
+  }
+
+  doAssessmentLater(): void {
+    this.showIntro = false;
+    this.skip();
   }
 
   prevStep(): void {
@@ -158,12 +184,13 @@ export class AlzheimersAssessmentComponent implements OnInit {
 
   submitAssessment(): void {
     this.isLoading = true;
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    console.log('Token:', token);  // ADD THIS
 
+    const caregiverPatientId = this.getCaregiverPatientId();
+    const request$ = caregiverPatientId
+      ? this.authService.submitAlzheimerAssessmentForPatient<AssessmentResult>(caregiverPatientId, this.form.value)
+      : this.authService.submitAlzheimerAssessment<AssessmentResult>(this.form.value);
 
-    this.http.post<AssessmentResult>(this.apiUrl, this.form.value, { headers })
+    request$
       .subscribe({
         next: (result) => {
           this.assessmentResult = result;
@@ -180,10 +207,108 @@ export class AlzheimersAssessmentComponent implements OnInit {
       });
   }
 
+  requestCaregiverFill(): void {
+    this.showIntro = false;
+    const user = this.authService.getCurrentUserValue();
+    if (!user || user.role !== 'PATIENT') {
+      return;
+    }
+
+    const caregiverEmails = (user.caregiverEmails || []).filter(Boolean);
+    if (!caregiverEmails.length) {
+      this.showCaregiverAssociationModal = true;
+      return;
+    }
+
+    this.notifyCaregiversForAssessment(user, caregiverEmails);
+  }
+
+  associateCaregiverAndRequestFill(): void {
+    const email = this.caregiverEmail.trim();
+    if (!email) {
+      this.toastr.error('Enter your caregiver email first.');
+      return;
+    }
+
+    this.isAssociatingCaregiver = true;
+    this.authService.updateProfile({ connectedEmail: email }).subscribe({
+      next: () => {
+        this.authService.fetchCurrentUser().subscribe({
+          next: (user) => {
+            this.isAssociatingCaregiver = false;
+            this.showCaregiverAssociationModal = false;
+            this.feedback.success('Caregiver linked successfully. We will notify them now.', 'Caregiver linked');
+            this.sendConnectionNotification(email);
+            this.notifyCaregiversForAssessment(user, [email]);
+          },
+          error: () => {
+            this.isAssociatingCaregiver = false;
+            this.feedback.warning('Caregiver was linked, but we could not refresh your profile. Please try again.', 'Profile refresh needed');
+          },
+        });
+      },
+      error: (error) => {
+        this.isAssociatingCaregiver = false;
+        const message = error?.error?.message || error?.error || 'That caregiver email was not found.';
+        this.feedback.error(message, 'Caregiver not found');
+      },
+    });
+  }
+
+  closeCaregiverAssociationModal(): void {
+    if (this.isAssociatingCaregiver) {
+      return;
+    }
+    this.showCaregiverAssociationModal = false;
+    this.caregiverEmail = '';
+    this.caregiverPreview = null;
+    this.caregiverPreviewMessage = '';
+    this.clearCaregiverLookup();
+  }
+
+  onCaregiverEmailChange(value: string): void {
+    this.clearCaregiverLookup();
+    this.caregiverPreview = null;
+    this.caregiverPreviewMessage = '';
+    const email = String(value || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      this.isLookingUpCaregiver = false;
+      return;
+    }
+
+    this.isLookingUpCaregiver = true;
+    this.caregiverLookupTimer = setTimeout(() => {
+      this.authService.getUserByEmail(email).subscribe({
+        next: (user) => {
+          if (this.caregiverEmail.trim().toLowerCase() !== email) {
+            return;
+          }
+          this.isLookingUpCaregiver = false;
+          if (user.role !== 'CAREGIVER') {
+            this.caregiverPreviewMessage = 'This email is not a caregiver account.';
+            return;
+          }
+          this.caregiverPreview = user;
+        },
+        error: () => {
+          if (this.caregiverEmail.trim().toLowerCase() !== email) {
+            return;
+          }
+          this.isLookingUpCaregiver = false;
+          this.caregiverPreviewMessage = 'No caregiver account was found with this full email.';
+        }
+      });
+    }, 350);
+  }
+
 pinToProfile(): void {
   if (!this.assessmentResult) return;
   const user = this.authService.getCurrentUserValue();
-  if (user) {
+  const caregiverPatientId = this.getCaregiverPatientId();
+  if (caregiverPatientId) {
+    localStorage.setItem(`assessmentResult:${caregiverPatientId.trim().toLowerCase()}`, JSON.stringify(this.assessmentResult));
+    this.clearCaregiverAssessmentContext();
+  } else if (user) {
     localStorage.setItem(this.assessmentStorageKey(user), JSON.stringify(this.assessmentResult));
   }
   localStorage.removeItem('assessmentResult');
@@ -197,6 +322,89 @@ pinToProfile(): void {
   // Keep showWelcomeFlow so HomeComponent shows welcome popup next
   this.skipped.emit();
 }
+
+  private notifyCaregiversForAssessment(user: User, caregiverEmails: string[]): void {
+    const patientId = (user.userId || user.email || '').trim();
+    if (!patientId) {
+      this.toastr.error('Your profile is missing a patient id.');
+      return;
+    }
+
+    this.isRequestingCaregiverFill = true;
+    const patientName = user.name || user.email;
+    const details = {
+      message: `${patientName} asked you to complete their Alzheimer assessment.`,
+      patientId,
+      patientName,
+      patientEmail: user.email,
+      returnTo: localStorage.getItem('alzAssessmentReturnTo') === 'profile' ? 'profile' : 'onboarding',
+    };
+
+    this.notificationService.sendNotification({
+      activityId: `alzheimer-assessment-request:${patientId}`,
+      action: 'ALZHEIMER_ASSESSMENT_CAREGIVER_REQUEST',
+      details: JSON.stringify(details),
+      targetUserIds: caregiverEmails,
+    }).subscribe({
+      next: () => {
+        this.isRequestingCaregiverFill = false;
+        this.toastr.success('Your caregiver has been notified.');
+        this.feedback.success('Your caregiver has been notified to complete the Alzheimer assessment.', 'Request sent');
+        localStorage.removeItem('showAlzheimerAssessment');
+        this.caregiverRequested.emit();
+      },
+      error: () => {
+        this.isRequestingCaregiverFill = false;
+        this.feedback.error('Could not notify your caregiver. Please try again.', 'Request failed');
+      },
+    });
+  }
+
+  getInitialsFor(name: string | undefined): string {
+    if (!name) return 'U';
+    return name.split(' ').filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  private clearCaregiverLookup(): void {
+    if (this.caregiverLookupTimer) {
+      clearTimeout(this.caregiverLookupTimer);
+      this.caregiverLookupTimer = null;
+    }
+  }
+
+  private sendConnectionNotification(targetEmail: string): void {
+    const current = this.authService.getCurrentUserValue();
+    if (!current?.email) {
+      return;
+    }
+
+    this.notificationService.sendNotification({
+      activityId: `connection-associated:${current.email}:${targetEmail}:${Date.now()}`,
+      action: 'USER_ASSOCIATED',
+      details: JSON.stringify({
+        message: `${current.name || current.email} associated you on EverCare.`,
+        actorName: current.name,
+        actorEmail: current.email,
+        actorRole: current.role
+      }),
+      targetUserIds: [targetEmail.trim().toLowerCase()]
+    }).subscribe({ error: () => undefined });
+  }
+
+  private getCaregiverPatientId(): string {
+    return localStorage.getItem('caregiverAlzheimerPatientId')?.trim() || '';
+  }
+
+  private isCaregiverPatientMode(): boolean {
+    return this.authService.getCurrentUserValue()?.role === 'CAREGIVER' && !!this.getCaregiverPatientId();
+  }
+
+  private clearCaregiverAssessmentContext(): void {
+    localStorage.removeItem('caregiverAlzheimerPatientId');
+    localStorage.removeItem('caregiverAlzheimerPatientEmail');
+    localStorage.removeItem('caregiverAlzheimerPatientName');
+    localStorage.removeItem('caregiverAlzheimerReturnTo');
+  }
 
   private assessmentStorageKey(user: User): string {
     const identifier = (user.userId || user.email || 'patient').trim().toLowerCase();

@@ -9,6 +9,7 @@ export interface Activity {
   name: string;
   type: string; // e.g., "Relaxation"
   duration: number;
+  difficulty?: 'Easy' | 'Moderate' | 'Challenging';
   scheduledTime?: string;
   description: string;
   imageUrl: string;
@@ -77,6 +78,18 @@ export interface ActivityWithUserData {
   completedAt?: string;
 }
 
+export interface ActivityRatingFeedback {
+  id: string;
+  activityId: string;
+  activityName: string;
+  userId?: string;
+  userName?: string;
+  userEmail?: string;
+  rating: number;
+  feedback: string;
+  createdAt: string;
+}
+
 // Requests
 export interface CreateActivityRequest {
   name: string;
@@ -142,6 +155,7 @@ export class ActivityService {
  // private apiUrl = 'http://localhost:8092/EverCare'; // direct to microservice
   // New gateway URL
   public apiUrl = 'http://localhost:8089/EverCare';
+  private readonly ratingFeedbackStorageKey = 'evercare_activity_rating_feedbacks';
 
   constructor(
     private http: HttpClient,
@@ -215,6 +229,30 @@ export class ActivityService {
 
   rateActivity(userId: string, activityId: string, rating: number): Observable<Activity> {
     return this.http.post<Activity>(`${this.apiUrl}/activities/user/${userId}/activity/${activityId}/rate?rating=${rating}`, {});
+  }
+
+  getRatingFeedbacks(): ActivityRatingFeedback[] {
+    try {
+      const raw = localStorage.getItem(this.ratingFeedbackStorageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  getRatingFeedbacksForActivity(activityId: string): ActivityRatingFeedback[] {
+    return this.getRatingFeedbacks().filter(feedback => feedback.activityId === activityId);
+  }
+
+  saveRatingFeedback(feedback: Omit<ActivityRatingFeedback, 'id' | 'createdAt'>): ActivityRatingFeedback {
+    const item: ActivityRatingFeedback = {
+      ...feedback,
+      id: `activity-feedback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: new Date().toISOString()
+    };
+    const feedbacks = [item, ...this.getRatingFeedbacks()];
+    localStorage.setItem(this.ratingFeedbackStorageKey, JSON.stringify(feedbacks));
+    return item;
   }
 
   // In activity.service.ts

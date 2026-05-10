@@ -10,6 +10,7 @@ import { SetupProfileComponent } from './pages/setup-profile/setup-profile.compo
 import { DoctorsComponent } from './pages/doctors/doctors.component';
 import { FaceLoginComponent } from './pages/face-login/face-login.component';
 import { FaceSetupComponent } from './pages/face-setup/face-setup.component';
+import { AssessmentPageComponent } from './pages/assessment-page/assessment-page.component';
 import { AppointmentsPageComponent } from '../appointments/pages/appointments-page/appointments-page.component';
 import { FrontOfficeAuthGuard } from '../../core/guards/front-office-auth.guard';
 
@@ -81,6 +82,7 @@ const routes: Routes = [
         loadChildren: () => import('../tracking/tracking.module').then(m => m.TrackingModule)
       },
       { path: 'setup-face-id', component: FaceSetupComponent, canActivate: [FrontOfficeAuthGuard] },
+      { path: 'alzheimer-assessment', component: AssessmentPageComponent, canActivate: [FrontOfficeAuthGuard] },
       { path: 'face-login', component: FaceLoginComponent },
     ],
   },

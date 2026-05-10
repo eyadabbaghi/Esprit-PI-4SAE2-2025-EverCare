@@ -59,9 +59,22 @@
 .activity-list-card,
 .doctor-activity-card {
   position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.92) !important;
   box-shadow: 0 18px 45px rgba(76, 29, 149, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.92);
   transform: translateZ(0);
+}
+
+.activity-list-card > div:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-activity-card .routine-assignment-strip {
+  margin-top: auto;
 }
 
 .activity-list-card::before,
@@ -93,6 +106,230 @@
   filter: saturate(1.08);
 }
 
+.activity-rating-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(221, 214, 254, 0.8);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(250, 245, 255, 0.95), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.activity-rating-control span {
+  color: #6B5B8C;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.rating-star-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  color: #d1d5db;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  transition: transform 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.rating-star-btn svg {
+  width: 0.98rem;
+  height: 0.98rem;
+}
+
+.rating-star-btn.is-active {
+  color: #f59e0b;
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.42);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.16);
+}
+
+.rating-star-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.06);
+  color: #f59e0b;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.18);
+}
+
+.rating-star-btn:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.activity-type-mini-svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  vertical-align: -0.18rem;
+}
+
+.activity-card-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.activity-card-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: max-content;
+}
+
+.activity-type-pill,
+.activity-difficulty-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.78rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 10px 18px rgba(124, 58, 237, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.activity-difficulty-pill {
+  letter-spacing: 0;
+}
+
+.activity-difficulty-svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+.activity-card-action-area {
+  margin-top: auto !important;
+}
+
+.activity-translate-select {
+  min-height: 1.75rem;
+  padding: 0.25rem 1.45rem 0.25rem 0.55rem;
+  border: 1px solid #DDD6FE;
+  border-radius: 999px;
+  color: #6D28D9;
+  background:
+    linear-gradient(135deg, rgba(243, 232, 255, 0.96), #fff);
+  box-shadow: 0 8px 18px rgba(124, 58, 237, 0.08);
+  font-size: 0.68rem;
+  font-weight: 800;
+  outline: none;
+}
+
+.rating-feedback-overlay {
+  animation: fadeInOverlay 0.22s ease forwards;
+}
+
+.rating-feedback-modal {
+  animation: ratingModalIn 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.rating-feedback-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #F5F0FF, #FFFFFF);
+}
+
+.rating-feedback-hero.is-low {
+  background: linear-gradient(135deg, #FFF1F2, #FFFFFF);
+}
+
+.rating-feedback-hero.is-mid {
+  background: linear-gradient(135deg, #FFFBEB, #FFFFFF);
+}
+
+.rating-feedback-hero.is-high {
+  background: linear-gradient(135deg, #ECFDF5, #FFFFFF);
+}
+
+.rating-face {
+  width: 6.25rem;
+  height: 6.25rem;
+  color: #7C3AED;
+  animation: ratingFaceFloat 2.2s ease-in-out infinite;
+}
+
+.rating-face.is-low {
+  color: #BE185D;
+}
+
+.rating-face.is-mid {
+  color: #D97706;
+}
+
+.rating-face.is-high {
+  color: #059669;
+}
+
+.rating-feedback-textarea {
+  width: 100%;
+  margin-top: 0.55rem;
+  border: 1px solid #DDD6FE;
+  border-radius: 1rem;
+  padding: 0.8rem 0.9rem;
+  color: #2D1B4E;
+  background: #FAF8FC;
+  outline: none;
+  resize: vertical;
+}
+
+.rating-feedback-textarea:focus {
+  border-color: #A78BFA;
+  box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.28);
+}
+
+.rating-skip-btn,
+.rating-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.65rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.rating-skip-btn {
+  color: #6B5B8C;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+}
+
+.rating-submit-btn {
+  color: white;
+  background: #7C3AED;
+  border: 1px solid #6D28D9;
+}
+
+.rating-submit-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@keyframes ratingModalIn {
+  from { opacity: 0; transform: translateY(22px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ratingFaceFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+
 .patient-select-btn {
   border-color: rgba(196, 181, 253, 0.9);
   border-radius: 0.8rem;
@@ -103,6 +340,246 @@
   transform: translateY(-1px);
   border-color: #A78BFA;
   box-shadow: 0 10px 24px rgba(124, 58, 237, 0.12);
+}
+
+.routine-care-board {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(221, 214, 254, 0.9);
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 245, 255, 0.9));
+  box-shadow: 0 20px 48px rgba(124, 58, 237, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.routine-secondary-btn,
+.routine-pin-patient-btn,
+.routine-remind-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  font-weight: 800;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.routine-secondary-btn {
+  padding: 0.72rem 1rem;
+  color: #7C3AED;
+  background: #F3E8FF;
+  border: 1px solid #DDD6FE;
+  white-space: nowrap;
+}
+
+.routine-secondary-btn svg,
+.routine-pin-patient-btn svg,
+.routine-remind-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.routine-secondary-btn:hover,
+.routine-pin-patient-btn:hover:not(:disabled),
+.routine-remind-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(124, 58, 237, 0.15);
+}
+
+.patient-routine-tile {
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(221, 214, 254, 0.88);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 38px rgba(124, 58, 237, 0.09);
+}
+
+.routine-progress-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  height: 2.15rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  color: #7C3AED;
+  background: #F3E8FF;
+  border: 1px solid #DDD6FE;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.routine-assignment-strip,
+.caregiver-pin-box {
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(221, 214, 254, 0.88);
+  background: linear-gradient(135deg, rgba(250, 245, 255, 0.9), rgba(255, 255, 255, 0.94));
+}
+
+.routine-assignment-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.routine-mini-field {
+  display: grid;
+  gap: 0.25rem;
+  color: #6B5B8C;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.routine-mini-field input,
+.routine-mini-field select,
+.routine-care-input,
+.routine-care-note {
+  width: 100%;
+  border: 1px solid #DDD6FE;
+  border-radius: 0.8rem;
+  background: #fff;
+  color: #2D1B4E;
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.routine-mini-field input,
+.routine-mini-field select,
+.routine-care-input {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.routine-care-note {
+  margin-top: 0.55rem;
+  min-height: 3.1rem;
+  padding: 0.55rem 0.7rem;
+  resize: vertical;
+}
+
+.routine-pin-patient-btn {
+  min-height: 2.4rem;
+  padding: 0.48rem 0.8rem;
+  color: white;
+  background: #7C3AED;
+  border: 1px solid #6D28D9;
+  font-size: 0.78rem;
+}
+
+.routine-pin-patient-btn:disabled,
+.routine-remind-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.routine-remind-btn {
+  padding: 0.45rem 0.75rem;
+  color: #7C3AED;
+  background: #F3E8FF;
+  border: 1px solid #DDD6FE;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.routine-patient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.routine-patient-chip.is-active {
+  color: #7C3AED;
+  background: white;
+  border-color: white;
+  box-shadow: 0 10px 24px rgba(45, 27, 78, 0.16);
+}
+
+.routine-reminder-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border-radius: 1.1rem;
+  border: 1px solid #DDD6FE;
+  background: linear-gradient(135deg, #F5F0FF, #FFFFFF);
+}
+
+.routine-reminder-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #7C3AED;
+  background: white;
+  border-radius: 0.95rem;
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.12);
+}
+
+.routine-reminder-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.routine-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  color: #6B5B8C;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.routine-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+}
+
+.routine-meta-row svg {
+  width: 0.78rem;
+  height: 0.78rem;
+}
+
+.routine-priority-pill {
+  padding: 0.14rem 0.42rem;
+  border-radius: 999px;
+  color: #7C3AED;
+  background: #F3E8FF;
+}
+
+.routine-note-text {
+  margin-top: 0.4rem;
+  color: #6B5B8C;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .routine-care-board,
+  .routine-assignment-strip {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .routine-care-board {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .search-input {

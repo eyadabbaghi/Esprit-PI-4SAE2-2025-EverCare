@@ -4,6 +4,7 @@ import { AuthService, User } from '../../../front-office/pages/login/auth.servic
 import { ChatService } from '../../services/chat.service';
 import { Message, Conversation, Call } from '../../models/messages.model';
 import { Subscription } from 'rxjs';
+import { AppFeedbackService } from '../../../../core/services/app-feedback.service';
 
 interface ChatMessage extends Message {
   translatedContent?: string | null;
@@ -37,8 +38,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   searchResults: any[] = [];
   isGlobalSearching: boolean = false;
+  archivedConversations: ChatConversation[] = [];
+  showArchivedModal = false;
+  archivedLoading = false;
 
-  readonly MAX_MESSAGE_CHARS = 50;
+  readonly MAX_MESSAGE_CHARS = 2000;
 
   showConfirmModal: boolean = false;
   modalTitle: string = '';
@@ -79,7 +83,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     public chatService: ChatService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private feedback: AppFeedbackService
   ) { }
 
   ngOnInit(): void {
@@ -153,7 +158,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // --- Contrôle de saisie ---
   isMessageTooLong(): boolean {
-    return this.messageText.length > this.MAX_MESSAGE_CHARS;
+    return this.isTextTooLong(this.messageText);
+  }
+
+  isTextTooLong(text: string): boolean {
+    return text.length > this.MAX_MESSAGE_CHARS;
   }
 
   // --- Modale de confirmation ---
@@ -315,11 +324,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         if (err.error?.message === 'USER_BUSY' || err.message?.includes('USER_BUSY')) {
-          alert("This contact is already in a call. Please try again later.");
+          this.feedback.warning('This contact is already in a call. Please try again later.', 'Call unavailable');
         } else if (err.error?.message === 'TOO_MANY_UNREAD' || err.message?.includes('TOO_MANY_UNREAD')) {
-          alert("Please wait for a response to your previous messages before starting a call.");
+          this.feedback.info('Please wait for a response to your previous messages before starting a call.', 'Message first');
         } else {
-          alert("Unable to start the call right now.");
+          this.feedback.error('Unable to start the call right now.', 'Call failed');
         }
       }
     });
@@ -366,7 +375,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   saveEdit(msg: ChatMessage) {
-    if (!this.editContent.trim() || this.containsBadWords(this.editContent)) return;
+    if (!this.editContent.trim() || this.containsBadWords(this.editContent) || this.isTextTooLong(this.editContent)) return;
     this.chatService.updateMessage(msg.id, this.editContent).subscribe({
       next: () => {
         msg.content = this.editContent;
@@ -477,6 +486,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (user.role === 'PATIENT') {
       (user.caregiverEmails || []).forEach(email => emails.add(this.normalizeEmail(email)));
       if (user.doctorEmail) emails.add(this.normalizeEmail(user.doctorEmail));
+      (user.doctorEmails || []).forEach(email => emails.add(this.normalizeEmail(email)));
     } else if (user.role === 'DOCTOR') {
       (user.patientEmails || []).forEach(email => emails.add(this.normalizeEmail(email)));
       (user.caregiverEmails || []).forEach(email => emails.add(this.normalizeEmail(email)));
@@ -565,6 +575,36 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.tryOpenPendingContact();
       }
     });
+  }
+
+  openArchivedConversations(): void {
+    const currentEmail = this.currentUser?.email;
+    if (!currentEmail) return;
+
+    this.showArchivedModal = true;
+    this.archivedLoading = true;
+    this.chatService.getArchivedConversations(currentEmail).subscribe({
+      next: (data: Conversation[]) => {
+        this.archivedConversations = data as ChatConversation[];
+        this.archivedConversations.forEach(conv => this.updateInterlocutorInfo(conv));
+        this.archivedLoading = false;
+      },
+      error: (err) => {
+        console.error('Unable to load archived conversations:', err);
+        this.archivedConversations = [];
+        this.archivedLoading = false;
+        this.feedback.error('Could not load archived conversations. Please try again.', 'Archive unavailable');
+      }
+    });
+  }
+
+  closeArchivedConversations(): void {
+    this.showArchivedModal = false;
+  }
+
+  openArchivedConversation(conv: ChatConversation): void {
+    this.closeArchivedConversations();
+    this.selectConversation(conv);
   }
 
   updateInterlocutorInfo(conv: ChatConversation) {

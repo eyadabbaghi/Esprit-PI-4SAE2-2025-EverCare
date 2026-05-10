@@ -28,7 +28,8 @@
       <app-appointment-list-item
         *ngFor="let apt of appointments"
         [appointment]="apt"
-        (onClick)="onCardClick.emit($event)">
+        (onClick)="onCardClick.emit($event)"
+        (onJoin)="onJoin.emit($event)">
       </app-appointment-list-item>
 
       <!-- Empty State -->

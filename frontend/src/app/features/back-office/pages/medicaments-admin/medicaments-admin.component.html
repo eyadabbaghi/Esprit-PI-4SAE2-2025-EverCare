@@ -141,6 +141,9 @@
                           [ngClass]="medicament.actif ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'">
                     {{ medicament.actif ? 'Deactivate' : 'Activate' }}
                   </button>
+                  <button type="button" (click)="deleteMedicament(medicament)" class="rounded-md bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700">
+                    Delete
+                  </button>
                 </div>
               </td>
             </tr>

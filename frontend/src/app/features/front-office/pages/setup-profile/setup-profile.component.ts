@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ImageCroppedEvent } from 'ngx-image-cropper';
-import { AuthService, UpdateUserRequest } from '../login/auth.service';
+import { Subscription } from 'rxjs';
+import { AuthService, UpdateUserRequest, User } from '../login/auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { COUNTRY_PHONE_CODES, CountryPhoneCode, countryFlag } from '../../../../shared/utils/country-phone-codes';
 
 function phoneNumberValidator(control: AbstractControl): ValidationErrors | null {
@@ -59,7 +61,7 @@ function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null
   templateUrl: './setup-profile.component.html',
   styleUrls: ['./setup-profile.component.css'],
 })
-export class SetupProfileComponent implements OnInit {
+export class SetupProfileComponent implements OnInit, OnDestroy {
   profileForm: FormGroup;
   profileImage: string | null = null;
   selectedFile: File | null = null;
@@ -67,6 +69,24 @@ export class SetupProfileComponent implements OnInit {
   croppedImageBlob: Blob | null = null;
   showCropper = false;
   isLoading = false;
+  connectedUserPreview: User | null = null;
+  connectedUserPreviewMessage = '';
+  isLookingUpConnectedUser = false;
+  showRelationshipModal = false;
+  selectedRelationshipType = '';
+  readonly relationshipOptions = [
+    'Spouse',
+    'Parent',
+    'Child',
+    'Sibling',
+    'Grandparent',
+    'Grandchild',
+    'Aunt / Uncle',
+    'Cousin',
+    'Friend',
+    'Neighbor',
+    'Professional caregiver',
+  ];
   readonly countries = COUNTRY_PHONE_CODES;
   phoneCountryCode = '+1';
   emergencyCountryCode = '+1';
@@ -95,6 +115,16 @@ export class SetupProfileComponent implements OnInit {
   name: string = '';
   email: string = '';
   role: string = '';
+  isVerified = false;
+  isGooglePrefilled = false;
+  verificationCode = '';
+  isSendingVerification = false;
+  isVerifyingEmail = false;
+  hasSentVerificationCode = false;
+  verificationResendCountdown = 0;
+  private verificationCountdownTimer: ReturnType<typeof setInterval> | null = null;
+  private connectedEmailSubscription?: Subscription;
+  private connectedEmailLookupTimer: ReturnType<typeof setTimeout> | null = null;
 
   // For conditional rendering
   workplaceType: 'hospital' | 'private' = 'hospital';
@@ -103,18 +133,9 @@ export class SetupProfileComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private toastr: ToastrService,
-    private authService: AuthService
+    private authService: AuthService,
+    private notificationService: NotificationService
   ) {
-    const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras.state as { name: string; email: string; role: string };
-    if (state) {
-      this.name = state.name;
-      this.email = state.email;
-      this.role = state.role;
-    } else {
-      this.router.navigate(['/']);
-    }
-
     // Build form with all possible fields
     this.profileForm = this.fb.group({
       dateOfBirth: ['', [Validators.required, dateOfBirthValidator]],
@@ -133,7 +154,139 @@ export class SetupProfileComponent implements OnInit {
     this.updateValidators();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.hydrateProfileIdentity();
+    this.connectedEmailSubscription = this.profileForm.get('connectedEmail')?.valueChanges.subscribe((value) => {
+      this.selectedRelationshipType = '';
+      this.queueConnectedUserPreview(value);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearVerificationCountdown();
+    this.connectedEmailSubscription?.unsubscribe();
+    this.clearConnectedEmailLookup();
+  }
+
+  private hydrateProfileIdentity(): void {
+    const navigation = this.router.getCurrentNavigation();
+    const historyState = typeof history !== 'undefined' ? history.state : undefined;
+    const state = (navigation?.extras.state || historyState) as { name?: string; email?: string; role?: string; profilePicture?: string } | undefined;
+    const storedUser = this.authService.getCurrentUserValue();
+
+    this.applyIdentity({
+      name: state?.name || storedUser?.name || '',
+      email: state?.email || storedUser?.email || '',
+      role: state?.role || storedUser?.role || '',
+      profilePicture: state?.profilePicture || storedUser?.profilePicture
+    });
+
+    if (!this.email || !this.role) {
+      this.authService.fetchCurrentUser().subscribe({
+        next: (user) => this.applyIdentity(user),
+        error: () => {
+          this.toastr.error('Please sign in again to complete your profile.');
+          this.router.navigate(['/login']);
+        }
+      });
+    }
+  }
+
+  private applyIdentity(user: Partial<User>): void {
+    if (!user.email || !user.role) {
+      return;
+    }
+
+    this.name = user.name || this.name || user.email.split('@')[0];
+    this.email = user.email;
+    this.role = user.role;
+    this.isVerified = !!(user.isVerified ?? user.verified);
+
+    if (user.profilePicture && !this.selectedFile) {
+      this.profileImage = user.profilePicture;
+      this.isGooglePrefilled = true;
+    }
+
+    this.updateValidators();
+  }
+
+  get shouldShowEmailVerification(): boolean {
+    return this.role !== 'ADMIN' && !this.isVerified;
+  }
+
+  get connectedExpectedRole(): 'PATIENT' | 'CAREGIVER' | null {
+    if (this.role === 'PATIENT') return 'CAREGIVER';
+    if (this.role === 'CAREGIVER') return 'PATIENT';
+    return null;
+  }
+
+  get connectedPreviewTitle(): string {
+    return this.connectedExpectedRole === 'CAREGIVER' ? 'Caregiver preview' : 'Patient preview';
+  }
+
+  sendVerificationCode(): void {
+    if (this.isSendingVerification || this.isVerified || this.verificationResendCountdown > 0) {
+      return;
+    }
+
+    this.isSendingVerification = true;
+    this.authService.sendEmailVerificationCode().subscribe({
+      next: () => {
+        this.hasSentVerificationCode = true;
+        this.startVerificationCountdown();
+        this.toastr.success('Verification code sent to your email');
+        this.isSendingVerification = false;
+      },
+      error: (err) => {
+        this.toastr.error(err?.error?.message || 'Could not send verification code');
+        this.isSendingVerification = false;
+      }
+    });
+  }
+
+  private startVerificationCountdown(): void {
+    this.clearVerificationCountdown();
+    this.verificationResendCountdown = 60;
+    this.verificationCountdownTimer = setInterval(() => {
+      this.verificationResendCountdown = Math.max(0, this.verificationResendCountdown - 1);
+      if (this.verificationResendCountdown === 0) {
+        this.clearVerificationCountdown();
+      }
+    }, 1000);
+  }
+
+  private clearVerificationCountdown(): void {
+    if (this.verificationCountdownTimer) {
+      clearInterval(this.verificationCountdownTimer);
+      this.verificationCountdownTimer = null;
+    }
+  }
+
+  verifyEmailCode(): void {
+    if (this.isVerifyingEmail || this.isVerified) {
+      return;
+    }
+
+    const code = this.verificationCode.trim();
+    if (!/^\d{6}$/.test(code)) {
+      this.toastr.warning('Enter the 6-digit code from your email');
+      return;
+    }
+
+    this.isVerifyingEmail = true;
+    this.authService.verifyEmailCode(code).subscribe({
+      next: (response) => {
+        this.isVerified = true;
+        this.verificationCode = '';
+        this.toastr.success(response.message || 'Email verified');
+        this.isVerifyingEmail = false;
+      },
+      error: (err) => {
+        this.toastr.error(err?.error?.message || 'Verification failed');
+        this.isVerifyingEmail = false;
+      }
+    });
+  }
 
   get selectedPhoneCountry(): CountryPhoneCode {
     return this.countries.find(country => country.dialCode === this.phoneCountryCode && country.iso2 === 'US') ||
@@ -306,6 +459,17 @@ export class SetupProfileComponent implements OnInit {
       .toUpperCase();
   }
 
+  getInitialsFor(name: string | undefined): string {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
   getRoleColor(): string {
     switch (this.role) {
       case 'PATIENT': return 'bg-blue-100 text-blue-700 border-blue-300';
@@ -349,7 +513,13 @@ export class SetupProfileComponent implements OnInit {
 
     // Only include connectedEmail if not empty
     if (formValue.connectedEmail && formValue.connectedEmail.trim() !== '') {
+      if (!this.selectedRelationshipType) {
+        this.showRelationshipModal = true;
+        this.isLoading = false;
+        return;
+      }
       updateData.connectedEmail = formValue.connectedEmail;
+      updateData.relationshipType = this.selectedRelationshipType;
     }
 
     if (this.role === 'DOCTOR') {
@@ -375,6 +545,33 @@ export class SetupProfileComponent implements OnInit {
     } else {
       this.sendProfileUpdate(updateData);
     }
+  }
+
+  confirmRelationshipSelection(preferNotToSay = false): void {
+    this.selectedRelationshipType = preferNotToSay ? 'Prefer not to say' : this.selectedRelationshipType;
+    if (!this.selectedRelationshipType) {
+      this.toastr.warning('Choose the relationship type, or select prefer not to say.');
+      return;
+    }
+    this.showRelationshipModal = false;
+    this.onSubmit();
+  }
+
+  closeRelationshipModal(): void {
+    this.showRelationshipModal = false;
+  }
+
+  relationshipIconPath(label: string): string {
+    const value = (label || '').toLowerCase();
+    if (value.includes('spouse')) return 'M12 21s-7-4.4-7-10a4.2 4.2 0 0 1 7-3.1A4.2 4.2 0 0 1 19 11c0 5.6-7 10-7 10Z';
+    if (value.includes('parent')) return 'M6 20v-1.2A4.8 4.8 0 0 1 10.8 14h2.4A4.8 4.8 0 0 1 18 18.8V20M9 8a3 3 0 1 0 6 0 3 3 0 0 0-6 0M4 12h4M16 12h4';
+    if (value.includes('child')) return 'M8 20v-1a4 4 0 0 1 8 0v1M9.5 9.5a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0M5 6h14M7 6v4M17 6v4';
+    if (value.includes('sibling')) return 'M4 20v-1a4 4 0 0 1 4-4h1M15 15h1a4 4 0 0 1 4 4v1M7 9a3 3 0 1 0 6 0 3 3 0 0 0-6 0M11 12a3 3 0 1 0 6 0';
+    if (value.includes('grand')) return 'M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1M8 8a4 4 0 1 0 8 0 4 4 0 0 0-8 0M9 4c1 1.4 5 1.4 6 0';
+    if (value.includes('aunt') || value.includes('uncle') || value.includes('cousin')) return 'M12 3 20 8v8l-8 5-8-5V8l8-5ZM8 11h8M9 15h6';
+    if (value.includes('friend') || value.includes('neighbor')) return 'M7 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a4 4 0 0 1 8 0M13 20a4 4 0 0 1 8 0';
+    if (value.includes('professional')) return 'M4 8h16v11H4V8ZM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M12 11v5M9.5 13.5h5';
+    return 'M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11ZM9.5 10.5h5';
   }
 
   getPhoneError(controlName: 'phoneNumber' | 'emergencyContact'): string {
@@ -561,6 +758,9 @@ export class SetupProfileComponent implements OnInit {
     this.authService.updateProfile(updateData).subscribe({
       next: (response) => {
         this.toastr.success('Profile setup complete!');
+        if (updateData.connectedEmail) {
+          this.sendAssociationNotification(updateData.connectedEmail);
+        }
         if (response.user) {
           this.authService.fetchCurrentUser().subscribe();
         }
@@ -574,5 +774,81 @@ export class SetupProfileComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private queueConnectedUserPreview(value: unknown): void {
+    this.clearConnectedEmailLookup();
+    this.connectedUserPreview = null;
+    this.connectedUserPreviewMessage = '';
+
+    const expectedRole = this.connectedExpectedRole;
+    const email = String(value ?? '').trim().toLowerCase();
+    if (!expectedRole || !email) {
+      this.isLookingUpConnectedUser = false;
+      return;
+    }
+
+    if (!this.isFullEmail(email)) {
+      this.isLookingUpConnectedUser = false;
+      return;
+    }
+
+    this.isLookingUpConnectedUser = true;
+    this.connectedEmailLookupTimer = setTimeout(() => {
+      this.authService.getUserByEmail(email).subscribe({
+        next: (user) => {
+          const currentEmail = String(this.profileForm.get('connectedEmail')?.value ?? '').trim().toLowerCase();
+          if (currentEmail !== email) {
+            return;
+          }
+          this.isLookingUpConnectedUser = false;
+          if (user.role !== expectedRole) {
+            this.connectedUserPreviewMessage = `This email belongs to a ${user.role.toLowerCase()} account. Please enter a ${expectedRole.toLowerCase()} email.`;
+            this.connectedUserPreview = null;
+            return;
+          }
+          this.connectedUserPreview = user;
+        },
+        error: () => {
+          const currentEmail = String(this.profileForm.get('connectedEmail')?.value ?? '').trim().toLowerCase();
+          if (currentEmail !== email) {
+            return;
+          }
+          this.isLookingUpConnectedUser = false;
+          this.connectedUserPreview = null;
+          this.connectedUserPreviewMessage = `No ${expectedRole.toLowerCase()} account was found with this full email.`;
+        }
+      });
+    }, 350);
+  }
+
+  private clearConnectedEmailLookup(): void {
+    if (this.connectedEmailLookupTimer) {
+      clearTimeout(this.connectedEmailLookupTimer);
+      this.connectedEmailLookupTimer = null;
+    }
+  }
+
+  private isFullEmail(value: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+  }
+
+  private sendAssociationNotification(targetEmail: string): void {
+    const normalizedTarget = targetEmail.trim().toLowerCase();
+    if (!normalizedTarget || !this.email) {
+      return;
+    }
+
+    this.notificationService.sendNotification({
+      activityId: `connection-associated:${this.email}:${normalizedTarget}:${Date.now()}`,
+      action: 'USER_ASSOCIATED',
+      details: JSON.stringify({
+        message: `${this.name || this.email} associated you on EverCare.`,
+        actorName: this.name,
+        actorEmail: this.email,
+        actorRole: this.role
+      }),
+      targetUserIds: [normalizedTarget]
+    }).subscribe({ error: () => undefined });
   }
 }

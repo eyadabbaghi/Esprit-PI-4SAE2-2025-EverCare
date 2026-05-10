@@ -12,6 +12,7 @@ import java.util.List;
 public interface PatientCaregiverRelationshipRepository extends JpaRepository<PatientCaregiverRelationship, PatientCaregiverRelationshipId> {
     List<PatientCaregiverRelationship> findByPatientId(String patientId);
     List<PatientCaregiverRelationship> findByCaregiverId(String caregiverId);
+    boolean existsByPatientIdAndCaregiverId(String patientId, String caregiverId);
 
     @Modifying
     @Query(value = """

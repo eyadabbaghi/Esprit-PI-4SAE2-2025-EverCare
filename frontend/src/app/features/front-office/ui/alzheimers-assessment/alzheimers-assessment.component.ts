@@ -185,7 +185,7 @@ export class AlzheimersAssessmentComponent implements OnInit {
   submitAssessment(): void {
     this.isLoading = true;
 
-    const caregiverPatientId = this.getCaregiverPatientId();
+    const caregiverPatientId = this.isCaregiverPatientMode() ? this.getCaregiverPatientId() : '';
     const request$ = caregiverPatientId
       ? this.authService.submitAlzheimerAssessmentForPatient<AssessmentResult>(caregiverPatientId, this.form.value)
       : this.authService.submitAlzheimerAssessment<AssessmentResult>(this.form.value);
@@ -201,7 +201,10 @@ export class AlzheimersAssessmentComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.toastr.error('Assessment failed. Please try again.');
+          const message = typeof err?.error === 'string'
+            ? err.error
+            : err?.error?.message || 'Assessment failed. Please try again.';
+          this.toastr.error(message);
           this.isLoading = false;
         }
       });

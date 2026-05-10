@@ -12,8 +12,6 @@ import org.springframework.web.client.RestTemplate;
 import tn.esprit.user.dto.ChangePasswordRequest;
 import tn.esprit.user.dto.RegisterRequest;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,13 +55,10 @@ public class KeycloakAdminClient {
         this.restTemplate = new RestTemplate();
         restTemplate.setInterceptors(Collections.singletonList(new ClientHttpRequestInterceptor() {
             @Override
-            public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
+            public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws java.io.IOException {
                 System.out.println("=== HTTP Request ===");
                 System.out.println("Method: " + request.getMethod());
                 System.out.println("URI: " + request.getURI());
-                if (body.length > 0) {
-                    System.out.println("Body: " + new String(body, StandardCharsets.UTF_8));
-                }
                 ClientHttpResponse response = execution.execute(request, body);
                 System.out.println("Response status: " + response.getStatusCode());
                 return response;
@@ -162,6 +157,34 @@ public class KeycloakAdminClient {
         userRep.put("enabled", true);
 
         restTemplate.put(url, new HttpEntity<>(userRep, headers));
+    }
+
+    public String getLoginUsername(String userId) {
+        String token = getAdminAccessToken();
+        String url = authServerUrl + "/admin/realms/" + realm + "/users/" + userId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Map.class
+        );
+
+        Map body = response.getBody();
+        if (body == null) {
+            return null;
+        }
+
+        Object username = body.get("username");
+        if (username instanceof String value && !value.isBlank()) {
+            return value;
+        }
+
+        Object email = body.get("email");
+        return email instanceof String value && !value.isBlank() ? value : null;
     }
 
     public boolean verifyUserPassword(String email, String currentPassword) {

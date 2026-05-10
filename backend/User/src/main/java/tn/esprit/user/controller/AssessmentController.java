@@ -10,6 +10,7 @@ import tn.esprit.user.dto.AssessmentRequest;
 import tn.esprit.user.dto.AssessmentResult;
 import tn.esprit.user.entity.User;
 import tn.esprit.user.entity.UserRole;
+import tn.esprit.user.repository.PatientCaregiverRelationshipRepository;
 import tn.esprit.user.service.AssessmentService;
 import tn.esprit.user.service.UserService;
 
@@ -20,6 +21,7 @@ public class AssessmentController {
 
     private final AssessmentService assessmentService;
     private final UserService userService;
+    private final PatientCaregiverRelationshipRepository relationshipRepository;
 
     /**
      * Run the full ML assessment pipeline for the current patient.
@@ -81,27 +83,53 @@ public class AssessmentController {
             @RequestBody AssessmentRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        User caregiver = userService.findByEmail(userDetails.getUsername());
-        if (caregiver.getRole() != UserRole.CAREGIVER) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Only an associated caregiver can fill this assessment for a patient");
-        }
-
-        User patient = userService.findByUserId(patientId);
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+        User patient = resolvePatient(patientId);
         if (patient.getRole() != UserRole.PATIENT) {
             return ResponseEntity.badRequest().body("The selected user is not a patient");
         }
 
-        boolean associated = caregiver.getPatients() != null
-                && caregiver.getPatients().stream()
-                .anyMatch(associatedPatient -> patient.getUserId().equals(associatedPatient.getUserId()));
+        if (currentUser.getRole() == UserRole.PATIENT && patient.getUserId().equals(currentUser.getUserId())) {
+            AssessmentResult result = assessmentService.runAssessment(patient, request);
+            return ResponseEntity.ok(result);
+        }
 
-        if (!associated) {
+        if (currentUser.getRole() != UserRole.CAREGIVER) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Only an associated caregiver can fill this assessment for a patient");
+        }
+
+        if (!isCaregiverAssociatedWithPatient(currentUser, patient)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Caregiver is not associated with this patient");
         }
 
         AssessmentResult result = assessmentService.runAssessment(patient, request);
         return ResponseEntity.ok(result);
+    }
+
+    private User resolvePatient(String patientIdentifier) {
+        String normalized = patientIdentifier == null ? "" : patientIdentifier.trim();
+        if (normalized.contains("@")) {
+            return userService.findByEmail(normalized);
+        }
+        return userService.findByUserId(normalized);
+    }
+
+    private boolean isCaregiverAssociatedWithPatient(User caregiver, User patient) {
+        String patientId = patient.getUserId();
+        String caregiverId = caregiver.getUserId();
+        if (patientId == null || caregiverId == null) {
+            return false;
+        }
+
+        if (relationshipRepository.existsByPatientIdAndCaregiverId(patientId, caregiverId)
+                || relationshipRepository.existsByPatientIdAndCaregiverId(caregiverId, patientId)) {
+            return true;
+        }
+
+        return caregiver.getPatients() != null
+                && caregiver.getPatients().stream()
+                .anyMatch(associatedPatient -> patientId.equals(associatedPatient.getUserId()));
     }
 }

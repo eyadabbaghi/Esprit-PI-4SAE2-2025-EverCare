@@ -8,8 +8,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import tn.esprit.user.entity.User;
+import tn.esprit.user.repository.UserRepository;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,32 +43,52 @@ public class KeycloakTokenService {
     private String frontendClientSecret;
 
     private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
+    private final KeycloakAdminClient keycloakAdminClient;
 
     public Map<String, Object> loginFrontendUser(String username, String password) {
-        String tokenUrl = tokenUrl();
-        HttpHeaders headers = formHeaders();
-
+        String normalizedUsername = normalizeUsername(username);
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
         body.add("client_id", frontendClientId);
-        addClientSecret(body, frontendClientSecret);
-        body.add("username", username);
+        body.add("username", normalizedUsername);
         body.add("password", password);
 
-        return requestToken(tokenUrl, headers, body);
+        try {
+            return requestFrontendToken(body);
+        } catch (RuntimeException error) {
+            if (!isInvalidGrant(error)) {
+                throw error;
+            }
+
+            Optional<User> user = userRepository.findByEmailIgnoreCase(normalizedUsername);
+            String keycloakId = user.map(User::getKeycloakId).orElse(null);
+            if (keycloakId == null || keycloakId.isBlank()) {
+                throw error;
+            }
+
+            String keycloakUsername = keycloakAdminClient.getLoginUsername(keycloakId);
+            if (keycloakUsername == null || keycloakUsername.isBlank()
+                    || keycloakUsername.equalsIgnoreCase(normalizedUsername)) {
+                throw error;
+            }
+
+            MultiValueMap<String, String> retryBody = new LinkedMultiValueMap<>();
+            retryBody.add("grant_type", "password");
+            retryBody.add("client_id", frontendClientId);
+            retryBody.add("username", keycloakUsername);
+            retryBody.add("password", password);
+            return requestFrontendToken(retryBody);
+        }
     }
 
     public Map<String, Object> refreshFrontendUserToken(String refreshToken) {
-        String tokenUrl = tokenUrl();
-        HttpHeaders headers = formHeaders();
-
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "refresh_token");
         body.add("client_id", frontendClientId);
-        addClientSecret(body, frontendClientSecret);
         body.add("refresh_token", refreshToken);
 
-        return requestToken(tokenUrl, headers, body);
+        return requestFrontendToken(body);
     }
 
     public String getTokenForUser(String keycloakUserId) {
@@ -133,8 +156,29 @@ public class KeycloakTokenService {
             }
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            throw new RuntimeException(e.getResponseBodyAsString(), e);
+            throw new RuntimeException(readableKeycloakError(e), e);
         }
+    }
+
+    private Map<String, Object> requestFrontendToken(MultiValueMap<String, String> body) {
+        if (frontendClientSecret != null && !frontendClientSecret.isBlank()) {
+            try {
+                return requestTokenWithOptionalSecret(body, frontendClientSecret);
+            } catch (RuntimeException e) {
+                if (!isInvalidClient(e)) {
+                    throw e;
+                }
+            }
+        }
+
+        return requestTokenWithOptionalSecret(body, null);
+    }
+
+    private Map<String, Object> requestTokenWithOptionalSecret(MultiValueMap<String, String> body, String secret) {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.addAll(body);
+        addClientSecret(requestBody, secret);
+        return requestToken(tokenUrl(), formHeaders(), requestBody);
     }
 
     private String tokenUrl() {
@@ -151,6 +195,41 @@ public class KeycloakTokenService {
         if (secret != null && !secret.isBlank()) {
             body.add("client_secret", secret);
         }
+    }
+
+    private String normalizeUsername(String username) {
+        return username == null ? "" : username.trim().toLowerCase();
+    }
+
+    private boolean isInvalidClient(RuntimeException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof HttpClientErrorException clientError) {
+            String body = clientError.getResponseBodyAsString();
+            return body != null && body.contains("invalid_client");
+        }
+        return false;
+    }
+
+    private boolean isInvalidGrant(RuntimeException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof HttpClientErrorException clientError) {
+            String body = clientError.getResponseBodyAsString();
+            return body != null && body.contains("invalid_grant");
+        }
+        return false;
+    }
+
+    private String readableKeycloakError(HttpClientErrorException e) {
+        String body = e.getResponseBodyAsString();
+        if (body != null) {
+            if (body.contains("invalid_grant")) {
+                return "Invalid email or password.";
+            }
+            if (body.contains("invalid_client")) {
+                return "Login client is not configured correctly. Check the Keycloak frontend client secret.";
+            }
+        }
+        return "Login failed. Please try again.";
     }
 
     private String getClientAccessToken(

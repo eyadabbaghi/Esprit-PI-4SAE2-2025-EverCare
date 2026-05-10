@@ -1,153 +1,483 @@
+EverCare – Intelligent Alzheimer’s Risk Detection & Healthcare Platform
+
+Developed at Esprit School of Engineering as part of the PIDEV Academic Project (2025–2026).
+
+EverCare is an intelligent distributed healthcare platform designed to support Alzheimer’s patients, elderly individuals, caregivers, and healthcare professionals through real-time monitoring, cognitive assistance, emergency management, and AI-powered risk detection.
+The platform combines modern healthcare technologies, microservices architecture, intelligent monitoring systems, and cognitive stimulation modules to create a proactive and connected healthcare ecosystem focused on patient safety, autonomy, and well-being.
+
+# 📖 Overview
+
+Alzheimer’s disease and cognitive disorders often lead to:
+- Memory loss
+- Disorientation
+- Medication neglect
+- Dangerous wandering situations
+- Reduced autonomy
+- Increased caregiver stress
+
+EverCare addresses these challenges through:
+- Real-time patient monitoring
+- AI-powered risk detection
+- Emergency alert systems
+- Cognitive stimulation activities
+- Medical record management
+- Healthcare communication tools
+- Wellness and educational content
+
+The platform enables healthcare professionals and caregivers to remotely supervise patients, detect abnormal situations early, and intervene rapidly when necessary.
+
+---
+
+# 🎯 Project Objectives
+
+- Improve patient safety and autonomy
+- Assist caregivers in monitoring vulnerable patients
+- Detect risky behaviours and emergency situations
+- Centralise healthcare information
+- Enhance communication between patients and healthcare professionals
+- Provide cognitive stimulation and mental wellness support
+- Build a scalable distributed healthcare ecosystem
+
+---
+
+# ✨ Core Features
+
+## 📡 Real-Time Patient Monitoring
+Track patient activity, movement, location, and wellness indicators in real time through intelligent monitoring services.
+
+## 🚨 AI-Powered Alzheimer’s Risk Detection
+
+The platform analyses:
+- Abnormal inactivity
+- Wandering behaviour
+- Sudden location changes
+- Behavioural anomalies
+- Emergency situations
+
+Dynamic risk scores are generated automatically to detect dangerous situations early.
+
+## 🚨 Emergency Alerts & SOS System
+
+EverCare includes:
+- Automatic alert generation
+- Emergency SOS activation
+- Real-time notifications
+- Caregiver and doctor alerts
+- Critical incident monitoring
+
+## 🧠 Cognitive Simulation & Mental Wellness
+
+Interactive cognitive stimulation activities help:
+- Improve memory
+- Enhance concentration
+- Maintain cognitive engagement
+- Support Alzheimer’s and dementia patients
+
+The system includes:
+- Memory games
+- Logical exercises
+- Mental challenges
+- Personalised activity recommendations
+
+## 📁 Medical Record Management
+
+Secure digital medical folders allow management of:
+- Allergies
+- Chronic diseases
+- Prescriptions
+- Lab reports
+- Healthcare documents
+- Medical history
+
+## 📅 Appointment Scheduling
+
+Patients and doctors can:
+- Schedule appointments
+- Manage consultations
+- Receive reminders
+- Organise healthcare follow-ups
+
+## 💊 Medication Adherence Tracking
+
+The platform helps patients follow treatment plans through:
+- Smart reminders
+- Dosage tracking
+- Prescription monitoring
+- Medication adherence supervision
+
+## 💬 Doctor–Patient Communication
+
+EverCare facilitates:
+- Secure messaging
+- Real-time communication
+- Medical follow-ups
+- Healthcare assistance
+- Notifications and recommendations
+
+## 📰 Healthcare Blog & Educational Content
+
+The platform integrates a healthcare blog system allowing:
+- Publication of healthcare articles
+- Alzheimer’s awareness content
+- Wellness recommendations
+- Educational medical resources
+- Patient guidance and tips
+
+---
+
+# 👥 User Roles
+
+## 👤 Patients
+
+Patients benefit from a complete healthcare monitoring and assistance experience through:
+- Health and wellness tracking
+- Medication management
+- SOS emergency system
+- Cognitive exercises and simulations
+- Appointment scheduling
+- Daily healthcare activities
+- Access to medical records
+- Real-time notifications
+
+## 👨‍⚕️ Doctors
+
+Doctors can efficiently supervise and manage patient healthcare through:
+- Patient dashboards
+- Medical record access
+- Prescription management
+- Real-time alert monitoring
+- Cognitive activity recommendations
+- Appointment management
+- Patient follow-up
+- Emergency supervision
+
+## 👨‍👩‍👧 Caregivers
+
+Caregivers are able to remotely monitor patient well-being through:
+- Wellness supervision
+- Emergency alert reception
+- Medication adherence tracking
+- Activity monitoring
+- Behaviour observation
+- Critical situation notifications
+
+## 🛡️ Administrators
+
+Administrators ensure the stability and security of the platform through:
+- User and role management
+- System configuration
+- Platform monitoring
+- Infrastructure supervision
+- Permission management
+- Analytics and reporting
+- Security management
+
+---
+
+# 🏗️ Microservices Architecture
+
+EverCare follows a scalable distributed microservices architecture enabling independent development, deployment, monitoring, and scaling of services.
+
+# ⚙️ Backend Microservices
+
+## 👤 user-service
+
+Responsible for:
+- Authentication and authorization
+- User account management
+- Role and permission management
+- Patient, doctor, caregiver, and administrator profiles
+- Secure access control using Keycloak and JWT
+
+## 🧩 activities-service
+
+Handles:
+- Healthcare and wellness activities
+- Activity recommendations
+- Patient participation tracking
+- Activity filtering and management
+- Wellness engagement monitoring
+
+## 🚨 alert-service
+
+Responsible for:
+- Emergency alert generation
+- Alzheimer’s risk detection alerts
+- SOS incident management
+- Critical event monitoring
+- Real-time emergency notifications
+
+## 📅 appointment-service
+
+Manages:
+- Appointment scheduling
+- Consultation organisation
+- Appointment reminders
+- Doctor calendar management
+- Patient healthcare follow-ups
+
+## 🔔 notification-service
+
+Provides:
+- Real-time notifications
+- WebSocket communication
+- Alert broadcasting
+- Instant healthcare updates
+- System event notifications
+
+## 🧠 cognitivestimulation-service
+
+Handles:
+- Cognitive stimulation exercises
+- Memory games
+- Mental wellness activities
+- Logical thinking challenges
+- Cognitive progress tracking
+- Alzheimer’s cognitive support programs
+
+## 📁 medical-folder-service
+
+Responsible for:
+- Medical records management
+- Healthcare document storage
+- Prescriptions and medical history
+- Laboratory report management
+- Patient healthcare information centralisation
+
+## 📍 tracking-service
+
+Handles:
+- Real-time patient tracking
+- Location monitoring
+- Behaviour analysis
+- Movement supervision
+- Wandering detection
+- Risk score calculation
+- Geolocation-based monitoring
+
+## 📔 dailyme-service
+
+Responsible for:
+- Daily mood tracking
+- Wellness journal management
+- Emotional state monitoring
+- Daily patient reflections
+- Behavioural routine tracking
+- Personal well-being analytics
+
+💬 communication-service
+Provides:
 
 
-EverCare – Integrated Healthcare Platform
-EverCare is a comprehensive healthcare platform that connects patients, doctors, and caregivers through a unified digital ecosystem. It enables remote monitoring, communication, medical data management, and proactive alerts to improve patient well-being and streamline clinical workflows.
+Secure doctor–patient communication
+Caregiver interactions
+Real-time messaging
+Healthcare discussions
+Medical assistance communication
+Notification-based conversations
 
-✨ Key Features
-For Patients
-	• Daily Me Tracking
-Log daily mood and receive location-based context (e.g., “You are at home”). Helps caregivers and doctors understand the patient’s routine and emotional state.
-	• Medical Folder
-Store and manage personal medical information (allergies, chronic conditions, blood type) and upload important documents (prescriptions, lab results). Doctors have read-only access for better-informed care.
-	• Appointments
-Schedule, reschedule, and cancel appointments with your primary doctor directly through the app. Receive reminders and confirmations.
-	• Medication Management
-View prescribed medications, dosages, and schedules. Mark doses as taken, and get reminders.
-	• Alerts & SOS
-Automatic alerts are triggered when predefined thresholds are exceeded (e.g., prolonged inactivity, abnormal vitals). A manual SOS button sends an emergency notification to all connected caregivers and emergency contacts.
-	• Activities
-Access a library of personalised activities recommended by your doctor. Filter by type, difficulty, and track completion. Activities include detailed instructions, benefits, and precautions.
-	• Real-time Notifications
-Receive instant updates when an activity is created, updated, or recommended by your doctor (WebSocket).
 
-For Doctors
-	• Patient Dashboard
-View a list of your assigned patients with key metrics (last activity, mood, upcoming appointments, alerts).
-	• Medical Folder Access
-Securely view patient medical information and uploaded documents.
-	• Prescribe Medications
-Create and manage medication plans for each patient (drug name, dosage, frequency, duration).
-	• Activity Recommendations
-Browse the activity library and recommend specific activities to individual patients. Recommendations appear instantly in the patient’s feed.
-	• Appointment Management
-Accept, reschedule, or cancel appointment requests. View your daily schedule.
-	• Alerts Overview
-Monitor all alerts from your patients and acknowledge or resolve them. Critical alerts are highlighted.
-	• Communication
-Built-in text messaging and video call integration (planned) to discuss care plans in real time.
 
-For Caregivers
-	• Patient Monitoring
-View the well-being status, mood trends, and recent activities of the patients you are connected to.
-	• Alert Notifications
-Receive alerts when a patient triggers an SOS or a system-generated incident.
-	• Medication Adherence
-Track whether patients have taken their prescribed medications.
+📰 blog-service
+Responsible for:
 
-🏗️ Architecture
-EverCare follows a microservices architecture, enabling independent development, deployment, and scaling.
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│   Angular SPA   │ ─── │   API Gateway   │ ─── │   Eureka Server │
-│ (localhost:4200)│      │ (localhost:8089)│      │ (localhost:8761)│
-└─────────────────┘      └─────────────────┘      └─────────────────┘
-                                   │
-        ┌──────────────────────────┼──────────────────────────┐
-        ▼                          ▼                          ▼
-┌───────────────┐          ┌───────────────┐          ┌───────────────┐
-│  User Service │          │Activity Service│          │  Alert Service │
-│  (port 8096)  │          │  (port 8092)  │          │  (port 8093)  │
-└───────────────┘          └───────────────┘          └───────────────┘
-        │                          │                          │
-        ▼                          ▼                          ▼
-┌───────────────┐          ┌───────────────┐          ┌───────────────┐
-│Notification   │          │Appointment    │          │ Medical Folder│
-│Service (8095) │          │Service (8094) │          │ Service       │
-└───────────────┘          └───────────────┘          └───────────────┘
-	• API Gateway (Spring Cloud Gateway) – routes requests, handles CORS, and provides a single entry point.
-	• Eureka Discovery – all services register themselves for dynamic discovery.
-	• Each service has its own database (MySQL) and can be developed independently.
-	• Frontend – Angular 17+ application with role-based views.
 
-🛠️ Technology Stack
+Healthcare article publication
+Alzheimer’s awareness content
+Wellness recommendations
+Educational healthcare resources
+Medical blog management
+Patient guidance and support articles
+
+
+
+🏛️ Infrastructure Services
+API Gateway
+Provides:
+
+Centralized routing
+Secure API access
+Request filtering
+CORS management
+
+
+Eureka Discovery Server
+Responsible for:
+Service registration
+Dynamic service discovery
+Microservice communication management
+
+
+
+Config Server
+Handles:
+Centralized configuration
+Environment management
+Distributed configuration updates
+
+
+
+Keycloak Authentication
+Provides:
+
+Identity management
+OAuth2 authentication
+JWT authorization
+Role-based access control
+
+
+
+⚙️ Technology Stack
 Backend
-	• Java 23 + Spring Boot 3.2
-	• Spring Cloud (Gateway, Netflix Eureka, OpenFeign)
-	• Spring Security + Keycloak for authentication / OAuth2 resource server
-	• Spring Data JPA + Hibernate
-	• MySQL (per-service database)
-	• WebSocket + STOMP for real-time notifications
-	• Feign Clients for inter-service communication
-	• Maven – build tool
+
+Java 23
+Spring Boot 3
+Spring Cloud
+Eureka
+OpenFeign
+Spring Security
+Hibernate / JPA
+MySQL
+Maven
+WebSocket + STOMP
+
 Frontend
-	• Angular 17 (standalone components, new control flow)
-	• Angular Material (planned)
-	• RxJS – reactive programming
-	• NgRx (optional, for state management)
-	• Tailwind CSS – utility-first styling
-	• TypeScript
-Infrastructure
-	• Docker (containerisation planned)
-	• Keycloak – identity and access management
-	• GitHub Actions – CI/CD pipeline
+
+Angular 17
+TypeScript
+RxJS
+Tailwind CSS
+Angular Material
+DevOps & Infrastructure
+Docker
+GitHub Actions
+CI/CD Pipelines
+Keycloak
+SonarQube
+
+
+
+🔐 Security & Authentication
+EverCare implements enterprise-level security mechanisms:
+
+OAuth2 authentication
+JWT authorization
+Keycloak identity management
+Role-based access control
+Secure API Gateway routing
+
+
+
+📊 Real-Time Notifications
+The platform uses:
+
+WebSockets
+STOMP messaging
+Real-time event systems
+to instantly notify users about:
+Emergency alerts
+Appointment changes
+Medication reminders
+Cognitive activity updates
+Doctor recommendations
+Healthcare incidents
+
+
+
+🧪 Testing & Quality Assurance
+Backend Testing
+
+JUnit 5
+Integration testing
+CI/CD & Quality
+GitHub Actions
+Automated builds
+SonarQube integration
+Continuous Integration pipelines
+
+
 
 🚀 Getting Started
 Prerequisites
-	• Java 23
-	• Node.js 20+ and npm
-	• MySQL (local or Docker)
-	• Keycloak (optional for development – can be disabled)
-	• Eureka Server (start first)
+Java 23
+Node.js 20+
+MySQL
+Maven
+Angular CLI
 
-1️⃣ Clone the repository
-git clone https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.git
-cd Esprit-PI-4SAE2-2025-EverCare
-2️⃣ Start Eureka Server
-cd backend/eureka-server
-mvn spring-boot:run
-3️⃣ Start the Gateway
-cd ../api-gateway
-mvn spring-boot:run
-4️⃣ Start the microservices
-In separate terminals:
-cd ../user-service
-mvn spring-boot:run
-Repeat for:
-	• activities-service
-	• alert-service
-	• appointment-service
-	• notification-service
-	• medical-folder-service
 
-5️⃣ Start the frontend
-cd frontend
-npm install
-ng serve
-Open:
+
+Clone Repository
+git clone https://github.com/eyadabbaghi/Esprit-PI-4SAE2-2025-EverCare.gitcd Esprit-PI-4SAE2-2025-EverCare
+
+Start Eureka Server
+cd backend/eureka-servermvn spring-boot:run
+
+Start API Gateway
+cd backend/api-gatewaymvn spring-boot:run
+
+Start Backend Services
+Run each microservice independently:
+mvn spring-boot:run
+Services:
+
+user-service
+activities-service
+alert-service
+appointment-service
+notification-service
+cognitivestimulation-service
+medical-folder-service
+tracking-service
+dailyme-service
+communication-service
+blog-service
+
+
+
+Start Frontend
+cd frontendnpm installng serve
+Application URL:
 http://localhost:4200
 
-📚 API Documentation
-API endpoints are documented via Swagger/OpenAPI.
-Examples:
-	• http://localhost:8092/swagger-ui.html (activities-service)
-	• http://localhost:8096/swagger-ui.html (user-service)
-The gateway does not expose Swagger UI directly; use service-specific ports during development.
-
-🧪 Testing
-	• Backend unit tests – JUnit 5, Mockito (mvn test)
-	• Integration tests – @SpringBootTest
-	• Frontend unit tests – Jasmine / Karma (ng test)
-	• E2E tests – Cypress (planned)
-
 🔮 Future Improvements
-	• Implement AI-powered insights for mood trends and alert predictions
-	• Expand role-based dashboards for administrators
-	• Full Docker Compose setup for one-click deployment
+
+AI-powered predictive healthcare analytics
+Machine learning Alzheimer’s progression prediction
+Advanced behavioural analysis
+Voice assistant integration
+Smart wearable integration
+Real-time video consultations
+Docker Compose deployment
+Kubernetes orchestration
+Mobile application support
+
+
 
 👥 Contributors
-	Islem Belhadj
-	Eya Dabbaghi
-	Badr klila
-	Mariem ben zakour
-	Achref Jebabli.
 
-EverCare – care, everywhere.
+Eya Dabbaghi
+Islem Belhadj
+Mariem Ben Zakour
+Achref Jebabli
+Badr Klila
+
+
+
+🎓 Academic Context
+Developed at Esprit School of Engineering
+PIDEV – 4SAE2
+Academic Year: 2025–2026
+
+🙏 Acknowledgments
+Special thanks to:
+Esprit School of Engineering
+Project supervisors
+Open-source contributors
+Spring & Angular ecosystems
+
+
+
+❤️ EverCare
+
+“Care, everywhere.”

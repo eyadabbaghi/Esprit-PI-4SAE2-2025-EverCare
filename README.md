@@ -265,7 +265,7 @@ Responsible for:
 - Behavioural routine tracking
 - Personal well-being analytics
 
-💬 communication-service
+## 💬 communication-service
 Provides:
 
 
@@ -278,7 +278,7 @@ Notification-based conversations
 
 
 
-📰 blog-service
+## 📰 blog-service
 Responsible for:
 
 
@@ -291,7 +291,7 @@ Patient guidance and support articles
 
 
 
-🏛️ Infrastructure Services
+## 🏛️ Infrastructure Services
 API Gateway
 Provides:
 
@@ -327,7 +327,7 @@ Role-based access control
 
 
 
-⚙️ Technology Stack
+## ⚙️ Technology Stack
 Backend
 
 Java 23
@@ -357,7 +357,7 @@ SonarQube
 
 
 
-🔐 Security & Authentication
+## 🔐 Security & Authentication
 EverCare implements enterprise-level security mechanisms:
 
 OAuth2 authentication
@@ -454,7 +454,7 @@ Mobile application support
 
 
 
-👥 Contributors
+## 👥 Contributors
 
 Eya Dabbaghi
 Islem Belhadj
